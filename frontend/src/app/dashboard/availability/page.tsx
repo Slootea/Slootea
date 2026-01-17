@@ -255,16 +255,16 @@ export default function AvailabilityPage() {
             <div className="space-y-2">
               <Label>Service (Optional)</Label>
               <Select
-                value={formData.serviceOptionId}
+                value={formData.serviceOptionId || "__all__"}
                 onValueChange={(v) =>
-                  setFormData({ ...formData, serviceOptionId: v })
+                  setFormData({ ...formData, serviceOptionId: v === "__all__" ? "" : v })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All services" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All services</SelectItem>
+                  <SelectItem value="__all__">All services</SelectItem>
                   {serviceOptions.map((opt) => (
                     <SelectItem key={opt.id} value={opt.id}>
                       {opt.title}
