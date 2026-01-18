@@ -13,7 +13,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:3000',
-      'https://slootea.com',
+      'https://slootea.com','https://www.slootea.com','http://www.slootea.com/','http://slootea.com/'
     ],
     credentials: true,
   });
