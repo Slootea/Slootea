@@ -4,11 +4,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, MoreThanOrEqual, LessThan } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual, LessThan, Like, ILike, LessThanOrEqual } from 'typeorm';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
+  AppointmentQueryDto,
+  PaginatedResult,
 } from './dto/appointment.dto';
 import { ServiceOptionsService } from '../service-options/service-options.service';
 import { AvailabilityService } from '../availability/availability.service';
@@ -88,6 +90,91 @@ export class AppointmentsService {
     });
   }
 
+  async findAllByUserPaginated(
+    userId: string,
+    query: AppointmentQueryDto,
+  ): Promise<PaginatedResult<Appointment>> {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search,
+      startDate,
+      endDate,
+      serviceOptionId,
+      sortBy = 'startTime',
+      sortOrder = 'DESC',
+    } = query;
+
+    const queryBuilder = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.serviceOption', 'serviceOption')
+      .where('appointment.userId = :userId', { userId });
+
+    // Filter by status
+    if (status) {
+      queryBuilder.andWhere('appointment.status = :status', { status });
+    }
+
+    // Search by client name or email
+    if (search) {
+      queryBuilder.andWhere(
+        '(LOWER(appointment.clientName) LIKE LOWER(:search) OR LOWER(appointment.clientEmail) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Filter by date range
+    if (startDate) {
+      queryBuilder.andWhere('appointment.startTime >= :startDate', {
+        startDate: new Date(startDate),
+      });
+    }
+
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      queryBuilder.andWhere('appointment.startTime <= :endDate', {
+        endDate: endDateTime,
+      });
+    }
+
+    // Filter by service option
+    if (serviceOptionId) {
+      queryBuilder.andWhere('appointment.serviceOptionId = :serviceOptionId', {
+        serviceOptionId,
+      });
+    }
+
+    // Sorting
+    const validSortFields = ['startTime', 'clientName', 'status', 'createdAt'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'startTime';
+    queryBuilder.orderBy(`appointment.${sortField}`, sortOrder);
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const data = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
   async findUpcoming(userId: string): Promise<Appointment[]> {
     return this.appointmentRepository.find({
       where: {
@@ -95,6 +182,25 @@ export class AppointmentsService {
         startTime: MoreThanOrEqual(new Date()),
         status: AppointmentStatus.CONFIRMED,
       },
+      relations: ['serviceOption'],
+      order: { startTime: 'ASC' },
+    });
+  }
+
+  async findNextAppointment(userId: string): Promise<Appointment | null> {
+    return this.appointmentRepository.findOne({
+      where: [
+        {
+          userId,
+          startTime: MoreThanOrEqual(new Date()),
+          status: AppointmentStatus.CONFIRMED,
+        },
+        {
+          userId,
+          startTime: MoreThanOrEqual(new Date()),
+          status: AppointmentStatus.PENDING_CONFIRMATION,
+        },
+      ],
       relations: ['serviceOption'],
       order: { startTime: 'ASC' },
     });

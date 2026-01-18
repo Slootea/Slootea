@@ -9,11 +9,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
+  AppointmentQueryDto,
 } from './dto/appointment.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 
@@ -26,9 +27,16 @@ export class AppointmentsController {
   @Get()
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all appointments for current user' })
-  async findAll(@Request() req: any) {
-    return this.appointmentsService.findAllByUser(req.user.dbUserId);
+  @ApiOperation({ summary: 'Get all appointments for current user with pagination and filtering' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'serviceOptionId', required: false, type: String })
+  async findAll(@Request() req: any, @Query() query: AppointmentQueryDto) {
+    return this.appointmentsService.findAllByUserPaginated(req.user.dbUserId, query);
   }
 
   @Get('today')
@@ -45,6 +53,14 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Get upcoming confirmed appointments' })
   async findUpcoming(@Request() req: any) {
     return this.appointmentsService.findUpcoming(req.user.dbUserId);
+  }
+
+  @Get('next')
+  @UseGuards(ClerkAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get the next upcoming appointment' })
+  async findNext(@Request() req: any) {
+    return this.appointmentsService.findNextAppointment(req.user.dbUserId);
   }
 
   @Get('pending')

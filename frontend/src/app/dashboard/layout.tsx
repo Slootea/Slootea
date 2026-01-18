@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/dashboard", label: "Overview" },
+  { href: "/dashboard/calendar", label: "Calendar" },
   { href: "/dashboard/options", label: "Service Options" },
   { href: "/dashboard/availability", label: "Availability" },
   { href: "/dashboard/blocks", label: "Blocked Times" },

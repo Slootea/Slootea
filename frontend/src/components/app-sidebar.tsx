@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Clock, Link2, Settings, LayoutDashboard, CalendarX, List } from "lucide-react";
+import { Calendar, CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -19,6 +19,7 @@ import {
 
 const mainNavItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarRange },
   { href: "/dashboard/appointments", label: "Appointments", icon: Calendar },
 ];
 

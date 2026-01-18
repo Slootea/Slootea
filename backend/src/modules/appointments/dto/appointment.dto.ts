@@ -5,9 +5,13 @@ import {
   IsUUID,
   IsDateString,
   IsEnum,
+  IsNumber,
+  Min,
+  Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AppointmentStatus } from '../entities/appointment.entity';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateAppointmentDto {
   @ApiProperty({ description: 'Start time in ISO format' })
@@ -91,4 +95,69 @@ export class GetAvailableSlotsDto {
   @ApiProperty({ description: 'Booking link ID' })
   @IsUUID()
   bookingLinkId: string;
+}
+
+export class AppointmentQueryDto {
+  @ApiPropertyOptional({ description: 'Page number (1-based)', default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
+
+  @ApiPropertyOptional({ description: 'Number of items per page', default: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit?: number = 10;
+
+  @ApiPropertyOptional({ description: 'Filter by status' })
+  @IsOptional()
+  @IsEnum(AppointmentStatus)
+  status?: AppointmentStatus;
+
+  @ApiPropertyOptional({ description: 'Search by client name or email' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by start date (ISO format)' })
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by end date (ISO format)' })
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by service option ID' })
+  @IsOptional()
+  @IsUUID()
+  serviceOptionId?: string;
+
+  @ApiPropertyOptional({ description: 'Sort field', default: 'startTime' })
+  @IsOptional()
+  @IsString()
+  sortBy?: string = 'startTime';
+
+  @ApiPropertyOptional({ description: 'Sort order', default: 'DESC' })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value?.toUpperCase())
+  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }

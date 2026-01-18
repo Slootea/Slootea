@@ -66,9 +66,20 @@ export const bookingLinksApi = {
 
 // Appointments API
 export const appointmentsApi = {
-  getAll: () => api.get('/appointments'),
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+    serviceOptionId?: string;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }) => api.get('/appointments', { params }),
   getToday: () => api.get('/appointments/today'),
   getUpcoming: () => api.get('/appointments/upcoming'),
+  getNext: () => api.get('/appointments/next'),
   getPending: () => api.get('/appointments/pending'),
   getStats: () => api.get('/appointments/stats'),
   getOne: (id: string) => api.get(`/appointments/${id}`),

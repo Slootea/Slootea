@@ -164,3 +164,29 @@ export interface PublicBookingLink extends BookingLink {
   user: User;
   serviceOptions: ServiceOption[];
 }
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
+export interface AppointmentFilters {
+  page?: number;
+  limit?: number;
+  status?: AppointmentStatus | 'all';
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  serviceOptionId?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
