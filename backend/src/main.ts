@@ -12,7 +12,8 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors({
     origin: [
-      process.env.FRONTEND_URL || 'http://localhost:3000'
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'https://slootea.com',
     ],
     credentials: true,
   });
