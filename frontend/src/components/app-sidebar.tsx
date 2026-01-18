@@ -1,6 +1,7 @@
 "use client";
 
-import { Calendar, CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -42,10 +43,52 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <Calendar className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold">AppointmentApp</span>
+          <Image
+            src="/Slootea_logo.png"
+            alt="Slootea Logo"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+          />
+          <span className="text-xl font-bold tracking-wide uppercase">SLOOTEA</span>
         </Link>
       </SidebarHeader>
+
+      {/* SVG fallback logo
+          <svg
+            className="h-8 w-8 text-primary"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 10h12a2 2 0 012 2v1a6 6 0 01-6 6H9a6 6 0 01-6-6v-1a2 2 0 012-2z"
+              fill="currentColor"
+              opacity="0.2"
+            />
+            <path
+              d="M5 10h12a2 2 0 012 2v1a6 6 0 01-6 6H9a6 6 0 01-6-6v-1a2 2 0 012-2z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M19 12h1a2 2 0 012 2v0a2 2 0 01-2 2h-1"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M8 5c0-1 .5-2 2-2s2 1 2 2M12 5c0-1 .5-2 2-2s2 1 2 2"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          */}
 
       <SidebarSeparator />
 
