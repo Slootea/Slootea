@@ -126,3 +126,23 @@ export const usersApi = {
   updateProfile: (data: Partial<{ firstName: string; lastName: string; businessName: string; phone: string; timezone: string }>) =>
     api.put('/users/me', data),
 };
+
+// Clients API
+export const clientsApi = {
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }) => api.get('/clients', { params }),
+  getStats: () => api.get('/clients/stats'),
+  getOne: (id: string) => api.get(`/clients/${id}`),
+  getAppointments: (id: string, params?: { page?: number; limit?: number }) =>
+    api.get(`/clients/${id}/appointments`, { params }),
+  create: (data: { name: string; email?: string; phone: string; notes?: string }) =>
+    api.post('/clients', data),
+  update: (id: string, data: Partial<{ name: string; email: string; notes: string }>) =>
+    api.put(`/clients/${id}`, data),
+  delete: (id: string) => api.delete(`/clients/${id}`),
+};

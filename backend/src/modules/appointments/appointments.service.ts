@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThan, Like, ILike, LessThanOrEqual } from 'typeorm';
@@ -17,6 +19,7 @@ import { AvailabilityService } from '../availability/availability.service';
 import { BlockedTimesService } from '../blocked-times/blocked-times.service';
 import { SettingsService } from '../settings/settings.service';
 import { BookingLinksService } from '../booking-links/booking-links.service';
+import { ClientsService } from '../clients/clients.service';
 import { DayOfWeek } from '../availability/entities/availability.entity';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,6 +39,8 @@ export class AppointmentsService {
     private readonly blockedTimesService: BlockedTimesService,
     private readonly settingsService: SettingsService,
     private readonly bookingLinksService: BookingLinksService,
+    @Inject(forwardRef(() => ClientsService))
+    private readonly clientsService: ClientsService,
   ) {}
 
   async create(createDto: CreateAppointmentDto): Promise<Appointment> {
@@ -68,6 +73,20 @@ export class AppointmentsService {
       throw new BadRequestException('This time slot is no longer available');
     }
 
+    // Create or find client by phone number
+    let clientId: string | undefined;
+    if (createDto.clientPhone) {
+      const client = await this.clientsService.findOrCreate(
+        userId,
+        createDto.clientPhone,
+        createDto.clientName,
+        createDto.clientEmail,
+      );
+      // Increment appointment count for client
+      await this.clientsService.incrementAppointmentCount(client.id, userId);
+      clientId = client.id;
+    }
+
     // Create appointment
     const confirmationToken = uuidv4();
     const appointment = this.appointmentRepository.create({
@@ -75,6 +94,7 @@ export class AppointmentsService {
       startTime,
       endTime,
       userId,
+      clientId,
       confirmationToken,
       status: AppointmentStatus.PENDING_CONFIRMATION,
     });
@@ -116,10 +136,10 @@ export class AppointmentsService {
       queryBuilder.andWhere('appointment.status = :status', { status });
     }
 
-    // Search by client name or email
+    // Search by client name, email, or phone
     if (search) {
       queryBuilder.andWhere(
-        '(LOWER(appointment.clientName) LIKE LOWER(:search) OR LOWER(appointment.clientEmail) LIKE LOWER(:search))',
+        '(LOWER(appointment.clientName) LIKE LOWER(:search) OR LOWER(appointment.clientEmail) LIKE LOWER(:search) OR appointment.clientPhone LIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -302,6 +322,20 @@ export class AppointmentsService {
       ? new Date(createDto.endTime)
       : new Date(startTime.getTime() + serviceOption.duration * 60000);
 
+    // Create or find client by phone number
+    let clientId: string | undefined;
+    if (createDto.clientPhone) {
+      const client = await this.clientsService.findOrCreate(
+        userId,
+        createDto.clientPhone,
+        createDto.clientName,
+        createDto.clientEmail,
+      );
+      // Increment appointment count for client
+      await this.clientsService.incrementAppointmentCount(client.id, userId);
+      clientId = client.id;
+    }
+
     // Create appointment
     const confirmationToken = uuidv4();
     const appointment = this.appointmentRepository.create({
@@ -309,6 +343,7 @@ export class AppointmentsService {
       startTime,
       endTime,
       userId,
+      clientId,
       confirmationToken,
       status: AppointmentStatus.PENDING_CONFIRMATION,
     });
@@ -322,8 +357,44 @@ export class AppointmentsService {
     updateDto: UpdateAppointmentDto,
   ): Promise<Appointment> {
     const appointment = await this.findOne(id, userId);
+    const previousStatus = appointment.status;
     Object.assign(appointment, updateDto);
-    return this.appointmentRepository.save(appointment);
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    // Update client stats if status changed to completed, cancelled, or no_show
+    if (
+      updateDto.status &&
+      updateDto.status !== previousStatus &&
+      appointment.clientPhone
+    ) {
+      const client = await this.clientsService.findByPhone(
+        appointment.clientPhone,
+        userId,
+      );
+      if (client) {
+        if (updateDto.status === AppointmentStatus.COMPLETED) {
+          await this.clientsService.updateAppointmentStats(
+            client.id,
+            userId,
+            'completed',
+          );
+        } else if (updateDto.status === AppointmentStatus.CANCELLED) {
+          await this.clientsService.updateAppointmentStats(
+            client.id,
+            userId,
+            'cancelled',
+          );
+        } else if (updateDto.status === AppointmentStatus.NO_SHOW) {
+          await this.clientsService.updateAppointmentStats(
+            client.id,
+            userId,
+            'no_show',
+          );
+        }
+      }
+    }
+
+    return savedAppointment;
   }
 
   async cancel(id: string, userId: string): Promise<Appointment> {

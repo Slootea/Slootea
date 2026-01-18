@@ -190,3 +190,33 @@ export interface AppointmentFilters {
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
 }
+
+export interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone: string;
+  notes?: string;
+  totalAppointments: number;
+  completedAppointments: number;
+  cancelledAppointments: number;
+  noShowAppointments: number;
+  lastAppointmentAt?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface ClientStats {
+  totalClients: number;
+  newClientsThisMonth: number;
+  repeatClients: number;
+}

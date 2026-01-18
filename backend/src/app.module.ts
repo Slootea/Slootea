@@ -11,6 +11,7 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { PublicModule } from './modules/public/public.module';
+import { ClientsModule } from './modules/clients/clients.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PublicModule } from './modules/public/public.module';
     SettingsModule,
     MessagingModule,
     PublicModule,
+    ClientsModule,
   ],
 })
 export class AppModule {}

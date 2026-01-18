@@ -10,6 +10,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
 import { BookingLink } from '../../booking-links/entities/booking-link.entity';
+import { Client } from '../../clients/entities/client.entity';
 
 export enum AppointmentStatus {
   PENDING_CONFIRMATION = 'pending_confirmation',
@@ -89,4 +90,11 @@ export class Appointment {
   })
   @JoinColumn({ name: 'bookingLinkId' })
   bookingLink: BookingLink;
+
+  @Column({ nullable: true })
+  clientId: string;
+
+  @ManyToOne(() => Client, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'clientId' })
+  client: Client;
 }

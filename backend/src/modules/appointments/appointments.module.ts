@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentsService } from './appointments.service';
@@ -8,6 +8,7 @@ import { AvailabilityModule } from '../availability/availability.module';
 import { BlockedTimesModule } from '../blocked-times/blocked-times.module';
 import { SettingsModule } from '../settings/settings.module';
 import { BookingLinksModule } from '../booking-links/booking-links.module';
+import { ClientsModule } from '../clients/clients.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BookingLinksModule } from '../booking-links/booking-links.module';
     BlockedTimesModule,
     SettingsModule,
     BookingLinksModule,
+    forwardRef(() => ClientsModule),
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],
