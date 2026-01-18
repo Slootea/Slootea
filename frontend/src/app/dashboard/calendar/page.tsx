@@ -88,6 +88,7 @@ interface CalendarEvent {
 
 interface DragState {
   isDragging: boolean;
+  hasMoved: boolean;
   appointmentId: string | null;
   originalTop: number;
   currentTop: number;
@@ -136,6 +137,7 @@ export default function CalendarPage() {
   // Drag and drop state
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
+    hasMoved: false,
     appointmentId: null,
     originalTop: 0,
     currentTop: 0,
@@ -143,6 +145,7 @@ export default function CalendarPage() {
     currentDay: null,
     offsetY: 0,
   });
+  const dragMovedRef = useRef(false);
   const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const dayColumnsRef = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -377,8 +380,11 @@ export default function CalendarPage() {
       const startHour = aptStart.getHours() + aptStart.getMinutes() / 60;
       const top = (startHour - START_HOUR) * HOUR_HEIGHT;
 
+      dragMovedRef.current = false;
+
       setDragState({
         isDragging: true,
+        hasMoved: false,
         appointmentId: appointment.id,
         originalTop: top,
         currentTop: top,
@@ -407,28 +413,63 @@ export default function CalendarPage() {
         }
       });
 
-      // Calculate new top position relative to the scroll area
+      // Calculate new top position relative to the time grid
+      // Find the actual viewport element inside ScrollArea
       const scrollArea = scrollAreaRef.current;
       if (scrollArea) {
-        const scrollRect = scrollArea.getBoundingClientRect();
-        const relativeY = clientY - scrollRect.top + scrollArea.scrollTop - 48 - dragState.offsetY; // 48 = header height
-        const newTop = Math.max(0, Math.min(relativeY, TOTAL_HOURS * HOUR_HEIGHT - 20));
+        const viewport = scrollArea.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+        const scrollRect = viewport?.getBoundingClientRect() || scrollArea.getBoundingClientRect();
+        const scrollTop = viewport?.scrollTop || 0;
+        
+        // Calculate position: mouse Y relative to viewport, plus scroll offset, minus header (48px)
+        const relativeY = clientY - scrollRect.top + scrollTop - 48;
+        // Subtract the grab offset to keep appointment under the mouse at grab point
+        const newTop = Math.max(0, Math.min(relativeY - dragState.offsetY, TOTAL_HOURS * HOUR_HEIGHT - 20));
+
+        // Check if actually moved (more than 5px threshold)
+        const hasMoved = Math.abs(newTop - dragState.originalTop) > 5 || 
+          (targetDay && dragState.originalDay && !isSameDay(targetDay, dragState.originalDay));
+        
+        if (hasMoved) {
+          dragMovedRef.current = true;
+        }
 
         setDragState((prev) => ({
           ...prev,
           currentTop: newTop,
           currentDay: targetDay,
+          hasMoved: hasMoved || prev.hasMoved,
         }));
       }
     },
-    [dragState.isDragging, dragState.appointmentId, dragState.offsetY, dragState.currentDay]
+    [dragState.isDragging, dragState.appointmentId, dragState.offsetY, dragState.currentDay, dragState.originalTop, dragState.originalDay]
   );
 
   // Handle drag end
   const handleDragEnd = useCallback(() => {
+    const wasDragged = dragMovedRef.current;
+    
     if (!dragState.isDragging || !dragState.appointmentId || !dragState.currentDay) {
+      dragMovedRef.current = false;
       setDragState({
         isDragging: false,
+        hasMoved: false,
+        appointmentId: null,
+        originalTop: 0,
+        currentTop: 0,
+        originalDay: null,
+        currentDay: null,
+        offsetY: 0,
+      });
+      return;
+    }
+
+    // If didn't actually move, just reset state (click handler will open edit dialog)
+    if (!wasDragged) {
+      dragMovedRef.current = false;
+      setDragState({
+        isDragging: false,
+        hasMoved: false,
         appointmentId: null,
         originalTop: 0,
         currentTop: 0,
@@ -441,8 +482,10 @@ export default function CalendarPage() {
 
     const appointment = findAppointmentById(dragState.appointmentId);
     if (!appointment) {
+      dragMovedRef.current = false;
       setDragState({
         isDragging: false,
+        hasMoved: false,
         appointmentId: null,
         originalTop: 0,
         currentTop: 0,
@@ -463,8 +506,10 @@ export default function CalendarPage() {
       newStartTime.getTime() === originalStart.getTime() &&
       isSameDay(newStartTime, originalStart)
     ) {
+      dragMovedRef.current = false;
       setDragState({
         isDragging: false,
+        hasMoved: false,
         appointmentId: null,
         originalTop: 0,
         currentTop: 0,
@@ -510,8 +555,10 @@ export default function CalendarPage() {
     setSendNotification(true);
     setConfirmDialogOpen(true);
 
+    dragMovedRef.current = false;
     setDragState({
       isDragging: false,
+      hasMoved: false,
       appointmentId: null,
       originalTop: 0,
       currentTop: 0,
@@ -699,8 +746,11 @@ export default function CalendarPage() {
       ? (() => {
           const apt = findAppointmentById(dragState.appointmentId || "");
           if (!apt) return null;
-          const duration = apt.serviceOption?.duration || 60;
-          const height = (duration / 60) * HOUR_HEIGHT;
+          // Use actual appointment times for consistent height calculation
+          const aptStart = parseISO(apt.startTime);
+          const aptEnd = parseISO(apt.endTime);
+          const durationMinutes = differenceInMinutes(aptEnd, aptStart);
+          const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 20);
           return { appointment: apt, top: dragState.currentTop, height };
         })()
       : null;
@@ -836,9 +886,11 @@ export default function CalendarPage() {
                 onMouseDown={(e) => canDrag && handleDragStart(e, event.appointment, day)}
                 onTouchStart={(e) => canDrag && handleDragStart(e, event.appointment, day)}
                 onClick={(e) => {
-                  if (!dragState.isDragging) {
+                  // Only open edit dialog if we didn't drag (just a click)
+                  if (!dragMovedRef.current) {
                     handleAppointmentClick(event.appointment);
                   }
+                  dragMovedRef.current = false;
                 }}
               >
                 <div className="flex items-start gap-1">
@@ -1016,7 +1068,7 @@ export default function CalendarPage() {
 
         <CardContent className="p-0">
           <ScrollArea 
-            className={`h-[calc(100vh-320px)] min-h-[500px] ${dragState.isDragging ? "select-none" : ""}`}
+            className={`h-[calc(100vh-220px)] min-h-[600px] ${dragState.isDragging ? "select-none" : ""}`}
             ref={scrollAreaRef}
           >
             <div className="flex">
@@ -1033,71 +1085,6 @@ export default function CalendarPage() {
           </ScrollArea>
         </CardContent>
       </Card>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-green-100 dark:bg-green-900">
-                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {appointments.filter((a) => a.status === AppointmentStatus.CONFIRMED).length}
-                </p>
-                <p className="text-xs text-muted-foreground">Confirmed</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900">
-                <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {appointments.filter((a) => a.status === AppointmentStatus.PENDING_CONFIRMATION).length}
-                </p>
-                <p className="text-xs text-muted-foreground">Pending</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900">
-                <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{appointments.length}</p>
-                <p className="text-xs text-muted-foreground">Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-red-100 dark:bg-red-900">
-                <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {appointments.filter((a) => a.status === AppointmentStatus.CANCELLED).length}
-                </p>
-                <p className="text-xs text-muted-foreground">Cancelled</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Edit Appointment Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
