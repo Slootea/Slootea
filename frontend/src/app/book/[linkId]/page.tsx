@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
 import { PublicBookingLink, ServiceOption } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Calendar, Clock, Image } from "lucide-react";
 export default function BookingPage() {
   const params = useParams();
   const router = useRouter();
+  const t = useTranslations('booking');
   const slug = params.linkId as string;
 
   const [bookingLink, setBookingLink] = useState<PublicBookingLink | null>(null);
@@ -67,7 +69,7 @@ export default function BookingPage() {
             <div className="text-red-500 mb-4">
               <Calendar className="h-12 w-12 mx-auto" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Link Not Available</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('linkNotAvailable')}</h2>
             <p className="text-muted-foreground">{error}</p>
           </CardContent>
         </Card>
@@ -81,10 +83,10 @@ export default function BookingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            {bookingLink?.user?.businessName || "Book an Appointment"}
+            {bookingLink?.user?.businessName || t('title')}
           </h1>
           <p className="text-muted-foreground">
-            Select a service to continue booking
+            {t('selectServiceToContinue')}
           </p>
         </div>
 
@@ -93,7 +95,7 @@ export default function BookingPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">
-                No services available at this time
+                {t('noServicesAvailable')}
               </p>
             </CardContent>
           </Card>
@@ -128,7 +130,7 @@ export default function BookingPage() {
                     )}
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 mr-1" />
-                      {option.duration} minutes
+                      {option.duration} {t('minutes')}
                     </div>
                   </div>
                 </CardContent>

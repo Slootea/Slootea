@@ -1,0 +1,583 @@
+{
+  "common": {
+    "logIn": "Giriş Yap",
+    "getStarted": "Başla",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor...",
+    "cancel": "İptal",
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı",
+    "back": "Geri",
+    "next": "İleri",
+    "submit": "Gönder",
+    "confirm": "Onayla",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "view": "Görüntüle",
+    "search": "Ara",
+    "noResults": "Sonuç bulunamadı",
+    "required": "Zorunlu",
+    "refresh": "Yenile",
+    "create": "Oluştur",
+    "update": "Güncelle",
+    "actions": "İşlemler",
+    "previous": "Önceki",
+    "viewAll": "Tümünü Gör",
+    "showing": "Gösterilen",
+    "to": "ile",
+    "of": "/",
+    "results": "sonuç",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "all": "Tümü",
+    "allServices": "Tüm Hizmetler",
+    "today": "Bugün",
+    "tomorrow": "Yarın",
+    "yes": "Evet",
+    "no": "Hayır",
+    "on": "Açık",
+    "off": "Kapalı",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı!",
+    "minutes": "dakika",
+    "hours": "saat",
+    "days": "gün",
+    "noDescription": "Açıklama yok"
+  },
+  "landing": {
+    "badge": "Ücretsiz beta sürümü artık kullanımda",
+    "heroTitle": "Boş Randevulardan Kaybedilen",
+    "heroTitleHighlight": "Geliri Geri Kazanın",
+    "heroDescription": "Randevu iş akışınızı otomatikleştirin. Akıllı onaylarla gelmeyenleri ortadan kaldırın ve iptal edilen slotları anında doldurun.",
+    "ctaButton": "Gelir Kazanmaya Başla",
+    "noCreditCard": "Kredi kartı gerekmez",
+    "freeTrial": "14 gün ücretsiz deneme",
+    "stats": {
+      "noShowReduction": "Gelmeme Oranında Azalma",
+      "automatedBooking": "Otomatik Rezervasyon",
+      "setupTime": "Kurulum Süresi",
+      "recoveryRate": "Slot Kurtarma Oranı"
+    },
+    "features": {
+      "title": "Sorunsuz çalışmanız için her şey",
+      "subtitle": "Hizmet tabanlı işletmelerin verimliliğini ve gelirini maksimize etmek için tasarlanmış güçlü özellikler.",
+      "bookingLinks": {
+        "title": "Akıllı Rezervasyon Linkleri",
+        "description": "Belirli hizmetler veya genel müsaitlik için özel rezervasyon linkleri oluşturun. Her yerde paylaşın."
+      },
+      "availability": {
+        "title": "Dinamik Müsaitlik",
+        "description": "Çalışma saatlerinizi ve engelleme kurallarınızı belirleyin. Sistem takviminizi otomatik olarak yönetir."
+      },
+      "confirmations": {
+        "title": "Randevu Öncesi Onaylar",
+        "description": "Otomatik olarak onay talepleri gönderin. Onaylamazlarsa, slot başkalarına açılır."
+      },
+      "recovery": {
+        "title": "Gelir Kurtarma",
+        "description": "Bekleme listeleri ve anlık bildirimler, son dakika iptallerini anında doldurmanıza yardımcı olur."
+      },
+      "clients": {
+        "title": "Müşteri Yönetimi",
+        "description": "Müşteri geçmişini, tercihlerini ve güvenilirlik puanlarını tek bir yerde takip edin."
+      },
+      "security": {
+        "title": "Güvenli ve Güvenilir",
+        "description": "Kurumsal düzeyde güvenlik, verilerinizi korurken %99.9 çalışma süresi sağlar."
+      }
+    },
+    "cta": {
+      "title": "Programınızı optimize etmeye hazır mısınız?",
+      "subtitle": "Rezervasyon iş akışını otomatikleştiren binlerce profesyonele katılın.",
+      "button": "Ücretsiz Başla"
+    },
+    "footer": {
+      "privacy": "Gizlilik",
+      "terms": "Şartlar",
+      "contact": "İletişim",
+      "copyright": "Tüm hakları saklıdır."
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "saving": "Kaydediliyor...",
+    "appearance": {
+      "title": "Görünüm",
+      "description": "Uygulamanın görünümünü özelleştirin",
+      "theme": "Tema",
+      "themeDescription": "Tercih ettiğiniz renk şemasını seçin",
+      "light": "Açık",
+      "dark": "Koyu",
+      "system": "Sistem"
+    },
+    "language": {
+      "title": "Dil",
+      "description": "Tercih ettiğiniz dili seçin",
+      "label": "Görüntüleme Dili",
+      "hint": "Bu, tüm uygulamanın dilini değiştirecektir"
+    },
+    "confirmation": {
+      "title": "Onay Ayarları",
+      "description": "Randevu onaylarının nasıl ve ne zaman gerekli olduğunu kontrol edin",
+      "sendReminder": "Hatırlatma gönder (randevudan kaç saat önce)",
+      "sendReminderHint": "Onay talebinin randevudan kaç saat önce gönderileceği",
+      "deadline": "Onay son tarihi (randevudan kaç saat önce)",
+      "deadlineHint": "Müşteri bu son tarihe kadar onaylamalı yoksa randevu iptal edilebilir",
+      "autoCancel": "Onaylanmamış randevuları otomatik iptal et",
+      "autoCancelHint": "Son tarihe kadar onaylanmazsa slotları otomatik olarak iptal et ve boşalt"
+    },
+    "scheduling": {
+      "title": "Planlama Ayarları",
+      "description": "Randevular için zaman tamponlarını ve limitleri yapılandırın",
+      "bufferTime": "Randevular arası tampon süresi (dakika)",
+      "bufferTimeHint": "Ardışık randevular arasındaki minimum boşluk",
+      "maxPerDay": "Günlük maksimum randevu"
+    },
+    "bookingWindow": {
+      "title": "Rezervasyon Penceresi",
+      "description": "Müşterilerin ne kadar önceden rezervasyon yapabileceğini ayarlayın",
+      "minAdvance": "Minimum önceden rezervasyon (saat)",
+      "minAdvanceHint": "Müşteriler en az bu kadar saat önceden rezervasyon yapmalıdır",
+      "maxAdvance": "Maksimum önceden rezervasyon (gün)",
+      "maxAdvanceHint": "Müşterilerin gelecekte rezervasyon yapabileceği maksimum gün sayısı"
+    },
+    "saveButton": "Ayarları Kaydet",
+    "savedSuccess": "Ayarlar başarıyla kaydedildi",
+    "saveError": "Ayarlar kaydedilemedi",
+    "loadError": "Ayarlar yüklenemedi"
+  },
+  "sidebar": {
+    "dashboard": "Panel",
+    "calendar": "Takvim",
+    "appointments": "Randevular",
+    "clients": "Müşteriler",
+    "availability": "Müsaitlik",
+    "blockedTimes": "Engelli Zamanlar",
+    "bookingLinks": "Rezervasyon Linkleri",
+    "serviceOptions": "Hizmet Seçenekleri",
+    "settings": "Ayarlar",
+    "main": "Ana Menü",
+    "configuration": "Yapılandırma",
+    "system": "Sistem"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Tekrar hoş geldiniz",
+    "overview": "Randevularınızın genel görünümü",
+    "stats": {
+      "today": "Bugün",
+      "appointments": "randevu",
+      "pending": "Bekleyen",
+      "confirmations": "onay",
+      "fillRate": "Doluluk Oranı",
+      "noShowRate": "Gelmeme",
+      "last30Days": "son 30 gün"
+    },
+    "nextClient": {
+      "title": "SONRAKİ MÜŞTERİ",
+      "startingSoon": "YAKINDA BAŞLIYOR",
+      "happeningNow": "ŞU AN GERÇEKLEŞİYOR",
+      "inProgress": "Devam Ediyor",
+      "service": "Hizmet",
+      "status": "Durum",
+      "contactDetails": "İletişim Bilgileri",
+      "notes": "Notlar"
+    },
+    "todaysSchedule": {
+      "title": "Bugünün Programı",
+      "appointmentToday": "bugün randevu",
+      "appointmentsToday": "bugün randevu",
+      "noAppointments": "Bugün için planlanmış randevu yok",
+      "moreAppointments": "randevu daha"
+    },
+    "quickShare": {
+      "title": "Hızlı Paylaşım",
+      "description": "Rezervasyon linklerinizi anında paylaşın",
+      "noLinks": "Henüz rezervasyon linki yok",
+      "createLink": "Link Oluştur",
+      "manageLinks": "Linkleri Yönet",
+      "allServices": "Tüm Hizmetler",
+      "specificService": "Belirli Hizmet",
+      "linkCopied": "Link kopyalandı!",
+      "linkCopiedDesc": "Rezervasyon linki panoya kopyalandı."
+    },
+    "performance": {
+      "title": "Performans Özeti",
+      "completedThisWeek": "bu hafta randevu",
+      "viewHistory": "Geçmişi Gör"
+    },
+    "noUpcoming": {
+      "allDone": "Şimdilik Tamamlandı!",
+      "noAppointments": "Bugün Randevu Yok",
+      "allDoneDesc": "Planlanmış tüm randevularınızı tamamladınız. Harika iş!",
+      "noAppointmentsDesc": "Programınız boş. Rezervasyon linkinizi paylaşmaya ne dersiniz?",
+      "viewSchedule": "Programı Gör"
+    }
+  },
+  "appointmentsPage": {
+    "title": "Randevular",
+    "description": "Tüm randevularınızı yönetin ve takip edin",
+    "nextAppointment": "Sonraki Randevu",
+    "happeningNow": "Şu An Gerçekleşiyor",
+    "startingSoon": "Yakında Başlıyor",
+    "inProgress": "Devam ediyor",
+    "tabs": {
+      "all": "Tümü",
+      "upcoming": "Yaklaşan",
+      "pending": "Bekleyen",
+      "confirmed": "Onaylanan",
+      "completed": "Tamamlanan",
+      "cancelled": "İptal"
+    },
+    "filters": {
+      "searchPlaceholder": "Müşteri adı veya e-posta ile ara...",
+      "allServices": "Tüm Hizmetler"
+    },
+    "table": {
+      "client": "Müşteri",
+      "service": "Hizmet",
+      "dateTime": "Tarih ve Saat",
+      "status": "Durum",
+      "actions": "İşlemler"
+    },
+    "actions": {
+      "confirm": "Onayla",
+      "complete": "Tamamla",
+      "markCompleted": "Tamamlandı Olarak İşaretle",
+      "markNoShow": "Gelmedi Olarak İşaretle",
+      "cancelAppointment": "Randevuyu İptal Et",
+      "noActionsAvailable": "Kullanılabilir işlem yok"
+    },
+    "confirmCancel": "Bu randevuyu iptal etmek istediğinizden emin misiniz?",
+    "statusUpdated": "Durum başarıyla güncellendi",
+    "appointmentCancelled": "Randevu iptal edildi",
+    "empty": {
+      "title": "Randevu bulunamadı",
+      "description": "Aradığınızı bulmak için filtrelerinizi veya arama kriterlerinizi ayarlamayı deneyin."
+    }
+  },
+  "clientsPage": {
+    "title": "Müşteriler",
+    "description": "Müşteri veritabanınızı yönetin ve randevu geçmişlerini görüntüleyin",
+    "addClient": "Müşteri Ekle",
+    "stats": {
+      "totalClients": "Toplam Müşteri",
+      "newThisMonth": "Bu Ay Yeni",
+      "repeatClients": "Tekrar Gelen Müşteri"
+    },
+    "filters": {
+      "searchPlaceholder": "Ad, e-posta veya telefon ile ara..."
+    },
+    "table": {
+      "client": "Müşteri",
+      "contact": "İletişim",
+      "appointments": "Randevular",
+      "lastVisit": "Son Ziyaret",
+      "actions": "İşlemler",
+      "hasNotes": "Notları var",
+      "completed": "tamamlandı",
+      "never": "Hiç"
+    },
+    "actions": {
+      "viewDetails": "Detayları Gör",
+      "edit": "Düzenle",
+      "delete": "Sil"
+    },
+    "detail": {
+      "clientSince": "Müşteri olduğundan beri",
+      "contactInfo": "İletişim Bilgileri",
+      "appointmentStats": "Randevu İstatistikleri",
+      "total": "Toplam",
+      "completed": "Tamamlanan",
+      "cancelled": "İptal",
+      "noShows": "Gelmedi",
+      "notes": "Notlar",
+      "noNotes": "Henüz not eklenmedi",
+      "appointmentHistory": "Randevu Geçmişi",
+      "noHistory": "Randevu geçmişi yok"
+    },
+    "form": {
+      "editTitle": "Müşteriyi Düzenle",
+      "addTitle": "Yeni Müşteri Ekle",
+      "editDescription": "Müşteri bilgilerini ve notları güncelleyin",
+      "addDescription": "Veritabanınıza yeni bir müşteri ekleyin",
+      "name": "Ad",
+      "namePlaceholder": "Ahmet Yılmaz",
+      "phone": "Telefon Numarası",
+      "phonePlaceholder": "+90 555 123 4567",
+      "phoneCannotChange": "Telefon numarası müşteri kimliği için kullanıldığından değiştirilemez",
+      "email": "E-posta",
+      "emailPlaceholder": "ahmet@example.com",
+      "notes": "Notlar",
+      "notesPlaceholder": "Bu müşteri hakkında notlar ekleyin...",
+      "nameRequired": "Ad ve telefon numarası gereklidir",
+      "saveChanges": "Değişiklikleri Kaydet"
+    },
+    "delete": {
+      "title": "Müşteriyi Sil",
+      "description": "{name} silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm müşteri verileri kaldırılır."
+    },
+    "messages": {
+      "updated": "Müşteri başarıyla güncellendi",
+      "created": "Müşteri başarıyla oluşturuldu",
+      "deleted": "Müşteri başarıyla silindi"
+    },
+    "empty": {
+      "title": "Henüz müşteri yok",
+      "description": "Müşteriler ilk randevularını aldıklarında otomatik olarak eklenecek veya manuel olarak ekleyebilirsiniz.",
+      "addFirst": "İlk Müşterinizi Ekleyin"
+    }
+  },
+  "appointments": {
+    "title": "Randevular",
+    "new": "Yeni Randevu",
+    "upcoming": "Yaklaşan",
+    "past": "Geçmiş",
+    "cancelled": "İptal Edilen",
+    "status": {
+      "pending": "Beklemede",
+      "confirmed": "Onaylandı",
+      "cancelled": "İptal Edildi",
+      "completed": "Tamamlandı",
+      "noShow": "Gelmedi"
+    }
+  },
+  "booking": {
+    "title": "Randevu Al",
+    "selectServiceToContinue": "Rezervasyona devam etmek için bir hizmet seçin",
+    "selectService": "Bir hizmet seçin",
+    "selectServiceFirst": "Lütfen önce bir hizmet seçin",
+    "selectDate": "Tarih Seçin",
+    "selectTime": "Bir saat seçin",
+    "selectDateFirst": "Uygun saatleri görmek için lütfen bir tarih seçin",
+    "availableTimes": "Uygun Saatler",
+    "noAvailableTimes": "Bu tarihte uygun saat bulunmuyor",
+    "noServicesAvailable": "Şu anda mevcut hizmet bulunmuyor",
+    "linkNotAvailable": "Link Kullanılamıyor",
+    "yourInformation": "Bilgileriniz",
+    "yourDetails": "Bilgileriniz",
+    "name": "Ad",
+    "namePlaceholder": "Adınız soyadınız",
+    "nameRequired": "Ad Gerekli",
+    "pleaseEnterName": "Lütfen adınızı girin",
+    "email": "E-posta",
+    "emailOptional": "E-posta (isteğe bağlı)",
+    "emailPlaceholder": "email@adresiniz.com",
+    "phone": "Telefon",
+    "phonePlaceholder": "+90 555 123 4567",
+    "phoneRequired": "Telefon Gerekli",
+    "pleaseEnterPhone": "Lütfen telefon numaranızı girin",
+    "notes": "Notlar (isteğe bağlı)",
+    "appointmentSummary": "Randevu Özeti",
+    "confirmBooking": "Rezervasyonu Onayla",
+    "bookingInProgress": "Rezerve ediliyor...",
+    "bookingConfirmed": "Rezervasyon Onaylandı!",
+    "bookingSuccess": "Randevunuz başarıyla oluşturuldu",
+    "bookingSuccessMessage": "Randevunuz başarıyla planlandı. Detayları içeren bir onay mesajı alacaksınız.",
+    "bookingFailed": "Rezervasyon Başarısız",
+    "bookingError": "Rezervasyon tamamlanamadı",
+    "backToServices": "Hizmetlere Dön",
+    "bookAnother": "Başka Randevu Al",
+    "importantNote": "Önemli:",
+    "confirmationReminder": "Randevunuzdan önce bir onay talebi alabilirsiniz. Lütfen yerinizi korumak için katılımınızı onaylayın.",
+    "minutes": "dakika",
+    "failedToLoad": "Rezervasyon bilgileri yüklenemedi",
+    "failedToLoadSlots": "Uygun saatler yüklenemedi"
+  },
+  "clients": {
+    "title": "Müşteriler",
+    "addClient": "Müşteri Ekle",
+    "noClients": "Henüz müşteri yok",
+    "totalAppointments": "Toplam Randevu",
+    "lastVisit": "Son Ziyaret"
+  },
+  "availability": {
+    "title": "Müsaitlik",
+    "description": "Randevular için ne zaman müsait olduğunuzu belirleyin. Gerekirse belirli hizmetler için farklı saatler ayarlayın.",
+    "addTimeSlot": "Zaman Dilimi Ekle",
+    "noAvailability": "Müsaitlik ayarlanmadı",
+    "allServices": "Tüm hizmetler",
+    "dayOfWeek": {
+      "0": "Pazartesi",
+      "1": "Salı",
+      "2": "Çarşamba",
+      "3": "Perşembe",
+      "4": "Cuma",
+      "5": "Cumartesi",
+      "6": "Pazar"
+    },
+    "dialog": {
+      "title": "Müsaitlik Dilimi Ekle",
+      "dayOfWeek": "Haftanın Günü",
+      "startTime": "Başlangıç Saati",
+      "endTime": "Bitiş Saati",
+      "service": "Hizmet (İsteğe Bağlı)",
+      "serviceHint": "Tüm hizmetlere uygulamak için boş bırakın"
+    },
+    "messages": {
+      "created": "Müsaitlik dilimi oluşturuldu",
+      "deleted": "Müsaitlik dilimi silindi",
+      "updated": "Müsaitlik güncellendi"
+    }
+  },
+  "blocksPage": {
+    "title": "Engelli Zamanlar",
+    "description": "Müsait olmadığınız belirli tarihleri veya zaman aralıklarını engelleyin.",
+    "blockTime": "Zaman Engelle",
+    "upcomingBlocked": "Yaklaşan Engelli Zamanlar",
+    "pastBlocked": "Geçmiş Engelli Zamanlar",
+    "fullDay": "Tüm gün",
+    "empty": {
+      "title": "Henüz engelli zaman yok",
+      "description": "Müsait olmadığınız zamanları engelleyin."
+    },
+    "dialog": {
+      "title": "Zaman Engelle",
+      "date": "Tarih",
+      "blockEntireDay": "Tüm günü engelle",
+      "startTime": "Başlangıç Saati",
+      "endTime": "Bitiş Saati",
+      "reason": "Sebep (İsteğe Bağlı)",
+      "reasonPlaceholder": "örn., Tatil, Kişisel randevu"
+    },
+    "messages": {
+      "created": "Engelli zaman oluşturuldu",
+      "deleted": "Engelli zaman silindi"
+    }
+  },
+  "linksPage": {
+    "title": "Rezervasyon Linkleri",
+    "description": "Müşterilerin randevu alması için paylaşılabilir linkler oluşturun.",
+    "createLink": "Link Oluştur",
+    "bookingLink": "Rezervasyon Linki",
+    "allServices": "Tüm hizmetler",
+    "specificService": "Hizmet:",
+    "campaignLink": "Kampanya linki",
+    "expires": "Bitiş:",
+    "empty": {
+      "title": "Henüz rezervasyon linki yok",
+      "description": "İlkini oluşturun!",
+      "createFirst": "Rezervasyon Linki Oluştur"
+    },
+    "dialog": {
+      "title": "Rezervasyon Linki Oluştur",
+      "name": "Ad (İsteğe Bağlı)",
+      "namePlaceholder": "örn., Yaz Kampanyası, Ana Rezervasyon",
+      "linkType": "Link Türü",
+      "types": {
+        "allServices": "Tüm Hizmetler",
+        "specificService": "Belirli Hizmet",
+        "campaign": "Kampanya"
+      },
+      "service": "Hizmet",
+      "selectService": "Bir hizmet seçin",
+      "expirationDate": "Bitiş Tarihi (İsteğe Bağlı)"
+    },
+    "actions": {
+      "copy": "Kopyala",
+      "open": "Aç"
+    },
+    "messages": {
+      "created": "Rezervasyon linki oluşturuldu",
+      "deleted": "Rezervasyon linki silindi",
+      "updated": "Rezervasyon linki güncellendi",
+      "copied": "Link kopyalandı!",
+      "copiedDesc": "Rezervasyon linki panoya kopyalandı."
+    },
+    "confirmDelete": "Bu rezervasyon linkini silmek istediğinizden emin misiniz?"
+  },
+  "optionsPage": {
+    "title": "Hizmet Seçenekleri",
+    "description": "Müşterilerin rezervasyon yapabileceği hizmetleri tanımlayın. Her seçeneğin kendi süresi vardır.",
+    "addService": "Hizmet Ekle",
+    "empty": {
+      "title": "Henüz hizmet seçeneği yok",
+      "description": "İlkini oluşturun!",
+      "createFirst": "Hizmet Seçeneği Oluştur"
+    },
+    "dialog": {
+      "editTitle": "Hizmet Seçeneğini Düzenle",
+      "createTitle": "Hizmet Seçeneği Oluştur",
+      "title": "Başlık",
+      "titlePlaceholder": "örn., Saç Kesimi, Danışmanlık",
+      "description": "Açıklama",
+      "descriptionPlaceholder": "Bu hizmeti tanımlayın...",
+      "imageUrl": "Resim URL'si (isteğe bağlı)",
+      "imageUrlPlaceholder": "https://example.com/resim.jpg",
+      "duration": "Süre (dakika)"
+    },
+    "confirmDelete": "Bu hizmet seçeneğini silmek istediğinizden emin misiniz?",
+    "messages": {
+      "created": "Hizmet seçeneği oluşturuldu",
+      "updated": "Hizmet seçeneği güncellendi",
+      "deleted": "Hizmet seçeneği silindi"
+    }
+  },
+  "calendarPage": {
+    "title": "Takvim",
+    "week": "Hafta",
+    "day": "Gün",
+    "today": "Bugün",
+    "legend": {
+      "confirmed": "Onaylandı",
+      "pending": "Beklemede",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal",
+      "available": "Müsait",
+      "blocked": "Engelli",
+      "dragToReschedule": "Yeniden planlamak için sürükleyin"
+    },
+    "editDialog": {
+      "title": "Randevuyu Düzenle",
+      "description": "Randevu saatini güncelleyin. Müşteri değişiklikler hakkında bilgilendirilecek.",
+      "currentTime": "Mevcut Saat",
+      "newDate": "Yeni Tarih",
+      "newTime": "Yeni Saat",
+      "newAppointmentTime": "Yeni randevu saati:",
+      "notifyClient": "Müşteriyi Bilgilendir",
+      "notifyClientDesc": "Saat değişikliği hakkında e-posta/SMS bildirimi gönder",
+      "saveChanges": "Değişiklikleri Kaydet"
+    },
+    "swapDialog": {
+      "swapTitle": "Randevu Saatlerini Değiştir",
+      "moveTitle": "Randevuyu Taşı",
+      "swapDescription": "Randevular çakışıyor. Saatleri değiştirilecek.",
+      "moveDescription": "Yeni randevu saatini onaylayın.",
+      "currentTime": "Mevcut Saat",
+      "newTime": "Yeni Saat",
+      "notifyClients": "Müşterileri Bilgilendir",
+      "notifyClientDesc": "Saat değişikliği hakkında e-posta/SMS bildirimi gönder",
+      "swapTimes": "Saatleri Değiştir",
+      "moveAppointment": "Randevuyu Taşı"
+    },
+    "messages": {
+      "appointmentsSwapped": "Randevular değiştirildi",
+      "bothNotified": "Her iki müşteri de saat değişiklikleri hakkında bilgilendirildi",
+      "swappedSuccess": "Randevu saatleri başarıyla değiştirildi",
+      "appointmentMoved": "Randevu taşındı",
+      "clientNotified": "Müşteri saat değişikliği hakkında bilgilendirildi",
+      "movedSuccess": "Randevu saati başarıyla değiştirildi",
+      "appointmentUpdated": "Randevu güncellendi",
+      "cannotEdit": "Düzenlenemez",
+      "cannotModify": "Bu randevu değiştirilemez"
+    }
+  },
+  "layoutPage": {
+    "overview": "Genel Bakış"
+  },
+  "confirm": {
+    "title": "Katılımınızı Onaylayın",
+    "confirmed": "Katılım Onaylandı!",
+    "linkInvalid": "Link Geçersiz",
+    "appointmentCancelled": "Randevu İptal Edildi",
+    "appointmentCancelledMessage": "Bu randevu iptal edilmiş ve artık geçerli değil.",
+    "unableToLoad": "Randevu detayları yüklenemedi",
+    "warningMessage": "Lütfen bu randevuya katılacağınızı onaylayın. Onaylamazsanız, yeriniz diğer müşterilere açılabilir.",
+    "confirmButton": "Evet, Katılacağım",
+    "confirming": "Onaylanıyor...",
+    "thankYou": "Onayladığınız için teşekkürler! Sizi görmeyi dört gözle bekliyoruz.",
+    "confirmSuccess": "Katılımınız onaylanmıştır",
+    "confirmError": "Onaylama başarısız"
+  }
+}

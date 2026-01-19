@@ -11,17 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
-
-const navItems = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/calendar", label: "Calendar" },
-  { href: "/dashboard/options", label: "Service Options" },
-  { href: "/dashboard/availability", label: "Availability" },
-  { href: "/dashboard/blocks", label: "Blocked Times" },
-  { href: "/dashboard/appointments", label: "Appointments" },
-  { href: "/dashboard/links", label: "Booking Links" },
-  { href: "/dashboard/settings", label: "Settings" },
-];
+import { useTranslations } from "next-intl";
 
 export default function DashboardLayout({
   children,
@@ -32,6 +22,19 @@ export default function DashboardLayout({
   const { user } = useUser();
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("sidebar");
+  const tLayout = useTranslations("layoutPage");
+
+  const navItems = [
+    { href: "/dashboard", label: tLayout("overview") },
+    { href: "/dashboard/calendar", label: t("calendar") },
+    { href: "/dashboard/options", label: t("serviceOptions") },
+    { href: "/dashboard/availability", label: t("availability") },
+    { href: "/dashboard/blocks", label: t("blockedTimes") },
+    { href: "/dashboard/appointments", label: t("appointments") },
+    { href: "/dashboard/links", label: t("bookingLinks") },
+    { href: "/dashboard/settings", label: t("settings") },
+  ];
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -66,7 +69,7 @@ export default function DashboardLayout({
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <h1 className="text-xl font-semibold">
-            {navItems.find((item) => item.href === pathname)?.label || "Dashboard"}
+            {navItems.find((item) => item.href === pathname)?.label || t("dashboard")}
           </h1>
           <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-muted-foreground">

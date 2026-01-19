@@ -62,10 +62,13 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isToday, isTomorrow, isPast, differenceInMinutes } from "date-fns";
+import { useTranslations } from "next-intl";
 
 export default function AppointmentsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("appointmentsPage");
+  const tCommon = useTranslations("common");
 
   // State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -153,8 +156,8 @@ export default function AppointmentsPage() {
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({
-        title: "Error",
-        description: "Failed to load appointments",
+        title: tCommon("error"),
+        description: t("messages.loadFailed"),
         variant: "destructive",
       });
     } finally {
@@ -175,28 +178,28 @@ export default function AppointmentsPage() {
   const handleStatusChange = async (id: string, status: AppointmentStatus) => {
     try {
       await appointmentsApi.update(id, { status });
-      toast({ title: "Status updated successfully" });
+      toast({ title: t("messages.statusUpdated") });
       fetchData(true);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update status",
+        title: tCommon("error"),
+        description: t("messages.statusUpdateFailed"),
         variant: "destructive",
       });
     }
   };
 
   const handleCancel = async (id: string) => {
-    if (!confirm("Are you sure you want to cancel this appointment?")) return;
+    if (!confirm(t("confirmCancel"))) return;
 
     try {
       await appointmentsApi.cancel(id);
-      toast({ title: "Appointment cancelled" });
+      toast({ title: t("messages.cancelled") });
       fetchData(true);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to cancel appointment",
+        title: tCommon("error"),
+        description: t("messages.cancelFailed"),
         variant: "destructive",
       });
     }

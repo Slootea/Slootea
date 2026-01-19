@@ -28,10 +28,13 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Copy, Trash2, Link2, ExternalLink } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useTranslations } from "next-intl";
 
 export default function BookingLinksPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("linksPage");
+  const tCommon = useTranslations("common");
   const [links, setLinks] = useState<BookingLink[]>([]);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +79,7 @@ export default function BookingLinksPage() {
             : undefined,
         expiresAt: formData.expiresAt || undefined,
       });
-      toast({ title: "Booking link created" });
+      toast({ title: t("messages.created") });
       setDialogOpen(false);
       setFormData({
         name: "",
@@ -87,24 +90,24 @@ export default function BookingLinksPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create booking link",
+        title: tCommon("error"),
+        description: t("messages.created"),
         variant: "destructive",
       });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this booking link?")) return;
+    if (!confirm(t("confirmDelete"))) return;
 
     try {
       await bookingLinksApi.delete(id);
-      toast({ title: "Booking link deleted" });
+      toast({ title: t("messages.deleted") });
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete booking link",
+        title: tCommon("error"),
+        description: t("messages.deleted"),
         variant: "destructive",
       });
     }
@@ -116,8 +119,8 @@ export default function BookingLinksPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update booking link",
+        title: tCommon("error"),
+        description: t("messages.updated"),
         variant: "destructive",
       });
     }
@@ -127,8 +130,8 @@ export default function BookingLinksPage() {
     const url = `${window.location.origin}/book/${slug}`;
     navigator.clipboard.writeText(url);
     toast({
-      title: "Link copied!",
-      description: "Booking link has been copied to clipboard.",
+      title: t("messages.copied"),
+      description: t("messages.copiedDesc"),
     });
   };
 
@@ -148,11 +151,11 @@ export default function BookingLinksPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-muted-foreground">
-          Create shareable links for clients to book appointments.
+          {t("description")}
         </p>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Create Link
+          {t("createLink")}
         </Button>
       </div>
 
@@ -161,11 +164,11 @@ export default function BookingLinksPage() {
           <CardContent className="py-12 text-center">
             <Link2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-4">
-              No booking links yet. Create your first one!
+              {t("empty.title")} {t("empty.description")}
             </p>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Booking Link
+              {t("empty.createFirst")}
             </Button>
           </CardContent>
         </Card>
@@ -181,19 +184,19 @@ export default function BookingLinksPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">
-                        {link.name || `Booking Link`}
+                        {link.name || t("bookingLink")}
                       </h3>
                       <Badge variant={link.isActive ? "default" : "secondary"}>
-                        {link.isActive ? "Active" : "Inactive"}
+                        {link.isActive ? tCommon("active") : tCommon("inactive")}
                       </Badge>
                     </div>
 
                     <p className="text-sm text-muted-foreground">
                       {link.type === BookingLinkType.ALL_OPTIONS
-                        ? "All services"
+                        ? t("allServices")
                         : link.type === BookingLinkType.SPECIFIC_OPTION
-                        ? `Service: ${link.serviceOption?.title || "Specific service"}`
-                        : "Campaign link"}
+                        ? `${t("specificService")} ${link.serviceOption?.title || ""}`
+                        : t("campaignLink")}
                     </p>
 
                     <div className="flex items-center gap-2 text-sm">
@@ -204,7 +207,7 @@ export default function BookingLinksPage() {
 
                     {link.expiresAt && (
                       <p className="text-xs text-muted-foreground">
-                        Expires: {format(parseISO(link.expiresAt), "PPP")}
+                        {t("expires")} {format(parseISO(link.expiresAt), "PPP")}
                       </p>
                     )}
                   </div>
@@ -216,7 +219,7 @@ export default function BookingLinksPage() {
                       onClick={() => copyToClipboard(link.slug)}
                     >
                       <Copy className="h-4 w-4 mr-1" />
-                      Copy
+                      {t("actions.copy")}
                     </Button>
                     <a
                       href={getBookingUrl(link.slug)}
@@ -250,22 +253,22 @@ export default function BookingLinksPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Booking Link</DialogTitle>
+            <DialogTitle>{t("dialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name (Optional)</Label>
+              <Label htmlFor="name">{t("dialog.name")}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="e.g., Summer Campaign, Main Booking"
+                placeholder={t("dialog.namePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Link Type</Label>
+              <Label>{t("dialog.linkType")}</Label>
               <Select
                 value={formData.type}
                 onValueChange={(v) =>
@@ -277,20 +280,20 @@ export default function BookingLinksPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={BookingLinkType.ALL_OPTIONS}>
-                    All Services
+                    {t("dialog.types.allServices")}
                   </SelectItem>
                   <SelectItem value={BookingLinkType.SPECIFIC_OPTION}>
-                    Specific Service
+                    {t("dialog.types.specificService")}
                   </SelectItem>
                   <SelectItem value={BookingLinkType.CAMPAIGN}>
-                    Campaign
+                    {t("dialog.types.campaign")}
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {formData.type === BookingLinkType.SPECIFIC_OPTION && (
               <div className="space-y-2">
-                <Label>Service</Label>
+                <Label>{t("dialog.service")}</Label>
                 <Select
                   value={formData.serviceOptionId}
                   onValueChange={(v) =>
@@ -298,7 +301,7 @@ export default function BookingLinksPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a service" />
+                    <SelectValue placeholder={t("dialog.selectService")} />
                   </SelectTrigger>
                   <SelectContent>
                     {serviceOptions.map((opt) => (
@@ -311,7 +314,7 @@ export default function BookingLinksPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="expiresAt">Expiration Date (Optional)</Label>
+              <Label htmlFor="expiresAt">{t("dialog.expirationDate")}</Label>
               <Input
                 id="expiresAt"
                 type="date"
@@ -324,7 +327,7 @@ export default function BookingLinksPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button
               onClick={handleCreate}
@@ -333,7 +336,7 @@ export default function BookingLinksPage() {
                 !formData.serviceOptionId
               }
             >
-              Create Link
+              {t("createLink")}
             </Button>
           </DialogFooter>
         </DialogContent>

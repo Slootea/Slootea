@@ -4,6 +4,7 @@ import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   Sidebar,
@@ -18,26 +19,27 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 
-const mainNavItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarRange },
-  { href: "/dashboard/appointments", label: "Appointments", icon: Calendar },
-  { href: "/dashboard/clients", label: "Clients", icon: Users },
-];
-
-const configNavItems = [
-  { href: "/dashboard/options", label: "Service Options", icon: List },
-  { href: "/dashboard/availability", label: "Availability", icon: Clock },
-  { href: "/dashboard/blocks", label: "Blocked Times", icon: CalendarX },
-  { href: "/dashboard/links", label: "Booking Links", icon: Link2 },
-];
-
-const settingsNavItems = [
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
-
 export function AppSidebar() {
   const pathname = usePathname();
+  const t = useTranslations('sidebar');
+
+  const mainNavItems = [
+    { href: "/dashboard", label: t('dashboard'), icon: LayoutDashboard },
+    { href: "/dashboard/calendar", label: t('calendar'), icon: CalendarRange },
+    { href: "/dashboard/appointments", label: t('appointments'), icon: Calendar },
+    { href: "/dashboard/clients", label: t('clients'), icon: Users },
+  ];
+
+  const configNavItems = [
+    { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
+    { href: "/dashboard/availability", label: t('availability'), icon: Clock },
+    { href: "/dashboard/blocks", label: t('blockedTimes'), icon: CalendarX },
+    { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
+  ];
+
+  const settingsNavItems = [
+    { href: "/dashboard/settings", label: t('settings'), icon: Settings },
+  ];
 
   return (
     <Sidebar>
@@ -94,7 +96,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('main')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
@@ -114,7 +116,7 @@ export function AppSidebar() {
         <SidebarSeparator />
 
         <SidebarGroup>
-          <SidebarGroupLabel>Configuration</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('configuration')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {configNavItems.map((item) => (
@@ -134,7 +136,7 @@ export function AppSidebar() {
         <SidebarSeparator />
 
         <SidebarGroup>
-          <SidebarGroupLabel>System</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('system')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {settingsNavItems.map((item) => (

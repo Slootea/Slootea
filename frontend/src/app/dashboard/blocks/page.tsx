@@ -21,10 +21,13 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2, CalendarX } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useTranslations } from "next-intl";
 
 export default function BlockedTimesPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("blocksPage");
+  const tCommon = useTranslations("common");
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -63,7 +66,7 @@ export default function BlockedTimesPage() {
         isFullDay: formData.isFullDay,
         reason: formData.reason || undefined,
       });
-      toast({ title: "Blocked time created" });
+      toast({ title: t("messages.created") });
       setDialogOpen(false);
       setFormData({
         date: format(new Date(), "yyyy-MM-dd"),
@@ -75,8 +78,8 @@ export default function BlockedTimesPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create blocked time",
+        title: tCommon("error"),
+        description: t("messages.created"),
         variant: "destructive",
       });
     }
@@ -85,12 +88,12 @@ export default function BlockedTimesPage() {
   const handleDelete = async (id: string) => {
     try {
       await blockedTimesApi.delete(id);
-      toast({ title: "Blocked time deleted" });
+      toast({ title: t("messages.deleted") });
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete blocked time",
+        title: tCommon("error"),
+        description: t("messages.deleted"),
         variant: "destructive",
       });
     }
@@ -117,11 +120,11 @@ export default function BlockedTimesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-muted-foreground">
-          Block specific dates or time ranges when you&apos;re not available.
+          {t("description")}
         </p>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Block Time
+          {t("blockTime")}
         </Button>
       </div>
 
@@ -130,11 +133,11 @@ export default function BlockedTimesPage() {
           <CardContent className="py-12 text-center">
             <CalendarX className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-4">
-              No blocked times yet. Block times when you&apos;re unavailable.
+              {t("empty.title")} {t("empty.description")}
             </p>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Block Time
+              {t("blockTime")}
             </Button>
           </CardContent>
         </Card>
@@ -143,7 +146,7 @@ export default function BlockedTimesPage() {
           {upcoming.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Upcoming Blocked Times</CardTitle>
+                <CardTitle>{t("upcomingBlocked")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -152,6 +155,7 @@ export default function BlockedTimesPage() {
                       key={bt.id}
                       blockedTime={bt}
                       onDelete={handleDelete}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -163,7 +167,7 @@ export default function BlockedTimesPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-muted-foreground">
-                  Past Blocked Times
+                  {t("pastBlocked")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -173,6 +177,7 @@ export default function BlockedTimesPage() {
                       key={bt.id}
                       blockedTime={bt}
                       onDelete={handleDelete}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -186,11 +191,11 @@ export default function BlockedTimesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Block Time</DialogTitle>
+            <DialogTitle>{t("dialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">{t("dialog.date")}</Label>
               <Input
                 id="date"
                 type="date"
@@ -208,12 +213,12 @@ export default function BlockedTimesPage() {
                   setFormData({ ...formData, isFullDay: checked })
                 }
               />
-              <Label htmlFor="isFullDay">Block entire day</Label>
+              <Label htmlFor="isFullDay">{t("dialog.blockEntireDay")}</Label>
             </div>
             {!formData.isFullDay && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startTime">Start Time</Label>
+                  <Label htmlFor="startTime">{t("dialog.startTime")}</Label>
                   <Input
                     id="startTime"
                     type="time"
@@ -224,7 +229,7 @@ export default function BlockedTimesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endTime">End Time</Label>
+                  <Label htmlFor="endTime">{t("dialog.endTime")}</Label>
                   <Input
                     id="endTime"
                     type="time"
@@ -237,23 +242,23 @@ export default function BlockedTimesPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason (Optional)</Label>
+              <Label htmlFor="reason">{t("dialog.reason")}</Label>
               <Textarea
                 id="reason"
                 value={formData.reason}
                 onChange={(e) =>
                   setFormData({ ...formData, reason: e.target.value })
                 }
-                placeholder="e.g., Vacation, Personal appointment"
+                placeholder={t("dialog.reasonPlaceholder")}
                 rows={2}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
-            <Button onClick={handleCreate}>Block Time</Button>
+            <Button onClick={handleCreate}>{t("blockTime")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -264,9 +269,11 @@ export default function BlockedTimesPage() {
 function BlockedTimeItem({
   blockedTime,
   onDelete,
+  t,
 }: {
   blockedTime: BlockedTime;
   onDelete: (id: string) => void;
+  t: any;
 }) {
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border bg-white">
@@ -276,7 +283,7 @@ function BlockedTimeItem({
         </p>
         <p className="text-sm text-muted-foreground">
           {blockedTime.isFullDay
-            ? "Full day"
+            ? t("fullDay")
             : `${blockedTime.startTime} - ${blockedTime.endTime}`}
           {blockedTime.reason && ` • ${blockedTime.reason}`}
         </p>

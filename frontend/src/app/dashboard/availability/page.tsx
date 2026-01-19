@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { availabilityApi, serviceOptionsApi, setAuthToken } from "@/lib/api";
-import { Availability, ServiceOption, DayOfWeek, DayOfWeekLabels } from "@/lib/types";
+import { Availability, ServiceOption, DayOfWeek } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,10 +26,13 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2, Clock } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function AvailabilityPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("availability");
+  const tCommon = useTranslations("common");
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,13 +72,13 @@ export default function AvailabilityPage() {
         ...formData,
         serviceOptionId: formData.serviceOptionId || undefined,
       });
-      toast({ title: "Availability slot created" });
+      toast({ title: t("messages.created") });
       setDialogOpen(false);
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create availability",
+        title: tCommon("error"),
+        description: t("messages.created"),
         variant: "destructive",
       });
     }
@@ -84,12 +87,12 @@ export default function AvailabilityPage() {
   const handleDelete = async (id: string) => {
     try {
       await availabilityApi.delete(id);
-      toast({ title: "Availability slot deleted" });
+      toast({ title: t("messages.deleted") });
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete availability",
+        title: tCommon("error"),
+        description: t("messages.deleted"),
         variant: "destructive",
       });
     }
@@ -103,8 +106,8 @@ export default function AvailabilityPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update availability",
+        title: tCommon("error"),
+        description: t("messages.updated"),
         variant: "destructive",
       });
     }
@@ -129,12 +132,11 @@ export default function AvailabilityPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-muted-foreground">
-          Define when you&apos;re available for appointments. Set different hours for
-          specific services if needed.
+          {t("description")}
         </p>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Time Slot
+          {t("addTimeSlot")}
         </Button>
       </div>
 
@@ -145,14 +147,14 @@ export default function AvailabilityPage() {
             <Card key={day}>
               <CardHeader className="py-4">
                 <CardTitle className="text-lg">
-                  {DayOfWeekLabels[day as DayOfWeek]}
+                  {t(`dayOfWeek.${day}`)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!groupedByDay[day as DayOfWeek] ||
                 groupedByDay[day as DayOfWeek].length === 0 ? (
                   <p className="text-muted-foreground text-sm">
-                    No availability set
+                    {t("noAvailability")}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -175,7 +177,7 @@ export default function AvailabilityPage() {
                           )}
                           {!av.serviceOptionId && (
                             <span className="text-sm text-muted-foreground">
-                              All services
+                              {t("allServices")}
                             </span>
                           )}
                         </div>
@@ -205,11 +207,11 @@ export default function AvailabilityPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Availability Slot</DialogTitle>
+            <DialogTitle>{t("dialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Day of Week</Label>
+              <Label>{t("dialog.dayOfWeek")}</Label>
               <Select
                 value={formData.dayOfWeek.toString()}
                 onValueChange={(v) =>
@@ -220,17 +222,19 @@ export default function AvailabilityPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(DayOfWeekLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
+                  {Object.values(DayOfWeek)
+                    .filter((d) => typeof d === "number")
+                    .map((value) => (
+                      <SelectItem key={value} value={value.toString()}>
+                        {t(`dayOfWeek.${value}`)}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startTime">Start Time</Label>
+                <Label htmlFor="startTime">{t("dialog.startTime")}</Label>
                 <Input
                   id="startTime"
                   type="time"
@@ -241,7 +245,7 @@ export default function AvailabilityPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
+                <Label htmlFor="endTime">{t("dialog.endTime")}</Label>
                 <Input
                   id="endTime"
                   type="time"
@@ -253,7 +257,7 @@ export default function AvailabilityPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Service (Optional)</Label>
+              <Label>{t("dialog.service")}</Label>
               <Select
                 value={formData.serviceOptionId || "__all__"}
                 onValueChange={(v) =>
@@ -261,10 +265,10 @@ export default function AvailabilityPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All services" />
+                  <SelectValue placeholder={tCommon("allServices")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">All services</SelectItem>
+                  <SelectItem value="__all__">{tCommon("allServices")}</SelectItem>
                   {serviceOptions.map((opt) => (
                     <SelectItem key={opt.id} value={opt.id}>
                       {opt.title}
@@ -273,15 +277,15 @@ export default function AvailabilityPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Leave empty to apply this slot to all services
+                {t("dialog.serviceHint")}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
-            <Button onClick={handleCreate}>Create</Button>
+            <Button onClick={handleCreate}>{tCommon("create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

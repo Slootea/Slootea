@@ -28,10 +28,14 @@ import {
 import { format, parseISO, formatDistanceToNow, differenceInMinutes, isAfter } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function DashboardPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
+  const tAppointments = useTranslations("appointments");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [bookingLinks, setBookingLinks] = useState<BookingLink[]>([]);
@@ -64,8 +68,8 @@ export default function DashboardPage() {
     const url = `${window.location.origin}/book/${slug}`;
     navigator.clipboard.writeText(url);
     toast({
-      title: "Link copied!",
-      description: "Booking link has been copied to clipboard.",
+      title: t("quickShare.linkCopied"),
+      description: t("quickShare.linkCopiedDesc"),
     });
   };
 
@@ -92,30 +96,30 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard
-          title="Today"
+          title={t("stats.today")}
           value={stats?.todayAppointments || 0}
-          subtitle="appointments"
+          subtitle={t("stats.appointments")}
           icon={<Calendar className="h-5 w-5" />}
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
-          title="Pending"
+          title={t("stats.pending")}
           value={stats?.pendingConfirmations || 0}
-          subtitle="confirmations"
+          subtitle={t("stats.confirmations")}
           icon={<AlertCircle className="h-5 w-5" />}
           gradient="from-amber-500 to-orange-500"
         />
         <StatCard
-          title="Fill Rate"
+          title={t("stats.fillRate")}
           value={`${stats?.fillRate || 0}%`}
-          subtitle="last 30 days"
+          subtitle={t("stats.last30Days")}
           icon={<TrendingUp className="h-5 w-5" />}
           gradient="from-emerald-500 to-green-500"
         />
         <StatCard
-          title="No-Show"
+          title={t("stats.noShowRate")}
           value={`${stats?.noShowRate || 0}%`}
-          subtitle="last 30 days"
+          subtitle={t("stats.last30Days")}
           icon={<TrendingDown className="h-5 w-5" />}
           gradient="from-rose-500 to-red-500"
         />
@@ -127,9 +131,9 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Next Client Card */}
           {nextAppointment ? (
-            <NextClientCard appointment={nextAppointment} />
+            <NextClientCard appointment={nextAppointment} t={t} tAppointments={tAppointments} />
           ) : (
-            <NoUpcomingCard hasAppointments={todayAppointments.length > 0} />
+            <NoUpcomingCard hasAppointments={todayAppointments.length > 0} t={t} />
           )}
 
           {/* Today's Schedule List */}
@@ -139,15 +143,15 @@ export default function DashboardPage() {
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <CalendarCheck className="h-5 w-5 text-primary" />
-                    Today&apos;s Schedule
+                    {t("todaysSchedule.title")}
                   </CardTitle>
                   <CardDescription>
-                    {todayAppointments.length} appointment{todayAppointments.length !== 1 ? "s" : ""} today
+                    {todayAppointments.length} {todayAppointments.length !== 1 ? t("todaysSchedule.appointmentsToday") : t("todaysSchedule.appointmentToday")}
                   </CardDescription>
                 </div>
                 <Link href="/dashboard/appointments">
                   <Button variant="ghost" size="sm" className="gap-1">
-                    View All
+                    {tCommon("viewAll")}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -160,19 +164,19 @@ export default function DashboardPage() {
                     <Calendar className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">
-                    No appointments scheduled for today
+                    {t("todaysSchedule.noAppointments")}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {remainingAppointments.slice(0, 5).map((apt, index) => (
-                    <ScheduleItem key={apt.id} appointment={apt} index={index} />
+                    <ScheduleItem key={apt.id} appointment={apt} index={index} tAppointments={tAppointments} />
                   ))}
                   {remainingAppointments.length > 5 && (
                     <div className="pt-2">
                       <Link href="/dashboard/appointments">
                         <Button variant="outline" className="w-full" size="sm">
-                          +{remainingAppointments.length - 5} more appointments
+                          +{remainingAppointments.length - 5} {t("todaysSchedule.moreAppointments")}
                         </Button>
                       </Link>
                     </div>
@@ -190,20 +194,20 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Quick Share
+                {t("quickShare.title")}
               </CardTitle>
               <CardDescription>
-                Share your booking links instantly
+                {t("quickShare.description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {bookingLinks.length === 0 ? (
                 <div className="text-center py-6">
                   <p className="text-sm text-muted-foreground mb-3">
-                    No booking links yet
+                    {t("quickShare.noLinks")}
                   </p>
                   <Link href="/dashboard/links">
-                    <Button size="sm">Create Link</Button>
+                    <Button size="sm">{t("quickShare.createLink")}</Button>
                   </Link>
                 </div>
               ) : (
@@ -219,8 +223,8 @@ export default function DashboardPage() {
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {link.type === "all_options"
-                            ? "All Services"
-                            : link.serviceOption?.title || "Specific Service"}
+                            ? t("quickShare.allServices")
+                            : link.serviceOption?.title || t("quickShare.specificService")}
                         </p>
                       </div>
                       <Button
@@ -235,7 +239,7 @@ export default function DashboardPage() {
                   ))}
                   <Link href="/dashboard/links" className="block pt-2">
                     <Button variant="outline" className="w-full" size="sm">
-                      Manage Links
+                      {t("quickShare.manageLinks")}
                     </Button>
                   </Link>
                 </div>
@@ -250,18 +254,15 @@ export default function DashboardPage() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold">Performance Summary</h3>
+                <h3 className="font-semibold">{t("performance.title")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  You&apos;ve completed{" "}
-                  <span className="font-medium text-foreground">
-                    {stats?.upcomingAppointments || 0}
-                  </span>{" "}
-                  appointments this week
+                  {stats?.upcomingAppointments || 0}{" "}
+                  {t("performance.completedThisWeek")}
                 </p>
                 <div className="pt-2">
                   <Link href="/dashboard/appointments?tab=completed">
                     <Button variant="outline" size="sm" className="gap-1">
-                      View History
+                      {t("performance.viewHistory")}
                       <ArrowRight className="h-3 w-3" />
                     </Button>
                   </Link>
@@ -276,7 +277,7 @@ export default function DashboardPage() {
 }
 
 // Next Client Elegant Card
-function NextClientCard({ appointment }: { appointment: Appointment }) {
+function NextClientCard({ appointment, t, tAppointments }: { appointment: Appointment; t: any; tAppointments: any }) {
   const startTime = parseISO(appointment.startTime);
   const endTime = parseISO(appointment.endTime);
   const minutesUntil = differenceInMinutes(startTime, new Date());
@@ -306,7 +307,7 @@ function NextClientCard({ appointment }: { appointment: Appointment }) {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-white/80 text-sm font-medium mb-1">
-                {isNow ? "HAPPENING NOW" : isImminent ? "STARTING SOON" : "NEXT CLIENT"}
+                {isNow ? t("nextClient.happeningNow") : isImminent ? t("nextClient.startingSoon") : t("nextClient.title")}
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
                 {appointment.clientName}
@@ -322,7 +323,7 @@ function NextClientCard({ appointment }: { appointment: Appointment }) {
               }`}
             >
               {isNow
-                ? "In Progress"
+                ? t("nextClient.inProgress")
                 : formatDistanceToNow(startTime, { addSuffix: true })}
             </div>
           </div>
@@ -351,7 +352,7 @@ function NextClientCard({ appointment }: { appointment: Appointment }) {
           <div className="space-y-4">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                Service
+                {t("nextClient.service")}
               </p>
               <p className="font-semibold text-lg">
                 {appointment.serviceOption?.title || "Appointment"}
@@ -360,16 +361,16 @@ function NextClientCard({ appointment }: { appointment: Appointment }) {
 
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                Status
+                {t("nextClient.status")}
               </p>
-              <StatusBadge status={appointment.status} />
+              <StatusBadge status={appointment.status} tAppointments={tAppointments} />
             </div>
           </div>
 
           {/* Contact Info */}
           <div className="space-y-3">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Contact Details
+              {t("nextClient.contactDetails")}
             </p>
             <div className="space-y-2">
               <div className="flex items-center gap-3 text-sm">
@@ -398,7 +399,7 @@ function NextClientCard({ appointment }: { appointment: Appointment }) {
         {appointment.notes && (
           <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-dashed">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              Notes
+              {t("nextClient.notes")}
             </p>
             <p className="text-sm">{appointment.notes}</p>
           </div>
@@ -409,7 +410,7 @@ function NextClientCard({ appointment }: { appointment: Appointment }) {
 }
 
 // No Upcoming Appointments Card
-function NoUpcomingCard({ hasAppointments }: { hasAppointments: boolean }) {
+function NoUpcomingCard({ hasAppointments, t }: { hasAppointments: boolean; t: any }) {
   return (
     <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <CardContent className="p-8 text-center">
@@ -417,17 +418,17 @@ function NoUpcomingCard({ hasAppointments }: { hasAppointments: boolean }) {
           <Calendar className="h-8 w-8 text-primary" />
         </div>
         <h3 className="text-xl font-semibold mb-2">
-          {hasAppointments ? "All Done for Now!" : "No Appointments Today"}
+          {hasAppointments ? t("noUpcoming.allDone") : t("noUpcoming.noAppointments")}
         </h3>
         <p className="text-muted-foreground mb-4">
           {hasAppointments
-            ? "You've completed all your scheduled appointments. Great work!"
-            : "Your schedule is clear. Why not share your booking link?"}
+            ? t("noUpcoming.allDoneDesc")
+            : t("noUpcoming.noAppointmentsDesc")}
         </p>
         <Link href="/dashboard/appointments">
           <Button variant="outline" className="gap-2">
             <Calendar className="h-4 w-4" />
-            View Schedule
+            {t("noUpcoming.viewSchedule")}
           </Button>
         </Link>
       </CardContent>
@@ -436,7 +437,7 @@ function NoUpcomingCard({ hasAppointments }: { hasAppointments: boolean }) {
 }
 
 // Schedule Item Component
-function ScheduleItem({ appointment, index }: { appointment: Appointment; index: number }) {
+function ScheduleItem({ appointment, index, tAppointments }: { appointment: Appointment; index: number; tAppointments: any }) {
   const startTime = parseISO(appointment.startTime);
   const isPast = new Date() > parseISO(appointment.endTime);
   const isCompleted = appointment.status === AppointmentStatus.COMPLETED;
@@ -469,7 +470,7 @@ function ScheduleItem({ appointment, index }: { appointment: Appointment; index:
 
       {/* Status */}
       <div className="flex-shrink-0">
-        <StatusBadge status={appointment.status} size="sm" />
+        <StatusBadge status={appointment.status} size="sm" tAppointments={tAppointments} />
       </div>
     </div>
   );
@@ -515,33 +516,33 @@ function StatCard({
 }
 
 // Enhanced Status Badge
-function StatusBadge({ status, size = "default" }: { status: string; size?: "sm" | "default" }) {
+function StatusBadge({ status, size = "default", tAppointments }: { status: string; size?: "sm" | "default"; tAppointments: any }) {
   const config: Record<
     string,
     { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }
   > = {
     pending_confirmation: {
-      label: "Pending",
+      label: tAppointments("status.pending"),
       variant: "outline",
       icon: <AlertCircle className="h-3 w-3" />,
     },
     confirmed: {
-      label: "Confirmed",
+      label: tAppointments("status.confirmed"),
       variant: "default",
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     cancelled: {
-      label: "Cancelled",
+      label: tAppointments("status.cancelled"),
       variant: "destructive",
       icon: <XCircle className="h-3 w-3" />,
     },
     completed: {
-      label: "Completed",
+      label: tAppointments("status.completed"),
       variant: "secondary",
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     no_show: {
-      label: "No Show",
+      label: tAppointments("status.noShow"),
       variant: "outline",
       icon: <AlertCircle className="h-3 w-3" />,
     },

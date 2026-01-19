@@ -1,0 +1,583 @@
+{
+  "common": {
+    "logIn": "Log In",
+    "getStarted": "Get Started",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "noResults": "No results found",
+    "required": "Required",
+    "refresh": "Refresh",
+    "create": "Create",
+    "update": "Update",
+    "actions": "Actions",
+    "previous": "Previous",
+    "viewAll": "View All",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All",
+    "allServices": "All Services",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yes": "Yes",
+    "no": "No",
+    "on": "On",
+    "off": "Off",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "noDescription": "No description"
+  },
+  "landing": {
+    "badge": "Now available for free public beta",
+    "heroTitle": "Recover Lost Revenue From",
+    "heroTitleHighlight": "Empty Appointments",
+    "heroDescription": "Automate your booking workflow. Eliminate no-shows with smart confirmations and instantly refill cancelled slots without lifting a finger.",
+    "ctaButton": "Start Recovering Revenue",
+    "noCreditCard": "No credit card required",
+    "freeTrial": "14-day free trial",
+    "stats": {
+      "noShowReduction": "Reduction in No-Shows",
+      "automatedBooking": "Automated Booking",
+      "setupTime": "Setup Time",
+      "recoveryRate": "Slot Recovery Rate"
+    },
+    "features": {
+      "title": "Everything you need to run smoothly",
+      "subtitle": "Powerful features designed to help service-based businesses maximize their efficiency and revenue.",
+      "bookingLinks": {
+        "title": "Smart Booking Links",
+        "description": "Create custom booking links for specific services or general availability. Share them anywhere."
+      },
+      "availability": {
+        "title": "Dynamic Availability",
+        "description": "Set your working hours and blocking rules. The system automatically manages your calendar."
+      },
+      "confirmations": {
+        "title": "Pre-Appointment Confirmations",
+        "description": "Automatically send confirmation requests. If they don't confirm, the slot opens up for others."
+      },
+      "recovery": {
+        "title": "Revenue Recovery",
+        "description": "Waitlists and instant notifications help you fill last-minute cancellations immediately."
+      },
+      "clients": {
+        "title": "Client Management",
+        "description": "Keep track of client history, preferences, and reliability scores all in one place."
+      },
+      "security": {
+        "title": "Secure & Reliable",
+        "description": "Enterprise-grade security keeps your data safe while assuming 99.9% uptime."
+      }
+    },
+    "cta": {
+      "title": "Ready to optimize your schedule?",
+      "subtitle": "Join thousands of professionals who have automated their booking workflow.",
+      "button": "Get Started for Free"
+    },
+    "footer": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "contact": "Contact",
+      "copyright": "All rights reserved."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "saving": "Saving...",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize how the app looks and feels",
+      "theme": "Theme",
+      "themeDescription": "Select your preferred color scheme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose your preferred language",
+      "label": "Display Language",
+      "hint": "This will change the language of the entire application"
+    },
+    "confirmation": {
+      "title": "Confirmation Settings",
+      "description": "Control how and when appointment confirmations are required",
+      "sendReminder": "Send reminder (hours before appointment)",
+      "sendReminderHint": "How many hours before the appointment to send a confirmation request",
+      "deadline": "Confirmation deadline (hours before appointment)",
+      "deadlineHint": "Client must confirm by this deadline or the appointment may be cancelled",
+      "autoCancel": "Auto-cancel unconfirmed appointments",
+      "autoCancelHint": "Automatically cancel and free up slots if not confirmed by deadline"
+    },
+    "scheduling": {
+      "title": "Scheduling Settings",
+      "description": "Configure time buffers and limits for appointments",
+      "bufferTime": "Buffer time between appointments (minutes)",
+      "bufferTimeHint": "Minimum gap between consecutive appointments",
+      "maxPerDay": "Maximum appointments per day"
+    },
+    "bookingWindow": {
+      "title": "Booking Window",
+      "description": "Set how far in advance clients can book",
+      "minAdvance": "Minimum advance booking (hours)",
+      "minAdvanceHint": "Clients must book at least this many hours in advance",
+      "maxAdvance": "Maximum advance booking (days)",
+      "maxAdvanceHint": "Maximum number of days in the future clients can book"
+    },
+    "saveButton": "Save Settings",
+    "savedSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings",
+    "loadError": "Failed to load settings"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "appointments": "Appointments",
+    "clients": "Clients",
+    "availability": "Availability",
+    "blockedTimes": "Blocked Times",
+    "bookingLinks": "Booking Links",
+    "serviceOptions": "Service Options",
+    "settings": "Settings",
+    "main": "Main",
+    "configuration": "Configuration",
+    "system": "System"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "overview": "Here's an overview of your appointments",
+    "stats": {
+      "today": "Today",
+      "appointments": "appointments",
+      "pending": "Pending",
+      "confirmations": "confirmations",
+      "fillRate": "Fill Rate",
+      "noShowRate": "No-Show",
+      "last30Days": "last 30 days"
+    },
+    "nextClient": {
+      "title": "NEXT CLIENT",
+      "startingSoon": "STARTING SOON",
+      "happeningNow": "HAPPENING NOW",
+      "inProgress": "In Progress",
+      "service": "Service",
+      "status": "Status",
+      "contactDetails": "Contact Details",
+      "notes": "Notes"
+    },
+    "todaysSchedule": {
+      "title": "Today's Schedule",
+      "appointmentToday": "appointment today",
+      "appointmentsToday": "appointments today",
+      "noAppointments": "No appointments scheduled for today",
+      "moreAppointments": "more appointments"
+    },
+    "quickShare": {
+      "title": "Quick Share",
+      "description": "Share your booking links instantly",
+      "noLinks": "No booking links yet",
+      "createLink": "Create Link",
+      "manageLinks": "Manage Links",
+      "allServices": "All Services",
+      "specificService": "Specific Service",
+      "linkCopied": "Link copied!",
+      "linkCopiedDesc": "Booking link has been copied to clipboard."
+    },
+    "performance": {
+      "title": "Performance Summary",
+      "completedThisWeek": "appointments this week",
+      "viewHistory": "View History"
+    },
+    "noUpcoming": {
+      "allDone": "All Done for Now!",
+      "noAppointments": "No Appointments Today",
+      "allDoneDesc": "You've completed all your scheduled appointments. Great work!",
+      "noAppointmentsDesc": "Your schedule is clear. Why not share your booking link?",
+      "viewSchedule": "View Schedule"
+    }
+  },
+  "appointmentsPage": {
+    "title": "Appointments",
+    "description": "Manage and track all your appointments",
+    "nextAppointment": "Next Appointment",
+    "happeningNow": "Happening Now",
+    "startingSoon": "Starting Soon",
+    "inProgress": "In progress",
+    "tabs": {
+      "all": "All",
+      "upcoming": "Upcoming",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by client name or email...",
+      "allServices": "All Services"
+    },
+    "table": {
+      "client": "Client",
+      "service": "Service",
+      "dateTime": "Date & Time",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "confirm": "Confirm",
+      "complete": "Complete",
+      "markCompleted": "Mark Completed",
+      "markNoShow": "Mark No Show",
+      "cancelAppointment": "Cancel Appointment",
+      "noActionsAvailable": "No actions available"
+    },
+    "confirmCancel": "Are you sure you want to cancel this appointment?",
+    "statusUpdated": "Status updated successfully",
+    "appointmentCancelled": "Appointment cancelled",
+    "empty": {
+      "title": "No appointments found",
+      "description": "Try adjusting your filters or search criteria to find what you're looking for."
+    }
+  },
+  "clientsPage": {
+    "title": "Clients",
+    "description": "Manage your client database and view their appointment history",
+    "addClient": "Add Client",
+    "stats": {
+      "totalClients": "Total Clients",
+      "newThisMonth": "New This Month",
+      "repeatClients": "Repeat Clients"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by name, email, or phone..."
+    },
+    "table": {
+      "client": "Client",
+      "contact": "Contact",
+      "appointments": "Appointments",
+      "lastVisit": "Last Visit",
+      "actions": "Actions",
+      "hasNotes": "Has notes",
+      "completed": "completed",
+      "never": "Never"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "detail": {
+      "clientSince": "Client since",
+      "contactInfo": "Contact Information",
+      "appointmentStats": "Appointment Statistics",
+      "total": "Total",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShows": "No Shows",
+      "notes": "Notes",
+      "noNotes": "No notes added yet",
+      "appointmentHistory": "Appointment History",
+      "noHistory": "No appointment history"
+    },
+    "form": {
+      "editTitle": "Edit Client",
+      "addTitle": "Add New Client",
+      "editDescription": "Update client information and notes",
+      "addDescription": "Add a new client to your database",
+      "name": "Name",
+      "namePlaceholder": "John Doe",
+      "phone": "Phone Number",
+      "phonePlaceholder": "+1 234 567 8900",
+      "phoneCannotChange": "Phone number cannot be changed as it's used for client identification",
+      "email": "Email",
+      "emailPlaceholder": "john@example.com",
+      "notes": "Notes",
+      "notesPlaceholder": "Add any notes about this client...",
+      "nameRequired": "Name and phone number are required",
+      "saveChanges": "Save Changes"
+    },
+    "delete": {
+      "title": "Delete Client",
+      "description": "Are you sure you want to delete {name}? This action cannot be undone and will remove all client data."
+    },
+    "messages": {
+      "updated": "Client updated successfully",
+      "created": "Client created successfully",
+      "deleted": "Client deleted successfully"
+    },
+    "empty": {
+      "title": "No clients yet",
+      "description": "Clients will be automatically added when they book their first appointment, or you can add them manually.",
+      "addFirst": "Add Your First Client"
+    }
+  },
+  "appointments": {
+    "title": "Appointments",
+    "new": "New Appointment",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "cancelled": "Cancelled",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "noShow": "No Show"
+    }
+  },
+  "booking": {
+    "title": "Book an Appointment",
+    "selectServiceToContinue": "Select a service to continue booking",
+    "selectService": "Select a service",
+    "selectServiceFirst": "Please select a service first",
+    "selectDate": "Select Date",
+    "selectTime": "Select a time",
+    "selectDateFirst": "Please select a date to see available times",
+    "availableTimes": "Available Times",
+    "noAvailableTimes": "No available times on this date",
+    "noServicesAvailable": "No services available at this time",
+    "linkNotAvailable": "Link Not Available",
+    "yourInformation": "Your Information",
+    "yourDetails": "Your details",
+    "name": "Name",
+    "namePlaceholder": "Your full name",
+    "nameRequired": "Name Required",
+    "pleaseEnterName": "Please enter your name",
+    "email": "Email",
+    "emailOptional": "Email (optional)",
+    "emailPlaceholder": "your@email.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+1 234 567 8900",
+    "phoneRequired": "Phone Required",
+    "pleaseEnterPhone": "Please enter your phone number",
+    "notes": "Notes (optional)",
+    "appointmentSummary": "Appointment Summary",
+    "confirmBooking": "Confirm Booking",
+    "bookingInProgress": "Booking...",
+    "bookingConfirmed": "Booking Confirmed!",
+    "bookingSuccess": "Your appointment has been scheduled successfully",
+    "bookingSuccessMessage": "Your appointment has been successfully scheduled. You will receive a confirmation message with the details.",
+    "bookingFailed": "Booking Failed",
+    "bookingError": "Unable to complete booking",
+    "backToServices": "Back to Services",
+    "bookAnother": "Book Another Appointment",
+    "importantNote": "Important:",
+    "confirmationReminder": "You may receive a confirmation request before your appointment. Please confirm your attendance to keep your slot.",
+    "minutes": "minutes",
+    "failedToLoad": "Failed to load booking information",
+    "failedToLoadSlots": "Failed to load available slots"
+  },
+  "clients": {
+    "title": "Clients",
+    "addClient": "Add Client",
+    "noClients": "No clients yet",
+    "totalAppointments": "Total Appointments",
+    "lastVisit": "Last Visit"
+  },
+  "availability": {
+    "title": "Availability",
+    "description": "Define when you're available for appointments. Set different hours for specific services if needed.",
+    "addTimeSlot": "Add Time Slot",
+    "noAvailability": "No availability set",
+    "allServices": "All services",
+    "dayOfWeek": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    },
+    "dialog": {
+      "title": "Add Availability Slot",
+      "dayOfWeek": "Day of Week",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "service": "Service (Optional)",
+      "serviceHint": "Leave empty to apply this slot to all services"
+    },
+    "messages": {
+      "created": "Availability slot created",
+      "deleted": "Availability slot deleted",
+      "updated": "Availability updated"
+    }
+  },
+  "blocksPage": {
+    "title": "Blocked Times",
+    "description": "Block specific dates or time ranges when you're not available.",
+    "blockTime": "Block Time",
+    "upcomingBlocked": "Upcoming Blocked Times",
+    "pastBlocked": "Past Blocked Times",
+    "fullDay": "Full day",
+    "empty": {
+      "title": "No blocked times yet",
+      "description": "Block times when you're unavailable."
+    },
+    "dialog": {
+      "title": "Block Time",
+      "date": "Date",
+      "blockEntireDay": "Block entire day",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "reason": "Reason (Optional)",
+      "reasonPlaceholder": "e.g., Vacation, Personal appointment"
+    },
+    "messages": {
+      "created": "Blocked time created",
+      "deleted": "Blocked time deleted"
+    }
+  },
+  "linksPage": {
+    "title": "Booking Links",
+    "description": "Create shareable links for clients to book appointments.",
+    "createLink": "Create Link",
+    "bookingLink": "Booking Link",
+    "allServices": "All services",
+    "specificService": "Service:",
+    "campaignLink": "Campaign link",
+    "expires": "Expires:",
+    "empty": {
+      "title": "No booking links yet",
+      "description": "Create your first one!",
+      "createFirst": "Create Booking Link"
+    },
+    "dialog": {
+      "title": "Create Booking Link",
+      "name": "Name (Optional)",
+      "namePlaceholder": "e.g., Summer Campaign, Main Booking",
+      "linkType": "Link Type",
+      "types": {
+        "allServices": "All Services",
+        "specificService": "Specific Service",
+        "campaign": "Campaign"
+      },
+      "service": "Service",
+      "selectService": "Select a service",
+      "expirationDate": "Expiration Date (Optional)"
+    },
+    "actions": {
+      "copy": "Copy",
+      "open": "Open"
+    },
+    "messages": {
+      "created": "Booking link created",
+      "deleted": "Booking link deleted",
+      "updated": "Booking link updated",
+      "copied": "Link copied!",
+      "copiedDesc": "Booking link has been copied to clipboard."
+    },
+    "confirmDelete": "Are you sure you want to delete this booking link?"
+  },
+  "optionsPage": {
+    "title": "Service Options",
+    "description": "Define what services clients can book. Each option has its own duration.",
+    "addService": "Add Service",
+    "empty": {
+      "title": "No service options yet",
+      "description": "Create your first one!",
+      "createFirst": "Create Service Option"
+    },
+    "dialog": {
+      "editTitle": "Edit Service Option",
+      "createTitle": "Create Service Option",
+      "title": "Title",
+      "titlePlaceholder": "e.g., Haircut, Consultation",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe this service...",
+      "imageUrl": "Image URL (optional)",
+      "imageUrlPlaceholder": "https://example.com/image.jpg",
+      "duration": "Duration (minutes)"
+    },
+    "confirmDelete": "Are you sure you want to delete this service option?",
+    "messages": {
+      "created": "Service option created",
+      "updated": "Service option updated",
+      "deleted": "Service option deleted"
+    }
+  },
+  "calendarPage": {
+    "title": "Calendar",
+    "week": "Week",
+    "day": "Day",
+    "today": "Today",
+    "legend": {
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "available": "Available",
+      "blocked": "Blocked",
+      "dragToReschedule": "Drag to reschedule"
+    },
+    "editDialog": {
+      "title": "Edit Appointment",
+      "description": "Update the appointment time. The client will be notified of any changes.",
+      "currentTime": "Current Time",
+      "newDate": "New Date",
+      "newTime": "New Time",
+      "newAppointmentTime": "New appointment time:",
+      "notifyClient": "Notify Client",
+      "notifyClientDesc": "Send an email/SMS notification about the time change",
+      "saveChanges": "Save Changes"
+    },
+    "swapDialog": {
+      "swapTitle": "Swap Appointment Times",
+      "moveTitle": "Move Appointment",
+      "swapDescription": "The appointments overlap. Their times will be swapped.",
+      "moveDescription": "Confirm the new appointment time.",
+      "currentTime": "Current Time",
+      "newTime": "New Time",
+      "notifyClients": "Notify Clients",
+      "notifyClientDesc": "Send email/SMS notification about the time change",
+      "swapTimes": "Swap Times",
+      "moveAppointment": "Move Appointment"
+    },
+    "messages": {
+      "appointmentsSwapped": "Appointments swapped",
+      "bothNotified": "Both clients have been notified about the time changes",
+      "swappedSuccess": "Appointment times swapped successfully",
+      "appointmentMoved": "Appointment moved",
+      "clientNotified": "The client has been notified about the time change",
+      "movedSuccess": "Appointment time changed successfully",
+      "appointmentUpdated": "Appointment updated",
+      "cannotEdit": "Cannot edit",
+      "cannotModify": "This appointment cannot be modified"
+    }
+  },
+  "layoutPage": {
+    "overview": "Overview"
+  },
+  "confirm": {
+    "title": "Confirm Your Attendance",
+    "confirmed": "Attendance Confirmed!",
+    "linkInvalid": "Link Invalid",
+    "appointmentCancelled": "Appointment Cancelled",
+    "appointmentCancelledMessage": "This appointment has been cancelled and is no longer valid.",
+    "unableToLoad": "Unable to load appointment details",
+    "warningMessage": "Please confirm that you will attend this appointment. If you don't confirm, your slot may be released to other clients.",
+    "confirmButton": "Yes, I Will Attend",
+    "confirming": "Confirming...",
+    "thankYou": "Thank you for confirming! We look forward to seeing you.",
+    "confirmSuccess": "Your attendance has been confirmed",
+    "confirmError": "Failed to confirm"
+  }
+}

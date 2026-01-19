@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 import { settingsApi, setAuthToken } from "@/lib/api";
 import { BusinessSettings } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,12 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Clock, Calendar, AlertCircle, Sun, Moon, Monitor } from "lucide-react";
+import { useLocale } from "@/components/providers/locale-provider";
+import { locales, localeNames, localeFlags, Locale } from "@/i18n/config";
+import { Save, Clock, Calendar, AlertCircle, Sun, Moon, Monitor, Globe } from "lucide-react";
 
 export default function SettingsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const t = useTranslations('settings');
+  const { locale: currentLocale, setLocale } = useLocale();
   const [mounted, setMounted] = useState(false);
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,11 +65,10 @@ export default function SettingsPage() {
         minAdvanceBookingHours: settings.minAdvanceBookingHours,
         maxAdvanceBookingDays: settings.maxAdvanceBookingDays,
       });
-      toast({ title: "Settings saved successfully" });
+      toast({ title: t('savedSuccess') });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save settings",
+        title: t('saveError'),
         variant: "destructive",
       });
     } finally {
@@ -83,7 +87,7 @@ export default function SettingsPage() {
   if (!settings) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Failed to load settings</p>
+        <p className="text-muted-foreground">{t('loadError')}</p>
       </div>
     );
   }
@@ -95,17 +99,17 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sun className="h-5 w-5" />
-            Appearance
+            {t('appearance.title')}
           </CardTitle>
           <CardDescription>
-            Customize how the app looks and feels
+            {t('appearance.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Theme</Label>
+            <Label>{t('appearance.theme')}</Label>
             <p className="text-xs text-muted-foreground mb-3">
-              Select your preferred color scheme
+              {t('appearance.themeDescription')}
             </p>
             {mounted && (
               <div className="flex gap-2">
@@ -116,7 +120,7 @@ export default function SettingsPage() {
                   className="flex items-center gap-2"
                 >
                   <Sun className="h-4 w-4" />
-                  Light
+                  {t('appearance.light')}
                 </Button>
                 <Button
                   variant={theme === "dark" ? "default" : "outline"}
@@ -125,7 +129,7 @@ export default function SettingsPage() {
                   className="flex items-center gap-2"
                 >
                   <Moon className="h-4 w-4" />
-                  Dark
+                  {t('appearance.dark')}
                 </Button>
                 <Button
                   variant={theme === "system" ? "default" : "outline"}
@@ -134,8 +138,45 @@ export default function SettingsPage() {
                   className="flex items-center gap-2"
                 >
                   <Monitor className="h-4 w-4" />
-                  System
+                  {t('appearance.system')}
                 </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Language Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            {t('language.title')}
+          </CardTitle>
+          <CardDescription>
+            {t('language.description')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('language.label')}</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              {t('language.hint')}
+            </p>
+            {mounted && (
+              <div className="flex gap-2">
+                {locales.map((locale) => (
+                  <Button
+                    key={locale}
+                    variant={currentLocale === locale ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLocale(locale)}
+                    className="flex items-center gap-2"
+                  >
+                    <span>{localeFlags[locale]}</span>
+                    {localeNames[locale]}
+                  </Button>
+                ))}
               </div>
             )}
           </div>
@@ -147,16 +188,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
-            Confirmation Settings
+            {t('confirmation.title')}
           </CardTitle>
           <CardDescription>
-            Control how and when appointment confirmations are required
+            {t('confirmation.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="confirmationRequiredHours">
-              Send reminder (hours before appointment)
+              {t('confirmation.sendReminder')}
             </Label>
             <Input
               id="confirmationRequiredHours"
@@ -172,13 +213,13 @@ export default function SettingsPage() {
               }
             />
             <p className="text-xs text-muted-foreground">
-              How many hours before the appointment to send a confirmation request
+              {t('confirmation.sendReminderHint')}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirmationDeadlineHours">
-              Confirmation deadline (hours before appointment)
+              {t('confirmation.deadline')}
             </Label>
             <Input
               id="confirmationDeadlineHours"
@@ -194,17 +235,17 @@ export default function SettingsPage() {
               }
             />
             <p className="text-xs text-muted-foreground">
-              Client must confirm by this deadline or the appointment may be cancelled
+              {t('confirmation.deadlineHint')}
             </p>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="autoCancelUnconfirmed">
-                Auto-cancel unconfirmed appointments
+                {t('confirmation.autoCancel')}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Automatically cancel and free up slots if not confirmed by deadline
+                {t('confirmation.autoCancelHint')}
               </p>
             </div>
             <Switch
@@ -223,16 +264,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Scheduling Settings
+            {t('scheduling.title')}
           </CardTitle>
           <CardDescription>
-            Configure time buffers and limits for appointments
+            {t('scheduling.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="bufferTimeMinutes">
-              Buffer time between appointments (minutes)
+              {t('scheduling.bufferTime')}
             </Label>
             <Input
               id="bufferTimeMinutes"
@@ -248,13 +289,13 @@ export default function SettingsPage() {
               }
             />
             <p className="text-xs text-muted-foreground">
-              Minimum gap between consecutive appointments
+              {t('scheduling.bufferTimeHint')}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="maxAppointmentsPerDay">
-              Maximum appointments per day
+              {t('scheduling.maxPerDay')}
             </Label>
             <Input
               id="maxAppointmentsPerDay"
@@ -278,16 +319,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Booking Window
+            {t('bookingWindow.title')}
           </CardTitle>
           <CardDescription>
-            Set how far in advance clients can book
+            {t('bookingWindow.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="minAdvanceBookingHours">
-              Minimum advance booking (hours)
+              {t('bookingWindow.minAdvance')}
             </Label>
             <Input
               id="minAdvanceBookingHours"
@@ -303,13 +344,13 @@ export default function SettingsPage() {
               }
             />
             <p className="text-xs text-muted-foreground">
-              Clients must book at least this many hours in advance
+              {t('bookingWindow.minAdvanceHint')}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="maxAdvanceBookingDays">
-              Maximum advance booking (days)
+              {t('bookingWindow.maxAdvance')}
             </Label>
             <Input
               id="maxAdvanceBookingDays"
@@ -325,7 +366,7 @@ export default function SettingsPage() {
               }
             />
             <p className="text-xs text-muted-foreground">
-              Maximum number of days in the future clients can book
+              {t('bookingWindow.maxAdvanceHint')}
             </p>
           </div>
         </CardContent>
@@ -335,7 +376,7 @@ export default function SettingsPage() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          {saving ? "Saving..." : "Save Settings"}
+          {saving ? t('saving') : t('saveButton')}
         </Button>
       </div>
     </div>

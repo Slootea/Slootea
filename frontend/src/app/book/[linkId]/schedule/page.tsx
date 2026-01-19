@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { format, addDays, startOfDay, isSameDay, parseISO } from "date-fns";
+import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
 import { PublicBookingLink, AvailableSlot, ServiceOption } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,8 @@ export default function SchedulePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations('booking');
+  const common = useTranslations('common');
 
   const slug = params.linkId as string;
   const serviceId = searchParams.get("service");
@@ -61,8 +64,8 @@ export default function SchedulePage() {
         }
       } catch (err: any) {
         toast({
-          title: "Error",
-          description: "Failed to load booking information",
+          title: common('error'),
+          description: t('failedToLoad'),
           variant: "destructive",
         });
       } finally {
@@ -84,8 +87,8 @@ export default function SchedulePage() {
         setSlots(res.data);
       } catch (err: any) {
         toast({
-          title: "Error",
-          description: "Failed to load available slots",
+          title: common('error'),
+          description: t('failedToLoadSlots'),
           variant: "destructive",
         });
         setSlots([]);
@@ -101,8 +104,8 @@ export default function SchedulePage() {
 
     if (!clientName.trim()) {
       toast({
-        title: "Name Required",
-        description: "Please enter your name",
+        title: t('nameRequired'),
+        description: t('pleaseEnterName'),
         variant: "destructive",
       });
       return;
@@ -110,8 +113,8 @@ export default function SchedulePage() {
 
     if (!clientPhone.trim()) {
       toast({
-        title: "Phone Required",
-        description: "Please enter your phone number",
+        title: t('phoneRequired'),
+        description: t('pleaseEnterPhone'),
         variant: "destructive",
       });
       return;
@@ -129,16 +132,16 @@ export default function SchedulePage() {
       });
 
       toast({
-        title: "Booking Confirmed!",
-        description: "Your appointment has been scheduled successfully",
+        title: t('bookingConfirmed'),
+        description: t('bookingSuccess'),
       });
 
       // Redirect to success or back to service selection
       router.push(`/book/${slug}/success`);
     } catch (err: any) {
       toast({
-        title: "Booking Failed",
-        description: err.response?.data?.message || "Unable to complete booking",
+        title: t('bookingFailed'),
+        description: err.response?.data?.message || t('bookingError'),
         variant: "destructive",
       });
     } finally {
@@ -172,10 +175,10 @@ export default function SchedulePage() {
         <Card className="max-w-md w-full">
           <CardContent className="p-6 text-center">
             <p className="text-muted-foreground mb-4">
-              Please select a service first
+              {t('selectServiceFirst')}
             </p>
             <Button onClick={() => router.push(`/book/${slug}`)}>
-              Select Service
+              {t('selectService')}
             </Button>
           </CardContent>
         </Card>
@@ -193,7 +196,7 @@ export default function SchedulePage() {
           onClick={() => router.push(`/book/${slug}`)}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Services
+          {t('backToServices')}
         </Button>
 
         {/* Selected service info */}
@@ -214,7 +217,7 @@ export default function SchedulePage() {
               <h2 className="font-semibold">{selectedService.title}</h2>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
-                {selectedService.duration} minutes
+                {selectedService.duration} {t('minutes')}
               </div>
             </div>
           </CardContent>
@@ -224,7 +227,7 @@ export default function SchedulePage() {
           {/* Date Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Select Date</CardTitle>
+              <CardTitle className="text-lg">{t('selectDate')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Calendar
@@ -246,14 +249,14 @@ export default function SchedulePage() {
               <CardHeader>
                 <CardTitle className="text-lg">
                   {selectedDate
-                    ? `Available Times - ${format(selectedDate, "MMM d, yyyy")}`
-                    : "Select a Date First"}
+                    ? `${t('availableTimes')} - ${format(selectedDate, "MMM d, yyyy")}`
+                    : t('selectDate')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!selectedDate ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Please select a date to see available times
+                    {t('selectDateFirst')}
                   </p>
                 ) : slotsLoading ? (
                   <div className="grid grid-cols-3 gap-2">
@@ -263,7 +266,7 @@ export default function SchedulePage() {
                   </div>
                 ) : slots.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    No available times on this date
+                    {t('noAvailableTimes')}
                   </p>
                 ) : (
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
@@ -286,39 +289,39 @@ export default function SchedulePage() {
             {selectedSlot && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Your Information</CardTitle>
+                  <CardTitle className="text-lg">{t('yourInformation')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Name *</Label>
+                    <Label htmlFor="name">{t('name')} *</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="name"
                         value={clientName}
                         onChange={(e) => setClientName(e.target.value)}
-                        placeholder="Your full name"
+                        placeholder={t('namePlaceholder')}
                         className="pl-10"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="phone">Phone *</Label>
+                    <Label htmlFor="phone">{t('phone')} *</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="phone"
                         value={clientPhone}
                         onChange={(e) => setClientPhone(e.target.value)}
-                        placeholder="+1 234 567 8900"
+                        placeholder={t('phonePlaceholder')}
                         className="pl-10"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="email">Email (optional)</Label>
+                    <Label htmlFor="email">{t('emailOptional')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -326,7 +329,7 @@ export default function SchedulePage() {
                         type="email"
                         value={clientEmail}
                         onChange={(e) => setClientEmail(e.target.value)}
-                        placeholder="your@email.com"
+                        placeholder={t('emailPlaceholder')}
                         className="pl-10"
                       />
                     </div>
@@ -335,7 +338,7 @@ export default function SchedulePage() {
                   <Separator />
 
                   <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                    <p className="font-medium">Appointment Summary</p>
+                    <p className="font-medium">{t('appointmentSummary')}</p>
                     <p className="text-muted-foreground">
                       {selectedService.title}
                     </p>
@@ -356,10 +359,10 @@ export default function SchedulePage() {
                     {booking ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Booking...
+                        {t('bookingInProgress')}
                       </>
                     ) : (
-                      "Confirm Booking"
+                      t('confirmBooking')
                     )}
                   </Button>
                 </CardContent>

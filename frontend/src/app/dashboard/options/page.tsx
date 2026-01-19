@@ -20,10 +20,13 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Pencil, Trash2, Clock, Image } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function ServiceOptionsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("optionsPage");
+  const tCommon = useTranslations("common");
   const [options, setOptions] = useState<ServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -74,33 +77,33 @@ export default function ServiceOptionsPage() {
     try {
       if (editingOption) {
         await serviceOptionsApi.update(editingOption.id, formData);
-        toast({ title: "Service option updated" });
+        toast({ title: t("messages.updated") });
       } else {
         await serviceOptionsApi.create(formData);
-        toast({ title: "Service option created" });
+        toast({ title: t("messages.created") });
       }
       setDialogOpen(false);
       fetchOptions();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save service option",
+        title: tCommon("error"),
+        description: t("messages.saveFailed"),
         variant: "destructive",
       });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this service option?")) return;
+    if (!confirm(t("confirmDelete"))) return;
 
     try {
       await serviceOptionsApi.delete(id);
-      toast({ title: "Service option deleted" });
+      toast({ title: t("messages.deleted") });
       fetchOptions();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete service option",
+        title: tCommon("error"),
+        description: t("messages.deleteFailed"),
         variant: "destructive",
       });
     }
@@ -112,8 +115,8 @@ export default function ServiceOptionsPage() {
       fetchOptions();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update service option",
+        title: tCommon("error"),
+        description: t("messages.updateFailed"),
         variant: "destructive",
       });
     }
@@ -131,11 +134,11 @@ export default function ServiceOptionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-muted-foreground">
-          Define what services clients can book. Each option has its own duration.
+          {t("description")}
         </p>
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Service
+          {t("addService")}
         </Button>
       </div>
 
@@ -143,11 +146,11 @@ export default function ServiceOptionsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">
-              No service options yet. Create your first one!
+              {t("empty.title")} {t("empty.description")}
             </p>
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Service Option
+              {t("empty.createFirst")}
             </Button>
           </CardContent>
         </Card>
@@ -182,11 +185,11 @@ export default function ServiceOptionsPage() {
                   </div>
                 )}
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {option.description || "No description"}
+                  {option.description || t("noDescription")}
                 </p>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Clock className="h-4 w-4 mr-1" />
-                  {option.duration} minutes
+                  {option.duration} {tCommon("minutes")}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -196,7 +199,7 @@ export default function ServiceOptionsPage() {
                     onClick={() => openEditDialog(option)}
                   >
                     <Pencil className="h-4 w-4 mr-1" />
-                    Edit
+                    {tCommon("edit")}
                   </Button>
                   <Button
                     variant="outline"
@@ -217,35 +220,35 @@ export default function ServiceOptionsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingOption ? "Edit Service Option" : "Create Service Option"}
+              {editingOption ? t("dialog.editTitle") : t("dialog.createTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t("dialog.title")}</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                placeholder="e.g., Haircut, Consultation"
+                placeholder={t("dialog.titlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("dialog.description")}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Describe this service..."
+                placeholder={t("dialog.descriptionPlaceholder")}
                 rows={3}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="imageUrl">Image URL (optional)</Label>
+              <Label htmlFor="imageUrl">{t("dialog.imageUrl")}</Label>
               <Input
                 id="imageUrl"
                 value={formData.imageUrl}
@@ -256,7 +259,7 @@ export default function ServiceOptionsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Label htmlFor="duration">{t("dialog.duration")}</Label>
               <Input
                 id="duration"
                 type="number"
@@ -271,10 +274,10 @@ export default function ServiceOptionsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={!formData.title}>
-              {editingOption ? "Update" : "Create"}
+              {editingOption ? tCommon("update") : tCommon("create")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
+import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,9 @@ interface AppointmentDetails {
 export default function ConfirmPage() {
   const params = useParams();
   const { toast } = useToast();
+  const t = useTranslations('confirm');
+  const common = useTranslations('common');
+  const booking = useTranslations('booking');
   const token = params.token as string;
 
   const [appointment, setAppointment] = useState<AppointmentDetails | null>(null);
@@ -53,7 +57,7 @@ export default function ConfirmPage() {
         setConfirmed(res.data.confirmed);
       } catch (err: any) {
         setError(
-          err.response?.data?.message || "Unable to load appointment details"
+          err.response?.data?.message || t('unableToLoad')
         );
       } finally {
         setLoading(false);
@@ -68,13 +72,13 @@ export default function ConfirmPage() {
       await publicApi.confirmAppointment(token);
       setConfirmed(true);
       toast({
-        title: "Confirmed!",
-        description: "Your attendance has been confirmed",
+        title: t('confirmed'),
+        description: t('confirmSuccess'),
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.response?.data?.message || "Failed to confirm",
+        title: common('error'),
+        description: err.response?.data?.message || t('confirmError'),
         variant: "destructive",
       });
     } finally {
@@ -105,7 +109,7 @@ export default function ConfirmPage() {
             <div className="mb-6">
               <XCircle className="h-16 w-16 text-red-500 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Link Invalid</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('linkInvalid')}</h1>
             <p className="text-muted-foreground">{error}</p>
           </CardContent>
         </Card>
@@ -121,9 +125,9 @@ export default function ConfirmPage() {
             <div className="mb-6">
               <XCircle className="h-16 w-16 text-red-500 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Appointment Cancelled</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('appointmentCancelled')}</h1>
             <p className="text-muted-foreground">
-              This appointment has been cancelled and is no longer valid.
+              {t('appointmentCancelledMessage')}
             </p>
           </CardContent>
         </Card>
@@ -138,12 +142,12 @@ export default function ConfirmPage() {
           {confirmed ? (
             <>
               <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Attendance Confirmed!</CardTitle>
+              <CardTitle className="text-2xl">{t('confirmed')}</CardTitle>
             </>
           ) : (
             <>
               <Calendar className="h-16 w-16 text-blue-500 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Confirm Your Attendance</CardTitle>
+              <CardTitle className="text-2xl">{t('title')}</CardTitle>
             </>
           )}
         </CardHeader>
@@ -181,7 +185,7 @@ export default function ConfirmPage() {
                     format(parseISO(appointment.endTime), "h:mm a")}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {appointment?.serviceOption?.duration} minutes
+                  {appointment?.serviceOption?.duration} {booking('minutes')}
                 </p>
               </div>
             </div>
@@ -198,8 +202,7 @@ export default function ConfirmPage() {
           {!confirmed && (
             <>
               <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200">
-                Please confirm that you will attend this appointment. If you
-                don't confirm, your slot may be released to other clients.
+                {t('warningMessage')}
               </div>
               <Button
                 className="w-full"
@@ -210,12 +213,12 @@ export default function ConfirmPage() {
                 {confirming ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Confirming...
+                    {t('confirming')}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Yes, I Will Attend
+                    {t('confirmButton')}
                   </>
                 )}
               </Button>
@@ -224,7 +227,7 @@ export default function ConfirmPage() {
 
           {confirmed && (
             <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm text-green-800 dark:text-green-200 text-center">
-              Thank you for confirming! We look forward to seeing you.
+              {t('thankYou')}
             </div>
           )}
         </CardContent>
