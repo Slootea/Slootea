@@ -11,7 +11,7 @@ export default function BookingSuccessPage() {
   const slug = params.linkId as string;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
       <Card className="max-w-md w-full">
         <CardContent className="p-8 text-center">
           <div className="mb-6">
@@ -22,7 +22,7 @@ export default function BookingSuccessPage() {
             Your appointment has been successfully scheduled. You will receive a
             confirmation message with the details.
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm text-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 text-sm text-blue-800 dark:text-blue-200">
             <p>
               <strong>Important:</strong> You may receive a confirmation request
               before your appointment. Please confirm your attendance to keep

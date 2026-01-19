@@ -84,7 +84,7 @@ export default function ConfirmPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-6">
             <Skeleton className="h-8 w-48 mx-auto mb-4" />
@@ -99,7 +99,7 @@ export default function ConfirmPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="mb-6">
@@ -115,7 +115,7 @@ export default function ConfirmPage() {
 
   if (appointment?.status === "cancelled") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="mb-6">
@@ -132,7 +132,7 @@ export default function ConfirmPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
       <Card className="max-w-md w-full">
         <CardHeader className="text-center">
           {confirmed ? (
@@ -197,7 +197,7 @@ export default function ConfirmPage() {
           {/* Confirm Button */}
           {!confirmed && (
             <>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+              <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200">
                 Please confirm that you will attend this appointment. If you
                 don't confirm, your slot may be released to other clients.
               </div>
@@ -223,7 +223,7 @@ export default function ConfirmPage() {
           )}
 
           {confirmed && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 text-center">
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm text-green-800 dark:text-green-200 text-center">
               Thank you for confirming! We look forward to seeing you.
             </div>
           )}

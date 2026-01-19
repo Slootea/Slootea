@@ -154,7 +154,7 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-muted/30 p-6">
         <div className="max-w-4xl mx-auto">
           <Skeleton className="h-8 w-32 mb-6" />
           <div className="grid md:grid-cols-2 gap-6">
@@ -168,7 +168,7 @@ export default function SchedulePage() {
 
   if (!selectedService) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-6 text-center">
             <p className="text-muted-foreground mb-4">
@@ -184,7 +184,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <div className="max-w-4xl mx-auto p-6">
         {/* Back button */}
         <Button
@@ -206,8 +206,8 @@ export default function SchedulePage() {
                 className="w-16 h-16 rounded-lg object-cover"
               />
             ) : (
-              <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center">
-                <CalendarIcon className="h-8 w-8 text-gray-300" />
+              <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+                <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
               </div>
             )}
             <div>
@@ -334,7 +334,7 @@ export default function SchedulePage() {
 
                   <Separator />
 
-                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                  <div className="bg-muted/50 p-3 rounded-lg text-sm">
                     <p className="font-medium">Appointment Summary</p>
                     <p className="text-muted-foreground">
                       {selectedService.title}

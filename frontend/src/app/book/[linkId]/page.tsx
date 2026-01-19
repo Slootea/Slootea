@@ -40,7 +40,7 @@ export default function BookingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-muted/30 p-6">
         <div className="max-w-4xl mx-auto">
           <Skeleton className="h-12 w-64 mb-6" />
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -61,7 +61,7 @@ export default function BookingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-6 text-center">
             <div className="text-red-500 mb-4">
@@ -76,7 +76,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="text-center mb-8">
@@ -107,7 +107,7 @@ export default function BookingPage() {
               >
                 <CardContent className="p-0">
                   {option.imageUrl ? (
-                    <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+                    <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                       <img
                         src={option.imageUrl}
                         alt={option.title}
@@ -115,8 +115,8 @@ export default function BookingPage() {
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gray-100 rounded-t-lg flex items-center justify-center">
-                      <Image className="h-12 w-12 text-gray-300" />
+                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+                      <Image className="h-12 w-12 text-muted-foreground/50" />
                     </div>
                   )}
                   <div className="p-4">
