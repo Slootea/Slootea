@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Gift } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -35,6 +35,7 @@ export function AppSidebar() {
     { href: "/dashboard/availability", label: t('availability'), icon: Clock },
     { href: "/dashboard/blocks", label: t('blockedTimes'), icon: CalendarX },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
+    { href: "/dashboard/gamification", label: t('gamification'), icon: Gift },
   ];
 
   const settingsNavItems = [

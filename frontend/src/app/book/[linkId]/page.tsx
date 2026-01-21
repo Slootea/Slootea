@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { publicApi } from "@/lib/api";
-import { PublicBookingLink, ServiceOption } from "@/lib/types";
+import { publicApi, publicGamificationApi } from "@/lib/api";
+import { PublicBookingLink, ServiceOption, GamificationStatus } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Image } from "lucide-react";
+import { Calendar, Clock, Image, Sparkles } from "lucide-react";
 
 export default function BookingPage() {
   const params = useParams();
@@ -19,12 +19,25 @@ export default function BookingPage() {
   const [bookingLink, setBookingLink] = useState<PublicBookingLink | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [gamificationEnabled, setGamificationEnabled] = useState(false);
 
   useEffect(() => {
     const fetchBookingLink = async () => {
       try {
-        const res = await publicApi.getBookingLink(slug);
-        setBookingLink(res.data);
+        // Fetch booking link and gamification status in parallel
+        const [linkRes, gamRes] = await Promise.all([
+          publicApi.getBookingLink(slug),
+          publicGamificationApi.getStatus(slug).catch(() => ({ data: { enabled: false } })),
+        ]);
+        
+        setBookingLink(linkRes.data);
+        
+        // If gamification is enabled, redirect to gamified booking flow
+        if (gamRes.data.enabled) {
+          setGamificationEnabled(true);
+          router.replace(`/book/${slug}/gamified`);
+          return;
+        }
       } catch (err: any) {
         setError(
           err.response?.data?.message || "This booking link is not available"
@@ -34,13 +47,13 @@ export default function BookingPage() {
       }
     };
     fetchBookingLink();
-  }, [slug]);
+  }, [slug, router]);
 
   const handleSelectService = (serviceOption: ServiceOption) => {
     router.push(`/book/${slug}/schedule?service=${serviceOption.id}`);
   };
 
-  if (loading) {
+  if (loading || gamificationEnabled) {
     return (
       <div className="min-h-screen bg-muted/30 p-6">
         <div className="max-w-4xl mx-auto">

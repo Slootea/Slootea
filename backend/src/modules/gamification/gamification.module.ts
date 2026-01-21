@@ -1,0 +1,30 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { GamificationService } from './gamification.service';
+import { GamificationController } from './gamification.controller';
+import { PublicGamificationController } from './public-gamification.controller';
+import { GamificationSettings } from './entities/gamification-settings.entity';
+import { Referral } from './entities/referral.entity';
+import { ClientReward } from './entities/client-reward.entity';
+import { PointsHistory } from './entities/points-history.entity';
+import { Client } from '../clients/entities/client.entity';
+import { BookingLink } from '../booking-links/entities/booking-link.entity';
+import { AuthModule } from '../auth/auth.module';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      GamificationSettings,
+      Referral,
+      ClientReward,
+      PointsHistory,
+      Client,
+      BookingLink,
+    ]),
+    AuthModule,
+  ],
+  controllers: [GamificationController, PublicGamificationController],
+  providers: [GamificationService],
+  exports: [GamificationService],
+})
+export class GamificationModule {}

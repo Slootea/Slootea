@@ -91,7 +91,11 @@ async verifyToken(token: string): Promise<ClerkUser> {
         role: membership.role,
         isAdmin: membership.role === 'org:admin',
       }));
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle when organizations feature is not enabled
+      if (error?.errors?.[0]?.code === 'organization_not_enabled_in_instance') {
+        return [];
+      }
       console.error('Failed to fetch user organizations:', error);
       return [];
     }

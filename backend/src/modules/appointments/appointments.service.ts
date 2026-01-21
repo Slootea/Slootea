@@ -20,6 +20,7 @@ import { BlockedTimesService } from '../blocked-times/blocked-times.service';
 import { SettingsService } from '../settings/settings.service';
 import { BookingLinksService } from '../booking-links/booking-links.service';
 import { ClientsService } from '../clients/clients.service';
+import { GamificationService } from '../gamification/gamification.service';
 import { DayOfWeek } from '../availability/entities/availability.entity';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -41,6 +42,8 @@ export class AppointmentsService {
     private readonly bookingLinksService: BookingLinksService,
     @Inject(forwardRef(() => ClientsService))
     private readonly clientsService: ClientsService,
+    @Inject(forwardRef(() => GamificationService))
+    private readonly gamificationService: GamificationService,
   ) {}
 
   async create(createDto: CreateAppointmentDto): Promise<Appointment> {
@@ -348,7 +351,28 @@ export class AppointmentsService {
       status: AppointmentStatus.PENDING_CONFIRMATION,
     });
 
-    return this.appointmentRepository.save(appointment);
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    // Award booking points if gamification is enabled
+    if (clientId) {
+      try {
+        await this.gamificationService.awardBookingPoints(clientId, userId, savedAppointment.id);
+        
+        // Process referral code if provided
+        if ((createDto as any).referralCode) {
+          await this.gamificationService.processReferral(
+            (createDto as any).referralCode,
+            clientId,
+            userId,
+          );
+        }
+      } catch (error) {
+        // Log but don't fail the booking if gamification fails
+        console.error('Gamification error:', error);
+      }
+    }
+
+    return { ...savedAppointment, clientId } as Appointment;
   }
 
   async update(
@@ -378,6 +402,12 @@ export class AppointmentsService {
             userId,
             'completed',
           );
+          // Award completion points for gamification
+          try {
+            await this.gamificationService.awardCompletionPoints(client.id, userId, savedAppointment.id);
+          } catch (error) {
+            console.error('Gamification completion points error:', error);
+          }
         } else if (updateDto.status === AppointmentStatus.CANCELLED) {
           await this.clientsService.updateAppointmentStats(
             client.id,
@@ -390,6 +420,12 @@ export class AppointmentsService {
             userId,
             'no_show',
           );
+          // Reset streak on no-show
+          try {
+            await this.gamificationService.updateStreak(client.id, userId, false);
+          } catch (error) {
+            console.error('Gamification streak reset error:', error);
+          }
         }
       }
     }

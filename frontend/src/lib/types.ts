@@ -220,3 +220,142 @@ export interface ClientStats {
   newClientsThisMonth: number;
   repeatClients: number;
 }
+
+// Gamification Types
+export type ClientLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
+
+export interface SpinWheelPrize {
+  id: string;
+  name: string;
+  type: 'points' | 'discount' | 'freebie' | 'nothing';
+  value: number;
+  description?: string;
+  probability: number;
+  color: string;
+}
+
+export interface GamificationSettings {
+  id: string;
+  enabled: boolean;
+  pointsPerBooking: number;
+  pointsPerCompletedAppointment: number;
+  pointsPerReferral: number;
+  pointsForReferred: number;
+  streakBonusPoints: number;
+  bronzeThreshold: number;
+  silverThreshold: number;
+  goldThreshold: number;
+  platinumThreshold: number;
+  bronzeDiscount: number;
+  silverDiscount: number;
+  goldDiscount: number;
+  platinumDiscount: number;
+  spinWheelEnabled: boolean;
+  spinWheelPrizes: SpinWheelPrize[];
+  referralsEnabled: boolean;
+  maxReferralsPerClient: number;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientGamificationSummary {
+  totalPoints: number;
+  availablePoints: number;
+  level: ClientLevel;
+  levelProgress: number;
+  nextLevel: ClientLevel | null;
+  pointsToNextLevel: number;
+  currentStreak: number;
+  longestStreak: number;
+  referralCode: string;
+  totalReferrals: number;
+  successfulReferrals: number;
+  canSpin: boolean;
+  discountPercentage: number;
+}
+
+export interface PointsHistory {
+  id: string;
+  clientId: string;
+  transactionType: string;
+  points: number;
+  balanceAfter: number;
+  description?: string;
+  relatedEntityId?: string;
+  createdAt: string;
+}
+
+export interface ClientReward {
+  id: string;
+  clientId: string;
+  rewardType: string;
+  rewardName: string;
+  description?: string;
+  valueType: 'points' | 'discount' | 'freebie';
+  value: number;
+  isRedeemed: boolean;
+  redeemedAt?: string;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+export interface GamificationStatus {
+  enabled: boolean;
+  referralsEnabled: boolean;
+  spinWheelEnabled: boolean;
+  pointsPerBooking: number;
+  levels: {
+    bronze: { threshold: number; discount: number };
+    silver: { threshold: number; discount: number };
+    gold: { threshold: number; discount: number };
+    platinum: { threshold: number; discount: number };
+  };
+}
+
+export interface ClientLookupResult {
+  found: boolean;
+  client?: {
+    id: string;
+    name: string;
+    email?: string;
+    phone: string;
+  };
+  gamification?: ClientGamificationSummary;
+}
+
+export interface ReferralValidation {
+  valid: boolean;
+  message?: string;
+  referrerName?: string;
+  bonusPoints?: number;
+}
+
+export interface SpinWheelResult {
+  prize: SpinWheelPrize;
+  pointsEarned: number;
+  newBalance: number;
+}
+
+export interface GamificationStats {
+  enabled: boolean;
+  totalPointsIssued: number;
+  totalReferrals: number;
+  levelDistribution: { level: string; count: string }[];
+  topReferrers: { id: string; name: string; referrals: number; level: string }[];
+}
+
+// Extended Client with gamification fields
+export interface ClientWithGamification extends Client {
+  totalPoints: number;
+  availablePoints: number;
+  level: ClientLevel;
+  currentStreak: number;
+  longestStreak: number;
+  totalReferrals: number;
+  successfulReferrals: number;
+  referralCode?: string;
+  referredBy?: string;
+  spinWheelSpins: number;
+  lastSpinAt?: string;
+}

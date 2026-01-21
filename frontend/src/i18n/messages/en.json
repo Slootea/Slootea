@@ -156,6 +156,7 @@
     "blockedTimes": "Blocked Times",
     "bookingLinks": "Booking Links",
     "serviceOptions": "Service Options",
+    "gamification": "Gamification",
     "settings": "Settings",
     "main": "Main",
     "configuration": "Configuration",
@@ -491,6 +492,7 @@
     "title": "Service Options",
     "description": "Define what services clients can book. Each option has its own duration.",
     "addService": "Add Service",
+    "noDescription": "No description",
     "empty": {
       "title": "No service options yet",
       "description": "Create your first one!",
@@ -579,5 +581,112 @@
     "thankYou": "Thank you for confirming! We look forward to seeing you.",
     "confirmSuccess": "Your attendance has been confirmed",
     "confirmError": "Failed to confirm"
+  },
+  "gamification": {
+    "title": "Gamification",
+    "description": "Configure gamification features to reward client loyalty",
+    "enabled": "Enable Gamification",
+    "enabledDescription": "When enabled, clients can earn points, referral rewards, and spin the wheel",
+    "stats": {
+      "totalPoints": "Total Points Earned",
+      "activeReferrals": "Active Referrals",
+      "topLevel": "Top Level Clients",
+      "spinWheelUses": "Spin Wheel Uses"
+    },
+    "tabs": {
+      "points": "Points Settings",
+      "levels": "Levels",
+      "referrals": "Referrals",
+      "spinWheel": "Spin Wheel"
+    },
+    "points": {
+      "perBooking": "Points per Booking",
+      "perReferral": "Points per Successful Referral",
+      "streakBonus": "Streak Bonus Points",
+      "streakBonusHint": "Bonus points awarded for consecutive visits"
+    },
+    "levels": {
+      "title": "Level Configuration",
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum",
+      "threshold": "Points Required",
+      "discount": "Discount %"
+    },
+    "referrals": {
+      "title": "Referral Program",
+      "enableReferrals": "Enable Referral Program",
+      "codePrefix": "Referral Code Prefix",
+      "codePrefixHint": "e.g., REF generates codes like REF-ABC123",
+      "expirationDays": "Code Expiration (days)",
+      "expirationHint": "Set to 0 for no expiration"
+    },
+    "spinWheel": {
+      "title": "Spin Wheel Configuration",
+      "enableSpinWheel": "Enable Spin Wheel",
+      "spinAfterBooking": "Spin After Booking",
+      "spinAfterBookingHint": "Allow clients to spin after completing a booking",
+      "prizes": "Prizes",
+      "addPrize": "Add Prize",
+      "prizeName": "Prize Name",
+      "prizeType": "Type",
+      "prizeValue": "Value",
+      "probability": "Probability %",
+      "types": {
+        "points": "Points",
+        "discount": "Discount",
+        "freeService": "Free Service",
+        "nothing": "No Prize"
+      }
+    },
+    "booking": {
+      "welcome": "Welcome to our booking!",
+      "enterDetails": "Enter your details to get started",
+      "haveReferral": "Have a referral code?",
+      "enterReferral": "Enter referral code",
+      "referralApplied": "Referral code applied!",
+      "referralInvalid": "Invalid or expired referral code",
+      "yourReferralCode": "Your Referral Code",
+      "shareReferral": "Share with friends to earn rewards",
+      "selectService": "Select a Service",
+      "selectDateTime": "Select Date & Time",
+      "confirmBooking": "Confirm Your Booking",
+      "bookingSuccess": "Booking Confirmed!",
+      "spinToWin": "Spin to Win!",
+      "yourRewards": "Your Rewards",
+      "pointsEarned": "Points Earned",
+      "currentStreak": "Current Streak",
+      "level": "Level",
+      "congratulations": "Congratulations!",
+      "youWon": "You won",
+      "spinAgain": "Spin again after your next booking!",
+      "noReward": "Better luck next time!",
+      "generateCode": "Generate My Referral Code",
+      "shareCode": "Share this code with friends",
+      "copyCode": "Copy Code",
+      "codeCopied": "Code copied to clipboard!"
+    },
+    "client": {
+      "adjustPoints": "Adjust Points",
+      "pointsAdjustment": "Points Adjustment",
+      "adjustReason": "Reason",
+      "adjustReasonPlaceholder": "e.g., Loyalty bonus, Compensation for issue...",
+      "addPoints": "Add Points",
+      "deductPoints": "Deduct Points",
+      "recentActivity": "Recent Activity",
+      "totalEarned": "Total earned",
+      "progressTo": "Progress to",
+      "streak": "Streak",
+      "bestStreak": "Best",
+      "referrals": "Referrals",
+      "total": "Total"
+    },
+    "messages": {
+      "settingsSaved": "Gamification settings saved",
+      "settingsFailed": "Failed to save settings",
+      "pointsAdjusted": "Points adjusted successfully",
+      "pointsFailed": "Failed to adjust points"
+    }
   }
 }

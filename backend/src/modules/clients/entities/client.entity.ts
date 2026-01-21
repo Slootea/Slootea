@@ -10,6 +10,8 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
+export type ClientLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
+
 @Entity('clients')
 @Index(['userId', 'phone'], { unique: true })
 export class Client {
@@ -42,6 +44,40 @@ export class Client {
 
   @Column({ type: 'timestamp', nullable: true })
   lastAppointmentAt: Date;
+
+  // Gamification fields
+  @Column({ type: 'int', default: 0 })
+  totalPoints: number;
+
+  @Column({ type: 'int', default: 0 })
+  availablePoints: number;
+
+  @Column({ default: 'bronze' })
+  level: ClientLevel;
+
+  @Column({ type: 'int', default: 0 })
+  currentStreak: number;
+
+  @Column({ type: 'int', default: 0 })
+  longestStreak: number;
+
+  @Column({ type: 'int', default: 0 })
+  totalReferrals: number;
+
+  @Column({ type: 'int', default: 0 })
+  successfulReferrals: number;
+
+  @Column({ nullable: true })
+  referralCode: string;
+
+  @Column({ nullable: true })
+  referredBy: string; // referral code used when signing up
+
+  @Column({ type: 'int', default: 0 })
+  spinWheelSpins: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastSpinAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

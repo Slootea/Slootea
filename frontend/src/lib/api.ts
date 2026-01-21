@@ -146,3 +146,62 @@ export const clientsApi = {
     api.put(`/clients/${id}`, data),
   delete: (id: string) => api.delete(`/clients/${id}`),
 };
+
+// Gamification API (authenticated)
+export const gamificationApi = {
+  getSettings: () => api.get('/gamification/settings'),
+  updateSettings: (data: {
+    enabled?: boolean;
+    pointsPerBooking?: number;
+    pointsPerCompletedAppointment?: number;
+    pointsPerReferral?: number;
+    pointsForReferred?: number;
+    streakBonusPoints?: number;
+    bronzeThreshold?: number;
+    silverThreshold?: number;
+    goldThreshold?: number;
+    platinumThreshold?: number;
+    bronzeDiscount?: number;
+    silverDiscount?: number;
+    goldDiscount?: number;
+    platinumDiscount?: number;
+    spinWheelEnabled?: boolean;
+    spinWheelPrizes?: any[];
+    referralsEnabled?: boolean;
+    maxReferralsPerClient?: number;
+  }) => api.put('/gamification/settings', data),
+  getStats: () => api.get('/gamification/stats'),
+  getClientGamification: (clientId: string) => api.get(`/gamification/clients/${clientId}`),
+  updateClientGamification: (clientId: string, data: {
+    totalPoints?: number;
+    availablePoints?: number;
+    level?: string;
+    currentStreak?: number;
+    longestStreak?: number;
+  }) => api.put(`/gamification/clients/${clientId}`, data),
+  adjustPoints: (clientId: string, data: { points: number; reason?: string }) =>
+    api.post(`/gamification/clients/${clientId}/adjust-points`, data),
+  getPointsHistory: (clientId: string, limit?: number) =>
+    api.get(`/gamification/clients/${clientId}/history`, { params: { limit } }),
+  getClientRewards: (clientId: string, includeRedeemed?: boolean) =>
+    api.get(`/gamification/clients/${clientId}/rewards`, { params: { includeRedeemed } }),
+  generateReferralCode: (clientId: string) =>
+    api.post(`/gamification/clients/${clientId}/generate-referral`),
+  redeemReward: (rewardId: string) =>
+    api.post(`/gamification/rewards/${rewardId}/redeem`),
+};
+
+// Public Gamification API
+export const publicGamificationApi = {
+  getStatus: (slug: string) => api.get(`/public/gamification/${slug}/status`),
+  lookupClient: (slug: string, phone: string) =>
+    api.post(`/public/gamification/${slug}/lookup`, { phone }),
+  validateReferral: (slug: string, referralCode: string, clientPhone?: string) =>
+    api.post(`/public/gamification/${slug}/validate-referral${clientPhone ? `?clientPhone=${encodeURIComponent(clientPhone)}` : ''}`, { referralCode }),
+  generateReferralCode: (slug: string, clientId: string) =>
+    api.post(`/public/gamification/${slug}/generate-referral`, { clientId }),
+  spinWheel: (slug: string, clientId: string) =>
+    api.post(`/public/gamification/${slug}/spin`, { clientId }),
+  getSpinWheelConfig: (slug: string) =>
+    api.get(`/public/gamification/${slug}/spin-wheel-config`),
+};
