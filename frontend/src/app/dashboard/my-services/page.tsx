@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
-import { serviceOptionsApi, userServiceOptionsApi } from "@/lib/api";
+import { serviceOptionsApi, userServiceOptionsApi, setAuthToken } from "@/lib/api";
 import { ServiceOption, UserServiceOption } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function MyServicesPage() {
+  const { getToken } = useAuth();
   const t = useTranslations('myServices');
   const { toast } = useToast();
   const { currentOrganization, isLoading: orgLoading } = useOrganizationContext();
@@ -40,6 +42,8 @@ export default function MyServicesPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
+      const token = await getToken();
+      setAuthToken(token);
       const [orgServicesRes, myServicesRes] = await Promise.all([
         serviceOptionsApi.getActiveForOrganization(),
         userServiceOptionsApi.getMyServices(),
@@ -82,6 +86,8 @@ export default function MyServicesPage() {
     setTogglingService(serviceId);
     
     try {
+      const token = await getToken();
+      setAuthToken(token);
       if (action === 'add') {
         await userServiceOptionsApi.assignService({ serviceOptionId: serviceId });
         toast({
@@ -112,6 +118,8 @@ export default function MyServicesPage() {
     setTogglingService(serviceId);
     
     try {
+      const token = await getToken();
+      setAuthToken(token);
       await userServiceOptionsApi.toggleService(serviceId);
       await loadData();
       toast({

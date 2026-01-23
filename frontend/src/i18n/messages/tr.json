@@ -404,6 +404,24 @@
     "addTimeSlot": "Zaman Dilimi Ekle",
     "noAvailability": "Müsaitlik ayarlanmadı",
     "allServices": "Tüm hizmetler",
+    "activeSlots": "aktif dilim",
+    "daysConfigured": "gün yapılandırıldı",
+    "hoursPerWeek": "saat/hafta",
+    "quickSetup": "Hızlı Kurulum",
+    "clearAll": "Tümünü Temizle",
+    "useTemplate": "Şablon Kullan",
+    "addManually": "Manuel Ekle",
+    "addSlotToDay": "Bu güne dilim ekle",
+    "copyToOtherDays": "Diğer günlere kopyala",
+    "clickToAdd": "Eklemek için tıklayın",
+    "addMore": "Daha fazla ekle",
+    "disable": "Devre dışı bırak",
+    "enable": "Etkinleştir",
+    "delete": "Sil",
+    "statusActive": "Aktif",
+    "statusInactive": "Pasif",
+    "allDays": "Tüm günler",
+    "weekdays": "Hafta içi",
     "dayOfWeek": {
       "0": "Pazartesi",
       "1": "Salı",
@@ -413,18 +431,67 @@
       "5": "Cumartesi",
       "6": "Pazar"
     },
+    "templates": {
+      "standard": "Standart (09:00 - 17:00)",
+      "morning": "Sabah Saatleri (06:00 - 12:00)",
+      "evening": "Akşam Saatleri (17:00 - 21:00)",
+      "splitShift": "Bölünmüş Vardiya",
+      "fullWeek": "Tam Hafta (7 gün)"
+    },
+    "emptyState": {
+      "title": "Müsaitlik yapılandırılmadı",
+      "description": "Müşterilerinizin sizinle randevu alabileceği çalışma saatlerinizi ayarlayın. Hızlı bir şablon kullanabilir veya dilimleri manuel olarak ekleyebilirsiniz."
+    },
     "dialog": {
       "title": "Müsaitlik Dilimi Ekle",
+      "editTitle": "Müsaitlik Dilimini Düzenle",
+      "description": "Randevular için müsait olduğunuz yeni bir zaman dilimi ekleyin.",
+      "editDescription": "Müsaitlik için zaman dilimini güncelleyin.",
       "dayOfWeek": "Haftanın Günü",
+      "selectTime": "Zaman Aralığı Seçin",
       "startTime": "Başlangıç Saati",
       "endTime": "Bitiş Saati",
+      "dragToSelect": "Zaman aralığı seçmek için sürükleyin",
       "service": "Hizmet (İsteğe Bağlı)",
       "serviceHint": "Tüm hizmetlere uygulamak için boş bırakın"
+    },
+    "presets": {
+      "morning": "Sabah",
+      "afternoon": "Öğleden Sonra",
+      "evening": "Akşam",
+      "fullDay": "Tam Gün"
+    },
+    "periods": {
+      "morning": "Sabah",
+      "afternoon": "Öğleden Sonra",
+      "evening": "Akşam"
+    },
+    "templateDialog": {
+      "title": "Program Şablonu Seçin",
+      "description": "Müsaitliğinizi hızlıca ayarlamak için bir şablon seçin. Bu, mevcut programınızın yerini alacaktır."
+    },
+    "copyDialog": {
+      "title": "Programı Kopyala",
+      "description": "{day} gününün programını diğer günlere kopyalayın.",
+      "confirm": "Programı Kopyala"
+    },
+    "tips": {
+      "title": "İpucu",
+      "description": "Düzenlemek için herhangi bir zaman dilimine tıklayın veya fare üzerine geldiğinde görünen hızlı eylemleri kullanarak dilimleri açın/kapatın veya silin."
     },
     "messages": {
       "created": "Müsaitlik dilimi oluşturuldu",
       "deleted": "Müsaitlik dilimi silindi",
-      "updated": "Müsaitlik güncellendi"
+      "updated": "Müsaitlik güncellendi",
+      "createError": "Müsaitlik dilimi oluşturulamadı",
+      "updateError": "Müsaitlik güncellenemedi",
+      "deleteError": "Müsaitlik dilimi silinemedi",
+      "templateApplied": "Program şablonu başarıyla uygulandı",
+      "templateError": "Şablon uygulanamadı",
+      "slotsCopied": "Program başarıyla kopyalandı",
+      "copyError": "Program kopyalanamadı",
+      "clearedAll": "Tüm müsaitlikler temizlendi",
+      "clearError": "Müsaitlik temizlenemedi"
     }
   },
   "blocksPage": {
