@@ -3,7 +3,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { publicApi, publicGamificationApi } from "@/lib/api";
+import { publicApi, publicGamificationApi, publicVirtualPetApi } from "@/lib/api";
 import {
   PublicBookingLink,
   ServiceOption,
@@ -12,6 +12,7 @@ import {
   ReferralValidation,
   AvailableSlot,
   SpinWheelResult,
+  VirtualPetStatus,
 } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import {
 import { GamificationCard, MiniGamificationCard } from "@/components/gamification/gamification-card";
 import { ReferralInput } from "@/components/gamification/referral-input";
 import { SpinWheel } from "@/components/gamification/spin-wheel";
+import { VirtualPetWidget } from "@/components/gamification/virtual-pet";
 
 // Simple animation wrapper (replace with framer-motion when installed)
 const MotionDiv = ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -92,17 +94,20 @@ export default function GamifiedBookingPage() {
   const [bookedAppointmentId, setBookedAppointmentId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
+  const [virtualPetEnabled, setVirtualPetEnabled] = useState(false);
 
   // Load booking link and gamification status
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [linkRes, gamRes] = await Promise.all([
+        const [linkRes, gamRes, petRes] = await Promise.all([
           publicApi.getBookingLink(slug),
           publicGamificationApi.getStatus(slug).catch(() => ({ data: { enabled: false } })),
+          publicVirtualPetApi.getStatus(slug).catch(() => ({ data: { enabled: false } })),
         ]);
         setBookingLink(linkRes.data);
         setGamificationStatus(gamRes.data);
+        setVirtualPetEnabled(petRes.data.enabled);
       } catch (err: any) {
         setError(err.response?.data?.message || "This booking link is not available");
       } finally {
@@ -796,11 +801,32 @@ export default function GamifiedBookingPage() {
                 </p>
               </div>
 
-              <GamificationCard
-                gamification={clientLookup.gamification}
-                slug={slug}
-                clientId={clientId!}
-              />
+              <div className="space-y-6">
+                <GamificationCard
+                  gamification={clientLookup.gamification}
+                  slug={slug}
+                  clientId={clientId!}
+                />
+
+                {/* Virtual Pet Section */}
+                {virtualPetEnabled && clientId && (
+                  <div className="mt-6">
+                    <div className="text-center mb-4">
+                      <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
+                        🐾 Your Virtual Pet
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Use your points to care for your pet and watch them grow!
+                      </p>
+                    </div>
+                    <VirtualPetWidget
+                      slug={slug}
+                      clientId={clientId}
+                      clientPoints={clientLookup.gamification.availablePoints}
+                    />
+                  </div>
+                )}
+              </div>
 
               <div className="mt-6 flex gap-2 justify-center">
                 <Button

@@ -320,6 +320,7 @@ export default function GamificationPage() {
           <TabsTrigger value="levels">Levels</TabsTrigger>
           <TabsTrigger value="referrals">Referrals</TabsTrigger>
           <TabsTrigger value="spinwheel">Spin Wheel</TabsTrigger>
+          <TabsTrigger value="virtualpet">Virtual Pet</TabsTrigger>
         </TabsList>
 
         {/* Points Settings */}
@@ -661,6 +662,91 @@ export default function GamificationPage() {
                   >
                     Load default prizes
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Virtual Pet Settings */}
+        <TabsContent value="virtualpet">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  🐾 Virtual Pet
+                </span>
+                <Switch
+                  checked={settings?.virtualPetEnabled || false}
+                  onCheckedChange={(checked) => updateSetting('virtualPetEnabled', checked)}
+                />
+              </CardTitle>
+              <CardDescription>
+                Let clients adopt and care for a virtual pet that grows with their loyalty
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
+                <div className="flex items-start gap-4">
+                  <div className="text-5xl">🐱</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2">How Virtual Pet Works</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Clients can adopt a virtual pet after booking</li>
+                      <li>• They use their points to buy food, toys, and decorations</li>
+                      <li>• Playing and feeding the pet increases its happiness and makes it grow</li>
+                      <li>• Pets evolve through stages: Egg → Baby → Teen → Adult → Elder</li>
+                      <li>• The pet playground can be customized with purchased items</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg border text-center">
+                  <div className="text-3xl mb-2">🥚</div>
+                  <p className="font-medium">Egg</p>
+                  <p className="text-xs text-muted-foreground">Starting stage</p>
+                </div>
+                <div className="p-4 rounded-lg border text-center">
+                  <div className="text-3xl mb-2">🐱</div>
+                  <p className="font-medium">Baby</p>
+                  <p className="text-xs text-muted-foreground">100 XP</p>
+                </div>
+                <div className="p-4 rounded-lg border text-center">
+                  <div className="text-3xl mb-2">😺</div>
+                  <p className="font-medium">Teen</p>
+                  <p className="text-xs text-muted-foreground">500 XP</p>
+                </div>
+                <div className="p-4 rounded-lg border text-center">
+                  <div className="text-3xl mb-2">😸</div>
+                  <p className="font-medium">Adult</p>
+                  <p className="text-xs text-muted-foreground">1500 XP</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium">Pet Shop Items</h4>
+                <p className="text-sm text-muted-foreground">
+                  Clients can use their reward points to purchase items from the pet shop. 
+                  Items include food to keep their pet happy, toys for playtime, 
+                  accessories to dress up their pet, and decorations for their playground.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Badge variant="secondary">🍖 Basic Kibble - 10 pts</Badge>
+                  <Badge variant="secondary">⚽ Bouncy Ball - 30 pts</Badge>
+                  <Badge variant="secondary">🎀 Cute Bow - 40 pts</Badge>
+                  <Badge variant="secondary">🛏️ Cozy Bed - 50 pts</Badge>
+                  <Badge variant="secondary">✨ Golden Feast - 100 pts</Badge>
+                  <Badge variant="secondary">👑 Royal Crown - 300 pts</Badge>
+                </div>
+              </div>
+
+              {!settings?.virtualPetEnabled && (
+                <div className="bg-muted/50 rounded-lg p-4 text-center">
+                  <p className="text-muted-foreground">
+                    Enable the virtual pet feature to let your clients enjoy this engaging experience!
+                  </p>
                 </div>
               )}
             </CardContent>

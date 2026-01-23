@@ -36,6 +36,11 @@ export class CreateServiceOptionDto {
   @IsOptional()
   @IsInt()
   sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Organization ID for org-level service' })
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
 }
 
 export class UpdateServiceOptionDto {

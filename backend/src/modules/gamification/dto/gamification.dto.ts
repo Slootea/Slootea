@@ -121,6 +121,10 @@ export class CreateGamificationSettingsDto {
   @IsInt()
   @Min(0)
   maxReferralsPerClient?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  virtualPetEnabled?: boolean;
 }
 
 export class UpdateGamificationSettingsDto extends PartialType(CreateGamificationSettingsDto) {}

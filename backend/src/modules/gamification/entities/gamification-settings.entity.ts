@@ -73,6 +73,10 @@ export class GamificationSettings {
   @Column({ type: 'int', default: 0, comment: 'Max referrals per client, 0 = unlimited' })
   maxReferralsPerClient: number;
 
+  // Virtual pet configuration
+  @Column({ default: false })
+  virtualPetEnabled: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

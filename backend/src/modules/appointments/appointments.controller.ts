@@ -8,8 +8,9 @@ import {
   Query,
   UseGuards,
   Request,
+  Headers,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import {
   CreateAppointmentDto,
@@ -17,6 +18,8 @@ import {
   AppointmentQueryDto,
 } from './dto/appointment.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
 
 @ApiTags('appointments')
 @Controller('appointments')
@@ -25,8 +28,9 @@ export class AppointmentsController {
 
   // Protected routes (require authentication)
   @Get()
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get all appointments for current user with pagination and filtering' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -35,8 +39,23 @@ export class AppointmentsController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiQuery({ name: 'serviceOptionId', required: false, type: String })
-  async findAll(@Request() req: any, @Query() query: AppointmentQueryDto) {
-    return this.appointmentsService.findAllByUserPaginated(req.user.dbUserId, query);
+  @ApiQuery({ name: 'userId', required: false, type: String, description: 'Filter by user ID (org admin only)' })
+  async findAll(
+    @Request() req: any,
+    @Query() query: AppointmentQueryDto,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    // If organization admin and userId filter is specified, use that userId
+    // Otherwise use the current user's ID
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    const targetUserId = (isOrgAdmin && query.userId) ? query.userId : req.user.dbUserId;
+    
+    // If admin filtering all members (no specific userId), get all org appointments
+    if (isOrgAdmin && organizationId && !query.userId) {
+      return this.appointmentsService.findAllByOrganizationPaginated(organizationId, query);
+    }
+    
+    return this.appointmentsService.findAllByUserPaginated(targetUserId, query);
   }
 
   @Get('today')

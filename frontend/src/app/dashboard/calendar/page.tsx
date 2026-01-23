@@ -8,6 +8,7 @@ import {
   availabilityApi,
   blockedTimesApi,
   setAuthToken,
+  setOrganizationContext,
 } from "@/lib/api";
 import {
   Appointment,
@@ -41,6 +42,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   ChevronLeft,
   ChevronRight,
@@ -57,6 +59,7 @@ import {
   Loader2,
   ArrowLeftRight,
   GripVertical,
+  Users,
 } from "lucide-react";
 import {
   format,
@@ -74,6 +77,7 @@ import {
   startOfDay,
   endOfDay,
 } from "date-fns";
+import { useOrganizationContext, OrganizationMember } from "@/components/providers/organization-provider";
 
 // Types
 interface CalendarEvent {
@@ -116,6 +120,7 @@ const TOTAL_HOURS = END_HOUR - START_HOUR;
 export default function CalendarPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization, isAdmin, members } = useOrganizationContext();
 
   // State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -125,6 +130,9 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "day">("week");
+  
+  // Member filter state (for organization admins)
+  const [selectedMember, setSelectedMember] = useState<string>("all");
 
   // Edit appointment state
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
@@ -180,19 +188,30 @@ export default function CalendarPage() {
   const fetchData = useCallback(async () => {
     const token = await getToken();
     setAuthToken(token);
+    if (currentOrganization) {
+      setOrganizationContext(currentOrganization.id);
+    }
 
     try {
       const startDate = format(viewMode === "week" ? weekStart : currentDate, "yyyy-MM-dd");
       const endDate = format(viewMode === "week" ? weekEnd : currentDate, "yyyy-MM-dd");
 
+      // Build query params including member filter for org admins
+      const appointmentParams: Record<string, unknown> = {
+        startDate,
+        endDate,
+        limit: 100,
+        sortBy: "startTime",
+        sortOrder: "ASC",
+      };
+
+      // If admin and a specific member is selected, filter by userId
+      if (currentOrganization && isAdmin && selectedMember !== "all") {
+        appointmentParams.userId = selectedMember;
+      }
+
       const [appointmentsRes, servicesRes, availabilityRes, blockedRes] = await Promise.all([
-        appointmentsApi.getAll({
-          startDate,
-          endDate,
-          limit: 100,
-          sortBy: "startTime",
-          sortOrder: "ASC",
-        }),
+        appointmentsApi.getAll(appointmentParams),
         serviceOptionsApi.getAll(),
         availabilityApi.getAll(),
         blockedTimesApi.getAll({ startDate, endDate }),
@@ -212,7 +231,7 @@ export default function CalendarPage() {
     } finally {
       setLoading(false);
     }
-  }, [getToken, weekStart, weekEnd, currentDate, viewMode, toast]);
+  }, [getToken, weekStart, weekEnd, currentDate, viewMode, toast, currentOrganization, isAdmin, selectedMember]);
 
   useEffect(() => {
     fetchData();
@@ -1004,6 +1023,44 @@ export default function CalendarPage() {
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Member Filter (Organization Admin only) */}
+              {currentOrganization && isAdmin && members.length > 0 && (
+                <Select value={selectedMember} onValueChange={setSelectedMember}>
+                  <SelectTrigger className="w-[200px]">
+                    <Users className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Members" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        All Members
+                      </div>
+                    </SelectItem>
+                    {members.map((member) => (
+                      <SelectItem key={member.clerkId} value={member.clerkId}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage src={member.imageUrl} />
+                            <AvatarFallback className="text-xs">
+                              {(member.firstName?.[0] || member.email[0]).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>
+                            {member.firstName 
+                              ? `${member.firstName} ${member.lastName || ''}`
+                              : member.email.split('@')[0]}
+                          </span>
+                          {member.role === 'org:admin' && (
+                            <Badge variant="outline" className="text-xs ml-1">Admin</Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               {/* View Mode Toggle */}
               <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "week" | "day")}>
                 <TabsList>

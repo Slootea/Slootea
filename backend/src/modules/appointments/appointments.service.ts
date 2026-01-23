@@ -198,6 +198,92 @@ export class AppointmentsService {
     };
   }
 
+  async findAllByOrganizationPaginated(
+    organizationId: string,
+    query: AppointmentQueryDto,
+  ): Promise<PaginatedResult<Appointment>> {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search,
+      startDate,
+      endDate,
+      serviceOptionId,
+      sortBy = 'startTime',
+      sortOrder = 'DESC',
+    } = query;
+
+    const queryBuilder = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.serviceOption', 'serviceOption')
+      .leftJoinAndSelect('appointment.user', 'user')
+      .where('user.organizationId = :organizationId', { organizationId });
+
+    // Filter by status
+    if (status) {
+      queryBuilder.andWhere('appointment.status = :status', { status });
+    }
+
+    // Search by client name, email, or phone
+    if (search) {
+      queryBuilder.andWhere(
+        '(LOWER(appointment.clientName) LIKE LOWER(:search) OR LOWER(appointment.clientEmail) LIKE LOWER(:search) OR appointment.clientPhone LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Filter by date range
+    if (startDate) {
+      queryBuilder.andWhere('appointment.startTime >= :startDate', {
+        startDate: new Date(startDate),
+      });
+    }
+
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      queryBuilder.andWhere('appointment.startTime <= :endDate', {
+        endDate: endDateTime,
+      });
+    }
+
+    // Filter by service option
+    if (serviceOptionId) {
+      queryBuilder.andWhere('appointment.serviceOptionId = :serviceOptionId', {
+        serviceOptionId,
+      });
+    }
+
+    // Sorting
+    const validSortFields = ['startTime', 'clientName', 'status', 'createdAt'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'startTime';
+    queryBuilder.orderBy(`appointment.${sortField}`, sortOrder);
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const data = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
   async findUpcoming(userId: string): Promise<Appointment[]> {
     return this.appointmentRepository.find({
       where: {

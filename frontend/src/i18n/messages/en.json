@@ -160,7 +160,12 @@
     "settings": "Settings",
     "main": "Main",
     "configuration": "Configuration",
-    "system": "System"
+    "system": "System",
+    "myConfiguration": "My Configuration",
+    "adminConfiguration": "Admin",
+    "myServices": "My Services",
+    "members": "Members",
+    "organizationSettings": "Organization Settings"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -688,5 +693,104 @@
       "pointsAdjusted": "Points adjusted successfully",
       "pointsFailed": "Failed to adjust points"
     }
+  },
+  "organization": {
+    "title": "Organization Settings",
+    "description": "Manage your organization settings and member preferences",
+    "noOrganization": "No Organization",
+    "selectOrganization": "Select Organization",
+    "createOrganization": "Create Organization",
+    "switchOrganization": "Switch Organization",
+    "organizationName": "Organization Name",
+    "admin": "Admin",
+    "member": "Member",
+    "tabs": {
+      "general": "General",
+      "booking": "Booking",
+      "notifications": "Notifications"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Configure how clients book appointments with your organization",
+      "allowProviderSelection": "Allow Provider Selection",
+      "allowProviderSelectionHint": "When enabled, clients can choose a specific team member when booking",
+      "autoAssignProvider": "Auto-Assign Provider",
+      "autoAssignProviderHint": "Automatically assign the most available provider when client doesn't choose",
+      "showProviderNames": "Show Provider Names",
+      "showProviderNamesHint": "Display provider names to clients during booking",
+      "showProviderPhotos": "Show Provider Photos",
+      "showProviderPhotosHint": "Display provider photos to clients during booking"
+    },
+    "booking": {
+      "title": "Booking Settings",
+      "description": "Configure booking window and limits",
+      "minAdvanceBooking": "Minimum Advance Booking (hours)",
+      "minAdvanceBookingHint": "Minimum hours in advance clients must book",
+      "maxAdvanceBooking": "Maximum Advance Booking (days)",
+      "maxAdvanceBookingHint": "Maximum days in advance clients can book",
+      "bufferTime": "Buffer Time (minutes)",
+      "bufferTimeHint": "Time between consecutive appointments",
+      "maxAppointmentsPerDay": "Max Appointments Per Day",
+      "maxAppointmentsPerDayHint": "Maximum appointments per provider per day (0 = unlimited)"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "description": "Configure how notifications are sent",
+      "sendEmailNotifications": "Email Notifications",
+      "sendEmailNotificationsHint": "Send email notifications to clients",
+      "sendSmsNotifications": "SMS Notifications",
+      "sendSmsNotificationsHint": "Send SMS notifications to clients",
+      "reminderHours": "Reminder Hours",
+      "reminderHoursHint": "Hours before appointment to send reminder"
+    },
+    "messages": {
+      "saved": "Organization settings saved",
+      "saveFailed": "Failed to save settings",
+      "loadFailed": "Failed to load settings"
+    }
+  },
+  "myServices": {
+    "title": "My Services",
+    "description": "Choose which services you offer to clients",
+    "availableServices": "Available Services",
+    "noServices": "No services available. Ask your admin to create services.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "duration": "Duration",
+    "customDuration": "Custom Duration",
+    "customDurationHint": "Override the default duration for this service",
+    "customDescription": "Custom Description",
+    "customDescriptionHint": "Add your own description for this service",
+    "useDefault": "Use Default",
+    "minutes": "minutes",
+    "messages": {
+      "updated": "Services updated successfully",
+      "updateFailed": "Failed to update services"
+    }
+  },
+  "members": {
+    "title": "Team Members",
+    "description": "Manage your organization's team members and their roles",
+    "invite": "Invite Member",
+    "noMembers": "No members found",
+    "role": "Role",
+    "joinedAt": "Joined",
+    "lastActive": "Last Active",
+    "services": "Services",
+    "servicesCount": "{count} services",
+    "viewDetails": "View Details",
+    "memberDetails": "Member Details",
+    "memberInfo": "Member Information",
+    "assignedServices": "Assigned Services",
+    "noAssignedServices": "No services assigned",
+    "availability": "Availability",
+    "noAvailability": "No availability set",
+    "recentAppointments": "Recent Appointments",
+    "noAppointments": "No recent appointments",
+    "statistics": "Statistics",
+    "totalAppointments": "Total Appointments",
+    "completedAppointments": "Completed",
+    "cancelledAppointments": "Cancelled",
+    "activeServices": "Active Services"
   }
 }

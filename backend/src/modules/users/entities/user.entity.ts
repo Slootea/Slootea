@@ -40,6 +40,12 @@ export class User {
   @Column({ nullable: true })
   timezone: string;
 
+  @Column({ nullable: true })
+  organizationId: string;
+
+  @Column({ nullable: true })
+  organizationRole: string;
+
   @Column({ default: true })
   isActive: boolean;
 

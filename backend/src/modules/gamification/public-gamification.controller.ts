@@ -66,6 +66,7 @@ export class PublicGamificationController {
       enabled: settings.enabled,
       referralsEnabled: settings.referralsEnabled,
       spinWheelEnabled: settings.spinWheelEnabled,
+      virtualPetEnabled: settings.virtualPetEnabled,
       pointsPerBooking: settings.pointsPerBooking,
       levels: {
         bronze: { threshold: settings.bronzeThreshold, discount: settings.bronzeDiscount },

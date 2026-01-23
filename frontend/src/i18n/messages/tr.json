@@ -160,7 +160,12 @@
     "settings": "Ayarlar",
     "main": "Ana Menü",
     "configuration": "Yapılandırma",
-    "system": "Sistem"
+    "system": "Sistem",
+    "myConfiguration": "Yapılandırmam",
+    "adminConfiguration": "Yönetici",
+    "myServices": "Hizmetlerim",
+    "members": "Üyeler",
+    "organizationSettings": "Organizasyon Ayarları"
   },
   "dashboard": {
     "title": "Panel",
@@ -688,5 +693,104 @@
       "pointsAdjusted": "Puanlar başarıyla ayarlandı",
       "pointsFailed": "Puanlar ayarlanamadı"
     }
+  },
+  "organization": {
+    "title": "Organizasyon Ayarları",
+    "description": "Organizasyon ayarlarınızı ve üye tercihlerini yönetin",
+    "noOrganization": "Organizasyon Yok",
+    "selectOrganization": "Organizasyon Seç",
+    "createOrganization": "Organizasyon Oluştur",
+    "switchOrganization": "Organizasyon Değiştir",
+    "organizationName": "Organizasyon Adı",
+    "admin": "Yönetici",
+    "member": "Üye",
+    "tabs": {
+      "general": "Genel",
+      "booking": "Rezervasyon",
+      "notifications": "Bildirimler"
+    },
+    "general": {
+      "title": "Genel Ayarlar",
+      "description": "Müşterilerin organizasyonunuzla nasıl randevu alacağını yapılandırın",
+      "allowProviderSelection": "Sağlayıcı Seçimine İzin Ver",
+      "allowProviderSelectionHint": "Etkinleştirildiğinde, müşteriler rezervasyon yaparken belirli bir ekip üyesi seçebilir",
+      "autoAssignProvider": "Otomatik Sağlayıcı Ata",
+      "autoAssignProviderHint": "Müşteri seçmediğinde en uygun sağlayıcıyı otomatik olarak ata",
+      "showProviderNames": "Sağlayıcı Adlarını Göster",
+      "showProviderNamesHint": "Rezervasyon sırasında müşterilere sağlayıcı adlarını göster",
+      "showProviderPhotos": "Sağlayıcı Fotoğraflarını Göster",
+      "showProviderPhotosHint": "Rezervasyon sırasında müşterilere sağlayıcı fotoğraflarını göster"
+    },
+    "booking": {
+      "title": "Rezervasyon Ayarları",
+      "description": "Rezervasyon penceresi ve limitleri yapılandırın",
+      "minAdvanceBooking": "Minimum Önceden Rezervasyon (saat)",
+      "minAdvanceBookingHint": "Müşterilerin minimum kaç saat önceden rezervasyon yapması gerekir",
+      "maxAdvanceBooking": "Maksimum Önceden Rezervasyon (gün)",
+      "maxAdvanceBookingHint": "Müşterilerin maksimum kaç gün önceden rezervasyon yapabileceği",
+      "bufferTime": "Tampon Süresi (dakika)",
+      "bufferTimeHint": "Ardışık randevular arasındaki süre",
+      "maxAppointmentsPerDay": "Günlük Maksimum Randevu",
+      "maxAppointmentsPerDayHint": "Sağlayıcı başına günlük maksimum randevu (0 = sınırsız)"
+    },
+    "notifications": {
+      "title": "Bildirim Ayarları",
+      "description": "Bildirimlerin nasıl gönderileceğini yapılandırın",
+      "sendEmailNotifications": "E-posta Bildirimleri",
+      "sendEmailNotificationsHint": "Müşterilere e-posta bildirimi gönder",
+      "sendSmsNotifications": "SMS Bildirimleri",
+      "sendSmsNotificationsHint": "Müşterilere SMS bildirimi gönder",
+      "reminderHours": "Hatırlatma Saati",
+      "reminderHoursHint": "Randevudan kaç saat önce hatırlatma gönderileceği"
+    },
+    "messages": {
+      "saved": "Organizasyon ayarları kaydedildi",
+      "saveFailed": "Ayarlar kaydedilemedi",
+      "loadFailed": "Ayarlar yüklenemedi"
+    }
+  },
+  "myServices": {
+    "title": "Hizmetlerim",
+    "description": "Müşterilere sunduğunuz hizmetleri seçin",
+    "availableServices": "Mevcut Hizmetler",
+    "noServices": "Mevcut hizmet yok. Yöneticinizden hizmet oluşturmasını isteyin.",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "duration": "Süre",
+    "customDuration": "Özel Süre",
+    "customDurationHint": "Bu hizmet için varsayılan süreyi geçersiz kıl",
+    "customDescription": "Özel Açıklama",
+    "customDescriptionHint": "Bu hizmet için kendi açıklamanızı ekleyin",
+    "useDefault": "Varsayılanı Kullan",
+    "minutes": "dakika",
+    "messages": {
+      "updated": "Hizmetler başarıyla güncellendi",
+      "updateFailed": "Hizmetler güncellenemedi"
+    }
+  },
+  "members": {
+    "title": "Ekip Üyeleri",
+    "description": "Organizasyonunuzun ekip üyelerini ve rollerini yönetin",
+    "invite": "Üye Davet Et",
+    "noMembers": "Üye bulunamadı",
+    "role": "Rol",
+    "joinedAt": "Katıldı",
+    "lastActive": "Son Aktif",
+    "services": "Hizmetler",
+    "servicesCount": "{count} hizmet",
+    "viewDetails": "Detayları Gör",
+    "memberDetails": "Üye Detayları",
+    "memberInfo": "Üye Bilgileri",
+    "assignedServices": "Atanan Hizmetler",
+    "noAssignedServices": "Atanmış hizmet yok",
+    "availability": "Müsaitlik",
+    "noAvailability": "Müsaitlik ayarlanmadı",
+    "recentAppointments": "Son Randevular",
+    "noAppointments": "Son randevu yok",
+    "statistics": "İstatistikler",
+    "totalAppointments": "Toplam Randevu",
+    "completedAppointments": "Tamamlanan",
+    "cancelledAppointments": "İptal Edilen",
+    "activeServices": "Aktif Hizmetler"
   }
 }

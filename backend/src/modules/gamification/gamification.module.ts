@@ -10,6 +10,10 @@ import { PointsHistory } from './entities/points-history.entity';
 import { Client } from '../clients/entities/client.entity';
 import { BookingLink } from '../booking-links/entities/booking-link.entity';
 import { AuthModule } from '../auth/auth.module';
+import { VirtualPet } from './entities/virtual-pet.entity';
+import { PetInventoryItem } from './entities/pet-item.entity';
+import { VirtualPetService } from './virtual-pet.service';
+import { PublicVirtualPetController } from './public-virtual-pet.controller';
 
 @Module({
   imports: [
@@ -20,11 +24,13 @@ import { AuthModule } from '../auth/auth.module';
       PointsHistory,
       Client,
       BookingLink,
+      VirtualPet,
+      PetInventoryItem,
     ]),
     AuthModule,
   ],
-  controllers: [GamificationController, PublicGamificationController],
-  providers: [GamificationService],
-  exports: [GamificationService],
+  controllers: [GamificationController, PublicGamificationController, PublicVirtualPetController],
+  providers: [GamificationService, VirtualPetService],
+  exports: [GamificationService, VirtualPetService],
 })
 export class GamificationModule {}

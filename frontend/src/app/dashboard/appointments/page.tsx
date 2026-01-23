@@ -6,6 +6,7 @@ import {
   appointmentsApi,
   serviceOptionsApi,
   setAuthToken,
+  setOrganizationContext,
 } from "@/lib/api";
 import {
   Appointment,
@@ -44,6 +45,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Calendar,
   Clock,
@@ -60,15 +62,18 @@ import {
   Timer,
   ArrowUpDown,
   RefreshCw,
+  Users,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isToday, isTomorrow, isPast, differenceInMinutes } from "date-fns";
 import { useTranslations } from "next-intl";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 
 export default function AppointmentsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
   const t = useTranslations("appointmentsPage");
   const tCommon = useTranslations("common");
+  const { currentOrganization, isAdmin, members } = useOrganizationContext();
 
   // State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -77,6 +82,9 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  
+  // Member filter state (for organization admins)
+  const [selectedMember, setSelectedMember] = useState<string>("all");
 
   // Pagination & Filters
   const [filters, setFilters] = useState<AppointmentFilters>({
@@ -107,6 +115,9 @@ export default function AppointmentsPage() {
   const fetchData = useCallback(async (showRefreshing = false) => {
     const token = await getToken();
     setAuthToken(token);
+    if (currentOrganization) {
+      setOrganizationContext(currentOrganization.id);
+    }
 
     if (showRefreshing) {
       setRefreshing(true);
@@ -141,6 +152,11 @@ export default function AppointmentsPage() {
         queryParams.serviceOptionId = filters.serviceOptionId;
       }
 
+      // If admin and a specific member is selected, filter by userId
+      if (currentOrganization && isAdmin && selectedMember !== "all") {
+        queryParams.userId = selectedMember;
+      }
+
       // Fetch appointments with pagination
       const [appointmentsRes, nextRes, servicesRes] = await Promise.all([
         appointmentsApi.getAll(queryParams),
@@ -164,7 +180,7 @@ export default function AppointmentsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [getToken, filters, debouncedSearch, toast]);
+  }, [getToken, filters, debouncedSearch, toast, currentOrganization, isAdmin, selectedMember]);
 
   useEffect(() => {
     fetchData();
@@ -329,6 +345,44 @@ export default function AppointmentsPage() {
                   className="pl-9"
                 />
               </div>
+
+              {/* Member Filter (Organization Admin only) */}
+              {currentOrganization && isAdmin && members.length > 0 && (
+                <Select value={selectedMember} onValueChange={setSelectedMember}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <Users className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Members" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        All Members
+                      </div>
+                    </SelectItem>
+                    {members.map((member) => (
+                      <SelectItem key={member.clerkId} value={member.clerkId}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage src={member.imageUrl} />
+                            <AvatarFallback className="text-xs">
+                              {(member.firstName?.[0] || member.email[0]).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>
+                            {member.firstName 
+                              ? `${member.firstName} ${member.lastName || ''}`
+                              : member.email.split('@')[0]}
+                          </span>
+                          {member.role === 'org:admin' && (
+                            <Badge variant="outline" className="text-xs ml-1">Admin</Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               <Select
                 value={filters.serviceOptionId || "all"}

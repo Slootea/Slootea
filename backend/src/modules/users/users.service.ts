@@ -56,6 +56,8 @@ export class UsersService {
     email: string,
     fullName: string,
     imageUrl?: string,
+    organizationId?: string,
+    organizationRole?: string,
   ): Promise<User> {
     let user = await this.findByClerkId(clerkId);
     
@@ -64,12 +66,27 @@ export class UsersService {
         clerkId,
         email,
         businessName: fullName,
+        organizationId,
+        organizationRole,
       });
     } else {
       user.email = email;
       if (fullName) user.businessName = fullName;
+      // Update organization info if provided
+      if (organizationId !== undefined) {
+        user.organizationId = organizationId;
+      }
+      if (organizationRole !== undefined) {
+        user.organizationRole = organizationRole;
+      }
     }
     
     return this.userRepository.save(user);
+  }
+
+  async findByOrganization(organizationId: string): Promise<User[]> {
+    return this.userRepository.find({
+      where: { organizationId },
+    });
   }
 }

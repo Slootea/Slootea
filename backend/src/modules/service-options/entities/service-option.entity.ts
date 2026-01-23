@@ -12,6 +12,7 @@ import { User } from '../../users/entities/user.entity';
 import { Availability } from '../../availability/entities/availability.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
 import { BookingLink } from '../../booking-links/entities/booking-link.entity';
+import { UserServiceOption } from './user-service-option.entity';
 
 @Entity('service_options')
 export class ServiceOption {
@@ -36,16 +37,19 @@ export class ServiceOption {
   @Column({ type: 'int', default: 0 })
   sortOrder: number;
 
+  @Column({ nullable: true, comment: 'Organization ID - if set, this is an org-level service' })
+  organizationId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   userId: string;
 
-  @ManyToOne(() => User, (user) => user.serviceOptions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.serviceOptions, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'userId' })
   user: User;
 
@@ -57,4 +61,7 @@ export class ServiceOption {
 
   @OneToMany(() => BookingLink, (link) => link.serviceOption)
   bookingLinks: BookingLink[];
+
+  @OneToMany(() => UserServiceOption, (uso) => uso.serviceOption)
+  userServiceOptions: UserServiceOption[];
 }

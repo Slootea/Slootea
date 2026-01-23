@@ -21,6 +21,7 @@ export class ClerkAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
+    const organizationId = request.headers['x-organization-id'] as string | undefined;
 
     if (!token) {
       throw new UnauthorizedException('No authentication token provided');
@@ -28,6 +29,15 @@ export class ClerkAuthGuard implements CanActivate {
 
     try {
       const user = await this.clerkService.verifyToken(token);
+      
+      // Determine organization role from memberships
+      let orgRole: string | undefined = undefined;
+      if (organizationId && user.memberships) {
+        const orgMembership = user.memberships.find(m => m.organizationId === organizationId);
+        if (orgMembership) {
+          orgRole = orgMembership.role;
+        }
+      }
       
       // Sync user to database on every authenticated request
       // This ensures the user record is created or updated in PostgreSQL
@@ -41,12 +51,19 @@ export class ClerkAuthGuard implements CanActivate {
           user.email,
           fullName,
           user.imageUrl,
+          organizationId,
+          orgRole,
         );
         
-        this.logger.debug(`User ${user.id} synced to database`);
+        this.logger.debug(`User ${user.id} synced to database with org: ${organizationId}`);
         
         // Attach both Clerk user info and DB user to request
-        (request as any).user = { ...user, dbUserId: dbUser.id };
+        (request as any).user = { 
+          ...user, 
+          dbUserId: dbUser.id,
+          organizationId,
+          orgRole,
+        };
         (request as any).clerkUser = user;
       } catch (syncError) {
         // Log the error but don't block the request
@@ -55,7 +72,7 @@ export class ClerkAuthGuard implements CanActivate {
           `Failed to sync user ${user.id} to database: ${syncError.message}`,
           syncError.stack,
         );
-        (request as any).user = user;
+        (request as any).user = { ...user, organizationId, orgRole };
         (request as any).clerkUser = user;
       }
 
