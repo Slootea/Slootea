@@ -72,6 +72,9 @@ export enum OrganizationRole {
   VIEWER = 'viewer',
 }
 
+// Provider Selection Mode
+export type ProviderSelectionMode = 'client_chooses' | 'auto_assign';
+
 // Organization Settings
 export interface OrganizationSettings {
   id: string;
@@ -87,6 +90,7 @@ export interface OrganizationSettings {
   // Provider Selection Settings
   allowProviderSelection: boolean;
   autoAssignProvider: boolean;
+  providerSelectionMode: ProviderSelectionMode;
   showProviderNames: boolean;
   showProviderPhotos: boolean;
   // Display Settings
@@ -235,11 +239,34 @@ export interface TimeSlot {
 export interface AvailableSlot {
   startTime: string;
   endTime: string;
+  providerId?: string;
+}
+
+export interface Provider {
+  id: string;
+  clerkId: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+}
+
+export interface ProvidersResponse {
+  providers: Provider[];
+  providerSelectionEnabled: boolean;
+}
+
+export interface PublicBookingSettings {
+  providerSelectionMode: ProviderSelectionMode;
+  showProviderNames: boolean;
+  showProviderPhotos: boolean;
+  minAdvanceBookingHours: number;
+  maxAdvanceBookingDays: number;
 }
 
 export interface PublicBookingLink extends BookingLink {
   user: User;
   serviceOptions: ServiceOption[];
+  settings?: PublicBookingSettings;
 }
 
 export interface PaginationMeta {

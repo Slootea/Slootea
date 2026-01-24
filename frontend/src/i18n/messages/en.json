@@ -358,6 +358,10 @@
     "selectServiceToContinue": "Select a service to continue booking",
     "selectService": "Select a service",
     "selectServiceFirst": "Please select a service first",
+    "selectProvider": "Select Your Provider",
+    "provider": "Provider",
+    "pleaseSelectProvider": "Please select a provider to continue",
+    "selectProviderFirst": "Please select a provider first",
     "selectDate": "Select Date",
     "selectTime": "Select a time",
     "selectDateFirst": "Please select a date to see available times",
@@ -806,6 +810,12 @@
     "general": {
       "title": "General Settings",
       "description": "Configure how clients book appointments with your organization",
+      "providerSelectionMode": "Provider Selection Mode",
+      "providerSelectionModeDescription": "Choose how service providers are assigned to appointments",
+      "clientChooses": "Client Chooses Provider",
+      "clientChoosesHint": "Clients can select which team member they want for their appointment after choosing a service",
+      "autoAssign": "Auto-Assign Based on Availability",
+      "autoAssignHint": "The system automatically assigns the most available provider to each booking",
       "allowProviderSelection": "Allow Provider Selection",
       "allowProviderSelectionHint": "When enabled, clients can choose a specific team member when booking",
       "autoAssignProvider": "Auto-Assign Provider",
@@ -840,8 +850,12 @@
     "messages": {
       "saved": "Organization settings saved",
       "saveFailed": "Failed to save settings",
-      "loadFailed": "Failed to load settings"
-    }
+      "loadFailed": "Failed to load settings",
+      "saving": "Saving...",
+      "save": "Save Settings"
+    },
+    "adminOnly": "Admin Only",
+    "adminOnlyDescription": "Only organization admins can access these settings."
   },
   "myServices": {
     "title": "My Services",

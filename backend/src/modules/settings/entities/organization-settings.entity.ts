@@ -77,6 +77,14 @@ export class OrganizationSettings {
   autoAssignProvider: boolean;
 
   @Column({
+    type: 'varchar',
+    length: 50,
+    default: 'auto_assign',
+    comment: 'Provider selection mode: client_chooses (clients select provider after service) or auto_assign (system assigns based on availability)',
+  })
+  providerSelectionMode: 'client_chooses' | 'auto_assign';
+
+  @Column({
     default: true,
     comment: 'Show provider names to clients during booking',
   })

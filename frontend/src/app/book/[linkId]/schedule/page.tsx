@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { format, addDays, startOfDay, isSameDay, parseISO } from "date-fns";
 import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
-import { PublicBookingLink, AvailableSlot, ServiceOption } from "@/lib/types";
+import { PublicBookingLink, AvailableSlot, ServiceOption, Provider } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
@@ -22,6 +23,8 @@ import {
   Phone,
   Mail,
   Loader2,
+  Users,
+  Check,
 } from "lucide-react";
 
 export default function SchedulePage() {
@@ -45,6 +48,12 @@ export default function SchedulePage() {
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
 
+  // Provider selection
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [providersLoading, setProvidersLoading] = useState(false);
+  const [providerSelectionEnabled, setProviderSelectionEnabled] = useState(false);
+
   // Client form
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -61,6 +70,20 @@ export default function SchedulePage() {
             (s: ServiceOption) => s.id === serviceId
           );
           setSelectedService(service || null);
+
+          // Fetch providers if provider selection mode is 'client_chooses'
+          if (res.data.settings?.providerSelectionMode === 'client_chooses') {
+            setProvidersLoading(true);
+            try {
+              const providersRes = await publicApi.getProviders(slug, serviceId);
+              setProviders(providersRes.data.providers || []);
+              setProviderSelectionEnabled(providersRes.data.providerSelectionEnabled);
+            } catch (err) {
+              console.error("Failed to fetch providers", err);
+            } finally {
+              setProvidersLoading(false);
+            }
+          }
         }
       } catch (err: any) {
         toast({
@@ -77,13 +100,20 @@ export default function SchedulePage() {
 
   useEffect(() => {
     if (!selectedDate || !selectedService || !bookingLink) return;
+    // If provider selection is enabled but no provider selected, don't fetch slots yet
+    if (providerSelectionEnabled && !selectedProvider) return;
 
     const fetchSlots = async () => {
       setSlotsLoading(true);
       setSelectedSlot(null);
       try {
         const dateStr = format(selectedDate, "yyyy-MM-dd");
-        const res = await publicApi.getAvailableSlots(slug, selectedService.id, dateStr);
+        const res = await publicApi.getAvailableSlots(
+          slug, 
+          selectedService.id, 
+          dateStr,
+          selectedProvider?.id
+        );
         setSlots(res.data);
       } catch (err: any) {
         toast({
@@ -97,7 +127,7 @@ export default function SchedulePage() {
       }
     };
     fetchSlots();
-  }, [selectedDate, selectedService, bookingLink, slug]);
+  }, [selectedDate, selectedService, selectedProvider, bookingLink, slug, providerSelectionEnabled]);
 
   const handleBook = async () => {
     if (!selectedSlot || !selectedService) return;
@@ -129,6 +159,7 @@ export default function SchedulePage() {
         clientName: clientName.trim(),
         clientPhone: clientPhone.trim(),
         clientEmail: clientEmail.trim() || undefined,
+        providerId: selectedProvider?.id,
       });
 
       toast({
@@ -223,6 +254,67 @@ export default function SchedulePage() {
           </CardContent>
         </Card>
 
+        {/* Provider Selection - shown when providerSelectionEnabled */}
+        {providerSelectionEnabled && providers.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {t('selectProvider') || 'Select Your Provider'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {providersLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {providers.map((provider) => (
+                    <button
+                      key={provider.id}
+                      onClick={() => {
+                        setSelectedProvider(provider);
+                        setSelectedSlot(null); // Reset slot when provider changes
+                      }}
+                      className={`relative p-4 rounded-lg border-2 transition-all ${
+                        selectedProvider?.id === provider.id
+                          ? "border-primary bg-primary/5"
+                          : "border-muted hover:border-primary/50"
+                      }`}
+                    >
+                      {selectedProvider?.id === provider.id && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                      <Avatar className="h-12 w-12 mx-auto mb-2">
+                        <AvatarImage src={provider.imageUrl} />
+                        <AvatarFallback>
+                          {provider.firstName?.[0] || ''}{provider.lastName?.[0] || ''}
+                          {!provider.firstName && !provider.lastName && <User className="h-5 w-5" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium text-center truncate">
+                        {provider.firstName || provider.lastName 
+                          ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
+                          : t('provider') || 'Provider'}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!selectedProvider && (
+                <p className="text-sm text-muted-foreground text-center mt-4">
+                  {t('pleaseSelectProvider') || 'Please select a provider to continue'}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* Date Selection */}
           <Card>
@@ -254,7 +346,11 @@ export default function SchedulePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {!selectedDate ? (
+                {providerSelectionEnabled && !selectedProvider ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t('selectProviderFirst') || 'Please select a provider first'}
+                  </p>
+                ) : !selectedDate ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     {t('selectDateFirst')}
                   </p>

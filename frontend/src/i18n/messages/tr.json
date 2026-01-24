@@ -358,6 +358,10 @@
     "selectServiceToContinue": "Rezervasyona devam etmek için bir hizmet seçin",
     "selectService": "Bir hizmet seçin",
     "selectServiceFirst": "Lütfen önce bir hizmet seçin",
+    "selectProvider": "Sağlayıcınızı Seçin",
+    "provider": "Sağlayıcı",
+    "pleaseSelectProvider": "Devam etmek için lütfen bir sağlayıcı seçin",
+    "selectProviderFirst": "Lütfen önce bir sağlayıcı seçin",
     "selectDate": "Tarih Seçin",
     "selectTime": "Bir saat seçin",
     "selectDateFirst": "Uygun saatleri görmek için lütfen bir tarih seçin",
@@ -789,6 +793,12 @@
     "general": {
       "title": "Genel Ayarlar",
       "description": "Müşterilerin organizasyonunuzla nasıl randevu alacağını yapılandırın",
+      "providerSelectionMode": "Sağlayıcı Seçim Modu",
+      "providerSelectionModeDescription": "Randevulara hizmet sağlayıcıların nasıl atanacağını seçin",
+      "clientChooses": "Müşteri Sağlayıcıyı Seçer",
+      "clientChoosesHint": "Müşteriler hizmet seçtikten sonra hangi ekip üyesinden randevu almak istediklerini seçebilir",
+      "autoAssign": "Müsaitliğe Göre Otomatik Ata",
+      "autoAssignHint": "Sistem her rezervasyon için en uygun sağlayıcıyı otomatik olarak atar",
       "allowProviderSelection": "Sağlayıcı Seçimine İzin Ver",
       "allowProviderSelectionHint": "Etkinleştirildiğinde, müşteriler rezervasyon yaparken belirli bir ekip üyesi seçebilir",
       "autoAssignProvider": "Otomatik Sağlayıcı Ata",
@@ -823,8 +833,12 @@
     "messages": {
       "saved": "Organizasyon ayarları kaydedildi",
       "saveFailed": "Ayarlar kaydedilemedi",
-      "loadFailed": "Ayarlar yüklenemedi"
-    }
+      "loadFailed": "Ayarlar yüklenemedi",
+      "saving": "Kaydediliyor...",
+      "save": "Ayarları Kaydet"
+    },
+    "adminOnly": "Sadece Yönetici",
+    "adminOnlyDescription": "Bu ayarlara sadece organizasyon yöneticileri erişebilir."
   },
   "myServices": {
     "title": "Hizmetlerim",

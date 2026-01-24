@@ -17,6 +17,7 @@ import { BlockedTimesService } from '../blocked-times/blocked-times.service';
 import { OrganizationSettingsService } from '../settings/organization-settings.service';
 import { CreateAppointmentDto } from '../appointments/dto/appointment.dto';
 import { UserServiceOptionsService } from '../service-options/user-service-options.service';
+import { ClerkService } from '../auth/clerk.service';
 
 @ApiTags('public')
 @Controller('public')
@@ -29,6 +30,7 @@ export class PublicController {
     private readonly blockedTimesService: BlockedTimesService,
     private readonly organizationSettingsService: OrganizationSettingsService,
     private readonly userServiceOptionsService: UserServiceOptionsService,
+    private readonly clerkService: ClerkService,
   ) {}
 
   @Get('book/:slug')
@@ -118,7 +120,8 @@ export class PublicController {
       bookingLink.organizationId,
     );
 
-    if (!settings.allowProviderSelection) {
+    // Check if provider selection mode is 'client_chooses'
+    if (settings.providerSelectionMode !== 'client_chooses') {
       return { providers: [], providerSelectionEnabled: false };
     }
 
@@ -128,14 +131,27 @@ export class PublicController {
       bookingLink.organizationId,
     );
 
-    // Filter provider info based on settings
-    const filteredProviders = providers.map((p) => ({
-      id: p.user?.id,
-      clerkId: p.user?.clerkId,
-      firstName: settings.showProviderNames ? p.user?.firstName : undefined,
-      lastName: settings.showProviderNames ? p.user?.lastName : undefined,
-      // photo: settings.showProviderPhotos ? p.user?.photoUrl : undefined,
-    }));
+    // Fetch Clerk user data for each provider to get profile images
+    const filteredProviders = await Promise.all(
+      providers.map(async (p) => {
+        let clerkUser = null;
+        if (p.user?.clerkId) {
+          try {
+            clerkUser = await this.clerkService.getUserById(p.user.clerkId);
+          } catch (error) {
+            console.error(`Failed to fetch Clerk user for ${p.user.clerkId}:`, error);
+          }
+        }
+
+        return {
+          id: p.user?.id,
+          clerkId: p.user?.clerkId,
+          firstName: settings.showProviderNames ? (clerkUser?.firstName || p.user?.firstName) : undefined,
+          lastName: settings.showProviderNames ? (clerkUser?.lastName || p.user?.lastName) : undefined,
+          imageUrl: settings.showProviderPhotos ? clerkUser?.imageUrl : undefined,
+        };
+      })
+    );
 
     return {
       providers: filteredProviders,

@@ -168,6 +168,7 @@ export const organizationSettingsApi = {
     maxAdvanceBookingDays: number;
     allowProviderSelection: boolean;
     autoAssignProvider: boolean;
+    providerSelectionMode: 'client_chooses' | 'auto_assign';
     showProviderNames: boolean;
     showProviderPhotos: boolean;
     welcomeMessage: string;
@@ -202,8 +203,10 @@ export const organizationsApi = {
 // Public API (no auth required)
 export const publicApi = {
   getBookingLink: (slug: string) => api.get(`/public/book/${slug}`),
-  getAvailableSlots: (slug: string, serviceOptionId: string, date: string) =>
-    api.get(`/public/book/${slug}/slots`, { params: { serviceOptionId, date } }),
+  getAvailableSlots: (slug: string, serviceOptionId: string, date: string, providerId?: string) =>
+    api.get(`/public/book/${slug}/slots`, { params: { serviceOptionId, date, providerId } }),
+  getProviders: (slug: string, serviceOptionId: string) =>
+    api.get(`/public/book/${slug}/providers`, { params: { serviceOptionId } }),
   bookAppointment: (slug: string, data: {
     serviceOptionId: string;
     startTime: string;
@@ -211,6 +214,7 @@ export const publicApi = {
     clientName: string;
     clientPhone: string;
     clientEmail?: string;
+    providerId?: string;
     notes?: string;
   }) => api.post(`/public/book/${slug}`, data),
   getAppointmentByToken: (token: string) => api.get(`/public/confirm/${token}`),

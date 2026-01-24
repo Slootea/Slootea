@@ -64,6 +64,7 @@ export class OrganizationSettingsService {
     
     return {
       allowProviderSelection: settings.allowProviderSelection,
+      providerSelectionMode: settings.providerSelectionMode,
       showProviderNames: settings.showProviderNames,
       showProviderPhotos: settings.showProviderPhotos,
       welcomeMessage: settings.welcomeMessage,

@@ -1,0 +1,398 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useTranslations } from "next-intl";
+import { organizationSettingsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { OrganizationSettings, ProviderSelectionMode } from "@/lib/types";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/components/ui/use-toast";
+import { Save, Users, Building2, Shield } from "lucide-react";
+
+export default function OrganizationSettingsPage() {
+  const { getToken } = useAuth();
+  const { toast } = useToast();
+  const t = useTranslations('organization');
+  const { currentOrganization, isAdmin } = useOrganizationContext();
+  const [settings, setSettings] = useState<OrganizationSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const fetchSettings = async () => {
+    if (!currentOrganization) return;
+
+    const token = await getToken();
+    setAuthToken(token);
+    setOrganizationContext(currentOrganization.id);
+
+    try {
+      const res = await organizationSettingsApi.get();
+      setSettings(res.data);
+    } catch (error) {
+      console.error("Failed to fetch organization settings", error);
+      toast({
+        title: t('messages.loadFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentOrganization) {
+      fetchSettings();
+    }
+  }, [currentOrganization, getToken]);
+
+  const handleSave = async () => {
+    if (!settings || !currentOrganization) return;
+
+    setSaving(true);
+    try {
+      await organizationSettingsApi.update({
+        providerSelectionMode: settings.providerSelectionMode,
+        showProviderNames: settings.showProviderNames,
+        showProviderPhotos: settings.showProviderPhotos,
+        minAdvanceBookingHours: settings.minAdvanceBookingHours,
+        maxAdvanceBookingDays: settings.maxAdvanceBookingDays,
+        bufferTimeMinutes: settings.bufferTimeMinutes,
+        maxAppointmentsPerDay: settings.maxAppointmentsPerDay,
+        sendEmailReminders: settings.sendEmailReminders,
+        sendSmsReminders: settings.sendSmsReminders,
+        reminderHoursBefore: settings.reminderHoursBefore,
+      });
+      toast({ title: t('messages.saved') });
+    } catch (error) {
+      toast({
+        title: t('messages.saveFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Redirect or show message if not admin
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">{t('adminOnly') || 'Admin Only'}</h2>
+            <p className="text-muted-foreground">
+              {t('adminOnlyDescription') || 'Only organization admins can access these settings.'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentOrganization) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">{t('noOrganization')}</h2>
+            <p className="text-muted-foreground">
+              {t('selectOrganization')}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">{t('messages.loadFailed')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('description')}</p>
+      </div>
+
+      {/* Provider Selection Mode */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {t('general.providerSelectionMode') || 'Provider Selection Mode'}
+          </CardTitle>
+          <CardDescription>
+            {t('general.providerSelectionModeDescription') || 'Choose how providers are assigned to appointments'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <RadioGroup
+            value={settings.providerSelectionMode}
+            onValueChange={(value: ProviderSelectionMode) =>
+              setSettings({ ...settings, providerSelectionMode: value })
+            }
+            className="space-y-4"
+          >
+            <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+              <RadioGroupItem value="client_chooses" id="client_chooses" className="mt-1" />
+              <div className="flex-1">
+                <Label htmlFor="client_chooses" className="text-base font-medium cursor-pointer">
+                  {t('general.clientChooses') || 'Client Chooses Provider'}
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('general.clientChoosesHint') || 'Clients can select which team member they want for their appointment after choosing a service'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+              <RadioGroupItem value="auto_assign" id="auto_assign" className="mt-1" />
+              <div className="flex-1">
+                <Label htmlFor="auto_assign" className="text-base font-medium cursor-pointer">
+                  {t('general.autoAssign') || 'Auto-Assign Based on Availability'}
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('general.autoAssignHint') || 'The system automatically assigns the most available provider to each booking'}
+                </p>
+              </div>
+            </div>
+          </RadioGroup>
+
+          {/* Additional options when client chooses */}
+          {settings.providerSelectionMode === 'client_chooses' && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="showProviderNames">
+                    {t('general.showProviderNames')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('general.showProviderNamesHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="showProviderNames"
+                  checked={settings.showProviderNames}
+                  onCheckedChange={(checked) =>
+                    setSettings({ ...settings, showProviderNames: checked })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="showProviderPhotos">
+                    {t('general.showProviderPhotos')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('general.showProviderPhotosHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="showProviderPhotos"
+                  checked={settings.showProviderPhotos}
+                  onCheckedChange={(checked) =>
+                    setSettings({ ...settings, showProviderPhotos: checked })
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Booking Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('booking.title')}</CardTitle>
+          <CardDescription>{t('booking.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="minAdvanceBookingHours">
+              {t('booking.minAdvanceBooking')}
+            </Label>
+            <Input
+              id="minAdvanceBookingHours"
+              type="number"
+              min={0}
+              max={168}
+              value={settings.minAdvanceBookingHours}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  minAdvanceBookingHours: parseInt(e.target.value) || 0,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('booking.minAdvanceBookingHint')}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="maxAdvanceBookingDays">
+              {t('booking.maxAdvanceBooking')}
+            </Label>
+            <Input
+              id="maxAdvanceBookingDays"
+              type="number"
+              min={1}
+              max={365}
+              value={settings.maxAdvanceBookingDays}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  maxAdvanceBookingDays: parseInt(e.target.value) || 30,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('booking.maxAdvanceBookingHint')}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bufferTimeMinutes">
+              {t('booking.bufferTime')}
+            </Label>
+            <Input
+              id="bufferTimeMinutes"
+              type="number"
+              min={0}
+              max={120}
+              value={settings.bufferTimeMinutes}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  bufferTimeMinutes: parseInt(e.target.value) || 0,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('booking.bufferTimeHint')}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="maxAppointmentsPerDay">
+              {t('booking.maxAppointmentsPerDay')}
+            </Label>
+            <Input
+              id="maxAppointmentsPerDay"
+              type="number"
+              min={0}
+              max={100}
+              value={settings.maxAppointmentsPerDay}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  maxAppointmentsPerDay: parseInt(e.target.value) || 0,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('booking.maxAppointmentsPerDayHint')}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Notification Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('notifications.title')}</CardTitle>
+          <CardDescription>{t('notifications.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="sendEmailReminders">
+                {t('notifications.sendEmailNotifications')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('notifications.sendEmailNotificationsHint')}
+              </p>
+            </div>
+            <Switch
+              id="sendEmailReminders"
+              checked={settings.sendEmailReminders}
+              onCheckedChange={(checked) =>
+                setSettings({ ...settings, sendEmailReminders: checked })
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="sendSmsReminders">
+                {t('notifications.sendSmsNotifications')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('notifications.sendSmsNotificationsHint')}
+              </p>
+            </div>
+            <Switch
+              id="sendSmsReminders"
+              checked={settings.sendSmsReminders}
+              onCheckedChange={(checked) =>
+                setSettings({ ...settings, sendSmsReminders: checked })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reminderHoursBefore">
+              {t('notifications.reminderHours')}
+            </Label>
+            <Input
+              id="reminderHoursBefore"
+              type="number"
+              min={1}
+              max={168}
+              value={settings.reminderHoursBefore}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  reminderHoursBefore: parseInt(e.target.value) || 24,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('notifications.reminderHoursHint')}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? t('messages.saving') || 'Saving...' : t('messages.save') || 'Save Settings'}
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -67,6 +67,14 @@ export class UpdateOrganizationSettingsDto {
   @IsBoolean()
   autoAssignProvider?: boolean;
 
+  @ApiPropertyOptional({ 
+    description: 'Provider selection mode: client_chooses (clients select provider after service) or auto_assign (system assigns based on availability)',
+    enum: ['client_chooses', 'auto_assign']
+  })
+  @IsOptional()
+  @IsString()
+  providerSelectionMode?: 'client_chooses' | 'auto_assign';
+
   @ApiPropertyOptional({ description: 'Show provider names to clients during booking' })
   @IsOptional()
   @IsBoolean()

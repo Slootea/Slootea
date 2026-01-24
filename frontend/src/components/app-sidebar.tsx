@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Gift } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Gift, Building2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -43,6 +43,7 @@ export function AppSidebar() {
     { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
     { href: "/dashboard/gamification", label: t('gamification'), icon: Gift },
+    { href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 },
   ];
 
   const settingsNavItems = [
