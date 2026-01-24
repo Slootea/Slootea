@@ -821,6 +821,16 @@
       "maxAppointmentsPerDay": "Günlük Maksimum Randevu",
       "maxAppointmentsPerDayHint": "Sağlayıcı başına günlük maksimum randevu (0 = sınırsız)"
     },
+    "confirmation": {
+      "title": "Onay Ayarları",
+      "description": "Randevu onaylarının nasıl ve ne zaman gerekli olduğunu kontrol edin",
+      "sendReminder": "Hatırlatma gönder (randevudan kaç saat önce)",
+      "sendReminderHint": "Onay talebinin randevudan kaç saat önce gönderileceği",
+      "deadline": "Onay son tarihi (randevudan kaç saat önce)",
+      "deadlineHint": "Müşteri bu son tarihe kadar onaylamalı yoksa randevu iptal edilebilir",
+      "autoCancel": "Onaylanmamış randevuları otomatik iptal et",
+      "autoCancelHint": "Son tarihe kadar onaylanmazsa slotları otomatik olarak iptal et ve boşalt"
+    },
     "notifications": {
       "title": "Bildirim Ayarları",
       "description": "Bildirimlerin nasıl gönderileceğini yapılandırın",

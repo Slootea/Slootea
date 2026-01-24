@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
+import { ClientPenalty, PenaltyType, PenaltyStatus } from './entities/client-penalty.entity';
 import {
   CreateClientDto,
   UpdateClientDto,
@@ -13,11 +14,22 @@ import {
   PaginatedResult,
 } from './dto/client.dto';
 
+// Extended client with penalty info
+export interface ClientWithPenalty extends Client {
+  activePenalty?: {
+    id: string;
+    type: PenaltyType;
+    expiresAt: Date | null;
+  } | null;
+}
+
 @Injectable()
 export class ClientsService {
   constructor(
     @InjectRepository(Client)
     private readonly clientRepository: Repository<Client>,
+    @InjectRepository(ClientPenalty)
+    private readonly penaltyRepository: Repository<ClientPenalty>,
   ) {}
 
   async create(organizationId: string, createDto: CreateClientDto): Promise<Client> {
@@ -121,7 +133,7 @@ export class ClientsService {
   async findAllByOrganizationPaginated(
     organizationId: string,
     query: ClientQueryDto,
-  ): Promise<PaginatedResult<Client>> {
+  ): Promise<PaginatedResult<ClientWithPenalty>> {
     const {
       page = 1,
       limit = 10,
@@ -129,6 +141,9 @@ export class ClientsService {
       sortBy = 'createdAt',
       sortOrder = 'DESC',
     } = query;
+
+    // First, update expired suspensions
+    await this.updateExpiredPenalties(organizationId);
 
     const queryBuilder = this.clientRepository
       .createQueryBuilder('client')
@@ -161,7 +176,35 @@ export class ClientsService {
     const skip = (page - 1) * limit;
     queryBuilder.skip(skip).take(limit);
 
-    const data = await queryBuilder.getMany();
+    const clients = await queryBuilder.getMany();
+
+    // Fetch active penalties for these clients in one query
+    const clientIds = clients.map(c => c.id);
+    const activePenalties = clientIds.length > 0 
+      ? await this.penaltyRepository
+          .createQueryBuilder('penalty')
+          .select(['penalty.id', 'penalty.clientId', 'penalty.type', 'penalty.expiresAt'])
+          .where('penalty.organizationId = :organizationId', { organizationId })
+          .andWhere('penalty.clientId IN (:...clientIds)', { clientIds })
+          .andWhere('penalty.status = :status', { status: PenaltyStatus.ACTIVE })
+          .getMany()
+      : [];
+
+    // Create a map of clientId -> penalty
+    const penaltyMap = new Map<string, { id: string; type: PenaltyType; expiresAt: Date | null }>();
+    for (const penalty of activePenalties) {
+      penaltyMap.set(penalty.clientId, {
+        id: penalty.id,
+        type: penalty.type,
+        expiresAt: penalty.expiresAt,
+      });
+    }
+
+    // Enrich clients with penalty info
+    const data: ClientWithPenalty[] = clients.map(client => ({
+      ...client,
+      activePenalty: penaltyMap.get(client.id) || null,
+    }));
 
     const totalPages = Math.ceil(total / limit);
 
@@ -176,6 +219,21 @@ export class ClientsService {
         hasPreviousPage: page > 1,
       },
     };
+  }
+
+  private async updateExpiredPenalties(organizationId: string): Promise<void> {
+    const now = new Date();
+    
+    await this.penaltyRepository
+      .createQueryBuilder()
+      .update(ClientPenalty)
+      .set({ status: PenaltyStatus.EXPIRED })
+      .where('organizationId = :organizationId', { organizationId })
+      .andWhere('status = :status', { status: PenaltyStatus.ACTIVE })
+      .andWhere('type = :type', { type: PenaltyType.SUSPENSION })
+      .andWhere('expiresAt IS NOT NULL')
+      .andWhere('expiresAt <= :now', { now })
+      .execute();
   }
 
   async findOne(id: string, organizationId: string): Promise<Client> {

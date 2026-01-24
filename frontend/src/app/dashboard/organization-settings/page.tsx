@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Users, Building2, Shield } from "lucide-react";
+import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell } from "lucide-react";
 
 export default function OrganizationSettingsPage() {
   const { getToken } = useAuth();
@@ -67,6 +67,9 @@ export default function OrganizationSettingsPage() {
         sendEmailReminders: settings.sendEmailReminders,
         sendSmsReminders: settings.sendSmsReminders,
         reminderHoursBefore: settings.reminderHoursBefore,
+        confirmationRequiredHours: settings.confirmationRequiredHours,
+        confirmationDeadlineHours: settings.confirmationDeadlineHours,
+        autoCancelUnconfirmed: settings.autoCancelUnconfirmed,
       });
       toast({ title: t('messages.saved') });
     } catch (error) {
@@ -222,10 +225,89 @@ export default function OrganizationSettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Confirmation Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            {t('confirmation.title') || 'Confirmation Settings'}
+          </CardTitle>
+          <CardDescription>
+            {t('confirmation.description') || 'Control how and when appointment confirmations are required'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="confirmationRequiredHours">
+              {t('confirmation.sendReminder') || 'Send reminder (hours before appointment)'}
+            </Label>
+            <Input
+              id="confirmationRequiredHours"
+              type="number"
+              min={1}
+              max={168}
+              value={settings.confirmationRequiredHours || 24}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  confirmationRequiredHours: parseInt(e.target.value) || 24,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('confirmation.sendReminderHint') || 'How many hours before the appointment to send a confirmation request'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmationDeadlineHours">
+              {t('confirmation.deadline') || 'Confirmation deadline (hours before appointment)'}
+            </Label>
+            <Input
+              id="confirmationDeadlineHours"
+              type="number"
+              min={1}
+              max={72}
+              value={settings.confirmationDeadlineHours || 3}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  confirmationDeadlineHours: parseInt(e.target.value) || 3,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('confirmation.deadlineHint') || 'Client must confirm by this deadline or the appointment may be cancelled'}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="autoCancelUnconfirmed">
+                {t('confirmation.autoCancel') || 'Auto-cancel unconfirmed appointments'}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('confirmation.autoCancelHint') || 'Automatically cancel and free up slots if not confirmed by deadline'}
+              </p>
+            </div>
+            <Switch
+              id="autoCancelUnconfirmed"
+              checked={settings.autoCancelUnconfirmed || false}
+              onCheckedChange={(checked) =>
+                setSettings({ ...settings, autoCancelUnconfirmed: checked })
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Booking Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('booking.title')}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            {t('booking.title')}
+          </CardTitle>
           <CardDescription>{t('booking.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -322,7 +404,10 @@ export default function OrganizationSettingsPage() {
       {/* Notification Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('notifications.title')}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            {t('notifications.title')}
+          </CardTitle>
           <CardDescription>{t('notifications.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

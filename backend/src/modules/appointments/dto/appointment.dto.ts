@@ -45,6 +45,11 @@ export class CreateAppointmentDto {
   @IsUUID()
   bookingLinkId?: string;
 
+  @ApiPropertyOptional({ description: 'Provider/User ID for provider selection' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
   @ApiPropertyOptional({ description: 'Notes' })
   @IsOptional()
   @IsString()

@@ -8,6 +8,7 @@ import { ServiceOptionsModule } from '../service-options/service-options.module'
 import { SettingsModule } from '../settings/settings.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
+import { ClientsModule } from '../clients/clients.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from '../auth/auth.module';
     forwardRef(() => SettingsModule),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
+    forwardRef(() => ClientsModule),
   ],
   controllers: [PublicController],
 })

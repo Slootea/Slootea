@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { clientsApi, appointmentsApi, gamificationApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { clientsApi, appointmentsApi, gamificationApi, clientPenaltiesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import {
   Client,
   ClientFilters,
@@ -13,6 +13,9 @@ import {
   ClientGamificationSummary,
   PointsHistory,
   GamificationSettings,
+  ClientPenalty,
+  PenaltyType,
+  PenaltyStatus,
 } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import {
@@ -96,6 +99,10 @@ import {
   Plus,
   Minus,
   Building2,
+  Ban,
+  ShieldOff,
+  ShieldAlert,
+  CalendarOff,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -147,6 +154,20 @@ export default function ClientsPage() {
   const [adjustPointsDialogOpen, setAdjustPointsDialogOpen] = useState(false);
   const [pointsAdjustment, setPointsAdjustment] = useState({ points: 0, reason: "" });
   const [adjustingPoints, setAdjustingPoints] = useState(false);
+
+  // Penalty state
+  const [clientPenalty, setClientPenalty] = useState<ClientPenalty | null>(null);
+  const [penaltyLoading, setPenaltyLoading] = useState(false);
+  const [penaltyDialogOpen, setPenaltyDialogOpen] = useState(false);
+  const [penaltyFormData, setPenaltyFormData] = useState({
+    type: 'ban' as 'ban' | 'suspension',
+    reason: '',
+    expiresAt: '',
+  });
+  const [savingPenalty, setSavingPenalty] = useState(false);
+  const [removePenaltyDialogOpen, setRemovePenaltyDialogOpen] = useState(false);
+  const [removalReason, setRemovalReason] = useState('');
+  const [removingPenalty, setRemovingPenalty] = useState(false);
 
   // Pagination & Filters
   const [filters, setFilters] = useState<ClientFilters>({
@@ -301,6 +322,105 @@ export default function ClientsPage() {
     }
   };
 
+  // Fetch client penalty
+  const fetchClientPenalty = async (clientId: string) => {
+    if (!currentOrganization) return;
+    
+    setPenaltyLoading(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      const response = await clientPenaltiesApi.getActiveByClient(clientId);
+      setClientPenalty(response.data);
+    } catch (error) {
+      console.error("Failed to fetch penalty data", error);
+      setClientPenalty(null);
+    } finally {
+      setPenaltyLoading(false);
+    }
+  };
+
+  // Create penalty
+  const handleCreatePenalty = async () => {
+    if (!selectedClient || !currentOrganization) return;
+    
+    if (penaltyFormData.type === 'suspension' && !penaltyFormData.expiresAt) {
+      toast({
+        title: "Error",
+        description: "Suspension requires an end date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingPenalty(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      
+      await clientPenaltiesApi.create({
+        clientId: selectedClient.id,
+        type: penaltyFormData.type,
+        reason: penaltyFormData.reason || undefined,
+        expiresAt: penaltyFormData.type === 'suspension' ? penaltyFormData.expiresAt : undefined,
+      });
+      
+      toast({
+        title: "Success",
+        description: penaltyFormData.type === 'ban' ? "Client has been banned" : "Client has been suspended",
+      });
+      
+      setPenaltyDialogOpen(false);
+      setPenaltyFormData({ type: 'ban', reason: '', expiresAt: '' });
+      await fetchClientPenalty(selectedClient.id);
+      // Refresh the clients list to update visual indicators
+      await fetchData(true);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create penalty",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPenalty(false);
+    }
+  };
+
+  // Remove penalty
+  const handleRemovePenalty = async () => {
+    if (!clientPenalty || !currentOrganization) return;
+
+    setRemovingPenalty(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      
+      await clientPenaltiesApi.remove(clientPenalty.id, { removalReason: removalReason || undefined });
+      
+      toast({
+        title: "Success",
+        description: "Penalty has been removed",
+      });
+      
+      setRemovePenaltyDialogOpen(false);
+      setRemovalReason('');
+      setClientPenalty(null);
+      // Refresh the clients list to update visual indicators
+      await fetchData(true);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to remove penalty",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingPenalty(false);
+    }
+  };
+
   // Handle points adjustment
   const handleAdjustPoints = async () => {
     if (!selectedClient || pointsAdjustment.points === 0 || !currentOrganization) return;
@@ -341,9 +461,11 @@ export default function ClientsPage() {
     setDetailSheetOpen(true);
     setClientGamification(null);
     setPointsHistory([]);
+    setClientPenalty(null);
     await Promise.all([
       fetchClientAppointments(client.id),
       fetchClientGamification(client.id),
+      fetchClientPenalty(client.id),
     ]);
   };
 
@@ -734,6 +856,90 @@ export default function ClientsPage() {
                         <p className="text-xs text-muted-foreground">No Shows</p>
                       </div>
                     </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Penalty Status Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4" />
+                        Penalty Status
+                      </h4>
+                      {!clientPenalty && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setPenaltyFormData({ type: 'ban', reason: '', expiresAt: '' });
+                            setPenaltyDialogOpen(true);
+                          }}
+                        >
+                          <Ban className="h-3 w-3 mr-1" />
+                          Add Penalty
+                        </Button>
+                      )}
+                    </div>
+
+                    {penaltyLoading ? (
+                      <Skeleton className="h-16 w-full" />
+                    ) : clientPenalty ? (
+                      <div className={`rounded-lg border p-4 ${
+                        clientPenalty.type === PenaltyType.BAN 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-950/20' 
+                          : 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                      }`}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            {clientPenalty.type === PenaltyType.BAN ? (
+                              <Ban className="h-5 w-5 text-red-600" />
+                            ) : (
+                              <CalendarOff className="h-5 w-5 text-yellow-600" />
+                            )}
+                            <div>
+                              <p className="font-medium">
+                                {clientPenalty.type === PenaltyType.BAN ? 'Banned' : 'Suspended'}
+                              </p>
+                              {clientPenalty.expiresAt && (
+                                <p className="text-xs text-muted-foreground">
+                                  Until: {format(parseISO(clientPenalty.expiresAt), "MMM d, yyyy 'at' h:mm a")}
+                                </p>
+                              )}
+                              {clientPenalty.type === PenaltyType.BAN && (
+                                <p className="text-xs text-muted-foreground">Permanent</p>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setRemovalReason('');
+                              setRemovePenaltyDialogOpen(true);
+                            }}
+                          >
+                            <ShieldOff className="h-3 w-3 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                        {clientPenalty.reason && (
+                          <p className="text-sm mt-2 text-muted-foreground">
+                            <span className="font-medium">Reason:</span> {clientPenalty.reason}
+                          </p>
+                        )}
+                        <p className="text-xs mt-2 text-muted-foreground">
+                          Issued: {format(parseISO(clientPenalty.createdAt), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 p-3">
+                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span className="text-sm">No active penalties - Client can book appointments</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />
@@ -1129,6 +1335,121 @@ export default function ClientsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Penalty Dialog */}
+      <Dialog open={penaltyDialogOpen} onOpenChange={setPenaltyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Penalty</DialogTitle>
+            <DialogDescription>
+              Ban or suspend {selectedClient?.name} from booking appointments
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Penalty Type</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={penaltyFormData.type === 'ban' ? 'default' : 'outline'}
+                  onClick={() => setPenaltyFormData(prev => ({ ...prev, type: 'ban', expiresAt: '' }))}
+                  className="justify-start"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  Ban (Permanent)
+                </Button>
+                <Button
+                  variant={penaltyFormData.type === 'suspension' ? 'default' : 'outline'}
+                  onClick={() => setPenaltyFormData(prev => ({ ...prev, type: 'suspension' }))}
+                  className="justify-start"
+                >
+                  <CalendarOff className="h-4 w-4 mr-2" />
+                  Suspend (Temporary)
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {penaltyFormData.type === 'ban' 
+                  ? 'Client will be permanently banned until manually removed' 
+                  : 'Client will be suspended until the specified date'}
+              </p>
+            </div>
+
+            {penaltyFormData.type === 'suspension' && (
+              <div className="space-y-2">
+                <Label htmlFor="expiresAt">Suspend Until *</Label>
+                <Input
+                  id="expiresAt"
+                  type="datetime-local"
+                  value={penaltyFormData.expiresAt}
+                  onChange={(e) => setPenaltyFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="penaltyReason">Reason (Optional)</Label>
+              <Textarea
+                id="penaltyReason"
+                value={penaltyFormData.reason}
+                onChange={(e) => setPenaltyFormData(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="e.g., Multiple no-shows, Inappropriate behavior..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPenaltyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleCreatePenalty} 
+              disabled={savingPenalty || (penaltyFormData.type === 'suspension' && !penaltyFormData.expiresAt)}
+            >
+              {savingPenalty ? "Applying..." : penaltyFormData.type === 'ban' ? "Ban Client" : "Suspend Client"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Penalty Dialog */}
+      <Dialog open={removePenaltyDialogOpen} onOpenChange={setRemovePenaltyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Penalty</DialogTitle>
+            <DialogDescription>
+              Remove the {clientPenalty?.type === PenaltyType.BAN ? 'ban' : 'suspension'} from {selectedClient?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="removalReason">Removal Reason (Optional)</Label>
+              <Textarea
+                id="removalReason"
+                value={removalReason}
+                onChange={(e) => setRemovalReason(e.target.value)}
+                placeholder="e.g., Warning given, Issue resolved..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemovePenaltyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRemovePenalty} 
+              disabled={removingPenalty}
+            >
+              {removingPenalty ? "Removing..." : "Remove Penalty"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1204,16 +1525,34 @@ function ClientRow({
     <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => onView(client)}>
       <TableCell>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-            {client.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
+          <div className={`flex h-10 w-10 items-center justify-center rounded-full font-medium ${
+            client.activePenalty 
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+              : 'bg-primary/10 text-primary'
+          }`}>
+            {client.activePenalty ? (
+              <Ban className="h-5 w-5" />
+            ) : (
+              client.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)
+            )}
           </div>
           <div>
-            <p className="font-medium">{client.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">{client.name}</p>
+              {client.activePenalty && (
+                <Badge 
+                  variant="destructive" 
+                  className="text-xs h-5 px-1.5"
+                >
+                  {client.activePenalty.type === 'ban' ? 'Banned' : 'Suspended'}
+                </Badge>
+              )}
+            </div>
             {client.notes && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <StickyNote className="h-3 w-3" />
@@ -1309,16 +1648,34 @@ function ClientMobileCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-              {client.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2)}
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full font-medium ${
+              client.activePenalty 
+                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                : 'bg-primary/10 text-primary'
+            }`}>
+              {client.activePenalty ? (
+                <Ban className="h-5 w-5" />
+              ) : (
+                client.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)
+              )}
             </div>
             <div>
-              <h4 className="font-semibold">{client.name}</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold">{client.name}</h4>
+                {client.activePenalty && (
+                  <Badge 
+                    variant="destructive" 
+                    className="text-xs h-5 px-1.5"
+                  >
+                    {client.activePenalty.type === 'ban' ? 'Banned' : 'Suspended'}
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">{client.phone}</p>
             </div>
           </div>

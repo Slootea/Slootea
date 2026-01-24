@@ -838,6 +838,16 @@
       "maxAppointmentsPerDay": "Max Appointments Per Day",
       "maxAppointmentsPerDayHint": "Maximum appointments per provider per day (0 = unlimited)"
     },
+    "confirmation": {
+      "title": "Confirmation Settings",
+      "description": "Control how and when appointment confirmations are required",
+      "sendReminder": "Send reminder (hours before appointment)",
+      "sendReminderHint": "How many hours before the appointment to send a confirmation request",
+      "deadline": "Confirmation deadline (hours before appointment)",
+      "deadlineHint": "Client must confirm by this deadline or the appointment may be cancelled",
+      "autoCancel": "Auto-cancel unconfirmed appointments",
+      "autoCancelHint": "Automatically cancel and free up slots if not confirmed by deadline"
+    },
     "notifications": {
       "title": "Notification Settings",
       "description": "Configure how notifications are sent",

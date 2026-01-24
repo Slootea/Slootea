@@ -7,6 +7,7 @@ import {
   Body,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { BookingLinksService } from '../booking-links/booking-links.service';
@@ -18,6 +19,7 @@ import { OrganizationSettingsService } from '../settings/organization-settings.s
 import { CreateAppointmentDto } from '../appointments/dto/appointment.dto';
 import { UserServiceOptionsService } from '../service-options/user-service-options.service';
 import { ClerkService } from '../auth/clerk.service';
+import { ClientPenaltyService } from '../clients/client-penalty.service';
 
 @ApiTags('public')
 @Controller('public')
@@ -31,6 +33,7 @@ export class PublicController {
     private readonly organizationSettingsService: OrganizationSettingsService,
     private readonly userServiceOptionsService: UserServiceOptionsService,
     private readonly clerkService: ClerkService,
+    private readonly clientPenaltyService: ClientPenaltyService,
   ) {}
 
   @Get('book/:slug')
@@ -203,6 +206,18 @@ export class PublicController {
 
     if (!bookingLink.isActive) {
       throw new NotFoundException('Booking link is not active');
+    }
+
+    // Check if client has any active penalties (ban or suspension)
+    if (createAppointmentDto.clientPhone) {
+      const penaltyCheck = await this.clientPenaltyService.checkClientCanBookByPhone(
+        createAppointmentDto.clientPhone,
+        bookingLink.organizationId,
+      );
+
+      if (!penaltyCheck.canBook) {
+        throw new ForbiddenException(penaltyCheck.reason);
+      }
     }
 
     // Create appointment for the organization

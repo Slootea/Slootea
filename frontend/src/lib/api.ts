@@ -250,6 +250,18 @@ export const clientsApi = {
   delete: (id: string) => api.delete(`/clients/${id}`),
 };
 
+// Client Penalties API
+export const clientPenaltiesApi = {
+  getActive: () => api.get('/client-penalties'),
+  getAll: () => api.get('/client-penalties/all'),
+  getByClient: (clientId: string) => api.get(`/client-penalties/client/${clientId}`),
+  getActiveByClient: (clientId: string) => api.get(`/client-penalties/client/${clientId}/active`),
+  create: (data: { clientId: string; type: 'ban' | 'suspension'; reason?: string; expiresAt?: string }) =>
+    api.post('/client-penalties', data),
+  remove: (penaltyId: string, data?: { removalReason?: string }) =>
+    api.delete(`/client-penalties/${penaltyId}`, { data }),
+};
+
 // Gamification API (authenticated)
 export const gamificationApi = {
   getSettings: () => api.get('/gamification/settings'),

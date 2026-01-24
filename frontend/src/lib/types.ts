@@ -295,6 +295,18 @@ export interface AppointmentFilters {
   sortOrder?: 'ASC' | 'DESC';
 }
 
+// Client Penalty Types - defined before Client to avoid reference errors
+export enum PenaltyType {
+  BAN = 'ban',
+  SUSPENSION = 'suspension',
+}
+
+export enum PenaltyStatus {
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  REMOVED = 'removed',
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -309,6 +321,45 @@ export interface Client {
   organizationId?: string;
   createdAt: string;
   updatedAt: string;
+  // Active penalty info (if any)
+  activePenalty?: {
+    id: string;
+    type: PenaltyType;
+    expiresAt?: string | null;
+  } | null;
+}
+
+export interface ClientPenalty {
+  id: string;
+  clientId: string;
+  organizationId: string;
+  type: PenaltyType;
+  status: PenaltyStatus;
+  reason?: string;
+  expiresAt?: string;
+  issuedBy?: string;
+  removedBy?: string;
+  removedAt?: string;
+  removalReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  client?: {
+    id: string;
+    name: string;
+    phone: string;
+    email?: string;
+  };
+}
+
+export interface CreatePenaltyDto {
+  clientId: string;
+  type: PenaltyType;
+  reason?: string;
+  expiresAt?: string;
+}
+
+export interface RemovePenaltyDto {
+  removalReason?: string;
 }
 
 export interface ClientFilters {
