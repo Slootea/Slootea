@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Sidebar,
@@ -42,7 +43,7 @@ export function AppSidebar() {
   const adminConfigItems = [
     { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
-    { href: "/dashboard/gamification", label: t('gamification'), icon: Gift },
+    { href: "/dashboard/gamification", label: t('gamification'), icon: Gift, badge: "alfa" },
     { href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 },
   ];
 
@@ -112,6 +113,11 @@ export function AppSidebar() {
                         <Link href={item.href}>
                           <item.icon />
                           <span>{item.label}</span>
+                          {'badge' in item && item.badge && (
+                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                              {item.badge}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -104,7 +104,8 @@ function VisualTimeRangePicker({
 
   // Convert minutes to time string
   const minutesToTime = (minutes: number): string => {
-    const totalMinutes = Math.max(0, Math.min(minutes, totalHours * 60));
+    // Cap at 23:59 (1439 minutes) to ensure valid time format for backend
+    const totalMinutes = Math.max(0, Math.min(minutes, 23 * 60 + 59));
     const h = Math.floor(totalMinutes / 60) + startHour;
     const m = totalMinutes % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
@@ -224,7 +225,7 @@ function VisualTimeRangePicker({
     { label: t("presets.morning"), icon: Sunrise, start: "06:00", end: "12:00" },
     { label: t("presets.afternoon"), icon: Sun, start: "12:00", end: "18:00" },
     { label: t("presets.evening"), icon: Sunset, start: "18:00", end: "23:00" },
-    { label: t("presets.fullDay"), icon: Clock, start: "00:00", end: "24:00" },
+    { label: t("presets.fullDay"), icon: Clock, start: "00:00", end: "23:59" },
   ];
 
   return (
