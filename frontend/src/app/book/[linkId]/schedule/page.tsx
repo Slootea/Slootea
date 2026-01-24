@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { format, addDays, startOfDay, isSameDay, parseISO } from "date-fns";
+import { format, addDays, startOfDay, isSameDay, parseISO, isBefore, isAfter } from "date-fns";
 import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
 import { PublicBookingLink, AvailableSlot, ServiceOption, Provider } from "@/lib/types";
@@ -54,6 +54,11 @@ export default function SchedulePage() {
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providerSelectionEnabled, setProviderSelectionEnabled] = useState(false);
 
+  // Available dates
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
+  const [availableDatesLoading, setAvailableDatesLoading] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+
   // Client form
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -97,6 +102,39 @@ export default function SchedulePage() {
     };
     fetchBookingLink();
   }, [slug, serviceId]);
+
+  // Fetch available dates when month, provider or service changes
+  const fetchAvailableDates = useCallback(async (month: Date) => {
+    if (!selectedService || !bookingLink) return;
+    // If provider selection is enabled but no provider selected, don't fetch yet
+    if (providerSelectionEnabled && !selectedProvider) return;
+
+    setAvailableDatesLoading(true);
+    try {
+      const monthStr = format(month, "yyyy-MM");
+      const res = await publicApi.getAvailableDates(
+        slug,
+        selectedService.id,
+        monthStr,
+        selectedProvider?.id
+      );
+      setAvailableDates(new Set(res.data.availableDates || []));
+    } catch (err) {
+      console.error("Failed to fetch available dates", err);
+      setAvailableDates(new Set());
+    } finally {
+      setAvailableDatesLoading(false);
+    }
+  }, [slug, selectedService, selectedProvider, bookingLink, providerSelectionEnabled]);
+
+  useEffect(() => {
+    if (selectedService && bookingLink) {
+      // Only fetch if provider selection is not required, or provider is selected
+      if (!providerSelectionEnabled || selectedProvider) {
+        fetchAvailableDates(currentMonth);
+      }
+    }
+  }, [selectedService, bookingLink, selectedProvider, currentMonth, providerSelectionEnabled, fetchAvailableDates]);
 
   useEffect(() => {
     if (!selectedDate || !selectedService || !bookingLink) return;
@@ -326,11 +364,40 @@ export default function SchedulePage() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                disabled={(date) =>
-                  date < today || date > maxDate
-                }
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
+                disabled={(date) => {
+                  // Disable past dates and dates beyond max booking window
+                  if (isBefore(date, today) || isAfter(date, maxDate)) {
+                    return true;
+                  }
+                  // If provider selection is enabled but no provider selected, disable all
+                  if (providerSelectionEnabled && !selectedProvider) {
+                    return true;
+                  }
+                  // Disable dates that have no available slots
+                  const dateStr = format(date, "yyyy-MM-dd");
+                  return !availableDates.has(dateStr);
+                }}
+                modifiers={{
+                  available: (date) => {
+                    if (isBefore(date, today) || isAfter(date, maxDate)) return false;
+                    if (providerSelectionEnabled && !selectedProvider) return false;
+                    const dateStr = format(date, "yyyy-MM-dd");
+                    return availableDates.has(dateStr);
+                  },
+                }}
+                modifiersClassNames={{
+                  available: "bg-primary/10 font-semibold text-primary hover:bg-primary/20",
+                }}
                 className="rounded-md border w-full"
               />
+              {availableDatesLoading && (
+                <div className="flex items-center justify-center text-sm text-muted-foreground mt-2">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('loadingAvailability') || 'Loading availability...'}
+                </div>
+              )}
             </CardContent>
           </Card>
 

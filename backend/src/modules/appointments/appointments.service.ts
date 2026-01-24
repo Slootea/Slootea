@@ -853,6 +853,59 @@ export class AppointmentsService {
   }
 
   /**
+   * Get dates with available slots for a given month
+   * Returns array of date strings (YYYY-MM-DD) that have at least one available slot
+   */
+  async getAvailableDatesForOrganization(
+    organizationId: string,
+    serviceOptionId: string,
+    month: string,
+    providerId?: string,
+  ): Promise<string[]> {
+    const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+    
+    // Parse month to get start and end dates
+    const [year, monthNum] = month.split('-').map(Number);
+    const startOfMonth = new Date(year, monthNum - 1, 1);
+    const endOfMonth = new Date(year, monthNum, 0); // Last day of month
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const minDate = new Date();
+    minDate.setHours(minDate.getHours() + settings.minAdvanceBookingHours);
+    
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+    
+    const availableDates: string[] = [];
+    
+    // Iterate through each day of the month
+    const currentDate = new Date(Math.max(startOfMonth.getTime(), today.getTime()));
+    
+    while (currentDate <= endOfMonth && currentDate <= maxDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      // Check if this date has any available slots
+      const slots = await this.getAvailableSlotsForOrganization(
+        organizationId,
+        serviceOptionId,
+        dateStr,
+        providerId,
+      );
+      
+      if (slots.length > 0) {
+        availableDates.push(dateStr);
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return availableDates;
+  }
+
+  /**
    * Create an appointment from public booking (organization-based)
    */
   async createFromPublicOrganization(

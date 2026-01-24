@@ -397,7 +397,8 @@
     "confirmationReminder": "Randevunuzdan önce bir onay talebi alabilirsiniz. Lütfen yerinizi korumak için katılımınızı onaylayın.",
     "minutes": "dakika",
     "failedToLoad": "Rezervasyon bilgileri yüklenemedi",
-    "failedToLoadSlots": "Uygun saatler yüklenemedi"
+    "failedToLoadSlots": "Uygun saatler yüklenemedi",
+    "loadingAvailability": "Müsaitlik yükleniyor..."
   },
   "clients": {
     "title": "Müşteriler",

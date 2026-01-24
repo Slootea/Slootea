@@ -102,6 +102,40 @@ export class PublicController {
     return slots;
   }
 
+  @Get('book/:slug/available-dates')
+  @ApiOperation({ summary: 'Get dates with available slots for a month' })
+  @ApiQuery({ name: 'serviceOptionId', required: true })
+  @ApiQuery({ name: 'month', required: true, description: 'Month in YYYY-MM format' })
+  @ApiQuery({ name: 'providerId', required: false, description: 'Specific provider ID if provider selection is enabled' })
+  async getAvailableDates(
+    @Param('slug') slug: string,
+    @Query('serviceOptionId') serviceOptionId: string,
+    @Query('month') month: string,
+    @Query('providerId') providerId?: string,
+  ) {
+    const bookingLink = await this.bookingLinksService.findBySlug(slug);
+
+    if (!bookingLink.isActive) {
+      throw new NotFoundException('Booking link is not active');
+    }
+
+    // Validate month format
+    const monthRegex = /^\d{4}-\d{2}$/;
+    if (!monthRegex.test(month)) {
+      throw new BadRequestException('Invalid month format. Use YYYY-MM');
+    }
+
+    // Get available dates for the organization
+    const availableDates = await this.appointmentsService.getAvailableDatesForOrganization(
+      bookingLink.organizationId,
+      serviceOptionId,
+      month,
+      providerId,
+    );
+
+    return { availableDates };
+  }
+
   @Get('book/:slug/providers')
   @ApiOperation({ summary: 'Get available providers for a service' })
   @ApiQuery({ name: 'serviceOptionId', required: true })

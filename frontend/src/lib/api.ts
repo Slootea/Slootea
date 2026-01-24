@@ -205,6 +205,8 @@ export const publicApi = {
   getBookingLink: (slug: string) => api.get(`/public/book/${slug}`),
   getAvailableSlots: (slug: string, serviceOptionId: string, date: string, providerId?: string) =>
     api.get(`/public/book/${slug}/slots`, { params: { serviceOptionId, date, providerId } }),
+  getAvailableDates: (slug: string, serviceOptionId: string, month: string, providerId?: string) =>
+    api.get(`/public/book/${slug}/available-dates`, { params: { serviceOptionId, month, providerId } }),
   getProviders: (slug: string, serviceOptionId: string) =>
     api.get(`/public/book/${slug}/providers`, { params: { serviceOptionId } }),
   bookAppointment: (slug: string, data: {

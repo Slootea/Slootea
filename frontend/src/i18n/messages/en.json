@@ -397,7 +397,8 @@
     "confirmationReminder": "You may receive a confirmation request before your appointment. Please confirm your attendance to keep your slot.",
     "minutes": "minutes",
     "failedToLoad": "Failed to load booking information",
-    "failedToLoadSlots": "Failed to load available slots"
+    "failedToLoadSlots": "Failed to load available slots",
+    "loadingAvailability": "Loading availability..."
   },
   "clients": {
     "title": "Clients",
