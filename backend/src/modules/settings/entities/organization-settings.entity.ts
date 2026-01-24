@@ -4,17 +4,14 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
-  JoinColumn,
 } from 'typeorm';
-import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('organization_settings')
 export class OrganizationSettings {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, comment: 'Clerk Organization ID' })
   organizationId: string;
 
   // Booking Settings
@@ -123,8 +120,4 @@ export class OrganizationSettings {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @OneToOne(() => Organization, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'organizationId' })
-  organization: Organization;
 }

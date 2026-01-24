@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { UserServiceOption } from './entities/user-service-option.entity';
 import { ServiceOption } from './entities/service-option.entity';
 import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto } from './dto/user-service-option.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class UserServiceOptionsService {
@@ -12,16 +13,37 @@ export class UserServiceOptionsService {
     private readonly userServiceOptionRepository: Repository<UserServiceOption>,
     @InjectRepository(ServiceOption)
     private readonly serviceOptionRepository: Repository<ServiceOption>,
+    private readonly usersService: UsersService,
   ) {}
+
+  /**
+   * Resolve user ID - handles both Clerk IDs and internal UUIDs
+   * Clerk IDs start with "user_", internal IDs are UUIDs
+   */
+  private async resolveUserId(userIdOrClerkId: string): Promise<string> {
+    // If it looks like a Clerk ID, look up the internal user
+    if (userIdOrClerkId.startsWith('user_')) {
+      const user = await this.usersService.findByClerkId(userIdOrClerkId);
+      if (!user) {
+        throw new NotFoundException(`User with Clerk ID ${userIdOrClerkId} not found`);
+      }
+      return user.id;
+    }
+    // Otherwise assume it's already an internal UUID
+    return userIdOrClerkId;
+  }
 
   /**
    * Assign a service to a user (member self-assigns or admin assigns)
    */
   async assignService(
-    userId: string,
+    userIdOrClerkId: string,
     dto: AssignServiceDto,
     organizationId: string,
   ): Promise<UserServiceOption> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     // Verify service exists and belongs to the organization
     const service = await this.serviceOptionRepository.findOne({
       where: { id: dto.serviceOptionId, organizationId },
@@ -62,10 +84,13 @@ export class UserServiceOptionsService {
    * Bulk assign services to a user
    */
   async bulkAssignServices(
-    userId: string,
+    userIdOrClerkId: string,
     dto: BulkAssignServicesDto,
     organizationId: string,
   ): Promise<UserServiceOption[]> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     // Verify all services exist in the organization
     const services = await this.serviceOptionRepository.find({
       where: { id: In(dto.serviceOptionIds), organizationId },
@@ -103,9 +128,12 @@ export class UserServiceOptionsService {
    * Remove a service assignment from a user
    */
   async removeServiceAssignment(
-    userId: string,
+    userIdOrClerkId: string,
     serviceOptionId: string,
   ): Promise<void> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     const assignment = await this.userServiceOptionRepository.findOne({
       where: { userId, serviceOptionId },
     });
@@ -120,7 +148,10 @@ export class UserServiceOptionsService {
   /**
    * Get all services assigned to a user
    */
-  async findByUser(userId: string): Promise<UserServiceOption[]> {
+  async findByUser(userIdOrClerkId: string): Promise<UserServiceOption[]> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     return this.userServiceOptionRepository.find({
       where: { userId },
       relations: ['serviceOption'],
@@ -131,7 +162,10 @@ export class UserServiceOptionsService {
   /**
    * Get all active services assigned to a user
    */
-  async findActiveByUser(userId: string): Promise<UserServiceOption[]> {
+  async findActiveByUser(userIdOrClerkId: string): Promise<UserServiceOption[]> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     return this.userServiceOptionRepository.find({
       where: { userId, isActive: true },
       relations: ['serviceOption'],
@@ -152,10 +186,13 @@ export class UserServiceOptionsService {
    * Update a user's service assignment
    */
   async updateAssignment(
-    userId: string,
+    userIdOrClerkId: string,
     serviceOptionId: string,
     dto: UpdateUserServiceDto,
   ): Promise<UserServiceOption> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     const assignment = await this.userServiceOptionRepository.findOne({
       where: { userId, serviceOptionId },
       relations: ['serviceOption'],
@@ -173,9 +210,12 @@ export class UserServiceOptionsService {
    * Toggle a service assignment active status
    */
   async toggleActive(
-    userId: string,
+    userIdOrClerkId: string,
     serviceOptionId: string,
   ): Promise<UserServiceOption> {
+    // Resolve to internal user ID
+    const userId = await this.resolveUserId(userIdOrClerkId);
+
     const assignment = await this.userServiceOptionRepository.findOne({
       where: { userId, serviceOptionId },
       relations: ['serviceOption'],
@@ -196,15 +236,19 @@ export class UserServiceOptionsService {
     serviceOptionId: string,
     organizationId: string,
   ): Promise<UserServiceOption[]> {
-    return this.userServiceOptionRepository
-      .createQueryBuilder('uso')
-      .innerJoinAndSelect('uso.user', 'user')
-      .innerJoin('uso.serviceOption', 'so')
-      .innerJoin('user_organizations', 'uo', 'uo.user_id = uso.userId')
-      .where('uso.serviceOptionId = :serviceOptionId', { serviceOptionId })
-      .andWhere('uso.isActive = :isActive', { isActive: true })
-      .andWhere('so.organizationId = :organizationId', { organizationId })
-      .andWhere('uo.organization_id = :organizationId', { organizationId })
-      .getMany();
+    // Simple query - just get assignments for this service
+    // and verify the service belongs to the organization
+    const service = await this.serviceOptionRepository.findOne({
+      where: { id: serviceOptionId, organizationId },
+    });
+
+    if (!service) {
+      return [];
+    }
+
+    return this.userServiceOptionRepository.find({
+      where: { serviceOptionId },
+      relations: ['user'],
+    });
   }
 }

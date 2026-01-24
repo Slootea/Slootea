@@ -187,9 +187,15 @@ export default function CalendarPage() {
   // Fetch data
   const fetchData = useCallback(async () => {
     const token = await getToken();
+    if (!token) {
+      // Not authenticated yet, skip fetch
+      return;
+    }
     setAuthToken(token);
     if (currentOrganization) {
       setOrganizationContext(currentOrganization.id);
+    } else {
+      setOrganizationContext(null);
     }
 
     try {

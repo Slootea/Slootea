@@ -155,7 +155,7 @@ export interface BookingLink {
   type: BookingLinkType;
   isActive: boolean;
   expiresAt?: string;
-  userId: string;
+  organizationId: string;
   serviceOptionId?: string;
   serviceOption?: ServiceOption;
   createdAt: string;
@@ -279,7 +279,7 @@ export interface Client {
   cancelledAppointments: number;
   noShowAppointments: number;
   lastAppointmentAt?: string;
-  userId: string;
+  organizationId?: string;
   createdAt: string;
   updatedAt: string;
 }

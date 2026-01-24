@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { serviceOptionsApi, userServiceOptionsApi, organizationsApi, setAuthToken } from "@/lib/api";
+import { serviceOptionsApi, userServiceOptionsApi, organizationsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import { ServiceOption, OrganizationMember, UserServiceOption } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +58,15 @@ export default function ServiceOptionsPage() {
     setAuthToken(token);
 
     try {
-      const res = await serviceOptionsApi.getAll();
+      let res;
+      if (currentOrganization) {
+        // Fetch organization-level services when in org context
+        setOrganizationContext(currentOrganization.id);
+        res = await serviceOptionsApi.getAllForOrganization();
+      } else {
+        // Fetch personal services
+        res = await serviceOptionsApi.getAll();
+      }
       setOptions(res.data);
     } catch (error) {
       console.error("Failed to fetch service options", error);
@@ -69,7 +77,7 @@ export default function ServiceOptionsPage() {
 
   useEffect(() => {
     fetchOptions();
-  }, [getToken]);
+  }, [getToken, currentOrganization]);
 
   const openCreateDialog = () => {
     setEditingOption(null);
@@ -98,6 +106,8 @@ export default function ServiceOptionsPage() {
     try {
       const token = await getToken();
       setAuthToken(token);
+      // Set organization context for API calls that require x-organization-id header
+      setOrganizationContext(currentOrganization!.id);
 
       const [membersRes, providersRes] = await Promise.all([
         organizationsApi.getMembers(currentOrganization!.id),
@@ -105,9 +115,18 @@ export default function ServiceOptionsPage() {
       ]);
 
       setMembers(membersRes.data);
-      setServiceProviders(providersRes.data.map((p: UserServiceOption) => p.userId));
+      // Map provider's user.clerkId to match with member's userId (which is Clerk ID)
+      const assignedClerkIds = providersRes.data
+        .filter((p: UserServiceOption) => p.user?.clerkId)
+        .map((p: UserServiceOption) => p.user!.clerkId);
+      setServiceProviders(assignedClerkIds);
     } catch (error) {
       console.error("Failed to load members", error);
+      toast({
+        title: tCommon("error"),
+        description: t("messages.loadMembersFailed"),
+        variant: "destructive",
+      });
     } finally {
       setLoadingMembers(false);
     }
@@ -116,10 +135,22 @@ export default function ServiceOptionsPage() {
   const handleSubmit = async () => {
     try {
       if (editingOption) {
-        await serviceOptionsApi.update(editingOption.id, formData);
+        // Update service
+        if (currentOrganization) {
+          setOrganizationContext(currentOrganization.id);
+          await serviceOptionsApi.updateInOrganization(editingOption.id, formData);
+        } else {
+          await serviceOptionsApi.update(editingOption.id, formData);
+        }
         toast({ title: t("messages.updated") });
       } else {
-        await serviceOptionsApi.create(formData);
+        // Create service
+        if (currentOrganization) {
+          setOrganizationContext(currentOrganization.id);
+          await serviceOptionsApi.createForOrganization(formData);
+        } else {
+          await serviceOptionsApi.create(formData);
+        }
         toast({ title: t("messages.created") });
       }
       setDialogOpen(false);
@@ -137,7 +168,12 @@ export default function ServiceOptionsPage() {
     if (!confirm(t("confirmDelete"))) return;
 
     try {
-      await serviceOptionsApi.delete(id);
+      if (currentOrganization) {
+        setOrganizationContext(currentOrganization.id);
+        await serviceOptionsApi.deleteFromOrganization(id);
+      } else {
+        await serviceOptionsApi.delete(id);
+      }
       toast({ title: t("messages.deleted") });
       fetchOptions();
     } catch (error) {
@@ -151,7 +187,12 @@ export default function ServiceOptionsPage() {
 
   const handleToggleActive = async (option: ServiceOption) => {
     try {
-      await serviceOptionsApi.update(option.id, { isActive: !option.isActive });
+      if (currentOrganization) {
+        setOrganizationContext(currentOrganization.id);
+        await serviceOptionsApi.updateInOrganization(option.id, { isActive: !option.isActive });
+      } else {
+        await serviceOptionsApi.update(option.id, { isActive: !option.isActive });
+      }
       fetchOptions();
     } catch (error) {
       toast({
@@ -178,26 +219,31 @@ export default function ServiceOptionsPage() {
     try {
       const token = await getToken();
       setAuthToken(token);
+      // Set organization context for API calls
+      setOrganizationContext(currentOrganization!.id);
 
       // Get current providers
       const providersRes = await userServiceOptionsApi.getProvidersForService(editingOption.id);
-      const currentProviderIds = providersRes.data.map((p: UserServiceOption) => p.userId);
+      // Map to Clerk IDs for comparison (serviceProviders state contains Clerk IDs)
+      const currentProviderClerkIds = providersRes.data
+        .filter((p: UserServiceOption) => p.user?.clerkId)
+        .map((p: UserServiceOption) => p.user!.clerkId);
 
-      // Determine who to add and who to remove
-      const toAdd = serviceProviders.filter((id) => !currentProviderIds.includes(id));
-      const toRemove = currentProviderIds.filter((id: string) => !serviceProviders.includes(id));
+      // Determine who to add and who to remove (using Clerk IDs)
+      const toAdd = serviceProviders.filter((clerkId) => !currentProviderClerkIds.includes(clerkId));
+      const toRemove = currentProviderClerkIds.filter((clerkId: string) => !serviceProviders.includes(clerkId));
 
-      // Process additions
-      for (const memberId of toAdd) {
-        await userServiceOptionsApi.assignServiceToMember(memberId, {
+      // Process additions (pass Clerk ID - backend will resolve to internal ID)
+      for (const clerkId of toAdd) {
+        await userServiceOptionsApi.assignServiceToMember(clerkId, {
           serviceOptionId: editingOption.id,
           isActive: true,
         });
       }
 
-      // Process removals
-      for (const memberId of toRemove) {
-        await userServiceOptionsApi.removeServiceFromMember(memberId, editingOption.id);
+      // Process removals (pass Clerk ID - backend will resolve to internal ID)
+      for (const clerkId of toRemove) {
+        await userServiceOptionsApi.removeServiceFromMember(clerkId, editingOption.id);
       }
 
       toast({
@@ -414,7 +460,7 @@ export default function ServiceOptionsPage() {
                   <div className="space-y-2 max-h-[250px] overflow-y-auto">
                     {members.map((member) => (
                       <div
-                        key={member.id}
+                        key={member.userId}
                         className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
                         onClick={() => handleToggleMemberAssignment(member.userId)}
                       >

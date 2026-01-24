@@ -256,8 +256,12 @@
       "noActionsAvailable": "Kullanılabilir işlem yok"
     },
     "confirmCancel": "Bu randevuyu iptal etmek istediğinizden emin misiniz?",
-    "statusUpdated": "Durum başarıyla güncellendi",
-    "appointmentCancelled": "Randevu iptal edildi",
+    "messages": {
+      "statusUpdated": "Durum başarıyla güncellendi",
+      "statusUpdateFailed": "Durum güncellenemedi",
+      "cancelled": "Randevu iptal edildi",
+      "cancelFailed": "Randevu iptal edilemedi"
+    },
     "empty": {
       "title": "Randevu bulunamadı",
       "description": "Aradığınızı bulmak için filtrelerinizi veya arama kriterlerinizi ayarlamayı deneyin."
@@ -401,6 +405,7 @@
   "availability": {
     "title": "Müsaitlik",
     "description": "Randevular için ne zaman müsait olduğunuzu belirleyin. Gerekirse belirli hizmetler için farklı saatler ayarlayın.",
+    "descriptionMember": "Size atanan hizmetler için müsaitliğinizi ayarlayın. Yöneticiniz hangi hizmetleri sunabileceğinizi belirler.",
     "addTimeSlot": "Zaman Dilimi Ekle",
     "noAvailability": "Müsaitlik ayarlanmadı",
     "allServices": "Tüm hizmetler",
@@ -422,6 +427,8 @@
     "statusInactive": "Pasif",
     "allDays": "Tüm günler",
     "weekdays": "Hafta içi",
+    "noAssignedServices": "Henüz size atanan hizmet yok. Hizmet atanması için yöneticinizle iletişime geçin.",
+    "noAssignedServicesAlert": "Henüz size atanan hizmet yok. Müsaitliğinizi ayarlamadan önce yöneticinizden hizmet atamasını isteyin.",
     "dayOfWeek": {
       "0": "Pazartesi",
       "1": "Salı",
@@ -453,7 +460,8 @@
       "endTime": "Bitiş Saati",
       "dragToSelect": "Zaman aralığı seçmek için sürükleyin",
       "service": "Hizmet (İsteğe Bağlı)",
-      "serviceHint": "Tüm hizmetlere uygulamak için boş bırakın"
+      "serviceHint": "Tüm hizmetlere uygulamak için boş bırakın",
+      "serviceHintMember": "Bu müsaitliğin hangi atanmış hizmetler için geçerli olacağını seçin"
     },
     "presets": {
       "morning": "Sabah",
@@ -528,6 +536,8 @@
     "specificService": "Hizmet:",
     "campaignLink": "Kampanya linki",
     "expires": "Bitiş:",
+    "memberViewOnly": "Rezervasyon linklerini görüntüleyebilir ve kopyalayabilirsiniz. Sadece yöneticiler link oluşturabilir, düzenleyebilir veya silebilir.",
+    "noOrganization": "Rezervasyon linklerini yönetmek için lütfen bir organizasyon seçin. Rezervasyon linkleri organizasyonlara aittir.",
     "empty": {
       "title": "Henüz rezervasyon linki yok",
       "description": "İlkini oluşturun!",

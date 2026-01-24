@@ -105,8 +105,9 @@ export const blockedTimesApi = {
   delete: (id: string) => api.delete(`/blocked-times/${id}`),
 };
 
-// Booking Links API
+// Booking Links API (Organization only)
 export const bookingLinksApi = {
+  // All booking links require organization context
   getAll: () => api.get('/booking-links'),
   getOne: (id: string) => api.get(`/booking-links/${id}`),
   create: (data: { name?: string; type: string; serviceOptionId?: string; expiresAt?: string }) =>

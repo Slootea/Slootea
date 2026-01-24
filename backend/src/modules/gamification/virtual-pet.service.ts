@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { VirtualPet, calculateMood, calculateStage, stageThresholds, experiencePerLevel, PetType, PlacedItem } from './entities/virtual-pet.entity';
 import { PetInventoryItem, defaultShopItems, getShopItem, ShopItem } from './entities/pet-item.entity';
 import { Client } from '../clients/entities/client.entity';
+import { User } from '../users/entities/user.entity';
 import {
   CreateVirtualPetDto,
   FeedPetDto,
@@ -32,7 +33,18 @@ export class VirtualPetService {
     private readonly inventoryRepository: Repository<PetInventoryItem>,
     @InjectRepository(Client)
     private readonly clientRepository: Repository<Client>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
+
+  // Helper to get organizationId from userId
+  private async getOrganizationId(userId: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user?.organizationId) {
+      throw new NotFoundException('User or organization not found');
+    }
+    return user.organizationId;
+  }
 
   // Get or create pet for a client
   async getOrCreatePet(clientId: string, userId: string): Promise<VirtualPet | null> {
@@ -259,8 +271,9 @@ export class VirtualPetService {
     userId: string,
     buyDto: BuyItemDto,
   ): Promise<BuyItemResultDto> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -344,8 +357,9 @@ export class VirtualPetService {
 
   // Get shop items
   async getShopItems(clientId: string, userId: string): Promise<PetShopResponseDto> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -386,8 +400,9 @@ export class VirtualPetService {
 
   // Get inventory
   async getInventory(clientId: string, userId: string): Promise<PetInventoryResponseDto> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {

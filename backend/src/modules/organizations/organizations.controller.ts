@@ -80,13 +80,11 @@ export class OrganizationsController {
   }
 
   @Get(':id/members')
-  @UseGuards(OrgRolesGuard)
-  @OrgMemberOrAdmin()
   @ApiOperation({ summary: 'Get organization members' })
   @ApiResponse({ status: 200, description: 'Members retrieved successfully' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   getMembers(@Param('id') id: string, @Request() req: any) {
-    return this.organizationsService.getMembers(id, req.user.dbUserId);
+    // Pass Clerk user ID (req.user.id) for Clerk API calls
+    return this.organizationsService.getMembers(id, req.user.id);
   }
 
   @Patch(':id/members/:memberId')

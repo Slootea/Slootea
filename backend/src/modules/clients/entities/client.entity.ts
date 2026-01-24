@@ -4,16 +4,13 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
   Index,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 
 export type ClientLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 @Entity('clients')
-@Index(['userId', 'phone'], { unique: true })
+@Index(['organizationId', 'phone'], { unique: true })
 export class Client {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -85,10 +82,6 @@ export class Client {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
-  userId: string;
-
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  @Column({ nullable: true })
+  organizationId: string;
 }

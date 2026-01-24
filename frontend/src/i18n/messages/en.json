@@ -256,8 +256,12 @@
       "noActionsAvailable": "No actions available"
     },
     "confirmCancel": "Are you sure you want to cancel this appointment?",
-    "statusUpdated": "Status updated successfully",
-    "appointmentCancelled": "Appointment cancelled",
+    "messages": {
+      "statusUpdated": "Status updated successfully",
+      "statusUpdateFailed": "Failed to update status",
+      "cancelled": "Appointment cancelled",
+      "cancelFailed": "Failed to cancel appointment"
+    },
     "empty": {
       "title": "No appointments found",
       "description": "Try adjusting your filters or search criteria to find what you're looking for."
@@ -401,6 +405,7 @@
   "availability": {
     "title": "Availability",
     "description": "Define when you're available for appointments. Set different hours for specific services if needed.",
+    "descriptionMember": "Set your availability for the services assigned to you. Your admin assigns which services you can provide.",
     "addTimeSlot": "Add Time Slot",
     "noAvailability": "No availability set",
     "allServices": "All services",
@@ -422,6 +427,8 @@
     "statusInactive": "Inactive",
     "allDays": "All days",
     "weekdays": "Weekdays",
+    "noAssignedServices": "No services have been assigned to you yet. Please contact your admin to assign services.",
+    "noAssignedServicesAlert": "You don't have any services assigned to you yet. Contact your organization admin to assign services before setting up your availability.",
     "dayOfWeek": {
       "0": "Monday",
       "1": "Tuesday",
@@ -453,7 +460,8 @@
       "endTime": "End Time",
       "dragToSelect": "Drag to select time range",
       "service": "Service (Optional)",
-      "serviceHint": "Leave empty to apply this slot to all services"
+      "serviceHint": "Leave empty to apply this slot to all services",
+      "serviceHintMember": "Select which of your assigned services this availability applies to"
     },
     "presets": {
       "morning": "Morning",
@@ -528,6 +536,8 @@
     "specificService": "Service:",
     "campaignLink": "Campaign link",
     "expires": "Expires:",
+    "memberViewOnly": "You can view and copy booking links. Only administrators can create, edit, or delete links.",
+    "noOrganization": "Please select an organization to manage booking links. Booking links belong to organizations.",
     "empty": {
       "title": "No booking links yet",
       "description": "Create your first one!",

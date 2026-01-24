@@ -9,6 +9,7 @@ import { ClientReward } from './entities/client-reward.entity';
 import { PointsHistory } from './entities/points-history.entity';
 import { Client } from '../clients/entities/client.entity';
 import { BookingLink } from '../booking-links/entities/booking-link.entity';
+import { User } from '../users/entities/user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { VirtualPet } from './entities/virtual-pet.entity';
 import { PetInventoryItem } from './entities/pet-item.entity';
@@ -24,6 +25,7 @@ import { PublicVirtualPetController } from './public-virtual-pet.controller';
       PointsHistory,
       Client,
       BookingLink,
+      User,
       VirtualPet,
       PetInventoryItem,
     ]),

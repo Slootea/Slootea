@@ -115,7 +115,8 @@ export class AppointmentsController {
     @Param('id') id: string,
     @Body() updateDto: UpdateAppointmentDto,
   ) {
-    return this.appointmentsService.update(id, req.user.dbUserId, updateDto);
+    const organizationId = req.organizationId || req.headers['x-organization-id'];
+    return this.appointmentsService.update(id, req.user.dbUserId, updateDto, organizationId);
   }
 
   @Put(':id/cancel')

@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { availabilityApi, serviceOptionsApi, setAuthToken } from "@/lib/api";
-import { Availability, ServiceOption, DayOfWeek } from "@/lib/types";
+import { availabilityApi, serviceOptionsApi, userServiceOptionsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { Availability, ServiceOption, DayOfWeek, UserServiceOption } from "@/lib/types";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   Plus, 
@@ -63,7 +68,8 @@ import {
   GripVertical,
   Sun,
   Coffee,
-  Sunset
+  Sunset,
+  AlertCircle
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -648,10 +654,12 @@ function StatsCard({
 export default function AvailabilityPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization, isAdmin, userRole } = useOrganizationContext();
   const t = useTranslations("availability");
   const tCommon = useTranslations("common");
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
+  const [assignedServices, setAssignedServices] = useState<UserServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -666,23 +674,63 @@ export default function AvailabilityPage() {
     serviceOptionId: "",
   });
 
+  // Determine if user is a regular member in an organization (not admin/owner)
+  const isOrgMember = !!(currentOrganization && userRole === 'member');
+
+  // Get the list of services available for selection
+  // For org members, only show their assigned services
+  // For admins or personal users, show all services
+  const availableServicesForSelection = useMemo(() => {
+    if (isOrgMember) {
+      // Members can only set availability for their assigned services
+      return assignedServices
+        .filter(as => as.isActive && as.serviceOption)
+        .map(as => as.serviceOption!);
+    }
+    // Admins and personal users see all services
+    return serviceOptions;
+  }, [isOrgMember, assignedServices, serviceOptions]);
+
+  // Check if member has no assigned services
+  const hasNoAssignedServices = isOrgMember && availableServicesForSelection.length === 0;
+
   const fetchData = useCallback(async () => {
     const token = await getToken();
     setAuthToken(token);
 
+    // Set organization context if in an organization
+    if (currentOrganization) {
+      setOrganizationContext(currentOrganization.id);
+    }
+
     try {
-      const [availRes, optionsRes] = await Promise.all([
+      const requests: Promise<any>[] = [
         availabilityApi.getAll(),
-        serviceOptionsApi.getAll(),
-      ]);
-      setAvailabilities(availRes.data);
-      setServiceOptions(optionsRes.data);
+      ];
+
+      // Fetch organization services or personal services based on context
+      if (currentOrganization) {
+        requests.push(serviceOptionsApi.getAllForOrganization());
+        // Also fetch user's assigned services if they're an org member
+        requests.push(userServiceOptionsApi.getMyServices());
+      } else {
+        requests.push(serviceOptionsApi.getAll());
+      }
+
+      const results = await Promise.all(requests);
+      
+      setAvailabilities(results[0].data);
+      setServiceOptions(results[1].data);
+      
+      if (results[2]) {
+        setAssignedServices(results[2].data);
+      }
     } catch (error) {
       console.error("Failed to fetch data", error);
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, currentOrganization]);
 
   useEffect(() => {
     fetchData();
@@ -767,11 +815,15 @@ export default function AvailabilityPage() {
 
   const handleAddSlotToDay = (day: DayOfWeek) => {
     setEditingSlot(null);
+    // For org members, default to their first assigned service (they must select one)
+    const defaultServiceId = isOrgMember && availableServicesForSelection.length > 0
+      ? availableServicesForSelection[0].id
+      : "";
     setFormData({
       dayOfWeek: day,
       startTime: "09:00",
       endTime: "17:00",
-      serviceOptionId: "",
+      serviceOptionId: defaultServiceId,
     });
     setDialogOpen(true);
   };
@@ -871,11 +923,21 @@ export default function AvailabilityPage() {
 
   return (
     <div className="space-y-6">
+      {/* Alert for members with no assigned services */}
+      {hasNoAssignedServices && (
+        <Alert variant="default" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700 dark:text-amber-400">
+            {t("noAssignedServicesAlert")}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <p className="text-muted-foreground">
-            {t("description")}
+            {isOrgMember ? t("descriptionMember") : t("description")}
           </p>
         </div>
         
@@ -1056,27 +1118,44 @@ export default function AvailabilityPage() {
                 <Separator />
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">{t("dialog.service")}</Label>
-                  <Select
-                    value={formData.serviceOptionId || "__all__"}
-                    onValueChange={(v) =>
-                      setFormData({ ...formData, serviceOptionId: v === "__all__" ? "" : v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={tCommon("allServices")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__all__">{tCommon("allServices")}</SelectItem>
-                      {serviceOptions.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.id}>
-                          {opt.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    {t("dialog.serviceHint")}
-                  </p>
+                  {isOrgMember && availableServicesForSelection.length === 0 ? (
+                    <Alert variant="default" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-700 dark:text-amber-400">
+                        {t("noAssignedServices")}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <>
+                      <Select
+                        value={formData.serviceOptionId || "__all__"}
+                        onValueChange={(v) =>
+                          setFormData({ ...formData, serviceOptionId: v === "__all__" ? "" : v })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={tCommon("allServices")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {/* Only show "All Services" option for admins/personal users */}
+                          {!isOrgMember && (
+                            <SelectItem value="__all__">{tCommon("allServices")}</SelectItem>
+                          )}
+                          {availableServicesForSelection.map((opt) => (
+                            <SelectItem key={opt.id} value={opt.id}>
+                              {opt.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {isOrgMember 
+                          ? t("dialog.serviceHintMember")
+                          : t("dialog.serviceHint")
+                        }
+                      </p>
+                    </>
+                  )}
                 </div>
               </>
             )}
@@ -1085,7 +1164,10 @@ export default function AvailabilityPage() {
             <Button variant="outline" onClick={() => { setDialogOpen(false); setEditingSlot(null); }}>
               {tCommon("cancel")}
             </Button>
-            <Button onClick={handleCreate}>
+            <Button 
+              onClick={handleCreate}
+              disabled={isOrgMember && !editingSlot && !formData.serviceOptionId}
+            >
               {editingSlot ? tCommon("save") : tCommon("create")}
             </Button>
           </DialogFooter>

@@ -10,6 +10,7 @@ import { Referral } from './entities/referral.entity';
 import { ClientReward } from './entities/client-reward.entity';
 import { PointsHistory, PointsTransactionType } from './entities/points-history.entity';
 import { Client, ClientLevel } from '../clients/entities/client.entity';
+import { User } from '../users/entities/user.entity';
 import {
   CreateGamificationSettingsDto,
   UpdateGamificationSettingsDto,
@@ -32,7 +33,18 @@ export class GamificationService {
     private readonly historyRepository: Repository<PointsHistory>,
     @InjectRepository(Client)
     private readonly clientRepository: Repository<Client>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
+
+  // Helper to get organizationId from userId
+  private async getOrganizationId(userId: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user?.organizationId) {
+      throw new NotFoundException('User or organization not found');
+    }
+    return user.organizationId;
+  }
 
   // Settings Management
   async getSettings(userId: string): Promise<GamificationSettings> {
@@ -74,8 +86,9 @@ export class GamificationService {
     description?: string,
     relatedEntityId?: string,
   ): Promise<Client> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -110,8 +123,9 @@ export class GamificationService {
     points: number,
     description?: string,
   ): Promise<Client> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -145,8 +159,9 @@ export class GamificationService {
     points: number,
     reason?: string,
   ): Promise<Client> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -216,8 +231,9 @@ export class GamificationService {
 
   // Referral Management
   async generateReferralCode(clientId: string, userId: string): Promise<string> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -244,8 +260,9 @@ export class GamificationService {
     code: string,
     userId: string,
   ): Promise<{ valid: boolean; referrer?: Client }> {
+    const organizationId = await this.getOrganizationId(userId);
     const referrer = await this.clientRepository.findOne({
-      where: { referralCode: code, userId },
+      where: { referralCode: code, organizationId },
     });
 
     return {
@@ -272,8 +289,9 @@ export class GamificationService {
     }
 
     const referrer = validation.referrer;
+    const organizationId = await this.getOrganizationId(userId);
     const newClient = await this.clientRepository.findOne({
-      where: { id: newClientId, userId },
+      where: { id: newClientId, organizationId },
     });
 
     if (!newClient || referrer.id === newClient.id) {
@@ -324,8 +342,9 @@ export class GamificationService {
 
   // Streak Management
   async updateStreak(clientId: string, userId: string, completed: boolean): Promise<void> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -367,8 +386,9 @@ export class GamificationService {
       throw new BadRequestException('Spin wheel is not enabled');
     }
 
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -434,8 +454,9 @@ export class GamificationService {
     clientId: string,
     userId: string,
   ): Promise<ClientGamificationSummary> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -499,8 +520,9 @@ export class GamificationService {
     userId: string,
     updateDto: UpdateClientGamificationDto,
   ): Promise<Client> {
+    const organizationId = await this.getOrganizationId(userId);
     const client = await this.clientRepository.findOne({
-      where: { id: clientId, userId },
+      where: { id: clientId, organizationId },
     });
 
     if (!client) {
@@ -606,6 +628,7 @@ export class GamificationService {
   // Gamification stats for dashboard
   async getGamificationStats(userId: string) {
     const settings = await this.getSettings(userId);
+    const organizationId = await this.getOrganizationId(userId);
     
     const totalPointsIssued = await this.historyRepository
       .createQueryBuilder('history')
@@ -620,7 +643,7 @@ export class GamificationService {
 
     const levelDistribution = await this.clientRepository
       .createQueryBuilder('client')
-      .where('client.userId = :userId', { userId })
+      .where('client.organizationId = :organizationId', { organizationId })
       .select('client.level', 'level')
       .addSelect('COUNT(*)', 'count')
       .groupBy('client.level')
@@ -628,7 +651,7 @@ export class GamificationService {
 
     const topReferrers = await this.clientRepository
       .createQueryBuilder('client')
-      .where('client.userId = :userId', { userId })
+      .where('client.organizationId = :organizationId', { organizationId })
       .andWhere('client.successfulReferrals > 0')
       .orderBy('client.successfulReferrals', 'DESC')
       .take(5)

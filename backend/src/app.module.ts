@@ -13,6 +13,7 @@ import { MessagingModule } from './modules/messaging/messaging.module';
 import { PublicModule } from './modules/public/public.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { GamificationModule } from './modules/gamification/gamification.module';
     }),
     AuthModule,
     UsersModule,
+    OrganizationsModule,
     ServiceOptionsModule,
     AvailabilityModule,
     BlockedTimesModule,

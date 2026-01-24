@@ -14,8 +14,9 @@ import { ServiceOptionsService } from '../service-options/service-options.servic
 import { AppointmentsService } from '../appointments/appointments.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BlockedTimesService } from '../blocked-times/blocked-times.service';
-import { SettingsService } from '../settings/settings.service';
+import { OrganizationSettingsService } from '../settings/organization-settings.service';
 import { CreateAppointmentDto } from '../appointments/dto/appointment.dto';
+import { UserServiceOptionsService } from '../service-options/user-service-options.service';
 
 @ApiTags('public')
 @Controller('public')
@@ -26,7 +27,8 @@ export class PublicController {
     private readonly appointmentsService: AppointmentsService,
     private readonly availabilityService: AvailabilityService,
     private readonly blockedTimesService: BlockedTimesService,
-    private readonly settingsService: SettingsService,
+    private readonly organizationSettingsService: OrganizationSettingsService,
+    private readonly userServiceOptionsService: UserServiceOptionsService,
   ) {}
 
   @Get('book/:slug')
@@ -38,22 +40,29 @@ export class PublicController {
       throw new NotFoundException('Booking link is not active');
     }
 
+    // Get organization settings
+    const orgSettings = await this.organizationSettingsService.getPublicSettings(
+      bookingLink.organizationId,
+    );
+
     // If it's a specific option link, return just that option
     if (bookingLink.serviceOption) {
       return {
         ...bookingLink,
         serviceOptions: [bookingLink.serviceOption],
+        settings: orgSettings,
       };
     }
 
-    // Get all active service options for this user
-    const serviceOptions = await this.serviceOptionsService.findActiveByUser(
-      bookingLink.userId,
+    // Get all active service options for this organization
+    const serviceOptions = await this.serviceOptionsService.findActiveByOrganization(
+      bookingLink.organizationId,
     );
 
     return {
       ...bookingLink,
       serviceOptions,
+      settings: orgSettings,
     };
   }
 
@@ -61,10 +70,12 @@ export class PublicController {
   @ApiOperation({ summary: 'Get available time slots for a date' })
   @ApiQuery({ name: 'serviceOptionId', required: true })
   @ApiQuery({ name: 'date', required: true, description: 'Date in YYYY-MM-DD format' })
+  @ApiQuery({ name: 'providerId', required: false, description: 'Specific provider ID if provider selection is enabled' })
   async getAvailableSlots(
     @Param('slug') slug: string,
     @Query('serviceOptionId') serviceOptionId: string,
     @Query('date') date: string,
+    @Query('providerId') providerId?: string,
   ) {
     const bookingLink = await this.bookingLinksService.findBySlug(slug);
 
@@ -78,13 +89,58 @@ export class PublicController {
       throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
     }
 
-    const slots = await this.appointmentsService.getAvailableSlots(
-      bookingLink.userId,
+    // Get available slots for the organization
+    const slots = await this.appointmentsService.getAvailableSlotsForOrganization(
+      bookingLink.organizationId,
       serviceOptionId,
       date,
+      providerId,
     );
 
     return slots;
+  }
+
+  @Get('book/:slug/providers')
+  @ApiOperation({ summary: 'Get available providers for a service' })
+  @ApiQuery({ name: 'serviceOptionId', required: true })
+  async getProviders(
+    @Param('slug') slug: string,
+    @Query('serviceOptionId') serviceOptionId: string,
+  ) {
+    const bookingLink = await this.bookingLinksService.findBySlug(slug);
+
+    if (!bookingLink.isActive) {
+      throw new NotFoundException('Booking link is not active');
+    }
+
+    // Get organization settings to check if provider selection is allowed
+    const settings = await this.organizationSettingsService.findByOrganizationId(
+      bookingLink.organizationId,
+    );
+
+    if (!settings.allowProviderSelection) {
+      return { providers: [], providerSelectionEnabled: false };
+    }
+
+    // Get providers assigned to this service
+    const providers = await this.userServiceOptionsService.getProvidersForService(
+      serviceOptionId,
+      bookingLink.organizationId,
+    );
+
+    // Filter provider info based on settings
+    const filteredProviders = providers.map((p) => ({
+      id: p.user?.id,
+      clerkId: p.user?.clerkId,
+      firstName: settings.showProviderNames ? p.user?.firstName : undefined,
+      lastName: settings.showProviderNames ? p.user?.lastName : undefined,
+      // photo: settings.showProviderPhotos ? p.user?.photoUrl : undefined,
+    }));
+
+    return {
+      providers: filteredProviders,
+      providerSelectionEnabled: true,
+    };
   }
 
   @Post('book/:slug')
@@ -99,9 +155,9 @@ export class PublicController {
       throw new NotFoundException('Booking link is not active');
     }
 
-    // Create appointment with the booking link's user
-    const appointment = await this.appointmentsService.createFromPublic(
-      bookingLink.userId,
+    // Create appointment for the organization
+    const appointment = await this.appointmentsService.createFromPublicOrganization(
+      bookingLink.organizationId,
       createAppointmentDto,
     );
 

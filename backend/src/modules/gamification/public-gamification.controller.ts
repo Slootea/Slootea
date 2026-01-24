@@ -13,6 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client } from '../clients/entities/client.entity';
 import { BookingLink } from '../booking-links/entities/booking-link.entity';
+import { User } from '../users/entities/user.entity';
 
 // DTOs for public endpoints
 class LookupClientDto {
@@ -47,7 +48,20 @@ export class PublicGamificationController {
     private readonly clientRepository: Repository<Client>,
     @InjectRepository(BookingLink)
     private readonly bookingLinkRepository: Repository<BookingLink>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
+
+  /**
+   * Get the first active user (provider) in the organization
+   * Used for gamification settings until organization-level gamification is implemented
+   */
+  private async getOrganizationUserId(organizationId: string): Promise<string | null> {
+    const user = await this.userRepository.findOne({
+      where: { organizationId, isActive: true },
+    });
+    return user?.id || null;
+  }
 
   // Check if gamification is enabled for a booking link
   @Get(':slug/status')
@@ -60,7 +74,12 @@ export class PublicGamificationController {
       throw new BadRequestException('Invalid booking link');
     }
 
-    const settings = await this.gamificationService.getSettings(bookingLink.userId);
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      return { enabled: false };
+    }
+
+    const settings = await this.gamificationService.getSettings(userId);
     
     return {
       enabled: settings.enabled,
@@ -91,15 +110,20 @@ export class PublicGamificationController {
       throw new BadRequestException('Invalid booking link');
     }
 
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      return { found: false };
+    }
+
     const client = await this.clientRepository.findOne({
-      where: { phone: dto.phone, userId: bookingLink.userId },
+      where: { phone: dto.phone, organizationId: bookingLink.organizationId },
     });
 
     if (!client) {
       return { found: false };
     }
 
-    const settings = await this.gamificationService.getSettings(bookingLink.userId);
+    const settings = await this.gamificationService.getSettings(userId);
 
     if (!settings.enabled) {
       return {
@@ -116,7 +140,7 @@ export class PublicGamificationController {
 
     const gamification = await this.gamificationService.getClientGamificationSummary(
       client.id,
-      bookingLink.userId,
+      userId,
     );
 
     return {
@@ -146,7 +170,12 @@ export class PublicGamificationController {
       throw new BadRequestException('Invalid booking link');
     }
 
-    const settings = await this.gamificationService.getSettings(bookingLink.userId);
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      return { valid: false, message: 'No providers available' };
+    }
+
+    const settings = await this.gamificationService.getSettings(userId);
 
     if (!settings.enabled || !settings.referralsEnabled) {
       return { valid: false, message: 'Referrals are not enabled' };
@@ -154,7 +183,7 @@ export class PublicGamificationController {
 
     const result = await this.gamificationService.validateReferralCode(
       dto.referralCode,
-      bookingLink.userId,
+      userId,
     );
 
     if (!result.valid) {
@@ -164,7 +193,7 @@ export class PublicGamificationController {
     // Check if the client is trying to use their own referral code
     if (clientPhone && result.referrer) {
       const existingClient = await this.clientRepository.findOne({
-        where: { phone: clientPhone, userId: bookingLink.userId },
+        where: { phone: clientPhone, organizationId: bookingLink.organizationId },
       });
       if (existingClient && existingClient.id === result.referrer.id) {
         return { valid: false, message: 'You cannot use your own referral code' };
@@ -193,7 +222,12 @@ export class PublicGamificationController {
       throw new BadRequestException('Invalid booking link');
     }
 
-    const settings = await this.gamificationService.getSettings(bookingLink.userId);
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      throw new BadRequestException('No providers available');
+    }
+
+    const settings = await this.gamificationService.getSettings(userId);
 
     if (!settings.enabled || !settings.referralsEnabled) {
       throw new BadRequestException('Referrals are not enabled');
@@ -201,7 +235,7 @@ export class PublicGamificationController {
 
     const code = await this.gamificationService.generateReferralCode(
       dto.clientId,
-      bookingLink.userId,
+      userId,
     );
 
     return { referralCode: code };
@@ -221,13 +255,18 @@ export class PublicGamificationController {
       throw new BadRequestException('Invalid booking link');
     }
 
-    const settings = await this.gamificationService.getSettings(bookingLink.userId);
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      throw new BadRequestException('No providers available');
+    }
+
+    const settings = await this.gamificationService.getSettings(userId);
 
     if (!settings.enabled || !settings.spinWheelEnabled) {
       throw new BadRequestException('Spin wheel is not enabled');
     }
 
-    return this.gamificationService.spinWheel(dto.clientId, bookingLink.userId);
+    return this.gamificationService.spinWheel(dto.clientId, userId);
   }
 
   // Get spin wheel configuration
@@ -241,7 +280,12 @@ export class PublicGamificationController {
       throw new BadRequestException('Invalid booking link');
     }
 
-    const settings = await this.gamificationService.getSettings(bookingLink.userId);
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      return { enabled: false, prizes: [] };
+    }
+
+    const settings = await this.gamificationService.getSettings(userId);
 
     if (!settings.enabled || !settings.spinWheelEnabled) {
       return { enabled: false, prizes: [] };

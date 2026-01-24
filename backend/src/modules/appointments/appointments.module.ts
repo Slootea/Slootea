@@ -14,7 +14,7 @@ import { GamificationModule } from '../gamification/gamification.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Appointment]),
-    ServiceOptionsModule,
+    forwardRef(() => ServiceOptionsModule),
     AvailabilityModule,
     BlockedTimesModule,
     SettingsModule,

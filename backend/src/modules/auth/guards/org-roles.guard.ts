@@ -42,6 +42,10 @@ export class OrgRolesGuard implements CanActivate {
     // Get organization ID from request header, query, or body
     const organizationId = this.extractOrganizationId(request);
 
+    this.logger.debug(`OrgRolesGuard - organizationId: ${organizationId}`);
+    this.logger.debug(`OrgRolesGuard - user.memberships: ${JSON.stringify(user.memberships)}`);
+    this.logger.debug(`OrgRolesGuard - requiredRoles: ${JSON.stringify(requiredRoles)}`);
+
     if (!organizationId) {
       this.logger.warn('No organization context provided');
       // If no org context and roles are required, deny access
@@ -50,6 +54,8 @@ export class OrgRolesGuard implements CanActivate {
 
     // Check if user has required role in the organization
     const hasRole = this.checkUserOrgRole(user, organizationId, requiredRoles);
+
+    this.logger.debug(`OrgRolesGuard - hasRole: ${hasRole}`);
 
     if (!hasRole) {
       throw new ForbiddenException(

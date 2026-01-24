@@ -34,7 +34,6 @@ export function AppSidebar() {
 
   // Members can see their own services, but only in org context
   const memberConfigItems = [
-    { href: "/dashboard/my-services", label: t('myServices') || 'My Services', icon: List },
     { href: "/dashboard/availability", label: t('availability'), icon: Clock },
     { href: "/dashboard/blocks", label: t('blockedTimes'), icon: CalendarX },
   ];

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { clientsApi, appointmentsApi, gamificationApi, setAuthToken } from "@/lib/api";
+import { clientsApi, appointmentsApi, gamificationApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import {
   Client,
   ClientFilters,
@@ -14,6 +14,7 @@ import {
   PointsHistory,
   GamificationSettings,
 } from "@/lib/types";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 import {
   Card,
   CardContent,
@@ -62,6 +63,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Users,
   UserPlus,
@@ -93,6 +95,7 @@ import {
   Trophy,
   Plus,
   Minus,
+  Building2,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -104,6 +107,7 @@ import {
 export default function ClientsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization } = useOrganizationContext();
 
   // State
   const [clients, setClients] = useState<Client[]>([]);
@@ -173,7 +177,18 @@ export default function ClientsPage() {
   const fetchData = useCallback(
     async (showRefreshing = false) => {
       const token = await getToken();
+      if (!token) return;
       setAuthToken(token);
+
+      // Clients require organization context
+      if (!currentOrganization) {
+        setClients([]);
+        setStats(null);
+        setLoading(false);
+        return;
+      }
+
+      setOrganizationContext(currentOrganization.id);
 
       if (showRefreshing) {
         setRefreshing(true);
@@ -212,23 +227,25 @@ export default function ClientsPage() {
         setRefreshing(false);
       }
     },
-    [getToken, filters, debouncedSearch, toast]
+    [getToken, filters, debouncedSearch, toast, currentOrganization]
   );
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Reset page when search changes
+  // Reset page when search or organization changes
   useEffect(() => {
     setFilters((prev) => ({ ...prev, page: 1 }));
-  }, [debouncedSearch]);
+  }, [debouncedSearch, currentOrganization]);
 
   const fetchClientAppointments = async (clientId: string) => {
+    if (!currentOrganization) return;
     setAppointmentsLoading(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
       const response = await clientsApi.getAppointments(clientId, { limit: 20 });
       const paginatedData = response.data as PaginatedResult<Appointment>;
       setClientAppointments(paginatedData.data);
@@ -247,9 +264,12 @@ export default function ClientsPage() {
   // Fetch gamification settings
   useEffect(() => {
     const checkGamification = async () => {
+      if (!currentOrganization) return;
       try {
         const token = await getToken();
+        if (!token) return;
         setAuthToken(token);
+        setOrganizationContext(currentOrganization.id);
         const response = await gamificationApi.getSettings();
         setGamificationEnabled(response.data?.enabled ?? false);
       } catch (error) {
@@ -257,16 +277,17 @@ export default function ClientsPage() {
       }
     };
     checkGamification();
-  }, [getToken]);
+  }, [getToken, currentOrganization]);
 
   // Fetch client gamification data
   const fetchClientGamification = async (clientId: string) => {
-    if (!gamificationEnabled) return;
+    if (!gamificationEnabled || !currentOrganization) return;
     
     setGamificationLoading(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
       const [summaryRes, historyRes] = await Promise.all([
         gamificationApi.getClientGamification(clientId),
         gamificationApi.getPointsHistory(clientId),
@@ -282,16 +303,16 @@ export default function ClientsPage() {
 
   // Handle points adjustment
   const handleAdjustPoints = async () => {
-    if (!selectedClient || pointsAdjustment.points === 0) return;
+    if (!selectedClient || pointsAdjustment.points === 0 || !currentOrganization) return;
     
     setAdjustingPoints(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
       await gamificationApi.adjustPoints(selectedClient.id, {
         points: pointsAdjustment.points,
         reason: pointsAdjustment.reason || (pointsAdjustment.points > 0 ? "Manual bonus" : "Manual deduction"),
-        type: pointsAdjustment.points > 0 ? "bonus" : "redeemed",
       });
       
       toast({
@@ -358,10 +379,20 @@ export default function ClientsPage() {
       return;
     }
 
+    if (!currentOrganization) {
+      toast({
+        title: "Error",
+        description: "Organization context required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
 
       if (editingClient) {
         await clientsApi.update(editingClient.id, {
@@ -410,12 +441,13 @@ export default function ClientsPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!clientToDelete) return;
+    if (!clientToDelete || !currentOrganization) return;
 
     setDeleting(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
       await clientsApi.delete(clientToDelete.id);
       toast({ title: "Client deleted successfully" });
       setDeleteDialogOpen(false);
@@ -462,6 +494,30 @@ export default function ClientsPage() {
     return <LoadingSkeleton />;
   }
 
+  // Show message when no organization is selected
+  if (!currentOrganization) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">Clients</CardTitle>
+            <CardDescription>
+              Manage your client database and view their appointment history
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Building2 className="h-4 w-4" />
+              <AlertDescription>
+                Please select an organization to view and manage clients.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -474,7 +530,7 @@ export default function ClientsPage() {
             <div>
               <CardTitle className="text-xl font-semibold">Clients</CardTitle>
               <CardDescription>
-                Manage your client database and view their appointment history
+                Manage your organization&apos;s client database and view their appointment history
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -793,7 +849,7 @@ export default function ClientsPage() {
                                 <div className="space-y-1">
                                   {pointsHistory.slice(0, 5).map((history, idx) => (
                                     <div key={idx} className="flex items-center justify-between text-xs p-2 rounded bg-muted/30">
-                                      <span className="truncate max-w-[60%]">{history.reason}</span>
+                                      <span className="truncate max-w-[60%]">{history.description || history.transactionType}</span>
                                       <span className={history.points >= 0 ? 'text-green-600' : 'text-red-600'}>
                                         {history.points >= 0 ? '+' : ''}{history.points}
                                       </span>

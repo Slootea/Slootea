@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { bookingLinksApi, serviceOptionsApi, setAuthToken } from "@/lib/api";
+import { bookingLinksApi, serviceOptionsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import { BookingLink, BookingLinkType, ServiceOption } from "@/lib/types";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,13 +27,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Copy, Trash2, Link2, ExternalLink } from "lucide-react";
+import { Plus, Copy, Trash2, Link2, ExternalLink, ShieldAlert } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useTranslations } from "next-intl";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function BookingLinksPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization, isAdmin, userRole } = useOrganizationContext();
   const t = useTranslations("linksPage");
   const tCommon = useTranslations("common");
   const [links, setLinks] = useState<BookingLink[]>([]);
@@ -46,15 +49,31 @@ export default function BookingLinksPage() {
     expiresAt: "",
   });
 
+  // Check if user can create/edit/delete links (only admins in org context)
+  const canManageLinks = currentOrganization && isAdmin;
+
   const fetchData = async () => {
     const token = await getToken();
     setAuthToken(token);
 
     try {
+      if (!currentOrganization) {
+        // Booking links require organization context
+        setLinks([]);
+        setServiceOptions([]);
+        setLoading(false);
+        return;
+      }
+
+      // Set organization context for API calls
+      setOrganizationContext(currentOrganization.id);
+      
+      // Fetch organization links and services
       const [linksRes, optionsRes] = await Promise.all([
         bookingLinksApi.getAll(),
-        serviceOptionsApi.getAll(),
+        serviceOptionsApi.getAllForOrganization(),
       ]);
+
       setLinks(linksRes.data);
       setServiceOptions(optionsRes.data);
     } catch (error) {
@@ -66,10 +85,13 @@ export default function BookingLinksPage() {
 
   useEffect(() => {
     fetchData();
-  }, [getToken]);
+  }, [getToken, currentOrganization]);
 
   const handleCreate = async () => {
+    if (!currentOrganization) return;
+    
     try {
+      setOrganizationContext(currentOrganization.id);
       await bookingLinksApi.create({
         name: formData.name || undefined,
         type: formData.type,
@@ -91,7 +113,7 @@ export default function BookingLinksPage() {
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.created"),
+        description: t("messages.createFailed"),
         variant: "destructive",
       });
     }
@@ -99,28 +121,33 @@ export default function BookingLinksPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm(t("confirmDelete"))) return;
+    if (!currentOrganization) return;
 
     try {
+      setOrganizationContext(currentOrganization.id);
       await bookingLinksApi.delete(id);
       toast({ title: t("messages.deleted") });
       fetchData();
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.deleted"),
+        description: t("messages.deleteFailed"),
         variant: "destructive",
       });
     }
   };
 
   const handleToggleActive = async (link: BookingLink) => {
+    if (!currentOrganization) return;
+    
     try {
+      setOrganizationContext(currentOrganization.id);
       await bookingLinksApi.update(link.id, { isActive: !link.isActive });
       fetchData();
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.updated"),
+        description: t("messages.updateFailed"),
         variant: "destructive",
       });
     }
@@ -147,16 +174,42 @@ export default function BookingLinksPage() {
     );
   }
 
+  // Show message if no organization is selected
+  if (!currentOrganization) {
+    return (
+      <div className="space-y-6">
+        <Alert>
+          <ShieldAlert className="h-4 w-4" />
+          <AlertDescription>
+            {t("noOrganization") || "Please select an organization to manage booking links. Booking links belong to organizations."}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Info alert for non-admin members */}
+      {currentOrganization && !isAdmin && (
+        <Alert>
+          <ShieldAlert className="h-4 w-4" />
+          <AlertDescription>
+            {t("memberViewOnly") || "You can view and copy booking links. Only administrators can create, edit, or delete links."}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex justify-between items-center">
         <p className="text-muted-foreground">
           {t("description")}
         </p>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("createLink")}
-        </Button>
+        {canManageLinks && (
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t("createLink")}
+          </Button>
+        )}
       </div>
 
       {links.length === 0 ? (
@@ -166,10 +219,12 @@ export default function BookingLinksPage() {
             <p className="text-muted-foreground mb-4">
               {t("empty.title")} {t("empty.description")}
             </p>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t("empty.createFirst")}
-            </Button>
+            {canManageLinks && (
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t("empty.createFirst")}
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -230,17 +285,21 @@ export default function BookingLinksPage() {
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </a>
-                    <Switch
-                      checked={link.isActive}
-                      onCheckedChange={() => handleToggleActive(link)}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(link.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
+                    {canManageLinks && (
+                      <>
+                        <Switch
+                          checked={link.isActive}
+                          onCheckedChange={() => handleToggleActive(link)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(link.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>

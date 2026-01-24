@@ -26,6 +26,7 @@ interface OrganizationContextType {
   currentOrganization: Organization | null;
   organizations: Organization[];
   isAdmin: boolean;
+  userRole: 'owner' | 'admin' | 'member' | null;
   isLoading: boolean;
   members: OrganizationMember[];
   switchOrganization: (orgId: string) => Promise<void>;
@@ -67,6 +68,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // Check if current user is admin
   const isAdmin = membership?.role === 'org:admin';
+
+  // Get user role (normalized)
+  const userRole: 'owner' | 'admin' | 'member' | null = membership?.role 
+    ? (membership.role === 'org:admin' ? 'admin' : 'member')
+    : null;
 
   // Refresh members list
   const refreshMembers = useCallback(async () => {
@@ -131,6 +137,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         currentOrganization,
         organizations,
         isAdmin,
+        userRole,
         isLoading,
         members,
         switchOrganization,

@@ -21,6 +21,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BookingLink } from '../booking-links/entities/booking-link.entity';
 import { GamificationSettings } from './entities/gamification-settings.entity';
+import { User } from '../users/entities/user.entity';
 
 @Controller('public/virtual-pet')
 export class PublicVirtualPetController {
@@ -30,7 +31,20 @@ export class PublicVirtualPetController {
     private readonly bookingLinkRepository: Repository<BookingLink>,
     @InjectRepository(GamificationSettings)
     private readonly settingsRepository: Repository<GamificationSettings>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
+
+  /**
+   * Get the first active user (provider) in the organization
+   * Used for gamification settings until organization-level gamification is implemented
+   */
+  private async getOrganizationUserId(organizationId: string): Promise<string | null> {
+    const user = await this.userRepository.findOne({
+      where: { organizationId, isActive: true },
+    });
+    return user?.id || null;
+  }
 
   private async validateAndGetUserId(slug: string): Promise<string> {
     const bookingLink = await this.bookingLinkRepository.findOne({
@@ -41,15 +55,20 @@ export class PublicVirtualPetController {
       throw new BadRequestException('Invalid booking link');
     }
 
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      throw new BadRequestException('No providers available');
+    }
+
     const settings = await this.settingsRepository.findOne({
-      where: { userId: bookingLink.userId },
+      where: { userId },
     });
 
     if (!settings?.enabled || !settings?.virtualPetEnabled) {
       throw new BadRequestException('Virtual pet feature is not enabled');
     }
 
-    return bookingLink.userId;
+    return userId;
   }
 
   // Check if virtual pet is enabled
@@ -63,8 +82,13 @@ export class PublicVirtualPetController {
       throw new BadRequestException('Invalid booking link');
     }
 
+    const userId = await this.getOrganizationUserId(bookingLink.organizationId);
+    if (!userId) {
+      return { enabled: false, gamificationEnabled: false };
+    }
+
     const settings = await this.settingsRepository.findOne({
-      where: { userId: bookingLink.userId },
+      where: { userId },
     });
 
     return {
