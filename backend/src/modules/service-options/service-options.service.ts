@@ -20,7 +20,22 @@ export class ServiceOptionsService {
   ): Promise<ServiceOption> {
     const serviceOption = this.serviceOptionRepository.create({
       ...createDto,
-      userId,
+      userId: createDto.organizationId ? undefined : userId, // Personal service if no org
+    });
+    return this.serviceOptionRepository.save(serviceOption);
+  }
+
+  /**
+   * Create organization-level service (admin only)
+   */
+  async createForOrganization(
+    organizationId: string,
+    createDto: CreateServiceOptionDto,
+  ): Promise<ServiceOption> {
+    const serviceOption = this.serviceOptionRepository.create({
+      ...createDto,
+      organizationId,
+      userId: undefined, // Org-level service has no specific user
     });
     return this.serviceOptionRepository.save(serviceOption);
   }
@@ -28,6 +43,26 @@ export class ServiceOptionsService {
   async findAllByUser(userId: string): Promise<ServiceOption[]> {
     return this.serviceOptionRepository.find({
       where: { userId },
+      order: { sortOrder: 'ASC', createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Find all services for an organization
+   */
+  async findAllByOrganization(organizationId: string): Promise<ServiceOption[]> {
+    return this.serviceOptionRepository.find({
+      where: { organizationId },
+      order: { sortOrder: 'ASC', createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Find active services for an organization
+   */
+  async findActiveByOrganization(organizationId: string): Promise<ServiceOption[]> {
+    return this.serviceOptionRepository.find({
+      where: { organizationId, isActive: true },
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
     });
   }
@@ -45,6 +80,19 @@ export class ServiceOptionsService {
     });
     if (!serviceOption) {
       throw new NotFoundException('Service option not found');
+    }
+    return serviceOption;
+  }
+
+  /**
+   * Find a service by ID in an organization
+   */
+  async findOneInOrganization(id: string, organizationId: string): Promise<ServiceOption> {
+    const serviceOption = await this.serviceOptionRepository.findOne({
+      where: { id, organizationId },
+    });
+    if (!serviceOption) {
+      throw new NotFoundException('Service option not found in this organization');
     }
     return serviceOption;
   }
@@ -70,8 +118,29 @@ export class ServiceOptionsService {
     return this.serviceOptionRepository.save(serviceOption);
   }
 
+  /**
+   * Update organization-level service (admin only)
+   */
+  async updateInOrganization(
+    id: string,
+    organizationId: string,
+    updateDto: UpdateServiceOptionDto,
+  ): Promise<ServiceOption> {
+    const serviceOption = await this.findOneInOrganization(id, organizationId);
+    Object.assign(serviceOption, updateDto);
+    return this.serviceOptionRepository.save(serviceOption);
+  }
+
   async remove(id: string, userId: string): Promise<void> {
     const serviceOption = await this.findOne(id, userId);
+    await this.serviceOptionRepository.remove(serviceOption);
+  }
+
+  /**
+   * Remove organization-level service (admin only)
+   */
+  async removeFromOrganization(id: string, organizationId: string): Promise<void> {
+    const serviceOption = await this.findOneInOrganization(id, organizationId);
     await this.serviceOptionRepository.remove(serviceOption);
   }
 }

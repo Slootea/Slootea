@@ -45,6 +45,11 @@ export class CreateAppointmentDto {
   @IsUUID()
   bookingLinkId?: string;
 
+  @ApiPropertyOptional({ description: 'Provider/User ID for provider selection' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
   @ApiPropertyOptional({ description: 'Notes' })
   @IsOptional()
   @IsString()
@@ -137,6 +142,11 @@ export class AppointmentQueryDto {
   @IsOptional()
   @IsUUID()
   serviceOptionId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by user ID (for organization admins)' })
+  @IsOptional()
+  @IsString()
+  userId?: string;
 
   @ApiPropertyOptional({ description: 'Sort field', default: 'startTime' })
   @IsOptional()

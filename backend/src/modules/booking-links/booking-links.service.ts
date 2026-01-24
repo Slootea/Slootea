@@ -24,8 +24,14 @@ export class BookingLinksService {
     private readonly bookingLinkRepository: Repository<BookingLink>,
   ) {}
 
+  // ==================== Organization Booking Links ====================
+  // Booking links now belong to organizations only
+
+  /**
+   * Create organization booking link (admin only)
+   */
   async create(
-    userId: string,
+    organizationId: string,
     createDto: CreateBookingLinkDto,
   ): Promise<BookingLink> {
     if (
@@ -41,35 +47,44 @@ export class BookingLinksService {
     const bookingLink = this.bookingLinkRepository.create({
       ...createDto,
       slug,
-      userId,
+      organizationId,
       expiresAt: createDto.expiresAt ? new Date(createDto.expiresAt) : null,
     });
     return this.bookingLinkRepository.save(bookingLink);
   }
 
-  async findAllByUser(userId: string): Promise<BookingLink[]> {
+  /**
+   * Get all booking links for an organization (visible to all members)
+   */
+  async findAll(organizationId: string): Promise<BookingLink[]> {
     return this.bookingLinkRepository.find({
-      where: { userId },
+      where: { organizationId },
       relations: ['serviceOption'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: string, userId: string): Promise<BookingLink> {
+  /**
+   * Get a specific organization booking link
+   */
+  async findOne(id: string, organizationId: string): Promise<BookingLink> {
     const bookingLink = await this.bookingLinkRepository.findOne({
-      where: { id, userId },
+      where: { id, organizationId },
       relations: ['serviceOption'],
     });
     if (!bookingLink) {
-      throw new NotFoundException('Booking link not found');
+      throw new NotFoundException('Booking link not found in this organization');
     }
     return bookingLink;
   }
 
+  /**
+   * Find booking link by slug (for public booking page)
+   */
   async findBySlug(slug: string): Promise<BookingLink> {
     const bookingLink = await this.bookingLinkRepository.findOne({
       where: { slug },
-      relations: ['user', 'serviceOption', 'user.settings'],
+      relations: ['serviceOption'],
     });
     if (!bookingLink) {
       throw new NotFoundException('Booking link not found');
@@ -83,12 +98,15 @@ export class BookingLinksService {
     return bookingLink;
   }
 
+  /**
+   * Update organization booking link (admin only)
+   */
   async update(
     id: string,
-    userId: string,
+    organizationId: string,
     updateDto: UpdateBookingLinkDto,
   ): Promise<BookingLink> {
-    const bookingLink = await this.findOne(id, userId);
+    const bookingLink = await this.findOne(id, organizationId);
     Object.assign(bookingLink, {
       ...updateDto,
       expiresAt: updateDto.expiresAt ? new Date(updateDto.expiresAt) : bookingLink.expiresAt,
@@ -96,8 +114,11 @@ export class BookingLinksService {
     return this.bookingLinkRepository.save(bookingLink);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
-    const bookingLink = await this.findOne(id, userId);
+  /**
+   * Remove organization booking link (admin only)
+   */
+  async remove(id: string, organizationId: string): Promise<void> {
+    const bookingLink = await this.findOne(id, organizationId);
     await this.bookingLinkRepository.remove(bookingLink);
   }
 }

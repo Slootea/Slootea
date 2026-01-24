@@ -10,7 +10,6 @@ import {
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
 import { Availability } from '../../availability/entities/availability.entity';
 import { BlockedTime } from '../../blocked-times/entities/blocked-time.entity';
-import { BookingLink } from '../../booking-links/entities/booking-link.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
 import { BusinessSettings } from '../../settings/entities/business-settings.entity';
 
@@ -40,6 +39,12 @@ export class User {
   @Column({ nullable: true })
   timezone: string;
 
+  @Column({ nullable: true })
+  organizationId: string;
+
+  @Column({ nullable: true })
+  organizationRole: string;
+
   @Column({ default: true })
   isActive: boolean;
 
@@ -57,9 +62,6 @@ export class User {
 
   @OneToMany(() => BlockedTime, (blockedTime) => blockedTime.user)
   blockedTimes: BlockedTime[];
-
-  @OneToMany(() => BookingLink, (link) => link.user)
-  bookingLinks: BookingLink[];
 
   @OneToMany(() => Appointment, (appointment) => appointment.user)
   appointments: Appointment[];

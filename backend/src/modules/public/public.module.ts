@@ -7,6 +7,8 @@ import { BlockedTimesModule } from '../blocked-times/blocked-times.module';
 import { ServiceOptionsModule } from '../service-options/service-options.module';
 import { SettingsModule } from '../settings/settings.module';
 import { UsersModule } from '../users/users.module';
+import { AuthModule } from '../auth/auth.module';
+import { ClientsModule } from '../clients/clients.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { UsersModule } from '../users/users.module';
     forwardRef(() => ServiceOptionsModule),
     forwardRef(() => SettingsModule),
     forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
+    forwardRef(() => ClientsModule),
   ],
   controllers: [PublicController],
 })

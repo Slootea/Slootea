@@ -7,6 +7,7 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 import { Organization } from './organization.entity';
 
 export enum UserOrganizationRole {
@@ -17,16 +18,16 @@ export enum UserOrganizationRole {
 }
 
 @Entity('user_organizations')
-@Unique(['user_id', 'organization_id'])
+@Unique(['userId', 'organizationId'])
 export class UserOrganization {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  user_id: string;
+  @Column({ name: 'user_id' })
+  userId: string;
 
-  @Column()
-  organization_id: string;
+  @Column({ name: 'organization_id' })
+  organizationId: string;
 
   @Column({
     type: 'text',
@@ -34,8 +35,12 @@ export class UserOrganization {
   })
   role: UserOrganizationRole;
 
-  @CreateDateColumn()
-  joined_at: Date;
+  @CreateDateColumn({ name: 'joined_at' })
+  joinedAt: Date;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @ManyToOne(() => Organization, org => org.userOrganizations, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organization_id' })

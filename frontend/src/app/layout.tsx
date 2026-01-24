@@ -6,6 +6,7 @@ import { getMessages, getLocale } from "next-intl/server";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
+import { OrganizationProvider } from "@/components/providers/organization-provider";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -37,7 +38,9 @@ export default async function RootLayout({
             <NextIntlClientProvider messages={messages}>
               <LocaleProvider>
                 <AuthProvider>
-                  {children}
+                  <OrganizationProvider>
+                    {children}
+                  </OrganizationProvider>
                 </AuthProvider>
               </LocaleProvider>
             </NextIntlClientProvider>

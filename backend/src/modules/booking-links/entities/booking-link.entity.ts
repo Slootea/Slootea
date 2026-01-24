@@ -8,7 +8,6 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
 
@@ -48,12 +47,8 @@ export class BookingLink {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
-  userId: string;
-
-  @ManyToOne(() => User, (user) => user.bookingLinks, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  @Column({ nullable: true, comment: 'Organization ID - booking links belong to organizations' })
+  organizationId: string;
 
   @Column({ nullable: true })
   serviceOptionId: string;

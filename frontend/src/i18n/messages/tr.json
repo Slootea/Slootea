@@ -156,10 +156,16 @@
     "blockedTimes": "Engelli Zamanlar",
     "bookingLinks": "Rezervasyon Linkleri",
     "serviceOptions": "Hizmet Seçenekleri",
+    "gamification": "Oyunlaştırma",
     "settings": "Ayarlar",
     "main": "Ana Menü",
     "configuration": "Yapılandırma",
-    "system": "Sistem"
+    "system": "Sistem",
+    "myConfiguration": "Yapılandırmam",
+    "adminConfiguration": "Yönetici",
+    "myServices": "Hizmetlerim",
+    "members": "Üyeler",
+    "organizationSettings": "Organizasyon Ayarları"
   },
   "dashboard": {
     "title": "Panel",
@@ -250,8 +256,12 @@
       "noActionsAvailable": "Kullanılabilir işlem yok"
     },
     "confirmCancel": "Bu randevuyu iptal etmek istediğinizden emin misiniz?",
-    "statusUpdated": "Durum başarıyla güncellendi",
-    "appointmentCancelled": "Randevu iptal edildi",
+    "messages": {
+      "statusUpdated": "Durum başarıyla güncellendi",
+      "statusUpdateFailed": "Durum güncellenemedi",
+      "cancelled": "Randevu iptal edildi",
+      "cancelFailed": "Randevu iptal edilemedi"
+    },
     "empty": {
       "title": "Randevu bulunamadı",
       "description": "Aradığınızı bulmak için filtrelerinizi veya arama kriterlerinizi ayarlamayı deneyin."
@@ -348,6 +358,10 @@
     "selectServiceToContinue": "Rezervasyona devam etmek için bir hizmet seçin",
     "selectService": "Bir hizmet seçin",
     "selectServiceFirst": "Lütfen önce bir hizmet seçin",
+    "selectProvider": "Sağlayıcınızı Seçin",
+    "provider": "Sağlayıcı",
+    "pleaseSelectProvider": "Devam etmek için lütfen bir sağlayıcı seçin",
+    "selectProviderFirst": "Lütfen önce bir sağlayıcı seçin",
     "selectDate": "Tarih Seçin",
     "selectTime": "Bir saat seçin",
     "selectDateFirst": "Uygun saatleri görmek için lütfen bir tarih seçin",
@@ -383,7 +397,8 @@
     "confirmationReminder": "Randevunuzdan önce bir onay talebi alabilirsiniz. Lütfen yerinizi korumak için katılımınızı onaylayın.",
     "minutes": "dakika",
     "failedToLoad": "Rezervasyon bilgileri yüklenemedi",
-    "failedToLoadSlots": "Uygun saatler yüklenemedi"
+    "failedToLoadSlots": "Uygun saatler yüklenemedi",
+    "loadingAvailability": "Müsaitlik yükleniyor..."
   },
   "clients": {
     "title": "Müşteriler",
@@ -395,9 +410,30 @@
   "availability": {
     "title": "Müsaitlik",
     "description": "Randevular için ne zaman müsait olduğunuzu belirleyin. Gerekirse belirli hizmetler için farklı saatler ayarlayın.",
+    "descriptionMember": "Size atanan hizmetler için müsaitliğinizi ayarlayın. Yöneticiniz hangi hizmetleri sunabileceğinizi belirler.",
     "addTimeSlot": "Zaman Dilimi Ekle",
     "noAvailability": "Müsaitlik ayarlanmadı",
     "allServices": "Tüm hizmetler",
+    "activeSlots": "aktif dilim",
+    "daysConfigured": "gün yapılandırıldı",
+    "hoursPerWeek": "saat/hafta",
+    "quickSetup": "Hızlı Kurulum",
+    "clearAll": "Tümünü Temizle",
+    "useTemplate": "Şablon Kullan",
+    "addManually": "Manuel Ekle",
+    "addSlotToDay": "Bu güne dilim ekle",
+    "copyToOtherDays": "Diğer günlere kopyala",
+    "clickToAdd": "Eklemek için tıklayın",
+    "addMore": "Daha fazla ekle",
+    "disable": "Devre dışı bırak",
+    "enable": "Etkinleştir",
+    "delete": "Sil",
+    "statusActive": "Aktif",
+    "statusInactive": "Pasif",
+    "allDays": "Tüm günler",
+    "weekdays": "Hafta içi",
+    "noAssignedServices": "Henüz size atanan hizmet yok. Hizmet atanması için yöneticinizle iletişime geçin.",
+    "noAssignedServicesAlert": "Henüz size atanan hizmet yok. Müsaitliğinizi ayarlamadan önce yöneticinizden hizmet atamasını isteyin.",
     "dayOfWeek": {
       "0": "Pazartesi",
       "1": "Salı",
@@ -407,18 +443,68 @@
       "5": "Cumartesi",
       "6": "Pazar"
     },
+    "templates": {
+      "standard": "Standart (09:00 - 17:00)",
+      "morning": "Sabah Saatleri (06:00 - 12:00)",
+      "evening": "Akşam Saatleri (17:00 - 21:00)",
+      "splitShift": "Bölünmüş Vardiya",
+      "fullWeek": "Tam Hafta (7 gün)"
+    },
+    "emptyState": {
+      "title": "Müsaitlik yapılandırılmadı",
+      "description": "Müşterilerinizin sizinle randevu alabileceği çalışma saatlerinizi ayarlayın. Hızlı bir şablon kullanabilir veya dilimleri manuel olarak ekleyebilirsiniz."
+    },
     "dialog": {
       "title": "Müsaitlik Dilimi Ekle",
+      "editTitle": "Müsaitlik Dilimini Düzenle",
+      "description": "Randevular için müsait olduğunuz yeni bir zaman dilimi ekleyin.",
+      "editDescription": "Müsaitlik için zaman dilimini güncelleyin.",
       "dayOfWeek": "Haftanın Günü",
+      "selectTime": "Zaman Aralığı Seçin",
       "startTime": "Başlangıç Saati",
       "endTime": "Bitiş Saati",
+      "dragToSelect": "Zaman aralığı seçmek için sürükleyin",
       "service": "Hizmet (İsteğe Bağlı)",
-      "serviceHint": "Tüm hizmetlere uygulamak için boş bırakın"
+      "serviceHint": "Tüm hizmetlere uygulamak için boş bırakın",
+      "serviceHintMember": "Bu müsaitliğin hangi atanmış hizmetler için geçerli olacağını seçin"
+    },
+    "presets": {
+      "morning": "Sabah",
+      "afternoon": "Öğleden Sonra",
+      "evening": "Akşam",
+      "fullDay": "Tam Gün"
+    },
+    "periods": {
+      "morning": "Sabah",
+      "afternoon": "Öğleden Sonra",
+      "evening": "Akşam"
+    },
+    "templateDialog": {
+      "title": "Program Şablonu Seçin",
+      "description": "Müsaitliğinizi hızlıca ayarlamak için bir şablon seçin. Bu, mevcut programınızın yerini alacaktır."
+    },
+    "copyDialog": {
+      "title": "Programı Kopyala",
+      "description": "{day} gününün programını diğer günlere kopyalayın.",
+      "confirm": "Programı Kopyala"
+    },
+    "tips": {
+      "title": "İpucu",
+      "description": "Düzenlemek için herhangi bir zaman dilimine tıklayın veya fare üzerine geldiğinde görünen hızlı eylemleri kullanarak dilimleri açın/kapatın veya silin."
     },
     "messages": {
       "created": "Müsaitlik dilimi oluşturuldu",
       "deleted": "Müsaitlik dilimi silindi",
-      "updated": "Müsaitlik güncellendi"
+      "updated": "Müsaitlik güncellendi",
+      "createError": "Müsaitlik dilimi oluşturulamadı",
+      "updateError": "Müsaitlik güncellenemedi",
+      "deleteError": "Müsaitlik dilimi silinemedi",
+      "templateApplied": "Program şablonu başarıyla uygulandı",
+      "templateError": "Şablon uygulanamadı",
+      "slotsCopied": "Program başarıyla kopyalandı",
+      "copyError": "Program kopyalanamadı",
+      "clearedAll": "Tüm müsaitlikler temizlendi",
+      "clearError": "Müsaitlik temizlenemedi"
     }
   },
   "blocksPage": {
@@ -455,6 +541,8 @@
     "specificService": "Hizmet:",
     "campaignLink": "Kampanya linki",
     "expires": "Bitiş:",
+    "memberViewOnly": "Rezervasyon linklerini görüntüleyebilir ve kopyalayabilirsiniz. Sadece yöneticiler link oluşturabilir, düzenleyebilir veya silebilir.",
+    "noOrganization": "Rezervasyon linklerini yönetmek için lütfen bir organizasyon seçin. Rezervasyon linkleri organizasyonlara aittir.",
     "empty": {
       "title": "Henüz rezervasyon linki yok",
       "description": "İlkini oluşturun!",
@@ -491,6 +579,7 @@
     "title": "Hizmet Seçenekleri",
     "description": "Müşterilerin rezervasyon yapabileceği hizmetleri tanımlayın. Her seçeneğin kendi süresi vardır.",
     "addService": "Hizmet Ekle",
+    "noDescription": "Açıklama yok",
     "empty": {
       "title": "Henüz hizmet seçeneği yok",
       "description": "İlkini oluşturun!",
@@ -579,5 +668,231 @@
     "thankYou": "Onayladığınız için teşekkürler! Sizi görmeyi dört gözle bekliyoruz.",
     "confirmSuccess": "Katılımınız onaylanmıştır",
     "confirmError": "Onaylama başarısız"
+  },
+  "gamification": {
+    "title": "Oyunlaştırma",
+    "description": "Müşteri sadakatini ödüllendirmek için oyunlaştırma özelliklerini yapılandırın",
+    "enabled": "Oyunlaştırmayı Etkinleştir",
+    "enabledDescription": "Etkinleştirildiğinde, müşteriler puan kazanabilir, tavsiye ödülleri alabilir ve çarkı çevirebilir",
+    "stats": {
+      "totalPoints": "Toplam Kazanılan Puan",
+      "activeReferrals": "Aktif Tavsiyeler",
+      "topLevel": "En Yüksek Seviye Müşteriler",
+      "spinWheelUses": "Çark Çevirme Kullanımları"
+    },
+    "tabs": {
+      "points": "Puan Ayarları",
+      "levels": "Seviyeler",
+      "referrals": "Tavsiyeler",
+      "spinWheel": "Çark Çevir"
+    },
+    "points": {
+      "perBooking": "Rezervasyon Başına Puan",
+      "perReferral": "Başarılı Tavsiye Başına Puan",
+      "streakBonus": "Seri Bonus Puanı",
+      "streakBonusHint": "Ardışık ziyaretler için verilen bonus puanlar"
+    },
+    "levels": {
+      "title": "Seviye Yapılandırması",
+      "bronze": "Bronz",
+      "silver": "Gümüş",
+      "gold": "Altın",
+      "platinum": "Platin",
+      "threshold": "Gereken Puan",
+      "discount": "İndirim %"
+    },
+    "referrals": {
+      "title": "Tavsiye Programı",
+      "enableReferrals": "Tavsiye Programını Etkinleştir",
+      "codePrefix": "Tavsiye Kodu Öneki",
+      "codePrefixHint": "örn., TAV, TAV-ABC123 gibi kodlar oluşturur",
+      "expirationDays": "Kod Geçerlilik Süresi (gün)",
+      "expirationHint": "Sonsuz süre için 0 girin"
+    },
+    "spinWheel": {
+      "title": "Çark Çevir Yapılandırması",
+      "enableSpinWheel": "Çark Çeviri Etkinleştir",
+      "spinAfterBooking": "Rezervasyon Sonrası Çevirme",
+      "spinAfterBookingHint": "Müşterilerin rezervasyon tamamladıktan sonra çark çevirmesine izin ver",
+      "prizes": "Ödüller",
+      "addPrize": "Ödül Ekle",
+      "prizeName": "Ödül Adı",
+      "prizeType": "Tür",
+      "prizeValue": "Değer",
+      "probability": "Olasılık %",
+      "types": {
+        "points": "Puan",
+        "discount": "İndirim",
+        "freeService": "Ücretsiz Hizmet",
+        "nothing": "Ödül Yok"
+      }
+    },
+    "booking": {
+      "welcome": "Rezervasyonumuza hoş geldiniz!",
+      "enterDetails": "Başlamak için bilgilerinizi girin",
+      "haveReferral": "Tavsiye kodunuz var mı?",
+      "enterReferral": "Tavsiye kodunu girin",
+      "referralApplied": "Tavsiye kodu uygulandı!",
+      "referralInvalid": "Geçersiz veya süresi dolmuş tavsiye kodu",
+      "yourReferralCode": "Tavsiye Kodunuz",
+      "shareReferral": "Ödül kazanmak için arkadaşlarınızla paylaşın",
+      "selectService": "Hizmet Seçin",
+      "selectDateTime": "Tarih ve Saat Seçin",
+      "confirmBooking": "Rezervasyonunuzu Onaylayın",
+      "bookingSuccess": "Rezervasyon Onaylandı!",
+      "spinToWin": "Çevir ve Kazan!",
+      "yourRewards": "Ödülleriniz",
+      "pointsEarned": "Kazanılan Puan",
+      "currentStreak": "Mevcut Seri",
+      "level": "Seviye",
+      "congratulations": "Tebrikler!",
+      "youWon": "Kazandınız",
+      "spinAgain": "Bir sonraki rezervasyonunuzdan sonra tekrar çevirin!",
+      "noReward": "Bir dahaki sefere!",
+      "generateCode": "Tavsiye Kodumu Oluştur",
+      "shareCode": "Bu kodu arkadaşlarınızla paylaşın",
+      "copyCode": "Kodu Kopyala",
+      "codeCopied": "Kod panoya kopyalandı!"
+    },
+    "client": {
+      "adjustPoints": "Puan Ayarla",
+      "pointsAdjustment": "Puan Ayarlaması",
+      "adjustReason": "Neden",
+      "adjustReasonPlaceholder": "örn., Sadakat bonusu, Sorun telafisi...",
+      "addPoints": "Puan Ekle",
+      "deductPoints": "Puan Düş",
+      "recentActivity": "Son Aktivite",
+      "totalEarned": "Toplam kazanılan",
+      "progressTo": "İlerleme",
+      "streak": "Seri",
+      "bestStreak": "En İyi",
+      "referrals": "Tavsiyeler",
+      "total": "Toplam"
+    },
+    "messages": {
+      "settingsSaved": "Oyunlaştırma ayarları kaydedildi",
+      "settingsFailed": "Ayarlar kaydedilemedi",
+      "pointsAdjusted": "Puanlar başarıyla ayarlandı",
+      "pointsFailed": "Puanlar ayarlanamadı"
+    }
+  },
+  "organization": {
+    "title": "Organizasyon Ayarları",
+    "description": "Organizasyon ayarlarınızı ve üye tercihlerini yönetin",
+    "noOrganization": "Organizasyon Yok",
+    "selectOrganization": "Organizasyon Seç",
+    "createOrganization": "Organizasyon Oluştur",
+    "switchOrganization": "Organizasyon Değiştir",
+    "organizationName": "Organizasyon Adı",
+    "admin": "Yönetici",
+    "member": "Üye",
+    "tabs": {
+      "general": "Genel",
+      "booking": "Rezervasyon",
+      "notifications": "Bildirimler"
+    },
+    "general": {
+      "title": "Genel Ayarlar",
+      "description": "Müşterilerin organizasyonunuzla nasıl randevu alacağını yapılandırın",
+      "providerSelectionMode": "Sağlayıcı Seçim Modu",
+      "providerSelectionModeDescription": "Randevulara hizmet sağlayıcıların nasıl atanacağını seçin",
+      "clientChooses": "Müşteri Sağlayıcıyı Seçer",
+      "clientChoosesHint": "Müşteriler hizmet seçtikten sonra hangi ekip üyesinden randevu almak istediklerini seçebilir",
+      "autoAssign": "Müsaitliğe Göre Otomatik Ata",
+      "autoAssignHint": "Sistem her rezervasyon için en uygun sağlayıcıyı otomatik olarak atar",
+      "allowProviderSelection": "Sağlayıcı Seçimine İzin Ver",
+      "allowProviderSelectionHint": "Etkinleştirildiğinde, müşteriler rezervasyon yaparken belirli bir ekip üyesi seçebilir",
+      "autoAssignProvider": "Otomatik Sağlayıcı Ata",
+      "autoAssignProviderHint": "Müşteri seçmediğinde en uygun sağlayıcıyı otomatik olarak ata",
+      "showProviderNames": "Sağlayıcı Adlarını Göster",
+      "showProviderNamesHint": "Rezervasyon sırasında müşterilere sağlayıcı adlarını göster",
+      "showProviderPhotos": "Sağlayıcı Fotoğraflarını Göster",
+      "showProviderPhotosHint": "Rezervasyon sırasında müşterilere sağlayıcı fotoğraflarını göster"
+    },
+    "booking": {
+      "title": "Rezervasyon Ayarları",
+      "description": "Rezervasyon penceresi ve limitleri yapılandırın",
+      "minAdvanceBooking": "Minimum Önceden Rezervasyon (saat)",
+      "minAdvanceBookingHint": "Müşterilerin minimum kaç saat önceden rezervasyon yapması gerekir",
+      "maxAdvanceBooking": "Maksimum Önceden Rezervasyon (gün)",
+      "maxAdvanceBookingHint": "Müşterilerin maksimum kaç gün önceden rezervasyon yapabileceği",
+      "bufferTime": "Tampon Süresi (dakika)",
+      "bufferTimeHint": "Ardışık randevular arasındaki süre",
+      "maxAppointmentsPerDay": "Günlük Maksimum Randevu",
+      "maxAppointmentsPerDayHint": "Sağlayıcı başına günlük maksimum randevu (0 = sınırsız)"
+    },
+    "confirmation": {
+      "title": "Onay Ayarları",
+      "description": "Randevu onaylarının nasıl ve ne zaman gerekli olduğunu kontrol edin",
+      "sendReminder": "Hatırlatma gönder (randevudan kaç saat önce)",
+      "sendReminderHint": "Onay talebinin randevudan kaç saat önce gönderileceği",
+      "deadline": "Onay son tarihi (randevudan kaç saat önce)",
+      "deadlineHint": "Müşteri bu son tarihe kadar onaylamalı yoksa randevu iptal edilebilir",
+      "autoCancel": "Onaylanmamış randevuları otomatik iptal et",
+      "autoCancelHint": "Son tarihe kadar onaylanmazsa slotları otomatik olarak iptal et ve boşalt"
+    },
+    "notifications": {
+      "title": "Bildirim Ayarları",
+      "description": "Bildirimlerin nasıl gönderileceğini yapılandırın",
+      "sendEmailNotifications": "E-posta Bildirimleri",
+      "sendEmailNotificationsHint": "Müşterilere e-posta bildirimi gönder",
+      "sendSmsNotifications": "SMS Bildirimleri",
+      "sendSmsNotificationsHint": "Müşterilere SMS bildirimi gönder",
+      "reminderHours": "Hatırlatma Saati",
+      "reminderHoursHint": "Randevudan kaç saat önce hatırlatma gönderileceği"
+    },
+    "messages": {
+      "saved": "Organizasyon ayarları kaydedildi",
+      "saveFailed": "Ayarlar kaydedilemedi",
+      "loadFailed": "Ayarlar yüklenemedi",
+      "saving": "Kaydediliyor...",
+      "save": "Ayarları Kaydet"
+    },
+    "adminOnly": "Sadece Yönetici",
+    "adminOnlyDescription": "Bu ayarlara sadece organizasyon yöneticileri erişebilir."
+  },
+  "myServices": {
+    "title": "Hizmetlerim",
+    "description": "Müşterilere sunduğunuz hizmetleri seçin",
+    "availableServices": "Mevcut Hizmetler",
+    "noServices": "Mevcut hizmet yok. Yöneticinizden hizmet oluşturmasını isteyin.",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "duration": "Süre",
+    "customDuration": "Özel Süre",
+    "customDurationHint": "Bu hizmet için varsayılan süreyi geçersiz kıl",
+    "customDescription": "Özel Açıklama",
+    "customDescriptionHint": "Bu hizmet için kendi açıklamanızı ekleyin",
+    "useDefault": "Varsayılanı Kullan",
+    "minutes": "dakika",
+    "messages": {
+      "updated": "Hizmetler başarıyla güncellendi",
+      "updateFailed": "Hizmetler güncellenemedi"
+    }
+  },
+  "members": {
+    "title": "Ekip Üyeleri",
+    "description": "Organizasyonunuzun ekip üyelerini ve rollerini yönetin",
+    "invite": "Üye Davet Et",
+    "noMembers": "Üye bulunamadı",
+    "role": "Rol",
+    "joinedAt": "Katıldı",
+    "lastActive": "Son Aktif",
+    "services": "Hizmetler",
+    "servicesCount": "{count} hizmet",
+    "viewDetails": "Detayları Gör",
+    "memberDetails": "Üye Detayları",
+    "memberInfo": "Üye Bilgileri",
+    "assignedServices": "Atanan Hizmetler",
+    "noAssignedServices": "Atanmış hizmet yok",
+    "availability": "Müsaitlik",
+    "noAvailability": "Müsaitlik ayarlanmadı",
+    "recentAppointments": "Son Randevular",
+    "noAppointments": "Son randevu yok",
+    "statistics": "İstatistikler",
+    "totalAppointments": "Toplam Randevu",
+    "completedAppointments": "Tamamlanan",
+    "cancelledAppointments": "İptal Edilen",
+    "activeServices": "Aktif Hizmetler"
   }
 }

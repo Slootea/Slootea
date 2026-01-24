@@ -86,12 +86,21 @@ async verifyToken(token: string): Promise<ClerkUser> {
   async getUserOrganizations(userId: string) {
     try {
       const memberships = await this.clerkClient.users.getOrganizationMembershipList({ userId });
+      console.log(`[ClerkService] User ${userId} memberships:`, JSON.stringify(memberships.data.map(m => ({
+        orgId: m.organization.id,
+        role: m.role,
+      }))));
       return memberships.data.map(membership => ({
         organizationId: membership.organization.id,
         role: membership.role,
         isAdmin: membership.role === 'org:admin',
       }));
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle when organizations feature is not enabled
+      if (error?.errors?.[0]?.code === 'organization_not_enabled_in_instance') {
+        console.log('[ClerkService] Organizations feature not enabled');
+        return [];
+      }
       console.error('Failed to fetch user organizations:', error);
       return [];
     }

@@ -156,10 +156,16 @@
     "blockedTimes": "Blocked Times",
     "bookingLinks": "Booking Links",
     "serviceOptions": "Service Options",
+    "gamification": "Gamification",
     "settings": "Settings",
     "main": "Main",
     "configuration": "Configuration",
-    "system": "System"
+    "system": "System",
+    "myConfiguration": "My Configuration",
+    "adminConfiguration": "Admin",
+    "myServices": "My Services",
+    "members": "Members",
+    "organizationSettings": "Organization Settings"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -250,8 +256,12 @@
       "noActionsAvailable": "No actions available"
     },
     "confirmCancel": "Are you sure you want to cancel this appointment?",
-    "statusUpdated": "Status updated successfully",
-    "appointmentCancelled": "Appointment cancelled",
+    "messages": {
+      "statusUpdated": "Status updated successfully",
+      "statusUpdateFailed": "Failed to update status",
+      "cancelled": "Appointment cancelled",
+      "cancelFailed": "Failed to cancel appointment"
+    },
     "empty": {
       "title": "No appointments found",
       "description": "Try adjusting your filters or search criteria to find what you're looking for."
@@ -348,6 +358,10 @@
     "selectServiceToContinue": "Select a service to continue booking",
     "selectService": "Select a service",
     "selectServiceFirst": "Please select a service first",
+    "selectProvider": "Select Your Provider",
+    "provider": "Provider",
+    "pleaseSelectProvider": "Please select a provider to continue",
+    "selectProviderFirst": "Please select a provider first",
     "selectDate": "Select Date",
     "selectTime": "Select a time",
     "selectDateFirst": "Please select a date to see available times",
@@ -383,7 +397,8 @@
     "confirmationReminder": "You may receive a confirmation request before your appointment. Please confirm your attendance to keep your slot.",
     "minutes": "minutes",
     "failedToLoad": "Failed to load booking information",
-    "failedToLoadSlots": "Failed to load available slots"
+    "failedToLoadSlots": "Failed to load available slots",
+    "loadingAvailability": "Loading availability..."
   },
   "clients": {
     "title": "Clients",
@@ -395,9 +410,30 @@
   "availability": {
     "title": "Availability",
     "description": "Define when you're available for appointments. Set different hours for specific services if needed.",
+    "descriptionMember": "Set your availability for the services assigned to you. Your admin assigns which services you can provide.",
     "addTimeSlot": "Add Time Slot",
     "noAvailability": "No availability set",
     "allServices": "All services",
+    "activeSlots": "active slots",
+    "daysConfigured": "days configured",
+    "hoursPerWeek": "hours/week",
+    "quickSetup": "Quick Setup",
+    "clearAll": "Clear All",
+    "useTemplate": "Use Template",
+    "addManually": "Add Manually",
+    "addSlotToDay": "Add slot to this day",
+    "copyToOtherDays": "Copy to other days",
+    "clickToAdd": "Click to add",
+    "addMore": "Add more",
+    "disable": "Disable",
+    "enable": "Enable",
+    "delete": "Delete",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "allDays": "All days",
+    "weekdays": "Weekdays",
+    "noAssignedServices": "No services have been assigned to you yet. Please contact your admin to assign services.",
+    "noAssignedServicesAlert": "You don't have any services assigned to you yet. Contact your organization admin to assign services before setting up your availability.",
     "dayOfWeek": {
       "0": "Monday",
       "1": "Tuesday",
@@ -407,18 +443,68 @@
       "5": "Saturday",
       "6": "Sunday"
     },
+    "templates": {
+      "standard": "Standard (9 AM - 5 PM)",
+      "morning": "Morning Hours (6 AM - 12 PM)",
+      "evening": "Evening Hours (5 PM - 9 PM)",
+      "splitShift": "Split Shift",
+      "fullWeek": "Full Week (7 days)"
+    },
+    "emptyState": {
+      "title": "No availability configured",
+      "description": "Set up your working hours so clients know when they can book appointments with you. You can use a quick template or add slots manually."
+    },
     "dialog": {
       "title": "Add Availability Slot",
+      "editTitle": "Edit Availability Slot",
+      "description": "Add a new time slot when you're available for appointments.",
+      "editDescription": "Update the time slot for your availability.",
       "dayOfWeek": "Day of Week",
+      "selectTime": "Select Time Range",
       "startTime": "Start Time",
       "endTime": "End Time",
+      "dragToSelect": "Drag to select time range",
       "service": "Service (Optional)",
-      "serviceHint": "Leave empty to apply this slot to all services"
+      "serviceHint": "Leave empty to apply this slot to all services",
+      "serviceHintMember": "Select which of your assigned services this availability applies to"
+    },
+    "presets": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "fullDay": "Full Day"
+    },
+    "periods": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening"
+    },
+    "templateDialog": {
+      "title": "Choose a Schedule Template",
+      "description": "Select a template to quickly set up your availability. This will replace your current schedule."
+    },
+    "copyDialog": {
+      "title": "Copy Schedule",
+      "description": "Copy the schedule from {day} to other days.",
+      "confirm": "Copy Schedule"
+    },
+    "tips": {
+      "title": "Pro tip",
+      "description": "Click on any time slot to edit it, or use the quick actions that appear on hover to toggle or delete slots."
     },
     "messages": {
       "created": "Availability slot created",
       "deleted": "Availability slot deleted",
-      "updated": "Availability updated"
+      "updated": "Availability updated",
+      "createError": "Failed to create availability slot",
+      "updateError": "Failed to update availability",
+      "deleteError": "Failed to delete availability slot",
+      "templateApplied": "Schedule template applied successfully",
+      "templateError": "Failed to apply template",
+      "slotsCopied": "Schedule copied successfully",
+      "copyError": "Failed to copy schedule",
+      "clearedAll": "All availability cleared",
+      "clearError": "Failed to clear availability"
     }
   },
   "blocksPage": {
@@ -455,6 +541,8 @@
     "specificService": "Service:",
     "campaignLink": "Campaign link",
     "expires": "Expires:",
+    "memberViewOnly": "You can view and copy booking links. Only administrators can create, edit, or delete links.",
+    "noOrganization": "Please select an organization to manage booking links. Booking links belong to organizations.",
     "empty": {
       "title": "No booking links yet",
       "description": "Create your first one!",
@@ -491,6 +579,8 @@
     "title": "Service Options",
     "description": "Define what services clients can book. Each option has its own duration.",
     "addService": "Add Service",
+    "noDescription": "No description",
+    "assignMembers": "Assign",
     "empty": {
       "title": "No service options yet",
       "description": "Create your first one!",
@@ -499,6 +589,8 @@
     "dialog": {
       "editTitle": "Edit Service Option",
       "createTitle": "Create Service Option",
+      "detailsTab": "Details",
+      "membersTab": "Members",
       "title": "Title",
       "titlePlaceholder": "e.g., Haircut, Consultation",
       "description": "Description",
@@ -507,11 +599,25 @@
       "imageUrlPlaceholder": "https://example.com/image.jpg",
       "duration": "Duration (minutes)"
     },
+    "assignDialog": {
+      "title": "Assign Members",
+      "description": "Select which team members can provide this service",
+      "noMembers": "No team members found",
+      "saving": "Saving...",
+      "save": "Save Assignments"
+    },
     "confirmDelete": "Are you sure you want to delete this service option?",
     "messages": {
       "created": "Service option created",
       "updated": "Service option updated",
-      "deleted": "Service option deleted"
+      "deleted": "Service option deleted",
+      "saveFailed": "Failed to save service option",
+      "deleteFailed": "Failed to delete service option",
+      "updateFailed": "Failed to update service option",
+      "loadMembersFailed": "Failed to load members",
+      "assignmentsUpdated": "Assignments updated",
+      "assignmentsUpdatedDesc": "Member assignments have been saved",
+      "assignmentsFailed": "Failed to update assignments"
     }
   },
   "calendarPage": {
@@ -579,5 +685,244 @@
     "thankYou": "Thank you for confirming! We look forward to seeing you.",
     "confirmSuccess": "Your attendance has been confirmed",
     "confirmError": "Failed to confirm"
+  },
+  "gamification": {
+    "title": "Gamification",
+    "description": "Configure gamification features to reward client loyalty",
+    "enabled": "Enable Gamification",
+    "enabledDescription": "When enabled, clients can earn points, referral rewards, and spin the wheel",
+    "stats": {
+      "totalPoints": "Total Points Earned",
+      "activeReferrals": "Active Referrals",
+      "topLevel": "Top Level Clients",
+      "spinWheelUses": "Spin Wheel Uses"
+    },
+    "tabs": {
+      "points": "Points Settings",
+      "levels": "Levels",
+      "referrals": "Referrals",
+      "spinWheel": "Spin Wheel"
+    },
+    "points": {
+      "perBooking": "Points per Booking",
+      "perReferral": "Points per Successful Referral",
+      "streakBonus": "Streak Bonus Points",
+      "streakBonusHint": "Bonus points awarded for consecutive visits"
+    },
+    "levels": {
+      "title": "Level Configuration",
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum",
+      "threshold": "Points Required",
+      "discount": "Discount %"
+    },
+    "referrals": {
+      "title": "Referral Program",
+      "enableReferrals": "Enable Referral Program",
+      "codePrefix": "Referral Code Prefix",
+      "codePrefixHint": "e.g., REF generates codes like REF-ABC123",
+      "expirationDays": "Code Expiration (days)",
+      "expirationHint": "Set to 0 for no expiration"
+    },
+    "spinWheel": {
+      "title": "Spin Wheel Configuration",
+      "enableSpinWheel": "Enable Spin Wheel",
+      "spinAfterBooking": "Spin After Booking",
+      "spinAfterBookingHint": "Allow clients to spin after completing a booking",
+      "prizes": "Prizes",
+      "addPrize": "Add Prize",
+      "prizeName": "Prize Name",
+      "prizeType": "Type",
+      "prizeValue": "Value",
+      "probability": "Probability %",
+      "types": {
+        "points": "Points",
+        "discount": "Discount",
+        "freeService": "Free Service",
+        "nothing": "No Prize"
+      }
+    },
+    "booking": {
+      "welcome": "Welcome to our booking!",
+      "enterDetails": "Enter your details to get started",
+      "haveReferral": "Have a referral code?",
+      "enterReferral": "Enter referral code",
+      "referralApplied": "Referral code applied!",
+      "referralInvalid": "Invalid or expired referral code",
+      "yourReferralCode": "Your Referral Code",
+      "shareReferral": "Share with friends to earn rewards",
+      "selectService": "Select a Service",
+      "selectDateTime": "Select Date & Time",
+      "confirmBooking": "Confirm Your Booking",
+      "bookingSuccess": "Booking Confirmed!",
+      "spinToWin": "Spin to Win!",
+      "yourRewards": "Your Rewards",
+      "pointsEarned": "Points Earned",
+      "currentStreak": "Current Streak",
+      "level": "Level",
+      "congratulations": "Congratulations!",
+      "youWon": "You won",
+      "spinAgain": "Spin again after your next booking!",
+      "noReward": "Better luck next time!",
+      "generateCode": "Generate My Referral Code",
+      "shareCode": "Share this code with friends",
+      "copyCode": "Copy Code",
+      "codeCopied": "Code copied to clipboard!"
+    },
+    "client": {
+      "adjustPoints": "Adjust Points",
+      "pointsAdjustment": "Points Adjustment",
+      "adjustReason": "Reason",
+      "adjustReasonPlaceholder": "e.g., Loyalty bonus, Compensation for issue...",
+      "addPoints": "Add Points",
+      "deductPoints": "Deduct Points",
+      "recentActivity": "Recent Activity",
+      "totalEarned": "Total earned",
+      "progressTo": "Progress to",
+      "streak": "Streak",
+      "bestStreak": "Best",
+      "referrals": "Referrals",
+      "total": "Total"
+    },
+    "messages": {
+      "settingsSaved": "Gamification settings saved",
+      "settingsFailed": "Failed to save settings",
+      "pointsAdjusted": "Points adjusted successfully",
+      "pointsFailed": "Failed to adjust points"
+    }
+  },
+  "organization": {
+    "title": "Organization Settings",
+    "description": "Manage your organization settings and member preferences",
+    "noOrganization": "No Organization",
+    "selectOrganization": "Select Organization",
+    "createOrganization": "Create Organization",
+    "switchOrganization": "Switch Organization",
+    "organizationName": "Organization Name",
+    "admin": "Admin",
+    "member": "Member",
+    "tabs": {
+      "general": "General",
+      "booking": "Booking",
+      "notifications": "Notifications"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Configure how clients book appointments with your organization",
+      "providerSelectionMode": "Provider Selection Mode",
+      "providerSelectionModeDescription": "Choose how service providers are assigned to appointments",
+      "clientChooses": "Client Chooses Provider",
+      "clientChoosesHint": "Clients can select which team member they want for their appointment after choosing a service",
+      "autoAssign": "Auto-Assign Based on Availability",
+      "autoAssignHint": "The system automatically assigns the most available provider to each booking",
+      "allowProviderSelection": "Allow Provider Selection",
+      "allowProviderSelectionHint": "When enabled, clients can choose a specific team member when booking",
+      "autoAssignProvider": "Auto-Assign Provider",
+      "autoAssignProviderHint": "Automatically assign the most available provider when client doesn't choose",
+      "showProviderNames": "Show Provider Names",
+      "showProviderNamesHint": "Display provider names to clients during booking",
+      "showProviderPhotos": "Show Provider Photos",
+      "showProviderPhotosHint": "Display provider photos to clients during booking"
+    },
+    "booking": {
+      "title": "Booking Settings",
+      "description": "Configure booking window and limits",
+      "minAdvanceBooking": "Minimum Advance Booking (hours)",
+      "minAdvanceBookingHint": "Minimum hours in advance clients must book",
+      "maxAdvanceBooking": "Maximum Advance Booking (days)",
+      "maxAdvanceBookingHint": "Maximum days in advance clients can book",
+      "bufferTime": "Buffer Time (minutes)",
+      "bufferTimeHint": "Time between consecutive appointments",
+      "maxAppointmentsPerDay": "Max Appointments Per Day",
+      "maxAppointmentsPerDayHint": "Maximum appointments per provider per day (0 = unlimited)"
+    },
+    "confirmation": {
+      "title": "Confirmation Settings",
+      "description": "Control how and when appointment confirmations are required",
+      "sendReminder": "Send reminder (hours before appointment)",
+      "sendReminderHint": "How many hours before the appointment to send a confirmation request",
+      "deadline": "Confirmation deadline (hours before appointment)",
+      "deadlineHint": "Client must confirm by this deadline or the appointment may be cancelled",
+      "autoCancel": "Auto-cancel unconfirmed appointments",
+      "autoCancelHint": "Automatically cancel and free up slots if not confirmed by deadline"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "description": "Configure how notifications are sent",
+      "sendEmailNotifications": "Email Notifications",
+      "sendEmailNotificationsHint": "Send email notifications to clients",
+      "sendSmsNotifications": "SMS Notifications",
+      "sendSmsNotificationsHint": "Send SMS notifications to clients",
+      "reminderHours": "Reminder Hours",
+      "reminderHoursHint": "Hours before appointment to send reminder"
+    },
+    "messages": {
+      "saved": "Organization settings saved",
+      "saveFailed": "Failed to save settings",
+      "loadFailed": "Failed to load settings",
+      "saving": "Saving...",
+      "save": "Save Settings"
+    },
+    "adminOnly": "Admin Only",
+    "adminOnlyDescription": "Only organization admins can access these settings."
+  },
+  "myServices": {
+    "title": "My Services",
+    "description": "Select which services you provide to clients",
+    "assignedServices": "My Active Services",
+    "assignedServicesDesc": "Services you currently offer to clients",
+    "noAssignedServices": "You haven't selected any services yet",
+    "availableServices": "Available Services",
+    "availableServicesDesc": "Organization services you can add to your profile",
+    "noAvailableServices": "All organization services have been added to your profile",
+    "noServices": "No services available. Ask your admin to create services.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "duration": "Duration",
+    "customDuration": "Custom Duration",
+    "customDurationHint": "Override the default duration for this service",
+    "customDescription": "Custom Description",
+    "customDescriptionHint": "Add your own description for this service",
+    "useDefault": "Use Default",
+    "minutes": "minutes",
+    "remove": "Remove",
+    "addService": "Add to My Services",
+    "confirmAddTitle": "Add Service?",
+    "confirmRemoveTitle": "Remove Service?",
+    "confirmAddDesc": "This will add the service to your profile. Clients will be able to book appointments with you for this service.",
+    "confirmRemoveDesc": "This will remove the service from your profile. Existing appointments will not be affected.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "messages": {
+      "updated": "Services updated successfully",
+      "updateFailed": "Failed to update services"
+    }
+  },
+  "members": {
+    "title": "Team Members",
+    "description": "Manage your organization's team members and their roles",
+    "invite": "Invite Member",
+    "noMembers": "No members found",
+    "role": "Role",
+    "joinedAt": "Joined",
+    "lastActive": "Last Active",
+    "services": "Services",
+    "servicesCount": "{count} services",
+    "viewDetails": "View Details",
+    "memberDetails": "Member Details",
+    "memberInfo": "Member Information",
+    "assignedServices": "Assigned Services",
+    "noAssignedServices": "No services assigned",
+    "availability": "Availability",
+    "noAvailability": "No availability set",
+    "recentAppointments": "Recent Appointments",
+    "noAppointments": "No recent appointments",
+    "statistics": "Statistics",
+    "totalAppointments": "Total Appointments",
+    "completedAppointments": "Completed",
+    "cancelledAppointments": "Cancelled",
+    "activeServices": "Active Services"
   }
 }

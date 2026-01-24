@@ -5,7 +5,10 @@ import {
   IsBoolean,
   IsUUID,
   Matches,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DayOfWeek } from '../entities/availability.entity';
 
@@ -69,5 +72,8 @@ export class UpdateAvailabilityDto {
 
 export class BulkCreateAvailabilityDto {
   @ApiProperty({ type: [CreateAvailabilityDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateAvailabilityDto)
   availabilities: CreateAvailabilityDto[];
 }

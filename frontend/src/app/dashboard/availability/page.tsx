@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { availabilityApi, serviceOptionsApi, setAuthToken } from "@/lib/api";
-import { Availability, ServiceOption, DayOfWeek } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { availabilityApi, serviceOptionsApi, userServiceOptionsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { Availability, ServiceOption, DayOfWeek, UserServiceOption } from "@/lib/types";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -23,20 +27,647 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { 
+  Plus, 
+  Trash2, 
+  Clock, 
+  Copy, 
+  Calendar, 
+  Briefcase, 
+  Sunrise, 
+  Moon, 
+  MoreHorizontal,
+  CheckCircle2,
+  XCircle,
+  Zap,
+  ChevronDown,
+  Info,
+  Settings2,
+  CalendarDays,
+  Timer,
+  GripVertical,
+  Sun,
+  Coffee,
+  Sunset,
+  AlertCircle
+} from "lucide-react";
 import { useTranslations } from "next-intl";
+
+// Visual Time Range Picker Component
+function VisualTimeRangePicker({
+  startTime,
+  endTime,
+  onTimeChange,
+}: {
+  startTime: string;
+  endTime: string;
+  onTimeChange: (start: string, end: string) => void;
+}) {
+  const t = useTranslations("availability");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState<'start' | 'end' | 'range' | null>(null);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [initialStart, setInitialStart] = useState(0);
+  const [initialEnd, setInitialEnd] = useState(0);
+
+  // Time configuration - Full 24-hour range
+  const startHour = 0; // Midnight
+  const endHour = 24; // Midnight (next day)
+  const totalHours = endHour - startHour;
+  const snapMinutes = 5; // Snap to 5-minute intervals
+
+  // Convert time string to minutes from start
+  const timeToMinutes = (time: string): number => {
+    const [h, m] = time.split(':').map(Number);
+    return (h - startHour) * 60 + m;
+  };
+
+  // Convert minutes to time string
+  const minutesToTime = (minutes: number): string => {
+    // Cap at 23:59 (1439 minutes) to ensure valid time format for backend
+    const totalMinutes = Math.max(0, Math.min(minutes, 23 * 60 + 59));
+    const h = Math.floor(totalMinutes / 60) + startHour;
+    const m = totalMinutes % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Snap to nearest interval
+  const snapToInterval = (minutes: number): number => {
+    return Math.round(minutes / snapMinutes) * snapMinutes;
+  };
+
+  // Get position from minutes
+  const getPositionPercent = (minutes: number): number => {
+    return (minutes / (totalHours * 60)) * 100;
+  };
+
+  // Get minutes from mouse position
+  const getMinutesFromPosition = (clientX: number): number => {
+    if (!containerRef.current) return 0;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percent = Math.max(0, Math.min(x / rect.width, 1));
+    return snapToInterval(percent * totalHours * 60);
+  };
+
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+
+  // Handle mouse/touch events
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent, type: 'start' | 'end' | 'range') => {
+    e.preventDefault();
+    setIsDragging(type);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    setDragStartX(clientX);
+    setInitialStart(startMinutes);
+    setInitialEnd(endMinutes);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDragging || !containerRef.current) return;
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const rect = containerRef.current.getBoundingClientRect();
+    const deltaX = clientX - dragStartX;
+    const deltaMinutes = snapToInterval((deltaX / rect.width) * totalHours * 60);
+    
+    if (isDragging === 'start') {
+      const newStart = Math.max(0, Math.min(initialStart + deltaMinutes, initialEnd - snapMinutes));
+      onTimeChange(minutesToTime(newStart), endTime);
+    } else if (isDragging === 'end') {
+      const newEnd = Math.max(initialStart + snapMinutes, Math.min(initialEnd + deltaMinutes, totalHours * 60));
+      onTimeChange(startTime, minutesToTime(newEnd));
+    } else if (isDragging === 'range') {
+      const duration = initialEnd - initialStart;
+      let newStart = initialStart + deltaMinutes;
+      let newEnd = initialEnd + deltaMinutes;
+      
+      if (newStart < 0) {
+        newStart = 0;
+        newEnd = duration;
+      }
+      if (newEnd > totalHours * 60) {
+        newEnd = totalHours * 60;
+        newStart = newEnd - duration;
+      }
+      onTimeChange(minutesToTime(newStart), minutesToTime(newEnd));
+    }
+  }, [isDragging, dragStartX, initialStart, initialEnd, startTime, endTime, totalHours, snapMinutes, onTimeChange]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(null);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleMouseMove);
+      window.addEventListener('touchend', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('touchmove', handleMouseMove);
+        window.removeEventListener('touchend', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Click on timeline to set time
+  const handleTimelineClick = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    const minutes = getMinutesFromPosition(e.clientX);
+    const duration = endMinutes - startMinutes;
+    const halfDuration = duration / 2;
+    
+    let newStart = snapToInterval(minutes - halfDuration);
+    let newEnd = snapToInterval(minutes + halfDuration);
+    
+    if (newStart < 0) {
+      newStart = 0;
+      newEnd = duration;
+    }
+    if (newEnd > totalHours * 60) {
+      newEnd = totalHours * 60;
+      newStart = newEnd - duration;
+    }
+    
+    onTimeChange(minutesToTime(newStart), minutesToTime(newEnd));
+  };
+
+  // Calculate duration
+  const durationMinutes = endMinutes - startMinutes;
+  const durationHours = Math.floor(durationMinutes / 60);
+  const durationMins = durationMinutes % 60;
+
+  // Quick presets
+  const presets = [
+    { label: t("presets.morning"), icon: Sunrise, start: "06:00", end: "12:00" },
+    { label: t("presets.afternoon"), icon: Sun, start: "12:00", end: "18:00" },
+    { label: t("presets.evening"), icon: Sunset, start: "18:00", end: "23:00" },
+    { label: t("presets.fullDay"), icon: Clock, start: "00:00", end: "23:59" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Quick presets */}
+      <div className="flex flex-wrap gap-2">
+        {presets.map((preset) => {
+          const Icon = preset.icon;
+          const isActive = startTime === preset.start && endTime === preset.end;
+          return (
+            <Button
+              key={preset.label}
+              variant={isActive ? "default" : "outline"}
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => onTimeChange(preset.start, preset.end)}
+            >
+              <Icon className="h-3 w-3 mr-1.5" />
+              {preset.label}
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Visual timeline */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">{t("dialog.dragToSelect")}</span>
+            <Badge variant="outline" className="font-mono text-primary">
+              {startTime} - {endTime}
+            </Badge>
+          </div>
+          <Badge variant="secondary" className="font-mono">
+            {durationHours > 0 && `${durationHours}h `}{durationMins > 0 && `${durationMins}m`}
+            {durationHours === 0 && durationMins === 0 && "0m"}
+          </Badge>
+        </div>
+        
+        <div 
+          ref={containerRef}
+          className="relative h-16 bg-muted/50 rounded-lg cursor-pointer select-none overflow-hidden"
+          onClick={handleTimelineClick}
+        >
+          {/* Hour markers */}
+          <div className="absolute inset-0 flex">
+            {Array.from({ length: totalHours + 1 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex-1 border-l border-border/30 first:border-l-0"
+              >
+                {i % 3 === 0 && (
+                  <span className="absolute top-1 text-[10px] text-muted-foreground -translate-x-1/2">
+                    {(startHour + i) % 24}:00
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Selected range */}
+          <div
+            className={`absolute top-6 bottom-2 bg-primary/20 border-2 border-primary rounded-md transition-colors ${isDragging === 'range' ? 'cursor-grabbing' : 'cursor-grab'}`}
+            style={{
+              left: `${getPositionPercent(startMinutes)}%`,
+              width: `${getPositionPercent(endMinutes - startMinutes)}%`,
+            }}
+            onMouseDown={(e) => handleMouseDown(e, 'range')}
+            onTouchStart={(e) => handleMouseDown(e, 'range')}
+          />
+
+          {/* Start handle */}
+          <div
+            className={`absolute top-6 bottom-2 w-3 -ml-1.5 flex items-center justify-center cursor-ew-resize z-10 group ${isDragging === 'start' ? 'cursor-grabbing' : ''}`}
+            style={{ left: `${getPositionPercent(startMinutes)}%` }}
+            onMouseDown={(e) => handleMouseDown(e, 'start')}
+            onTouchStart={(e) => handleMouseDown(e, 'start')}
+          >
+            <div className="w-1.5 h-8 bg-primary rounded-full shadow-md group-hover:scale-110 transition-transform" />
+          </div>
+
+          {/* End handle */}
+          <div
+            className={`absolute top-6 bottom-2 w-3 -ml-1.5 flex items-center justify-center cursor-ew-resize z-10 group ${isDragging === 'end' ? 'cursor-grabbing' : ''}`}
+            style={{ left: `${getPositionPercent(endMinutes)}%` }}
+            onMouseDown={(e) => handleMouseDown(e, 'end')}
+            onTouchStart={(e) => handleMouseDown(e, 'end')}
+          >
+            <div className="w-1.5 h-8 bg-primary rounded-full shadow-md group-hover:scale-110 transition-transform" />
+          </div>
+        </div>
+
+        {/* Time period indicators */}
+        <div className="flex text-[10px] text-muted-foreground">
+          <div className="flex-1 text-center">
+            <Sunrise className="h-3 w-3 mx-auto mb-0.5" />
+            {t("periods.morning")}
+          </div>
+          <div className="flex-1 text-center">
+            <Sun className="h-3 w-3 mx-auto mb-0.5" />
+            {t("periods.afternoon")}
+          </div>
+          <div className="flex-1 text-center">
+            <Sunset className="h-3 w-3 mx-auto mb-0.5" />
+            {t("periods.evening")}
+          </div>
+        </div>
+      </div>
+
+      {/* Fine-tune inputs */}
+      <div className="grid grid-cols-2 gap-4 pt-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="startTime" className="text-xs">{t("dialog.startTime")}</Label>
+          <Input
+            id="startTime"
+            type="time"
+            value={startTime}
+            onChange={(e) => {
+              const newStart = e.target.value;
+              const newStartMins = timeToMinutes(newStart);
+              if (newStartMins < timeToMinutes(endTime)) {
+                onTimeChange(newStart, endTime);
+              }
+            }}
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="endTime" className="text-xs">{t("dialog.endTime")}</Label>
+          <Input
+            id="endTime"
+            type="time"
+            value={endTime}
+            onChange={(e) => {
+              const newEnd = e.target.value;
+              const newEndMins = timeToMinutes(newEnd);
+              if (newEndMins > timeToMinutes(startTime)) {
+                onTimeChange(startTime, newEnd);
+              }
+            }}
+            className="h-9"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Schedule templates
+const SCHEDULE_TEMPLATES = {
+  standard: {
+    name: "Standard (9-5)",
+    icon: Briefcase,
+    slots: [{ startTime: "09:00", endTime: "17:00" }],
+    days: [0, 1, 2, 3, 4],
+  },
+  morning: {
+    name: "Morning Hours",
+    icon: Sunrise,
+    slots: [{ startTime: "06:00", endTime: "12:00" }],
+    days: [0, 1, 2, 3, 4],
+  },
+  evening: {
+    name: "Evening Hours",
+    icon: Moon,
+    slots: [{ startTime: "17:00", endTime: "21:00" }],
+    days: [0, 1, 2, 3, 4],
+  },
+  splitShift: {
+    name: "Split Shift",
+    icon: Clock,
+    slots: [
+      { startTime: "09:00", endTime: "12:00" },
+      { startTime: "14:00", endTime: "18:00" },
+    ],
+    days: [0, 1, 2, 3, 4],
+  },
+  fullWeek: {
+    name: "Full Week",
+    icon: Calendar,
+    slots: [{ startTime: "09:00", endTime: "17:00" }],
+    days: [0, 1, 2, 3, 4, 5, 6],
+  },
+};
+
+// Time slot component
+function TimeSlotItem({ 
+  slot, 
+  onToggle, 
+  onDelete, 
+  onEdit,
+}: { 
+  slot: Availability; 
+  onToggle: () => void; 
+  onDelete: () => void;
+  onEdit: () => void;
+}) {
+  const t = useTranslations("availability");
+  
+  return (
+    <div
+      className={`
+        group flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border
+        transition-all duration-200 hover:shadow-sm
+        ${slot.isActive 
+          ? "bg-card border-border hover:border-primary/50" 
+          : "bg-muted/50 border-border/50 opacity-70"
+        }
+      `}
+    >
+      <button
+        onClick={onEdit}
+        className="flex items-center gap-3 flex-1 min-w-0 text-left"
+      >
+        <div className={`
+          flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0
+          ${slot.isActive 
+            ? "bg-primary/10 text-primary" 
+            : "bg-muted text-muted-foreground"
+          }
+        `}>
+          <Clock className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">
+            {slot.startTime} - {slot.endTime}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {slot.serviceOption?.title || t("allServices")}
+          </p>
+        </div>
+      </button>
+      
+      <div className="flex items-center gap-1">
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Switch
+                  checked={slot.isActive}
+                  onCheckedChange={onToggle}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {slot.isActive ? t("disable") : t("enable")}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Day card component
+function DayCard({ 
+  day, 
+  dayName, 
+  slots, 
+  onAddSlot, 
+  onToggleSlot, 
+  onDeleteSlot,
+  onEditSlot,
+  onCopyDay,
+  isWeekend 
+}: {
+  day: DayOfWeek;
+  dayName: string;
+  slots: Availability[];
+  onAddSlot: (day: DayOfWeek) => void;
+  onToggleSlot: (slot: Availability) => void;
+  onDeleteSlot: (id: string) => void;
+  onEditSlot: (slot: Availability) => void;
+  onCopyDay: (fromDay: DayOfWeek) => void;
+  isWeekend: boolean;
+}) {
+  const t = useTranslations("availability");
+  const activeSlots = slots.filter(s => s.isActive);
+  const hasSlots = slots.length > 0;
+  
+  const totalHours = useMemo(() => {
+    return activeSlots.reduce((total, slot) => {
+      const [startH, startM] = slot.startTime.split(":").map(Number);
+      const [endH, endM] = slot.endTime.split(":").map(Number);
+      const hours = (endH * 60 + endM - startH * 60 - startM) / 60;
+      return total + hours;
+    }, 0);
+  }, [activeSlots]);
+
+  return (
+    <Card className={`overflow-hidden ${isWeekend ? "bg-muted/30" : ""}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base font-semibold">{dayName}</CardTitle>
+            {activeSlots.length > 0 && (
+              <Badge variant="secondary" className="font-normal">
+                {totalHours.toFixed(1)}h
+              </Badge>
+            )}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onAddSlot(day)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t("addSlotToDay")}
+              </DropdownMenuItem>
+              {hasSlots && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onCopyDay(day)}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    {t("copyToOtherDays")}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {!hasSlots ? (
+          <button
+            onClick={() => onAddSlot(day)}
+            className="w-full py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground rounded-lg border-2 border-dashed border-muted hover:border-primary/50 hover:bg-muted/50 transition-all"
+          >
+            <Plus className="h-5 w-5" />
+            <span className="text-sm">{t("clickToAdd")}</span>
+          </button>
+        ) : (
+          <div className="space-y-2">
+            {slots.map((slot) => (
+              <TimeSlotItem
+                key={slot.id}
+                slot={slot}
+                onToggle={() => onToggleSlot(slot)}
+                onDelete={() => onDeleteSlot(slot.id)}
+                onEdit={() => onEditSlot(slot)}
+              />
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mt-2 text-muted-foreground hover:text-foreground"
+              onClick={() => onAddSlot(day)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {t("addMore")}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Loading skeleton
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-24 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Stats card
+function StatsCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  color 
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  value: string | number;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50">
+      <div className={`p-2 rounded-full ${color}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <p className="text-2xl font-semibold">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AvailabilityPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization, isAdmin, userRole } = useOrganizationContext();
   const t = useTranslations("availability");
   const tCommon = useTranslations("common");
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
+  const [assignedServices, setAssignedServices] = useState<UserServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
+  const [copyFromDay, setCopyFromDay] = useState<DayOfWeek | null>(null);
+  const [selectedCopyDays, setSelectedCopyDays] = useState<DayOfWeek[]>([]);
   const [formData, setFormData] = useState({
     dayOfWeek: DayOfWeek.MONDAY,
     startTime: "09:00",
@@ -44,41 +675,111 @@ export default function AvailabilityPage() {
     serviceOptionId: "",
   });
 
-  const fetchData = async () => {
+  // Determine if user is a regular member in an organization (not admin/owner)
+  const isOrgMember = !!(currentOrganization && userRole === 'member');
+
+  // Get the list of services available for selection
+  // For org members, only show their assigned services
+  // For admins or personal users, show all services
+  const availableServicesForSelection = useMemo(() => {
+    if (isOrgMember) {
+      // Members can only set availability for their assigned services
+      return assignedServices
+        .filter(as => as.isActive && as.serviceOption)
+        .map(as => as.serviceOption!);
+    }
+    // Admins and personal users see all services
+    return serviceOptions;
+  }, [isOrgMember, assignedServices, serviceOptions]);
+
+  // Check if member has no assigned services
+  const hasNoAssignedServices = isOrgMember && availableServicesForSelection.length === 0;
+
+  const fetchData = useCallback(async () => {
     const token = await getToken();
     setAuthToken(token);
 
+    // Set organization context if in an organization
+    if (currentOrganization) {
+      setOrganizationContext(currentOrganization.id);
+    }
+
     try {
-      const [availRes, optionsRes] = await Promise.all([
+      const requests: Promise<any>[] = [
         availabilityApi.getAll(),
-        serviceOptionsApi.getAll(),
-      ]);
-      setAvailabilities(availRes.data);
-      setServiceOptions(optionsRes.data);
+      ];
+
+      // Fetch organization services or personal services based on context
+      if (currentOrganization) {
+        requests.push(serviceOptionsApi.getAllForOrganization());
+        // Also fetch user's assigned services if they're an org member
+        requests.push(userServiceOptionsApi.getMyServices());
+      } else {
+        requests.push(serviceOptionsApi.getAll());
+      }
+
+      const results = await Promise.all(requests);
+      
+      setAvailabilities(results[0].data);
+      setServiceOptions(results[1].data);
+      
+      if (results[2]) {
+        setAssignedServices(results[2].data);
+      }
     } catch (error) {
       console.error("Failed to fetch data", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken, currentOrganization]);
 
   useEffect(() => {
     fetchData();
-  }, [getToken]);
+  }, [fetchData]);
+
+  const groupedByDay = useMemo(() => {
+    return availabilities.reduce((acc, av) => {
+      if (!acc[av.dayOfWeek]) acc[av.dayOfWeek] = [];
+      acc[av.dayOfWeek].push(av);
+      acc[av.dayOfWeek].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      return acc;
+    }, {} as Record<DayOfWeek, Availability[]>);
+  }, [availabilities]);
+
+  const stats = useMemo(() => {
+    const activeSlots = availabilities.filter(a => a.isActive);
+    const daysWithAvailability = new Set(activeSlots.map(a => a.dayOfWeek)).size;
+    const totalHours = activeSlots.reduce((total, slot) => {
+      const [startH, startM] = slot.startTime.split(":").map(Number);
+      const [endH, endM] = slot.endTime.split(":").map(Number);
+      return total + (endH * 60 + endM - startH * 60 - startM) / 60;
+    }, 0);
+    return { activeSlots: activeSlots.length, daysWithAvailability, totalHours };
+  }, [availabilities]);
 
   const handleCreate = async () => {
     try {
-      await availabilityApi.create({
-        ...formData,
-        serviceOptionId: formData.serviceOptionId || undefined,
-      });
-      toast({ title: t("messages.created") });
+      if (editingSlot) {
+        await availabilityApi.update(editingSlot.id, {
+          dayOfWeek: formData.dayOfWeek,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+        });
+        toast({ title: t("messages.updated") });
+      } else {
+        await availabilityApi.create({
+          ...formData,
+          serviceOptionId: formData.serviceOptionId || undefined,
+        });
+        toast({ title: t("messages.created") });
+      }
       setDialogOpen(false);
+      setEditingSlot(null);
       fetchData();
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.created"),
+        description: editingSlot ? t("messages.updateError") : t("messages.createError"),
         variant: "destructive",
       });
     }
@@ -92,7 +793,7 @@ export default function AvailabilityPage() {
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.deleted"),
+        description: t("messages.deleteError"),
         variant: "destructive",
       });
     }
@@ -107,185 +808,468 @@ export default function AvailabilityPage() {
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.updated"),
+        description: t("messages.updateError"),
         variant: "destructive",
       });
     }
   };
 
-  // Group availabilities by day
-  const groupedByDay = availabilities.reduce((acc, av) => {
-    if (!acc[av.dayOfWeek]) acc[av.dayOfWeek] = [];
-    acc[av.dayOfWeek].push(av);
-    return acc;
-  }, {} as Record<DayOfWeek, Availability[]>);
+  const handleAddSlotToDay = (day: DayOfWeek) => {
+    setEditingSlot(null);
+    // For org members, default to their first assigned service (they must select one)
+    const defaultServiceId = isOrgMember && availableServicesForSelection.length > 0
+      ? availableServicesForSelection[0].id
+      : "";
+    setFormData({
+      dayOfWeek: day,
+      startTime: "09:00",
+      endTime: "17:00",
+      serviceOptionId: defaultServiceId,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleEditSlot = (slot: Availability) => {
+    setEditingSlot(slot);
+    setFormData({
+      dayOfWeek: slot.dayOfWeek,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      serviceOptionId: slot.serviceOptionId || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleApplyTemplate = async (templateKey: keyof typeof SCHEDULE_TEMPLATES) => {
+    const template = SCHEDULE_TEMPLATES[templateKey];
+    const newSlots: Array<{ dayOfWeek: number; startTime: string; endTime: string }> = [];
+    
+    template.days.forEach((day) => {
+      template.slots.forEach((slot) => {
+        newSlots.push({
+          dayOfWeek: day,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        });
+      });
+    });
+
+    try {
+      await availabilityApi.deleteAll();
+      await availabilityApi.createBulk({ availabilities: newSlots });
+      toast({ title: t("messages.templateApplied") });
+      setTemplateDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: tCommon("error"),
+        description: t("messages.templateError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCopyDay = (fromDay: DayOfWeek) => {
+    setCopyFromDay(fromDay);
+    setSelectedCopyDays([]);
+    setCopyDialogOpen(true);
+  };
+
+  const handleConfirmCopyDay = async () => {
+    if (copyFromDay === null || selectedCopyDays.length === 0) return;
+    
+    const slotsToCopy = groupedByDay[copyFromDay] || [];
+    const newSlots = selectedCopyDays.flatMap((targetDay) =>
+      slotsToCopy.map((slot) => ({
+        dayOfWeek: targetDay,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        serviceOptionId: slot.serviceOptionId,
+      }))
+    );
+
+    try {
+      await availabilityApi.createBulk({ availabilities: newSlots });
+      toast({ title: t("messages.slotsCopied") });
+      setCopyDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: tCommon("error"),
+        description: t("messages.copyError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await availabilityApi.deleteAll();
+      toast({ title: t("messages.clearedAll") });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: tCommon("error"),
+        description: t("messages.clearError"),
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
+
+  const dayNumbers = [0, 1, 2, 3, 4, 5, 6] as DayOfWeek[];
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <p className="text-muted-foreground">
-          {t("description")}
-        </p>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("addTimeSlot")}
-        </Button>
+      {/* Alert for members with no assigned services */}
+      {hasNoAssignedServices && (
+        <Alert variant="default" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700 dark:text-amber-400">
+            {t("noAssignedServicesAlert")}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-1">
+          <p className="text-muted-foreground">
+            {isOrgMember ? t("descriptionMember") : t("description")}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="default">
+                <Settings2 className="h-4 w-4 mr-2" />
+                {t("quickSetup")}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {Object.entries(SCHEDULE_TEMPLATES).map(([key, template]) => {
+                const Icon = template.icon;
+                return (
+                  <DropdownMenuItem key={key} onClick={() => handleApplyTemplate(key as keyof typeof SCHEDULE_TEMPLATES)}>
+                    <Icon className="h-4 w-4 mr-2" />
+                    {t(`templates.${key}`)}
+                  </DropdownMenuItem>
+                );
+              })}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleClearAll}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t("clearAll")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button onClick={() => handleAddSlotToDay(DayOfWeek.MONDAY)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t("addTimeSlot")}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4">
-        {Object.values(DayOfWeek)
-          .filter((d) => typeof d === "number")
-          .map((day) => (
-            <Card key={day}>
-              <CardHeader className="py-4">
-                <CardTitle className="text-lg">
-                  {t(`dayOfWeek.${day}`)}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!groupedByDay[day as DayOfWeek] ||
-                groupedByDay[day as DayOfWeek].length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    {t("noAvailability")}
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {groupedByDay[day as DayOfWeek].map((av) => (
-                      <div
-                        key={av.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                          av.isActive ? "bg-white" : "bg-gray-50 opacity-60"
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">
-                            {av.startTime} - {av.endTime}
-                          </span>
-                          {av.serviceOption && (
-                            <span className="text-sm text-muted-foreground bg-gray-100 px-2 py-1 rounded">
-                              {av.serviceOption.title}
-                            </span>
-                          )}
-                          {!av.serviceOptionId && (
-                            <span className="text-sm text-muted-foreground">
-                              {t("allServices")}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={av.isActive}
-                            onCheckedChange={() => handleToggleActive(av)}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(av.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+      {/* Stats */}
+      {availabilities.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatsCard
+            icon={CheckCircle2}
+            label={t("activeSlots")}
+            value={stats.activeSlots}
+            color="bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400"
+          />
+          <StatsCard
+            icon={CalendarDays}
+            label={t("daysConfigured")}
+            value={stats.daysWithAvailability}
+            color="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+          />
+          <StatsCard
+            icon={Timer}
+            label={t("hoursPerWeek")}
+            value={stats.totalHours.toFixed(1)}
+            color="bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400"
+          />
+        </div>
+      )}
+
+      {/* Empty State */}
+      {availabilities.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="rounded-full bg-muted p-4 mb-4">
+              <Calendar className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">{t("emptyState.title")}</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              {t("emptyState.description")}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={() => setTemplateDialogOpen(true)} variant="outline">
+                <Zap className="h-4 w-4 mr-2" />
+                {t("useTemplate")}
+              </Button>
+              <Button onClick={() => handleAddSlotToDay(DayOfWeek.MONDAY)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t("addManually")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Weekly Grid */}
+      {availabilities.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {dayNumbers.map((day) => (
+            <DayCard
+              key={day}
+              day={day}
+              dayName={t(`dayOfWeek.${day}`)}
+              slots={groupedByDay[day] || []}
+              onAddSlot={handleAddSlotToDay}
+              onToggleSlot={handleToggleActive}
+              onDeleteSlot={handleDelete}
+              onEditSlot={handleEditSlot}
+              onCopyDay={handleCopyDay}
+              isWeekend={day === 5 || day === 6}
+            />
           ))}
-      </div>
+        </div>
+      )}
 
-      {/* Create Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      {/* Tips */}
+      {availabilities.length > 0 && (
+        <Card className="bg-muted/50">
+          <CardContent className="flex items-start gap-3 py-4">
+            <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium">{t("tips.title")}</p>
+              <p className="text-muted-foreground">{t("tips.description")}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingSlot(null); }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t("dialog.title")}</DialogTitle>
+            <DialogTitle>
+              {editingSlot ? t("dialog.editTitle") : t("dialog.title")}
+            </DialogTitle>
+            <DialogDescription>
+              {editingSlot ? t("dialog.editDescription") : t("dialog.description")}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-5 py-2">
+            {/* Day selector with visual pills */}
             <div className="space-y-2">
-              <Label>{t("dialog.dayOfWeek")}</Label>
-              <Select
-                value={formData.dayOfWeek.toString()}
-                onValueChange={(v) =>
-                  setFormData({ ...formData, dayOfWeek: parseInt(v) })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(DayOfWeek)
-                    .filter((d) => typeof d === "number")
-                    .map((value) => (
-                      <SelectItem key={value} value={value.toString()}>
-                        {t(`dayOfWeek.${value}`)}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startTime">{t("dialog.startTime")}</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={formData.startTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startTime: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">{t("dialog.endTime")}</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={formData.endTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endTime: e.target.value })
-                  }
-                />
+              <Label className="text-sm font-medium">{t("dialog.dayOfWeek")}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {dayNumbers.map((value) => {
+                  const isSelected = formData.dayOfWeek === value;
+                  const isWeekend = value === 5 || value === 6;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => setFormData({ ...formData, dayOfWeek: value })}
+                      className={`
+                        px-3 py-1.5 text-sm font-medium rounded-full transition-all
+                        ${isSelected 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : isWeekend
+                            ? "bg-muted/70 text-muted-foreground hover:bg-muted"
+                            : "bg-muted text-foreground hover:bg-muted/80"
+                        }
+                      `}
+                    >
+                      {t(`dayOfWeek.${value}`).slice(0, 3)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <Separator />
+
+            {/* Visual Time Range Picker */}
             <div className="space-y-2">
-              <Label>{t("dialog.service")}</Label>
-              <Select
-                value={formData.serviceOptionId || "__all__"}
-                onValueChange={(v) =>
-                  setFormData({ ...formData, serviceOptionId: v === "__all__" ? "" : v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tCommon("allServices")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">{tCommon("allServices")}</SelectItem>
-                  {serviceOptions.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {t("dialog.serviceHint")}
-              </p>
+              <Label className="text-sm font-medium">{t("dialog.selectTime")}</Label>
+              <VisualTimeRangePicker
+                startTime={formData.startTime}
+                endTime={formData.endTime}
+                onTimeChange={(start, end) => setFormData({ ...formData, startTime: start, endTime: end })}
+              />
             </div>
+
+            {/* Service selector */}
+            {!editingSlot && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">{t("dialog.service")}</Label>
+                  {isOrgMember && availableServicesForSelection.length === 0 ? (
+                    <Alert variant="default" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-700 dark:text-amber-400">
+                        {t("noAssignedServices")}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <>
+                      <Select
+                        value={formData.serviceOptionId || "__all__"}
+                        onValueChange={(v) =>
+                          setFormData({ ...formData, serviceOptionId: v === "__all__" ? "" : v })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={tCommon("allServices")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {/* Only show "All Services" option for admins/personal users */}
+                          {!isOrgMember && (
+                            <SelectItem value="__all__">{tCommon("allServices")}</SelectItem>
+                          )}
+                          {availableServicesForSelection.map((opt) => (
+                            <SelectItem key={opt.id} value={opt.id}>
+                              {opt.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {isOrgMember 
+                          ? t("dialog.serviceHintMember")
+                          : t("dialog.serviceHint")
+                        }
+                      </p>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setDialogOpen(false); setEditingSlot(null); }}>
               {tCommon("cancel")}
             </Button>
-            <Button onClick={handleCreate}>{tCommon("create")}</Button>
+            <Button 
+              onClick={handleCreate}
+              disabled={isOrgMember && !editingSlot && !formData.serviceOptionId}
+            >
+              {editingSlot ? tCommon("save") : tCommon("create")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Dialog */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("templateDialog.title")}</DialogTitle>
+            <DialogDescription>
+              {t("templateDialog.description")}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-2 py-4 pr-4">
+              {Object.entries(SCHEDULE_TEMPLATES).map(([key, template]) => {
+                const Icon = template.icon;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleApplyTemplate(key as keyof typeof SCHEDULE_TEMPLATES)}
+                    className="w-full flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="rounded-full bg-muted p-3">
+                      <Icon className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium">{t(`templates.${key}`)}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {template.slots.map(s => `${s.startTime} - ${s.endTime}`).join(", ")}
+                        {" • "}
+                        {template.days.length === 7 ? t("allDays") : t("weekdays")}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy Day Dialog */}
+      <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("copyDialog.title")}</DialogTitle>
+            <DialogDescription>
+              {t("copyDialog.description", { day: copyFromDay !== null ? t(`dayOfWeek.${copyFromDay}`) : "" })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 py-4">
+            {dayNumbers
+              .filter((d) => d !== copyFromDay)
+              .map((day) => {
+                const isSelected = selectedCopyDays.includes(day);
+                return (
+                  <button
+                    key={day}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedCopyDays(selectedCopyDays.filter((d) => d !== day));
+                      } else {
+                        setSelectedCopyDays([...selectedCopyDays, day]);
+                      }
+                    }}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg border transition-all
+                      ${isSelected 
+                        ? "bg-primary/10 border-primary text-primary" 
+                        : "hover:bg-muted/50"
+                      }
+                    `}
+                  >
+                    <div className={`
+                      w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
+                      ${isSelected 
+                        ? "bg-primary border-primary" 
+                        : "border-muted-foreground/30"
+                      }
+                    `}>
+                      {isSelected && <CheckCircle2 className="h-3 w-3 text-primary-foreground" />}
+                    </div>
+                    <span className="font-medium">{t(`dayOfWeek.${day}`)}</span>
+                  </button>
+                );
+              })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCopyDialogOpen(false)}>
+              {tCommon("cancel")}
+            </Button>
+            <Button 
+              onClick={handleConfirmCopyDay}
+              disabled={selectedCopyDays.length === 0}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              {t("copyDialog.confirm")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

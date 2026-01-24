@@ -1,10 +1,12 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar } from "lucide-react";
-import Image from "next/image";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Gift, Building2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Sidebar,
@@ -22,6 +24,7 @@ import {
 export function AppSidebar() {
   const pathname = usePathname();
   const t = useTranslations('sidebar');
+  const { isAdmin, currentOrganization } = useOrganizationContext();
 
   const mainNavItems = [
     { href: "/dashboard", label: t('dashboard'), icon: LayoutDashboard },
@@ -30,11 +33,18 @@ export function AppSidebar() {
     { href: "/dashboard/clients", label: t('clients'), icon: Users },
   ];
 
-  const configNavItems = [
-    { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
+  // Members can see their own services, but only in org context
+  const memberConfigItems = [
     { href: "/dashboard/availability", label: t('availability'), icon: Clock },
     { href: "/dashboard/blocks", label: t('blockedTimes'), icon: CalendarX },
+  ];
+
+  // Admin-only configuration items (members management is handled by Clerk in org switcher)
+  const adminConfigItems = [
+    { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
+    { href: "/dashboard/gamification", label: t('gamification'), icon: Gift, badge: "alfa" },
+    { href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 },
   ];
 
   const settingsNavItems = [
@@ -43,54 +53,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <Link href="/dashboard" className="flex items-center space-x-2">
-          <Image
-            src="/Slootea_logo.png"
-            alt="Slootea Logo"
-            width={32}
-            height={32}
-            className="h-8 w-8"
-          />
-          <span className="text-xl font-bold tracking-wide uppercase">SLOOTEA</span>
-        </Link>
+      <SidebarHeader className="p-2">
+        <OrganizationSwitcher />
       </SidebarHeader>
-
-      {/* SVG fallback logo
-          <svg
-            className="h-8 w-8 text-primary"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M5 10h12a2 2 0 012 2v1a6 6 0 01-6 6H9a6 6 0 01-6-6v-1a2 2 0 012-2z"
-              fill="currentColor"
-              opacity="0.2"
-            />
-            <path
-              d="M5 10h12a2 2 0 012 2v1a6 6 0 01-6 6H9a6 6 0 01-6-6v-1a2 2 0 012-2z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M19 12h1a2 2 0 012 2v0a2 2 0 01-2 2h-1"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8 5c0-1 .5-2 2-2s2 1 2 2M12 5c0-1 .5-2 2-2s2 1 2 2"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          */}
 
       <SidebarSeparator />
 
@@ -115,11 +80,12 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
+        {/* Member Configuration - Available to all members */}
         <SidebarGroup>
-          <SidebarGroupLabel>{t('configuration')}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('myConfiguration') || 'My Configuration'}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {configNavItems.map((item) => (
+              {memberConfigItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
                     <Link href={item.href}>
@@ -132,6 +98,35 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin Configuration - Only visible to admins */}
+        {isAdmin && currentOrganization && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup>
+              <SidebarGroupLabel>{t('adminConfiguration') || 'Admin'}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminConfigItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                          {'badge' in item && item.badge && (
+                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
 
         <SidebarSeparator />
 

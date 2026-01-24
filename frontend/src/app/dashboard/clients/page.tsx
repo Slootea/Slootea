@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { clientsApi, appointmentsApi, setAuthToken } from "@/lib/api";
+import { clientsApi, appointmentsApi, gamificationApi, clientPenaltiesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import {
   Client,
   ClientFilters,
@@ -10,7 +10,14 @@ import {
   Appointment,
   AppointmentStatus,
   PaginatedResult,
+  ClientGamificationSummary,
+  PointsHistory,
+  GamificationSettings,
+  ClientPenalty,
+  PenaltyType,
+  PenaltyStatus,
 } from "@/lib/types";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 import {
   Card,
   CardContent,
@@ -59,6 +66,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Users,
   UserPlus,
@@ -83,7 +91,20 @@ import {
   XCircle,
   AlertCircle,
   History,
+  Gift,
+  Star,
+  Flame,
+  Share2,
+  Trophy,
+  Plus,
+  Minus,
+  Building2,
+  Ban,
+  ShieldOff,
+  ShieldAlert,
+  CalendarOff,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import {
   format,
   parseISO,
@@ -93,6 +114,7 @@ import {
 export default function ClientsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization } = useOrganizationContext();
 
   // State
   const [clients, setClients] = useState<Client[]>([]);
@@ -124,6 +146,29 @@ export default function ClientsPage() {
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Gamification state
+  const [gamificationEnabled, setGamificationEnabled] = useState(false);
+  const [clientGamification, setClientGamification] = useState<ClientGamificationSummary | null>(null);
+  const [pointsHistory, setPointsHistory] = useState<PointsHistory[]>([]);
+  const [gamificationLoading, setGamificationLoading] = useState(false);
+  const [adjustPointsDialogOpen, setAdjustPointsDialogOpen] = useState(false);
+  const [pointsAdjustment, setPointsAdjustment] = useState({ points: 0, reason: "" });
+  const [adjustingPoints, setAdjustingPoints] = useState(false);
+
+  // Penalty state
+  const [clientPenalty, setClientPenalty] = useState<ClientPenalty | null>(null);
+  const [penaltyLoading, setPenaltyLoading] = useState(false);
+  const [penaltyDialogOpen, setPenaltyDialogOpen] = useState(false);
+  const [penaltyFormData, setPenaltyFormData] = useState({
+    type: 'ban' as 'ban' | 'suspension',
+    reason: '',
+    expiresAt: '',
+  });
+  const [savingPenalty, setSavingPenalty] = useState(false);
+  const [removePenaltyDialogOpen, setRemovePenaltyDialogOpen] = useState(false);
+  const [removalReason, setRemovalReason] = useState('');
+  const [removingPenalty, setRemovingPenalty] = useState(false);
+
   // Pagination & Filters
   const [filters, setFilters] = useState<ClientFilters>({
     page: 1,
@@ -153,7 +198,18 @@ export default function ClientsPage() {
   const fetchData = useCallback(
     async (showRefreshing = false) => {
       const token = await getToken();
+      if (!token) return;
       setAuthToken(token);
+
+      // Clients require organization context
+      if (!currentOrganization) {
+        setClients([]);
+        setStats(null);
+        setLoading(false);
+        return;
+      }
+
+      setOrganizationContext(currentOrganization.id);
 
       if (showRefreshing) {
         setRefreshing(true);
@@ -192,23 +248,25 @@ export default function ClientsPage() {
         setRefreshing(false);
       }
     },
-    [getToken, filters, debouncedSearch, toast]
+    [getToken, filters, debouncedSearch, toast, currentOrganization]
   );
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Reset page when search changes
+  // Reset page when search or organization changes
   useEffect(() => {
     setFilters((prev) => ({ ...prev, page: 1 }));
-  }, [debouncedSearch]);
+  }, [debouncedSearch, currentOrganization]);
 
   const fetchClientAppointments = async (clientId: string) => {
+    if (!currentOrganization) return;
     setAppointmentsLoading(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
       const response = await clientsApi.getAppointments(clientId, { limit: 20 });
       const paginatedData = response.data as PaginatedResult<Appointment>;
       setClientAppointments(paginatedData.data);
@@ -224,10 +282,191 @@ export default function ClientsPage() {
     }
   };
 
+  // Fetch gamification settings
+  useEffect(() => {
+    const checkGamification = async () => {
+      if (!currentOrganization) return;
+      try {
+        const token = await getToken();
+        if (!token) return;
+        setAuthToken(token);
+        setOrganizationContext(currentOrganization.id);
+        const response = await gamificationApi.getSettings();
+        setGamificationEnabled(response.data?.enabled ?? false);
+      } catch (error) {
+        console.error("Failed to fetch gamification settings", error);
+      }
+    };
+    checkGamification();
+  }, [getToken, currentOrganization]);
+
+  // Fetch client gamification data
+  const fetchClientGamification = async (clientId: string) => {
+    if (!gamificationEnabled || !currentOrganization) return;
+    
+    setGamificationLoading(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      const [summaryRes, historyRes] = await Promise.all([
+        gamificationApi.getClientGamification(clientId),
+        gamificationApi.getPointsHistory(clientId),
+      ]);
+      setClientGamification(summaryRes.data);
+      setPointsHistory(historyRes.data || []);
+    } catch (error) {
+      console.error("Failed to fetch gamification data", error);
+    } finally {
+      setGamificationLoading(false);
+    }
+  };
+
+  // Fetch client penalty
+  const fetchClientPenalty = async (clientId: string) => {
+    if (!currentOrganization) return;
+    
+    setPenaltyLoading(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      const response = await clientPenaltiesApi.getActiveByClient(clientId);
+      setClientPenalty(response.data);
+    } catch (error) {
+      console.error("Failed to fetch penalty data", error);
+      setClientPenalty(null);
+    } finally {
+      setPenaltyLoading(false);
+    }
+  };
+
+  // Create penalty
+  const handleCreatePenalty = async () => {
+    if (!selectedClient || !currentOrganization) return;
+    
+    if (penaltyFormData.type === 'suspension' && !penaltyFormData.expiresAt) {
+      toast({
+        title: "Error",
+        description: "Suspension requires an end date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingPenalty(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      
+      await clientPenaltiesApi.create({
+        clientId: selectedClient.id,
+        type: penaltyFormData.type,
+        reason: penaltyFormData.reason || undefined,
+        expiresAt: penaltyFormData.type === 'suspension' ? penaltyFormData.expiresAt : undefined,
+      });
+      
+      toast({
+        title: "Success",
+        description: penaltyFormData.type === 'ban' ? "Client has been banned" : "Client has been suspended",
+      });
+      
+      setPenaltyDialogOpen(false);
+      setPenaltyFormData({ type: 'ban', reason: '', expiresAt: '' });
+      await fetchClientPenalty(selectedClient.id);
+      // Refresh the clients list to update visual indicators
+      await fetchData(true);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create penalty",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPenalty(false);
+    }
+  };
+
+  // Remove penalty
+  const handleRemovePenalty = async () => {
+    if (!clientPenalty || !currentOrganization) return;
+
+    setRemovingPenalty(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      
+      await clientPenaltiesApi.remove(clientPenalty.id, { removalReason: removalReason || undefined });
+      
+      toast({
+        title: "Success",
+        description: "Penalty has been removed",
+      });
+      
+      setRemovePenaltyDialogOpen(false);
+      setRemovalReason('');
+      setClientPenalty(null);
+      // Refresh the clients list to update visual indicators
+      await fetchData(true);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to remove penalty",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingPenalty(false);
+    }
+  };
+
+  // Handle points adjustment
+  const handleAdjustPoints = async () => {
+    if (!selectedClient || pointsAdjustment.points === 0 || !currentOrganization) return;
+    
+    setAdjustingPoints(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      await gamificationApi.adjustPoints(selectedClient.id, {
+        points: pointsAdjustment.points,
+        reason: pointsAdjustment.reason || (pointsAdjustment.points > 0 ? "Manual bonus" : "Manual deduction"),
+      });
+      
+      toast({
+        title: "Success",
+        description: `Points ${pointsAdjustment.points > 0 ? "added" : "deducted"} successfully`,
+      });
+      
+      // Refresh gamification data
+      await fetchClientGamification(selectedClient.id);
+      setAdjustPointsDialogOpen(false);
+      setPointsAdjustment({ points: 0, reason: "" });
+    } catch (error) {
+      console.error("Failed to adjust points", error);
+      toast({
+        title: "Error",
+        description: "Failed to adjust points",
+        variant: "destructive",
+      });
+    } finally {
+      setAdjustingPoints(false);
+    }
+  };
+
   const handleViewDetails = async (client: Client) => {
     setSelectedClient(client);
     setDetailSheetOpen(true);
-    await fetchClientAppointments(client.id);
+    setClientGamification(null);
+    setPointsHistory([]);
+    setClientPenalty(null);
+    await Promise.all([
+      fetchClientAppointments(client.id),
+      fetchClientGamification(client.id),
+      fetchClientPenalty(client.id),
+    ]);
   };
 
   const handleEditClient = (client: Client) => {
@@ -262,10 +501,20 @@ export default function ClientsPage() {
       return;
     }
 
+    if (!currentOrganization) {
+      toast({
+        title: "Error",
+        description: "Organization context required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
 
       if (editingClient) {
         await clientsApi.update(editingClient.id, {
@@ -314,12 +563,13 @@ export default function ClientsPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!clientToDelete) return;
+    if (!clientToDelete || !currentOrganization) return;
 
     setDeleting(true);
     try {
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
       await clientsApi.delete(clientToDelete.id);
       toast({ title: "Client deleted successfully" });
       setDeleteDialogOpen(false);
@@ -366,6 +616,30 @@ export default function ClientsPage() {
     return <LoadingSkeleton />;
   }
 
+  // Show message when no organization is selected
+  if (!currentOrganization) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">Clients</CardTitle>
+            <CardDescription>
+              Manage your client database and view their appointment history
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Building2 className="h-4 w-4" />
+              <AlertDescription>
+                Please select an organization to view and manage clients.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -378,7 +652,7 @@ export default function ClientsPage() {
             <div>
               <CardTitle className="text-xl font-semibold">Clients</CardTitle>
               <CardDescription>
-                Manage your client database and view their appointment history
+                Manage your organization&apos;s client database and view their appointment history
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -586,6 +860,222 @@ export default function ClientsPage() {
 
                   <Separator />
 
+                  {/* Penalty Status Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4" />
+                        Penalty Status
+                      </h4>
+                      {!clientPenalty && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setPenaltyFormData({ type: 'ban', reason: '', expiresAt: '' });
+                            setPenaltyDialogOpen(true);
+                          }}
+                        >
+                          <Ban className="h-3 w-3 mr-1" />
+                          Add Penalty
+                        </Button>
+                      )}
+                    </div>
+
+                    {penaltyLoading ? (
+                      <Skeleton className="h-16 w-full" />
+                    ) : clientPenalty ? (
+                      <div className={`rounded-lg border p-4 ${
+                        clientPenalty.type === PenaltyType.BAN 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-950/20' 
+                          : 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                      }`}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            {clientPenalty.type === PenaltyType.BAN ? (
+                              <Ban className="h-5 w-5 text-red-600" />
+                            ) : (
+                              <CalendarOff className="h-5 w-5 text-yellow-600" />
+                            )}
+                            <div>
+                              <p className="font-medium">
+                                {clientPenalty.type === PenaltyType.BAN ? 'Banned' : 'Suspended'}
+                              </p>
+                              {clientPenalty.expiresAt && (
+                                <p className="text-xs text-muted-foreground">
+                                  Until: {format(parseISO(clientPenalty.expiresAt), "MMM d, yyyy 'at' h:mm a")}
+                                </p>
+                              )}
+                              {clientPenalty.type === PenaltyType.BAN && (
+                                <p className="text-xs text-muted-foreground">Permanent</p>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setRemovalReason('');
+                              setRemovePenaltyDialogOpen(true);
+                            }}
+                          >
+                            <ShieldOff className="h-3 w-3 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                        {clientPenalty.reason && (
+                          <p className="text-sm mt-2 text-muted-foreground">
+                            <span className="font-medium">Reason:</span> {clientPenalty.reason}
+                          </p>
+                        )}
+                        <p className="text-xs mt-2 text-muted-foreground">
+                          Issued: {format(parseISO(clientPenalty.createdAt), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 p-3">
+                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span className="text-sm">No active penalties - Client can book appointments</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Separator />
+
+                  {/* Gamification Section */}
+                  {gamificationEnabled && (
+                    <>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <Gift className="h-4 w-4" />
+                            Gamification
+                          </h4>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setPointsAdjustment({ points: 0, reason: "" });
+                              setAdjustPointsDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Adjust Points
+                          </Button>
+                        </div>
+
+                        {gamificationLoading ? (
+                          <div className="space-y-2">
+                            <Skeleton className="h-20 w-full" />
+                            <Skeleton className="h-16 w-full" />
+                          </div>
+                        ) : clientGamification ? (
+                          <div className="space-y-4">
+                            {/* Level & Points */}
+                            <div className="rounded-lg border p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Trophy className={`h-5 w-5 ${
+                                    clientGamification.level === 'platinum' ? 'text-purple-500' :
+                                    clientGamification.level === 'gold' ? 'text-yellow-500' :
+                                    clientGamification.level === 'silver' ? 'text-gray-400' :
+                                    'text-amber-700'
+                                  }`} />
+                                  <span className="font-medium capitalize">
+                                    {clientGamification.level} Level
+                                  </span>
+                                </div>
+                                <Badge variant="secondary">
+                                  <Star className="h-3 w-3 mr-1" />
+                                  {clientGamification.availablePoints} pts
+                                </Badge>
+                              </div>
+                              
+                              {/* Progress to next level */}
+                              {clientGamification.nextLevel && (
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>Progress to {clientGamification.nextLevel}</span>
+                                    <span>
+                                      {clientGamification.totalPoints} / {clientGamification.pointsToNextLevel + clientGamification.totalPoints}
+                                    </span>
+                                  </div>
+                                  <Progress 
+                                    value={(clientGamification.totalPoints / (clientGamification.pointsToNextLevel + clientGamification.totalPoints)) * 100} 
+                                    className="h-2"
+                                  />
+                                </div>
+                              )}
+
+                              <div className="text-xs text-muted-foreground">
+                                Total earned: {clientGamification.totalPoints} points
+                              </div>
+                            </div>
+
+                            {/* Streak & Referrals */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="rounded-lg border p-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Flame className="h-4 w-4 text-orange-500" />
+                                  <span className="text-xs text-muted-foreground">Streak</span>
+                                </div>
+                                <p className="text-xl font-bold">{clientGamification.currentStreak}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Best: {clientGamification.longestStreak}
+                                </p>
+                              </div>
+                              <div className="rounded-lg border p-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Share2 className="h-4 w-4 text-blue-500" />
+                                  <span className="text-xs text-muted-foreground">Referrals</span>
+                                </div>
+                                <p className="text-xl font-bold">{clientGamification.successfulReferrals}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Total: {clientGamification.totalReferrals}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Referral Code */}
+                            {clientGamification.referralCode && (
+                              <div className="rounded-lg bg-muted/50 p-3">
+                                <p className="text-xs text-muted-foreground mb-1">Referral Code</p>
+                                <code className="text-sm font-mono font-bold">
+                                  {clientGamification.referralCode}
+                                </code>
+                              </div>
+                            )}
+
+                            {/* Recent Points History */}
+                            {pointsHistory.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-muted-foreground">Recent Activity</p>
+                                <div className="space-y-1">
+                                  {pointsHistory.slice(0, 5).map((history, idx) => (
+                                    <div key={idx} className="flex items-center justify-between text-xs p-2 rounded bg-muted/30">
+                                      <span className="truncate max-w-[60%]">{history.description || history.transactionType}</span>
+                                      <span className={history.points >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {history.points >= 0 ? '+' : ''}{history.points}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">
+                            No gamification data available
+                          </p>
+                        )}
+                      </div>
+
+                      <Separator />
+                    </>
+                  )}
+
                   {/* Notes */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -779,6 +1269,187 @@ export default function ClientsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Adjust Points Dialog */}
+      <Dialog open={adjustPointsDialogOpen} onOpenChange={setAdjustPointsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adjust Points</DialogTitle>
+            <DialogDescription>
+              Manually add or deduct points for {selectedClient?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Points Adjustment</Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setPointsAdjustment(prev => ({ ...prev, points: prev.points - 10 }))}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  value={pointsAdjustment.points}
+                  onChange={(e) => setPointsAdjustment(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
+                  className="text-center w-24"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setPointsAdjustment(prev => ({ ...prev, points: prev.points + 10 }))}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Use positive values to add points, negative to deduct
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason</Label>
+              <Textarea
+                id="reason"
+                value={pointsAdjustment.reason}
+                onChange={(e) => setPointsAdjustment(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="e.g., Loyalty bonus, Compensation for issue..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdjustPointsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAdjustPoints} 
+              disabled={adjustingPoints || pointsAdjustment.points === 0}
+            >
+              {adjustingPoints ? "Adjusting..." : pointsAdjustment.points >= 0 ? "Add Points" : "Deduct Points"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Penalty Dialog */}
+      <Dialog open={penaltyDialogOpen} onOpenChange={setPenaltyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Penalty</DialogTitle>
+            <DialogDescription>
+              Ban or suspend {selectedClient?.name} from booking appointments
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Penalty Type</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={penaltyFormData.type === 'ban' ? 'default' : 'outline'}
+                  onClick={() => setPenaltyFormData(prev => ({ ...prev, type: 'ban', expiresAt: '' }))}
+                  className="justify-start"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  Ban (Permanent)
+                </Button>
+                <Button
+                  variant={penaltyFormData.type === 'suspension' ? 'default' : 'outline'}
+                  onClick={() => setPenaltyFormData(prev => ({ ...prev, type: 'suspension' }))}
+                  className="justify-start"
+                >
+                  <CalendarOff className="h-4 w-4 mr-2" />
+                  Suspend (Temporary)
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {penaltyFormData.type === 'ban' 
+                  ? 'Client will be permanently banned until manually removed' 
+                  : 'Client will be suspended until the specified date'}
+              </p>
+            </div>
+
+            {penaltyFormData.type === 'suspension' && (
+              <div className="space-y-2">
+                <Label htmlFor="expiresAt">Suspend Until *</Label>
+                <Input
+                  id="expiresAt"
+                  type="datetime-local"
+                  value={penaltyFormData.expiresAt}
+                  onChange={(e) => setPenaltyFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="penaltyReason">Reason (Optional)</Label>
+              <Textarea
+                id="penaltyReason"
+                value={penaltyFormData.reason}
+                onChange={(e) => setPenaltyFormData(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="e.g., Multiple no-shows, Inappropriate behavior..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPenaltyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleCreatePenalty} 
+              disabled={savingPenalty || (penaltyFormData.type === 'suspension' && !penaltyFormData.expiresAt)}
+            >
+              {savingPenalty ? "Applying..." : penaltyFormData.type === 'ban' ? "Ban Client" : "Suspend Client"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Penalty Dialog */}
+      <Dialog open={removePenaltyDialogOpen} onOpenChange={setRemovePenaltyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Penalty</DialogTitle>
+            <DialogDescription>
+              Remove the {clientPenalty?.type === PenaltyType.BAN ? 'ban' : 'suspension'} from {selectedClient?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="removalReason">Removal Reason (Optional)</Label>
+              <Textarea
+                id="removalReason"
+                value={removalReason}
+                onChange={(e) => setRemovalReason(e.target.value)}
+                placeholder="e.g., Warning given, Issue resolved..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemovePenaltyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRemovePenalty} 
+              disabled={removingPenalty}
+            >
+              {removingPenalty ? "Removing..." : "Remove Penalty"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -854,16 +1525,34 @@ function ClientRow({
     <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => onView(client)}>
       <TableCell>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-            {client.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
+          <div className={`flex h-10 w-10 items-center justify-center rounded-full font-medium ${
+            client.activePenalty 
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+              : 'bg-primary/10 text-primary'
+          }`}>
+            {client.activePenalty ? (
+              <Ban className="h-5 w-5" />
+            ) : (
+              client.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)
+            )}
           </div>
           <div>
-            <p className="font-medium">{client.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">{client.name}</p>
+              {client.activePenalty && (
+                <Badge 
+                  variant="destructive" 
+                  className="text-xs h-5 px-1.5"
+                >
+                  {client.activePenalty.type === 'ban' ? 'Banned' : 'Suspended'}
+                </Badge>
+              )}
+            </div>
             {client.notes && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <StickyNote className="h-3 w-3" />
@@ -959,16 +1648,34 @@ function ClientMobileCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-              {client.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2)}
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full font-medium ${
+              client.activePenalty 
+                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                : 'bg-primary/10 text-primary'
+            }`}>
+              {client.activePenalty ? (
+                <Ban className="h-5 w-5" />
+              ) : (
+                client.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)
+              )}
             </div>
             <div>
-              <h4 className="font-semibold">{client.name}</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold">{client.name}</h4>
+                {client.activePenalty && (
+                  <Badge 
+                    variant="destructive" 
+                    className="text-xs h-5 px-1.5"
+                  >
+                    {client.activePenalty.type === 'ban' ? 'Banned' : 'Suspended'}
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">{client.phone}</p>
             </div>
           </div>

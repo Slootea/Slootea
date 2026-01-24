@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
+import { ClientPenalty, PenaltyType, PenaltyStatus } from './entities/client-penalty.entity';
 import {
   CreateClientDto,
   UpdateClientDto,
@@ -13,17 +14,28 @@ import {
   PaginatedResult,
 } from './dto/client.dto';
 
+// Extended client with penalty info
+export interface ClientWithPenalty extends Client {
+  activePenalty?: {
+    id: string;
+    type: PenaltyType;
+    expiresAt: Date | null;
+  } | null;
+}
+
 @Injectable()
 export class ClientsService {
   constructor(
     @InjectRepository(Client)
     private readonly clientRepository: Repository<Client>,
+    @InjectRepository(ClientPenalty)
+    private readonly penaltyRepository: Repository<ClientPenalty>,
   ) {}
 
-  async create(userId: string, createDto: CreateClientDto): Promise<Client> {
-    // Check if client with same phone already exists for this user
+  async create(organizationId: string, createDto: CreateClientDto): Promise<Client> {
+    // Check if client with same phone already exists for this organization
     const existingClient = await this.clientRepository.findOne({
-      where: { userId, phone: createDto.phone },
+      where: { organizationId, phone: createDto.phone },
     });
 
     if (existingClient) {
@@ -32,27 +44,27 @@ export class ClientsService {
 
     const client = this.clientRepository.create({
       ...createDto,
-      userId,
+      organizationId,
     });
 
     return this.clientRepository.save(client);
   }
 
   async findOrCreate(
-    userId: string,
+    organizationId: string,
     phone: string,
     name: string,
     email?: string,
   ): Promise<Client> {
     // Try to find existing client by phone
     let client = await this.clientRepository.findOne({
-      where: { userId, phone },
+      where: { organizationId, phone },
     });
 
     if (!client) {
       // Create new client
       client = this.clientRepository.create({
-        userId,
+        organizationId,
         phone,
         name,
         email,
@@ -83,22 +95,22 @@ export class ClientsService {
 
   async incrementAppointmentCount(
     clientId: string,
-    userId: string,
+    organizationId: string,
   ): Promise<void> {
     await this.clientRepository.increment(
-      { id: clientId, userId },
+      { id: clientId, organizationId },
       'totalAppointments',
       1,
     );
     await this.clientRepository.update(
-      { id: clientId, userId },
+      { id: clientId, organizationId },
       { lastAppointmentAt: new Date() },
     );
   }
 
   async updateAppointmentStats(
     clientId: string,
-    userId: string,
+    organizationId: string,
     status: 'completed' | 'cancelled' | 'no_show',
   ): Promise<void> {
     const field =
@@ -108,20 +120,20 @@ export class ClientsService {
         ? 'cancelledAppointments'
         : 'noShowAppointments';
 
-    await this.clientRepository.increment({ id: clientId, userId }, field, 1);
+    await this.clientRepository.increment({ id: clientId, organizationId }, field, 1);
   }
 
-  async findAllByUser(userId: string): Promise<Client[]> {
+  async findAllByOrganization(organizationId: string): Promise<Client[]> {
     return this.clientRepository.find({
-      where: { userId },
+      where: { organizationId },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findAllByUserPaginated(
-    userId: string,
+  async findAllByOrganizationPaginated(
+    organizationId: string,
     query: ClientQueryDto,
-  ): Promise<PaginatedResult<Client>> {
+  ): Promise<PaginatedResult<ClientWithPenalty>> {
     const {
       page = 1,
       limit = 10,
@@ -130,9 +142,12 @@ export class ClientsService {
       sortOrder = 'DESC',
     } = query;
 
+    // First, update expired suspensions
+    await this.updateExpiredPenalties(organizationId);
+
     const queryBuilder = this.clientRepository
       .createQueryBuilder('client')
-      .where('client.userId = :userId', { userId });
+      .where('client.organizationId = :organizationId', { organizationId });
 
     // Search by name, email, or phone
     if (search) {
@@ -161,7 +176,35 @@ export class ClientsService {
     const skip = (page - 1) * limit;
     queryBuilder.skip(skip).take(limit);
 
-    const data = await queryBuilder.getMany();
+    const clients = await queryBuilder.getMany();
+
+    // Fetch active penalties for these clients in one query
+    const clientIds = clients.map(c => c.id);
+    const activePenalties = clientIds.length > 0 
+      ? await this.penaltyRepository
+          .createQueryBuilder('penalty')
+          .select(['penalty.id', 'penalty.clientId', 'penalty.type', 'penalty.expiresAt'])
+          .where('penalty.organizationId = :organizationId', { organizationId })
+          .andWhere('penalty.clientId IN (:...clientIds)', { clientIds })
+          .andWhere('penalty.status = :status', { status: PenaltyStatus.ACTIVE })
+          .getMany()
+      : [];
+
+    // Create a map of clientId -> penalty
+    const penaltyMap = new Map<string, { id: string; type: PenaltyType; expiresAt: Date | null }>();
+    for (const penalty of activePenalties) {
+      penaltyMap.set(penalty.clientId, {
+        id: penalty.id,
+        type: penalty.type,
+        expiresAt: penalty.expiresAt,
+      });
+    }
+
+    // Enrich clients with penalty info
+    const data: ClientWithPenalty[] = clients.map(client => ({
+      ...client,
+      activePenalty: penaltyMap.get(client.id) || null,
+    }));
 
     const totalPages = Math.ceil(total / limit);
 
@@ -178,9 +221,24 @@ export class ClientsService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<Client> {
+  private async updateExpiredPenalties(organizationId: string): Promise<void> {
+    const now = new Date();
+    
+    await this.penaltyRepository
+      .createQueryBuilder()
+      .update(ClientPenalty)
+      .set({ status: PenaltyStatus.EXPIRED })
+      .where('organizationId = :organizationId', { organizationId })
+      .andWhere('status = :status', { status: PenaltyStatus.ACTIVE })
+      .andWhere('type = :type', { type: PenaltyType.SUSPENSION })
+      .andWhere('expiresAt IS NOT NULL')
+      .andWhere('expiresAt <= :now', { now })
+      .execute();
+  }
+
+  async findOne(id: string, organizationId: string): Promise<Client> {
     const client = await this.clientRepository.findOne({
-      where: { id, userId },
+      where: { id, organizationId },
     });
 
     if (!client) {
@@ -190,34 +248,34 @@ export class ClientsService {
     return client;
   }
 
-  async findByPhone(phone: string, userId: string): Promise<Client | null> {
+  async findByPhone(phone: string, organizationId: string): Promise<Client | null> {
     return this.clientRepository.findOne({
-      where: { phone, userId },
+      where: { phone, organizationId },
     });
   }
 
   async update(
     id: string,
-    userId: string,
+    organizationId: string,
     updateDto: UpdateClientDto,
   ): Promise<Client> {
-    const client = await this.findOne(id, userId);
+    const client = await this.findOne(id, organizationId);
     Object.assign(client, updateDto);
     return this.clientRepository.save(client);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
-    const client = await this.findOne(id, userId);
+  async remove(id: string, organizationId: string): Promise<void> {
+    const client = await this.findOne(id, organizationId);
     await this.clientRepository.remove(client);
   }
 
-  async getClientStats(userId: string): Promise<{
+  async getClientStats(organizationId: string): Promise<{
     totalClients: number;
     newClientsThisMonth: number;
     repeatClients: number;
   }> {
     const totalClients = await this.clientRepository.count({
-      where: { userId },
+      where: { organizationId },
     });
 
     const startOfMonth = new Date();
@@ -226,13 +284,13 @@ export class ClientsService {
 
     const newClientsThisMonth = await this.clientRepository
       .createQueryBuilder('client')
-      .where('client.userId = :userId', { userId })
+      .where('client.organizationId = :organizationId', { organizationId })
       .andWhere('client.createdAt >= :startOfMonth', { startOfMonth })
       .getCount();
 
     const repeatClients = await this.clientRepository
       .createQueryBuilder('client')
-      .where('client.userId = :userId', { userId })
+      .where('client.organizationId = :organizationId', { organizationId })
       .andWhere('client.totalAppointments > 1')
       .getCount();
 

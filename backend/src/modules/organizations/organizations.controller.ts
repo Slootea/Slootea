@@ -7,15 +7,18 @@ import {
   Param, 
   Delete, 
   UseGuards,
-  Request
+  Request,
+  Headers
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgAdminOnly, OrgMemberOrAdmin } from '../auth/decorators/org-roles.decorator';
 import { UserOrganizationRole } from './entities/user-organization.entity';
 
 @ApiTags('organizations')
@@ -47,22 +50,31 @@ export class OrganizationsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update organization' })
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Update organization (Admin only)' })
   @ApiResponse({ status: 200, description: 'Organization updated successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto, @Request() req: any) {
     return this.organizationsService.update(id, updateOrganizationDto, req.user.dbUserId);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete organization' })
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Delete organization (Admin only)' })
   @ApiResponse({ status: 200, description: 'Organization deleted successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   remove(@Param('id') id: string, @Request() req: any) {
     return this.organizationsService.remove(id, req.user.dbUserId);
   }
 
   @Post(':id/invite')
-  @ApiOperation({ summary: 'Invite user to organization' })
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Invite user to organization (Admin only)' })
   @ApiResponse({ status: 201, description: 'User invited successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   inviteUser(@Param('id') id: string, @Body() inviteUserDto: InviteUserDto, @Request() req: any) {
     return this.organizationsService.inviteUser(id, inviteUserDto.email, UserOrganizationRole.RECRUITER, req.user.dbUserId);
   }
@@ -71,12 +83,16 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Get organization members' })
   @ApiResponse({ status: 200, description: 'Members retrieved successfully' })
   getMembers(@Param('id') id: string, @Request() req: any) {
-    return this.organizationsService.getMembers(id, req.user.dbUserId);
+    // Pass Clerk user ID (req.user.id) for Clerk API calls
+    return this.organizationsService.getMembers(id, req.user.id);
   }
 
   @Patch(':id/members/:memberId')
-  @ApiOperation({ summary: 'Update member role' })
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Update member role (Admin only)' })
   @ApiResponse({ status: 200, description: 'Member role updated successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   updateMemberRole(
     @Param('id') id: string, 
     @Param('memberId') memberId: string, 
@@ -87,16 +103,29 @@ export class OrganizationsController {
   }
 
   @Delete(':id/members/:memberId')
-  @ApiOperation({ summary: 'Remove member from organization' })
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Remove member from organization (Admin only)' })
   @ApiResponse({ status: 200, description: 'Member removed successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   removeMember(@Param('id') id: string, @Param('memberId') memberId: string, @Request() req: any) {
     return this.organizationsService.removeMember(id, memberId, req.user.dbUserId);
   }
 
   @Post('add')
-  @ApiOperation({ summary: 'Add member to organization by email' })
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Add member to organization by email (Admin only)' })
   @ApiResponse({ status: 201, description: 'Member added successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   addMember(@Body() inviteUserDto: InviteUserDto, @Request() req: any) {
     return this.organizationsService.addMember(inviteUserDto.organizationId, inviteUserDto.email, req.user.dbUserId);
+  }
+
+  @Get(':id/my-role')
+  @ApiOperation({ summary: 'Get current user role in organization' })
+  @ApiResponse({ status: 200, description: 'Role retrieved successfully' })
+  getMyRole(@Param('id') id: string, @Request() req: any) {
+    return this.organizationsService.getOrganizationRole(id, req.user.dbUserId);
   }
 }

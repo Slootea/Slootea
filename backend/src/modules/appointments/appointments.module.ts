@@ -9,16 +9,18 @@ import { BlockedTimesModule } from '../blocked-times/blocked-times.module';
 import { SettingsModule } from '../settings/settings.module';
 import { BookingLinksModule } from '../booking-links/booking-links.module';
 import { ClientsModule } from '../clients/clients.module';
+import { GamificationModule } from '../gamification/gamification.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Appointment]),
-    ServiceOptionsModule,
+    forwardRef(() => ServiceOptionsModule),
     AvailabilityModule,
     BlockedTimesModule,
     SettingsModule,
     BookingLinksModule,
     forwardRef(() => ClientsModule),
+    forwardRef(() => GamificationModule),
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],

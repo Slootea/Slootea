@@ -52,8 +52,8 @@ export class OrganizationsService {
 
     // Add creator as owner
     const userOrganization = this.userOrganizationsRepository.create({
-      user_id: userId,
-      organization_id: savedOrganization.id,
+      userId: userId,
+      organizationId: savedOrganization.id,
       role: UserOrganizationRole.OWNER,
     });
 
@@ -93,7 +93,7 @@ export class OrganizationsService {
 
     // Now fetch from local DB (which should be synced)
     const userOrganizations = await this.userOrganizationsRepository.find({
-      where: { user_id: userId },
+      where: { userId: userId },
       relations: ["organization"],
     });
 
@@ -121,13 +121,13 @@ export class OrganizationsService {
     const userOrganization = await this.userOrganizationsRepository.findOne({
       where: [
         {
-          user_id: userId,
-          organization_id: id,
+          userId: userId,
+          organizationId: id,
           role: UserOrganizationRole.OWNER,
         },
         {
-          user_id: userId,
-          organization_id: id,
+          userId: userId,
+          organizationId: id,
           role: UserOrganizationRole.ADMIN,
         },
       ],
@@ -147,8 +147,8 @@ export class OrganizationsService {
     // Check if user is owner
     const userOrganization = await this.userOrganizationsRepository.findOne({
       where: {
-        user_id: userId,
-        organization_id: id,
+        userId: userId,
+        organizationId: id,
         role: UserOrganizationRole.OWNER,
       },
     });
@@ -171,13 +171,13 @@ export class OrganizationsService {
     const inviterRole = await this.userOrganizationsRepository.findOne({
       where: [
         {
-          user_id: inviterId,
-          organization_id: organizationId,
+          userId: inviterId,
+          organizationId: organizationId,
           role: UserOrganizationRole.OWNER,
         },
         {
-          user_id: inviterId,
-          organization_id: organizationId,
+          userId: inviterId,
+          organizationId: organizationId,
           role: UserOrganizationRole.ADMIN,
         },
       ],
@@ -192,19 +192,46 @@ export class OrganizationsService {
   }
 
   async getMembers(organizationId: string, userId: string) {
-    // Check if user has access to this organization
-    const userOrganization = await this.userOrganizationsRepository.findOne({
-      where: { user_id: userId, organization_id: organizationId },
-    });
+    // Check if user has access to this organization via Clerk
+    const userMemberships = await this.clerkService.getUserOrganizations(userId);
+    const hasAccess = userMemberships.some(m => m.organizationId === organizationId);
 
-    if (!userOrganization) {
+    if (!hasAccess) {
       throw new ForbiddenException("Access denied to this organization");
     }
 
-    return this.userOrganizationsRepository.find({
-      where: { organization_id: organizationId },
-      relations: ["user"],
-    });
+    // Fetch members directly from Clerk
+    const clerkMembers = await this.clerkService.getOrganizationMembers(organizationId);
+    
+    // Map to include user details
+    const membersWithDetails = await Promise.all(
+      clerkMembers.map(async (member) => {
+        try {
+          const user = await this.clerkService.getUserById(member.userId);
+          return {
+            userId: member.userId,
+            organizationId,
+            role: member.role,
+            user: {
+              clerkId: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              imageUrl: user.imageUrl,
+            },
+          };
+        } catch {
+          return {
+            userId: member.userId,
+            organizationId,
+            role: member.role,
+            user: null,
+          };
+        }
+      })
+    );
+
+    return membersWithDetails;
   }
   async updateMemberRole(
     organizationId: string,
@@ -216,13 +243,13 @@ export class OrganizationsService {
     const adminRole = await this.userOrganizationsRepository.findOne({
       where: [
         {
-          user_id: adminId,
-          organization_id: organizationId,
+          userId: adminId,
+          organizationId: organizationId,
           role: UserOrganizationRole.OWNER,
         },
         {
-          user_id: adminId,
-          organization_id: organizationId,
+          userId: adminId,
+          organizationId: organizationId,
           role: UserOrganizationRole.ADMIN,
         },
       ],
@@ -235,7 +262,7 @@ export class OrganizationsService {
     }
 
     await this.userOrganizationsRepository.update(
-      { user_id: memberId, organization_id: organizationId },
+      { userId: memberId, organizationId: organizationId },
       { role }
     );
   }
@@ -248,13 +275,13 @@ export class OrganizationsService {
     const adminRole = await this.userOrganizationsRepository.findOne({
       where: [
         {
-          user_id: adminId,
-          organization_id: organizationId,
+          userId: adminId,
+          organizationId: organizationId,
           role: UserOrganizationRole.OWNER,
         },
         {
-          user_id: adminId,
-          organization_id: organizationId,
+          userId: adminId,
+          organizationId: organizationId,
           role: UserOrganizationRole.ADMIN,
         },
       ],
@@ -267,8 +294,8 @@ export class OrganizationsService {
     }
 
     await this.userOrganizationsRepository.delete({
-      user_id: memberId,
-      organization_id: organizationId,
+      userId: memberId,
+      organizationId: organizationId,
     });
   }
 
@@ -296,8 +323,8 @@ export class OrganizationsService {
     }
 
     await this.userOrganizationsRepository.save({
-      user_id: member.id,
-      organization_id: organizationId,
+      userId: member.id,
+      organizationId: organizationId,
       role: UserOrganizationRole.RECRUITER,
     });
   }
@@ -307,7 +334,7 @@ export class OrganizationsService {
     userId: string
   ): Promise<UserOrganizationRole> {
     const userOrganization = await this.userOrganizationsRepository.findOne({
-      where: { user_id: userId, organization_id: organizationId },
+      where: { userId: userId, organizationId: organizationId },
       select: ["role"],
     });
 
@@ -373,7 +400,7 @@ export class OrganizationsService {
 
     // Check if membership already exists
     const existing = await this.userOrganizationsRepository.findOne({
-      where: { user_id: userId, organization_id: organizationId },
+      where: { userId: userId, organizationId: organizationId },
     });
 
     if (existing) {
@@ -386,8 +413,8 @@ export class OrganizationsService {
     } else {
       // Create new membership
       const membership = this.userOrganizationsRepository.create({
-        user_id: userId,
-        organization_id: organizationId,
+        userId: userId,
+        organizationId: organizationId,
         role: localRole,
       });
       await this.userOrganizationsRepository.save(membership);
@@ -400,8 +427,8 @@ export class OrganizationsService {
    */
   async removeMembershipFromClerk(userId: string, organizationId: string): Promise<void> {
     await this.userOrganizationsRepository.delete({
-      user_id: userId,
-      organization_id: organizationId,
+      userId: userId,
+      organizationId: organizationId,
     });
     this.logger.log(`Removed membership for user ${userId} from org ${organizationId}`);
   }
