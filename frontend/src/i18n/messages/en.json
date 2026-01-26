@@ -590,25 +590,30 @@
       "editTitle": "Edit Service Option",
       "createTitle": "Create Service Option",
       "detailsTab": "Details",
-      "membersTab": "Members",
+      "membersTab": "Assign Members",
       "title": "Title",
       "titlePlaceholder": "e.g., Haircut, Consultation",
       "description": "Description",
       "descriptionPlaceholder": "Describe this service...",
       "imageUrl": "Image URL (optional)",
       "imageUrlPlaceholder": "https://example.com/image.jpg",
-      "duration": "Duration (minutes)"
+      "duration": "Duration (minutes)",
+      "assignMembersOnCreate": "Assign team members to this service after creation"
     },
     "assignDialog": {
       "title": "Assign Members",
       "description": "Select which team members can provide this service",
       "noMembers": "No team members found",
       "saving": "Saving...",
-      "save": "Save Assignments"
+      "save": "Save Assignments",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "membersSelected": "{count} member(s) selected"
     },
     "confirmDelete": "Are you sure you want to delete this service option?",
     "messages": {
       "created": "Service option created",
+      "createdWithAssignments": "Service option created with member assignments",
       "updated": "Service option updated",
       "deleted": "Service option deleted",
       "saveFailed": "Failed to save service option",

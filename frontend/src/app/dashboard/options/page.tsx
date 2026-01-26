@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +20,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Pencil, Trash2, Clock, Image, Users, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Image, Users, Loader2, CheckSquare, Square } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -38,6 +36,7 @@ export default function ServiceOptionsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOption, setEditingOption] = useState<ServiceOption | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("details");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -50,6 +49,7 @@ export default function ServiceOptionsPage() {
   const [serviceProviders, setServiceProviders] = useState<string[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [savingAssignments, setSavingAssignments] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const isAdmin = userRole === 'owner' || userRole === 'admin';
 
@@ -60,11 +60,9 @@ export default function ServiceOptionsPage() {
     try {
       let res;
       if (currentOrganization) {
-        // Fetch organization-level services when in org context
         setOrganizationContext(currentOrganization.id);
         res = await serviceOptionsApi.getAllForOrganization();
       } else {
-        // Fetch personal services
         res = await serviceOptionsApi.getAll();
       }
       setOptions(res.data);
@@ -79,38 +77,40 @@ export default function ServiceOptionsPage() {
     fetchOptions();
   }, [getToken, currentOrganization]);
 
-  const openCreateDialog = () => {
-    setEditingOption(null);
-    setFormData({ title: "", description: "", imageUrl: "", duration: 30 });
-    setDialogOpen(true);
-  };
-
-  const openEditDialog = async (option: ServiceOption) => {
-    setEditingOption(option);
-    setFormData({
-      title: option.title,
-      description: option.description || "",
-      imageUrl: option.imageUrl || "",
-      duration: option.duration,
-    });
-    setDialogOpen(true);
-
-    // Load members and assignments if in organization context
-    if (currentOrganization && isAdmin) {
-      loadMembersAndAssignments(option.id);
-    }
-  };
-
-  const loadMembersAndAssignments = async (serviceId: string) => {
+  const loadMembers = async () => {
+    if (!currentOrganization || !isAdmin) return;
+    
     setLoadingMembers(true);
     try {
       const token = await getToken();
       setAuthToken(token);
-      // Set organization context for API calls that require x-organization-id header
-      setOrganizationContext(currentOrganization!.id);
+      setOrganizationContext(currentOrganization.id);
+
+      const membersRes = await organizationsApi.getMembers(currentOrganization.id);
+      setMembers(membersRes.data);
+    } catch (error) {
+      console.error("Failed to load members", error);
+      toast({
+        title: tCommon("error"),
+        description: t("messages.loadMembersFailed"),
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const loadMembersAndAssignments = async (serviceId: string) => {
+    if (!currentOrganization || !isAdmin) return;
+    
+    setLoadingMembers(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
 
       const [membersRes, providersRes] = await Promise.all([
-        organizationsApi.getMembers(currentOrganization!.id),
+        organizationsApi.getMembers(currentOrganization.id),
         userServiceOptionsApi.getProvidersForService(serviceId),
       ]);
 
@@ -132,8 +132,44 @@ export default function ServiceOptionsPage() {
     }
   };
 
+  const openCreateDialog = async () => {
+    setEditingOption(null);
+    setFormData({ title: "", description: "", imageUrl: "", duration: 30 });
+    setServiceProviders([]);
+    setActiveTab("details");
+    setDialogOpen(true);
+
+    // Load members for assignment if in organization context
+    if (currentOrganization && isAdmin) {
+      await loadMembers();
+    }
+  };
+
+  const openEditDialog = async (option: ServiceOption) => {
+    setEditingOption(option);
+    setFormData({
+      title: option.title,
+      description: option.description || "",
+      imageUrl: option.imageUrl || "",
+      duration: option.duration,
+    });
+    setActiveTab("details");
+    setDialogOpen(true);
+
+    // Load members and assignments if in organization context
+    if (currentOrganization && isAdmin) {
+      await loadMembersAndAssignments(option.id);
+    }
+  };
+
   const handleSubmit = async () => {
+    setSubmitting(true);
     try {
+      const token = await getToken();
+      setAuthToken(token);
+
+      let createdServiceId: string | null = null;
+
       if (editingOption) {
         // Update service
         if (currentOrganization) {
@@ -147,11 +183,27 @@ export default function ServiceOptionsPage() {
         // Create service
         if (currentOrganization) {
           setOrganizationContext(currentOrganization.id);
-          await serviceOptionsApi.createForOrganization(formData);
+          const res = await serviceOptionsApi.createForOrganization(formData);
+          createdServiceId = res.data.id;
         } else {
           await serviceOptionsApi.create(formData);
         }
-        toast({ title: t("messages.created") });
+
+        // If we created a service in an organization and have selected members, assign them
+        if (createdServiceId && currentOrganization && isAdmin && serviceProviders.length > 0) {
+          try {
+            await userServiceOptionsApi.bulkAssignMembersToService(createdServiceId, serviceProviders);
+            toast({ title: t("messages.createdWithAssignments") });
+          } catch (assignError) {
+            console.error("Failed to assign members", assignError);
+            toast({ 
+              title: t("messages.created"),
+              description: t("messages.assignmentsFailed"),
+            });
+          }
+        } else {
+          toast({ title: t("messages.created") });
+        }
       }
       setDialogOpen(false);
       fetchOptions();
@@ -161,6 +213,8 @@ export default function ServiceOptionsPage() {
         description: t("messages.saveFailed"),
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -212,6 +266,15 @@ export default function ServiceOptionsPage() {
     );
   };
 
+  const handleSelectAllMembers = () => {
+    const allMemberIds = members.map((m) => m.userId);
+    setServiceProviders(allMemberIds);
+  };
+
+  const handleDeselectAllMembers = () => {
+    setServiceProviders([]);
+  };
+
   const saveAssignments = async () => {
     if (!editingOption) return;
 
@@ -219,41 +282,19 @@ export default function ServiceOptionsPage() {
     try {
       const token = await getToken();
       setAuthToken(token);
-      // Set organization context for API calls
       setOrganizationContext(currentOrganization!.id);
 
-      // Get current providers
-      const providersRes = await userServiceOptionsApi.getProvidersForService(editingOption.id);
-      // Map to Clerk IDs for comparison (serviceProviders state contains Clerk IDs)
-      const currentProviderClerkIds = providersRes.data
-        .filter((p: UserServiceOption) => p.user?.clerkId)
-        .map((p: UserServiceOption) => p.user!.clerkId);
-
-      // Determine who to add and who to remove (using Clerk IDs)
-      const toAdd = serviceProviders.filter((clerkId) => !currentProviderClerkIds.includes(clerkId));
-      const toRemove = currentProviderClerkIds.filter((clerkId: string) => !serviceProviders.includes(clerkId));
-
-      // Process additions (pass Clerk ID - backend will resolve to internal ID)
-      for (const clerkId of toAdd) {
-        await userServiceOptionsApi.assignServiceToMember(clerkId, {
-          serviceOptionId: editingOption.id,
-          isActive: true,
-        });
-      }
-
-      // Process removals (pass Clerk ID - backend will resolve to internal ID)
-      for (const clerkId of toRemove) {
-        await userServiceOptionsApi.removeServiceFromMember(clerkId, editingOption.id);
-      }
+      // Use the new bulk assignment endpoint
+      await userServiceOptionsApi.bulkAssignMembersToService(editingOption.id, serviceProviders);
 
       toast({
-        title: t("messages.assignmentsUpdated") || "Assignments updated",
-        description: t("messages.assignmentsUpdatedDesc") || "Member assignments have been saved",
+        title: t("messages.assignmentsUpdated"),
+        description: t("messages.assignmentsUpdatedDesc"),
       });
     } catch (error) {
       toast({
         title: tCommon("error"),
-        description: t("messages.assignmentsFailed") || "Failed to update assignments",
+        description: t("messages.assignmentsFailed"),
         variant: "destructive",
       });
     } finally {
@@ -275,6 +316,89 @@ export default function ServiceOptionsPage() {
       return `${member.user.firstName || ""} ${member.user.lastName || ""}`.trim();
     }
     return member.user?.email || "Unknown";
+  };
+
+  // Render member list component (reusable for both create and edit)
+  const renderMembersList = () => {
+    if (loadingMembers) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+
+    if (members.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          {t("assignDialog.noMembers")}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {/* Select All / Deselect All buttons */}
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm text-muted-foreground">
+            {t("assignDialog.membersSelected", { count: serviceProviders.length })}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSelectAllMembers}
+              disabled={serviceProviders.length === members.length}
+            >
+              <CheckSquare className="h-4 w-4 mr-1" />
+              {t("assignDialog.selectAll")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleDeselectAllMembers}
+              disabled={serviceProviders.length === 0}
+            >
+              <Square className="h-4 w-4 mr-1" />
+              {t("assignDialog.deselectAll")}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2 max-h-[250px] overflow-y-auto">
+          {members.map((member) => (
+            <div
+              key={member.userId}
+              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
+              onClick={() => handleToggleMemberAssignment(member.userId)}
+            >
+              <Checkbox
+                checked={serviceProviders.includes(member.userId)}
+                onCheckedChange={() => handleToggleMemberAssignment(member.userId)}
+              />
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="text-xs">
+                  {getMemberInitials(member)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {getMemberDisplayName(member)}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {member.user?.email}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs capitalize">
+                {member.role}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </>
+    );
   };
 
   if (loading) {
@@ -379,13 +503,14 @@ export default function ServiceOptionsPage() {
             </DialogTitle>
           </DialogHeader>
 
-          {editingOption && currentOrganization && isAdmin ? (
-            <Tabs defaultValue="details" className="w-full">
+          {currentOrganization && isAdmin ? (
+            // Organization admin: show tabs for both create and edit
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="details">{t("dialog.detailsTab") || "Details"}</TabsTrigger>
+                <TabsTrigger value="details">{t("dialog.detailsTab")}</TabsTrigger>
                 <TabsTrigger value="members" className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
-                  {t("dialog.membersTab") || "Members"}
+                  {t("dialog.membersTab")}
                   {serviceProviders.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 justify-center">
                       {serviceProviders.length}
@@ -446,70 +571,36 @@ export default function ServiceOptionsPage() {
 
               <TabsContent value="members" className="mt-4">
                 <p className="text-sm text-muted-foreground mb-4">
-                  {t("assignDialog.description") || "Select which team members can provide this service"}
+                  {t("assignDialog.description")}
                 </p>
-                {loadingMembers ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : members.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {t("assignDialog.noMembers") || "No team members found"}
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                    {members.map((member) => (
-                      <div
-                        key={member.userId}
-                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
-                        onClick={() => handleToggleMemberAssignment(member.userId)}
-                      >
-                        <Checkbox
-                          checked={serviceProviders.includes(member.userId)}
-                          onCheckedChange={() => handleToggleMemberAssignment(member.userId)}
-                        />
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-xs">
-                            {getMemberInitials(member)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {getMemberDisplayName(member)}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {member.user?.email}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {member.role}
-                        </Badge>
-                      </div>
-                    ))}
+                {renderMembersList()}
+                
+                {/* Save Assignments button only shows when editing */}
+                {editingOption && (
+                  <div className="mt-4">
+                    <Button
+                      onClick={saveAssignments}
+                      disabled={loadingMembers || savingAssignments}
+                      className="w-full"
+                    >
+                      {savingAssignments ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {t("assignDialog.saving")}
+                        </>
+                      ) : (
+                        <>
+                          <Users className="h-4 w-4 mr-2" />
+                          {t("assignDialog.save")}
+                        </>
+                      )}
+                    </Button>
                   </div>
                 )}
-                <div className="mt-4">
-                  <Button
-                    onClick={saveAssignments}
-                    disabled={loadingMembers || savingAssignments}
-                    className="w-full"
-                  >
-                    {savingAssignments ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {t("assignDialog.saving") || "Saving..."}
-                      </>
-                    ) : (
-                      <>
-                        <Users className="h-4 w-4 mr-2" />
-                        {t("assignDialog.save") || "Save Assignments"}
-                      </>
-                    )}
-                  </Button>
-                </div>
               </TabsContent>
             </Tabs>
           ) : (
+            // Personal service or non-admin: just show details form
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">{t("dialog.title")}</Label>
@@ -565,8 +656,15 @@ export default function ServiceOptionsPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               {tCommon("cancel")}
             </Button>
-            <Button onClick={handleSubmit} disabled={!formData.title}>
-              {editingOption ? tCommon("update") : tCommon("create")}
+            <Button onClick={handleSubmit} disabled={!formData.title || submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {tCommon("saving")}
+                </>
+              ) : (
+                editingOption ? tCommon("update") : tCommon("create")
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

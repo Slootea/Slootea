@@ -10,6 +10,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { BookingLinksModule } from '../booking-links/booking-links.module';
 import { ClientsModule } from '../clients/clients.module';
 import { GamificationModule } from '../gamification/gamification.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { GamificationModule } from '../gamification/gamification.module';
     BookingLinksModule,
     forwardRef(() => ClientsModule),
     forwardRef(() => GamificationModule),
+    UsersModule,
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],

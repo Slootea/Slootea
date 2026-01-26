@@ -69,6 +69,9 @@ export const userServiceOptionsApi = {
     api.delete(`/user-services/members/${memberId}/${serviceOptionId}`),
   getProvidersForService: (serviceOptionId: string) =>
     api.get(`/user-services/service/${serviceOptionId}/providers`),
+  // Bulk assign multiple members to a service (admin only)
+  bulkAssignMembersToService: (serviceOptionId: string, memberIds: string[]) =>
+    api.put(`/user-services/service/${serviceOptionId}/members`, { memberIds }),
 };
 
 // Availability API

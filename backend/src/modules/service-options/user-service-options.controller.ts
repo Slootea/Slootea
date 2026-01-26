@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { UserServiceOptionsService } from './user-service-options.service';
-import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto } from './dto/user-service-option.dto';
+import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto, BulkAssignMembersToServiceDto } from './dto/user-service-option.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgMemberOrAdmin, OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
@@ -198,6 +198,26 @@ export class UserServiceOptionsController {
   ) {
     return this.userServiceOptionsService.getProvidersForService(
       serviceOptionId,
+      organizationId,
+    );
+  }
+
+  /**
+   * Admin bulk assigns multiple members to a service
+   */
+  @Put('service/:serviceOptionId/members')
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Admin: Bulk assign members to a service' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  async bulkAssignMembersToService(
+    @Param('serviceOptionId') serviceOptionId: string,
+    @Headers('x-organization-id') organizationId: string,
+    @Body() dto: BulkAssignMembersToServiceDto,
+  ) {
+    return this.userServiceOptionsService.bulkAssignMembersToService(
+      serviceOptionId,
+      dto,
       organizationId,
     );
   }

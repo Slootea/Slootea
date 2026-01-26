@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import {
   appointmentsApi,
   serviceOptionsApi,
@@ -63,13 +63,17 @@ import {
   ArrowUpDown,
   RefreshCw,
   Users,
+  Bell,
+  Hourglass,
+  Sparkles,
 } from "lucide-react";
-import { format, parseISO, formatDistanceToNow, isToday, isTomorrow, isPast, differenceInMinutes } from "date-fns";
+import { format, parseISO, formatDistanceToNow, isToday, isTomorrow, isPast, isFuture, differenceInMinutes, differenceInHours, addHours } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 
 export default function AppointmentsPage() {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const t = useTranslations("appointmentsPage");
   const tCommon = useTranslations("common");
@@ -77,6 +81,7 @@ export default function AppointmentsPage() {
 
   // State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +109,33 @@ export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
+  // Computed: Get upcoming confirmed appointments (within next 24 hours)
+  const upcomingConfirmedAppointments = useMemo(() => {
+    const now = new Date();
+    const next24Hours = addHours(now, 24);
+    
+    return allAppointments.filter((apt) => {
+      const startTime = parseISO(apt.startTime);
+      return (
+        apt.status === AppointmentStatus.CONFIRMED &&
+        isFuture(startTime) &&
+        startTime <= next24Hours
+      );
+    }).sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
+  }, [allAppointments]);
+
+  // Computed: Get the next pending confirmation appointment for current user (provider)
+  const nextPendingAppointment = useMemo(() => {
+    const pending = allAppointments.filter(
+      (apt) => 
+        apt.status === AppointmentStatus.PENDING_CONFIRMATION && 
+        isFuture(parseISO(apt.startTime)) &&
+        apt.user?.clerkId === user?.id // Only show if current user is the provider
+    ).sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
+    
+    return pending.length > 0 ? pending[0] : null; // Return only the nearest one
+  }, [allAppointments, user?.id]);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -124,7 +156,7 @@ export default function AppointmentsPage() {
     }
 
     try {
-      // Build query params
+      // Build query params for paginated results
       const queryParams: Record<string, any> = {
         page: filters.page,
         limit: filters.limit,
@@ -157,17 +189,38 @@ export default function AppointmentsPage() {
         queryParams.userId = selectedMember;
       }
 
-      // Fetch appointments with pagination
-      const [appointmentsRes, nextRes, servicesRes] = await Promise.all([
-        appointmentsApi.getAll(queryParams),
-        appointmentsApi.getNext(),
-        serviceOptionsApi.getAll(),
-      ]);
+      // Fetch all appointments for sections (upcoming confirmed & pending) - only future appointments
+      const allQueryParams: Record<string, any> = {
+        page: 1,
+        limit: 50,
+        sortBy: "startTime",
+        sortOrder: "ASC",
+        startDate: new Date().toISOString(),
+      };
+      if (currentOrganization && isAdmin && selectedMember !== "all") {
+        allQueryParams.userId = selectedMember;
+      }
 
+      // Fetch data sequentially to avoid rate limiting
+      // First fetch paginated appointments (main list)
+      const appointmentsRes = await appointmentsApi.getAll(queryParams);
       const paginatedData = appointmentsRes.data as PaginatedResult<Appointment>;
       setAppointments(paginatedData.data);
       setPagination(paginatedData.meta);
-      setNextAppointment(nextRes.data);
+
+      // Then fetch future appointments for sections (with a small delay)
+      const allAppointmentsRes = await appointmentsApi.getAll(allQueryParams);
+      const allData = allAppointmentsRes.data as PaginatedResult<Appointment>;
+      setAllAppointments(allData.data);
+      
+      // Derive next appointment from allAppointments (confirmed, future, sorted by startTime ASC)
+      const confirmedFuture = allData.data.filter(
+        (apt) => apt.status === AppointmentStatus.CONFIRMED
+      );
+      setNextAppointment(confirmedFuture.length > 0 ? confirmedFuture[0] : null);
+
+      // Finally fetch service options
+      const servicesRes = await serviceOptionsApi.getAll();
       setServiceOptions(servicesRes.data);
     } catch (error) {
       console.error("Failed to fetch data", error);
@@ -180,7 +233,7 @@ export default function AppointmentsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [getToken, filters, debouncedSearch, toast, currentOrganization, isAdmin, selectedMember]);
+  }, [getToken, filters, debouncedSearch, toast, currentOrganization, isAdmin, selectedMember, t, tCommon]);
 
   useEffect(() => {
     fetchData();
@@ -263,25 +316,36 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Next Appointment Highlight */}
-      {nextAppointment && (
-        <NextAppointmentCard
-          appointment={nextAppointment}
+    <div className="space-y-8">
+      {/* Upcoming Confirmed Section - Only visible when there are approaching confirmed appointments */}
+      {upcomingConfirmedAppointments.length > 0 && (
+        <UpcomingConfirmedSection
+          appointments={upcomingConfirmedAppointments}
           onStatusChange={handleStatusChange}
+          onCancel={handleCancel}
         />
       )}
 
-      {/* Main Content */}
-      <Card>
-        <CardHeader className="pb-3">
+      {/* Pending Confirmation Section - Shows next pending appointment for current provider */}
+      {nextPendingAppointment && (
+        <PendingConfirmationSection
+          appointment={nextPendingAppointment}
+          onStatusChange={handleStatusChange}
+          onCancel={handleCancel}
+        />
+      )}
+
+      {/* Main Appointments List */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4 border-b bg-muted/30">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-xl font-semibold">
-                Appointments
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                All Appointments
               </CardTitle>
-              <CardDescription>
-                Manage and track all your appointments
+              <CardDescription className="mt-1">
+                Complete history and management of all appointments
               </CardDescription>
             </div>
             <Button
@@ -289,6 +353,7 @@ export default function AppointmentsPage() {
               size="sm"
               onClick={() => fetchData(true)}
               disabled={refreshing}
+              className="self-start sm:self-auto"
             >
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
@@ -298,7 +363,7 @@ export default function AppointmentsPage() {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pt-6">
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="mb-4 flex-wrap h-auto gap-1">
@@ -473,141 +538,336 @@ export default function AppointmentsPage() {
   );
 }
 
-// Next Appointment Highlight Card
-function NextAppointmentCard({
-  appointment,
+// Upcoming Confirmed Section - Shows confirmed appointments approaching within 24 hours
+function UpcomingConfirmedSection({
+  appointments,
   onStatusChange,
+  onCancel,
 }: {
-  appointment: Appointment;
+  appointments: Appointment[];
   onStatusChange: (id: string, status: AppointmentStatus) => void;
+  onCancel: (id: string) => void;
 }) {
-  const startTime = parseISO(appointment.startTime);
-  const minutesUntil = differenceInMinutes(startTime, new Date());
-  const isImminent = minutesUntil <= 60 && minutesUntil > 0;
-  const isNow = minutesUntil <= 0 && minutesUntil > -(appointment.serviceOption?.duration || 60);
-
   return (
-    <Card
-      className={`border-2 ${
-        isNow
-          ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-          : isImminent
-          ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20"
-          : "border-primary/50 bg-primary/5"
-      }`}
-    >
-      <CardHeader className="pb-2">
+    <Card className="border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 shadow-lg overflow-hidden">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className={`p-2 rounded-full ${
-                isNow
-                  ? "bg-green-500"
-                  : isImminent
-                  ? "bg-yellow-500"
-                  : "bg-primary"
-              }`}
-            >
-              <CalendarDays className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg">
-                {isNow
-                  ? "Happening Now"
-                  : isImminent
-                  ? "Starting Soon"
-                  : "Next Appointment"}
+              <CardTitle className="text-lg font-semibold text-emerald-900 dark:text-emerald-100">
+                Confirmed & Coming Up
               </CardTitle>
-              <CardDescription>
-                {isNow
-                  ? "In progress"
-                  : formatDistanceToNow(startTime, { addSuffix: true })}
+              <CardDescription className="text-emerald-700/70 dark:text-emerald-300/70">
+                {appointments.length} confirmed appointment{appointments.length !== 1 ? 's' : ''} in the next 24 hours
               </CardDescription>
             </div>
           </div>
-          <StatusBadge status={appointment.status} size="lg" />
+          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+            Ready
+          </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="flex items-start gap-3">
-            <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium">{appointment.clientName}</p>
-              <p className="text-sm text-muted-foreground">
-                {appointment.clientEmail}
-              </p>
-              {appointment.clientPhone && (
-                <p className="text-sm text-muted-foreground">
-                  {appointment.clientPhone}
-                </p>
-              )}
-            </div>
-          </div>
+      <CardContent className="pt-0">
+        <div className="grid gap-3">
+          {appointments.slice(0, 5).map((appointment, index) => (
+            <UpcomingAppointmentCard
+              key={appointment.id}
+              appointment={appointment}
+              onStatusChange={onStatusChange}
+              onCancel={onCancel}
+              isFirst={index === 0}
+            />
+          ))}
+          {appointments.length > 5 && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center py-2">
+              +{appointments.length - 5} more confirmed appointments
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-          <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium">
+// Individual upcoming appointment card
+function UpcomingAppointmentCard({
+  appointment,
+  onStatusChange,
+  onCancel,
+  isFirst,
+}: {
+  appointment: Appointment;
+  onStatusChange: (id: string, status: AppointmentStatus) => void;
+  onCancel: (id: string) => void;
+  isFirst: boolean;
+}) {
+  const startTime = parseISO(appointment.startTime);
+  const endTime = parseISO(appointment.endTime);
+  const minutesUntil = differenceInMinutes(startTime, new Date());
+  const hoursUntil = differenceInHours(startTime, new Date());
+  const isImminent = minutesUntil <= 60 && minutesUntil > 0;
+  const isNow = minutesUntil <= 0 && minutesUntil > -(appointment.serviceOption?.duration || 60);
+
+  const getTimeLabel = () => {
+    if (isNow) return "Happening now";
+    if (minutesUntil < 60) return `In ${minutesUntil} minutes`;
+    if (hoursUntil < 24) return `In ${hoursUntil} hour${hoursUntil !== 1 ? 's' : ''}`;
+    return formatDistanceToNow(startTime, { addSuffix: true });
+  };
+
+  return (
+    <div
+      className={`relative p-4 rounded-xl border transition-all ${
+        isNow
+          ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 shadow-md"
+          : isImminent
+          ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50"
+          : "bg-white/80 dark:bg-gray-900/40 border-emerald-100 dark:border-emerald-800/30"
+      } ${isFirst ? "ring-2 ring-emerald-500/20" : ""}`}
+    >
+      {(isNow || isImminent) && (
+        <div className={`absolute -top-2 -right-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+          isNow
+            ? "bg-green-500 text-white"
+            : "bg-amber-500 text-white"
+        }`}>
+          {isNow ? "NOW" : "SOON"}
+        </div>
+      )}
+      
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className={`p-2 rounded-lg ${
+            isNow
+              ? "bg-green-200 dark:bg-green-800"
+              : isImminent
+              ? "bg-amber-200 dark:bg-amber-800"
+              : "bg-emerald-100 dark:bg-emerald-800/50"
+          }`}>
+            <Clock className={`h-5 w-5 ${
+              isNow
+                ? "text-green-700 dark:text-green-300"
+                : isImminent
+                ? "text-amber-700 dark:text-amber-300"
+                : "text-emerald-600 dark:text-emerald-400"
+            }`} />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                {appointment.clientName}
+              </h4>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                isNow
+                  ? "bg-green-500/10 text-green-700 dark:text-green-300"
+                  : isImminent
+                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                  : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              }`}>
+                {getTimeLabel()}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
                 {isToday(startTime)
                   ? "Today"
                   : isTomorrow(startTime)
                   ? "Tomorrow"
-                  : format(startTime, "EEEE, MMM d")}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {format(startTime, "h:mm a")} -{" "}
-                {format(parseISO(appointment.endTime), "h:mm a")}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <Timer className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium">
+                  : format(startTime, "MMM d")}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
+              </span>
+              <span className="hidden sm:flex items-center gap-1">
+                <Timer className="h-3.5 w-3.5" />
                 {appointment.serviceOption?.title || "Service"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {appointment.serviceOption?.duration} minutes
-              </p>
+              </span>
             </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            {appointment.status === AppointmentStatus.PENDING_CONFIRMATION && (
-              <Button
-                size="sm"
-                onClick={() =>
-                  onStatusChange(appointment.id, AppointmentStatus.CONFIRMED)
-                }
-              >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                Confirm
-              </Button>
-            )}
-            {appointment.status === AppointmentStatus.CONFIRMED && (
-              <Button
-                size="sm"
-                onClick={() =>
-                  onStatusChange(appointment.id, AppointmentStatus.COMPLETED)
-                }
-              >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                Complete
-              </Button>
-            )}
           </div>
         </div>
 
-        {appointment.notes && (
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-            <p className="text-sm">
-              <span className="font-medium">Notes: </span>
-              {appointment.notes}
-            </p>
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => onStatusChange(appointment.id, AppointmentStatus.COMPLETED)}
+          >
+            <CheckCircle2 className="h-4 w-4 mr-1" />
+            Complete
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => onStatusChange(appointment.id, AppointmentStatus.NO_SHOW)}
+              >
+                <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
+                Mark No Show
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onCancel(appointment.id)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Cancel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      
+      {appointment.notes && (
+        <div className="mt-3 pt-3 border-t border-emerald-100 dark:border-emerald-800/30">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium">Notes:</span> {appointment.notes}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Pending Confirmation Section - Shows single pending appointment
+function PendingConfirmationSection({
+  appointment,
+  onStatusChange,
+  onCancel,
+}: {
+  appointment: Appointment;
+  onStatusChange: (id: string, status: AppointmentStatus) => void;
+  onCancel: (id: string) => void;
+}) {
+  const startTime = parseISO(appointment.startTime);
+  const endTime = parseISO(appointment.endTime);
+
+  return (
+    <Card className="border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20 shadow-lg overflow-hidden">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-md">
+              <Hourglass className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                Pending Confirmation
+              </CardTitle>
+              <CardDescription className="text-amber-700/70 dark:text-amber-300/70">
+                New booking request awaiting your response
+              </CardDescription>
+            </div>
           </div>
-        )}
+          <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">
+            <Bell className="h-3.5 w-3.5 mr-1" />
+            Action Required
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="p-5 rounded-xl bg-white/80 dark:bg-gray-900/40 border border-amber-100 dark:border-amber-800/30">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Client Info */}
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-800/50">
+                <User className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {appointment.clientName}
+                </h4>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {appointment.clientEmail}
+                </p>
+                {appointment.clientPhone && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                    <Phone className="h-3.5 w-3.5" />
+                    {appointment.clientPhone}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Appointment Details */}
+            <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30">
+                  <Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
+                    {isToday(startTime)
+                      ? "Today"
+                      : isTomorrow(startTime)
+                      ? "Tomorrow"
+                      : format(startTime, "EEE, MMM d")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm">
+                <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30">
+                  <Timer className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
+                    {appointment.serviceOption?.title || "Service"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {appointment.serviceOption?.duration || 30} minutes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 lg:ml-auto">
+              <Button
+                size="lg"
+                variant="default"
+                className="bg-emerald-600 hover:bg-emerald-700 shadow-md"
+                onClick={() => onStatusChange(appointment.id, AppointmentStatus.CONFIRMED)}
+              >
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+                Confirm
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-800"
+                onClick={() => onCancel(appointment.id)}
+              >
+                <XCircle className="h-5 w-5 mr-2" />
+                Decline
+              </Button>
+            </div>
+          </div>
+          
+          {appointment.notes && (
+            <div className="mt-4 pt-4 border-t border-amber-100 dark:border-amber-800/30">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Client Notes:</span>{" "}
+                {appointment.notes}
+              </p>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -976,26 +1236,29 @@ function EmptyState() {
 // Loading Skeleton
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Next appointment skeleton */}
-      <Card className="border-2 border-primary/50">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-10 rounded-full" />
+    <div className="space-y-8">
+      {/* Upcoming Confirmed Skeleton */}
+      <Card className="border-2 border-emerald-200 dark:border-emerald-800">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-xl" />
             <div className="space-y-2">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-5 w-44" />
+              <Skeleton className="h-4 w-56" />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <Skeleton className="h-5 w-5 mt-0.5" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-32" />
+        <CardContent className="pt-0">
+          <div className="space-y-3">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="p-4 rounded-xl border bg-white/80 dark:bg-gray-900/40">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <Skeleton className="h-9 w-24" />
                 </div>
               </div>
             ))}
@@ -1003,22 +1266,59 @@ function LoadingSkeleton() {
         </CardContent>
       </Card>
 
-      {/* Main card skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48" />
+      {/* Pending Confirmation Skeleton - Single card */}
+      <Card className="border-2 border-amber-200 dark:border-amber-800">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-52" />
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
+          <div className="p-5 rounded-xl border bg-white/80 dark:bg-gray-900/40">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-12 w-12 rounded-xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-4 w-44" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </div>
+              <div className="flex items-center gap-4 lg:ml-auto">
+                <Skeleton className="h-10 w-28" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main List Skeleton */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4 border-b bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-36" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
           <div className="space-y-4">
-            <div className="flex gap-2">
-              {[...Array(5)].map((_, i) => (
+            <div className="flex gap-2 flex-wrap">
+              {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-9 w-20" />
               ))}
             </div>
-            <div className="flex gap-3">
-              <Skeleton className="h-10 flex-1" />
+            <div className="flex gap-3 flex-wrap">
+              <Skeleton className="h-10 flex-1 min-w-[200px]" />
               <Skeleton className="h-10 w-[200px]" />
+              <Skeleton className="h-10 w-10" />
             </div>
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (

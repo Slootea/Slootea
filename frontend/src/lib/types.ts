@@ -188,6 +188,13 @@ export interface Appointment {
   serviceOptionId: string;
   serviceOption?: ServiceOption;
   bookingLinkId?: string;
+  user?: {
+    id: string;
+    clerkId: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

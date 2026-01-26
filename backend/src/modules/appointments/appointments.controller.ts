@@ -20,11 +20,15 @@ import {
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('appointments')
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   // Protected routes (require authentication)
   @Get()
@@ -39,16 +43,23 @@ export class AppointmentsController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiQuery({ name: 'serviceOptionId', required: false, type: String })
-  @ApiQuery({ name: 'userId', required: false, type: String, description: 'Filter by user ID (org admin only)' })
+  @ApiQuery({ name: 'userId', required: false, type: String, description: 'Filter by user Clerk ID (org admin only)' })
   async findAll(
     @Request() req: any,
     @Query() query: AppointmentQueryDto,
     @Headers('x-organization-id') organizationId?: string,
   ) {
-    // If organization admin and userId filter is specified, use that userId
-    // Otherwise use the current user's ID
+    // If organization admin and userId filter is specified, convert Clerk ID to database user ID
     const isOrgAdmin = req.user.orgRole === 'org:admin';
-    const targetUserId = (isOrgAdmin && query.userId) ? query.userId : req.user.dbUserId;
+    let targetUserId = req.user.dbUserId;
+    
+    if (isOrgAdmin && query.userId) {
+      // userId from query is a Clerk ID, need to convert to database ID
+      const targetUser = await this.usersService.findByClerkId(query.userId);
+      if (targetUser) {
+        targetUserId = targetUser.id;
+      }
+    }
     
     // If admin filtering all members (no specific userId), get all org appointments
     if (isOrgAdmin && organizationId && !query.userId) {

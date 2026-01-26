@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { UserServiceOption } from './entities/user-service-option.entity';
 import { ServiceOption } from './entities/service-option.entity';
-import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto } from './dto/user-service-option.dto';
+import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto, BulkAssignMembersToServiceDto } from './dto/user-service-option.dto';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -250,5 +250,67 @@ export class UserServiceOptionsService {
       where: { serviceOptionId },
       relations: ['user'],
     });
+  }
+
+  /**
+   * Bulk assign multiple members to a service (admin only)
+   * This replaces all existing assignments with the provided member list
+   */
+  async bulkAssignMembersToService(
+    serviceOptionId: string,
+    dto: BulkAssignMembersToServiceDto,
+    organizationId: string,
+  ): Promise<{ added: number; removed: number; total: number }> {
+    // Verify service exists in the organization
+    const service = await this.serviceOptionRepository.findOne({
+      where: { id: serviceOptionId, organizationId },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found in this organization');
+    }
+
+    // Resolve all member IDs (they might be Clerk IDs or internal UUIDs)
+    const resolvedUserIds: string[] = [];
+    for (const memberId of dto.memberIds) {
+      const userId = await this.resolveUserId(memberId);
+      resolvedUserIds.push(userId);
+    }
+
+    // Get current assignments for this service
+    const currentAssignments = await this.userServiceOptionRepository.find({
+      where: { serviceOptionId },
+    });
+    const currentUserIds = currentAssignments.map(a => a.userId);
+
+    // Determine who to add and who to remove
+    const toAdd = resolvedUserIds.filter(id => !currentUserIds.includes(id));
+    const toRemove = currentUserIds.filter(id => !resolvedUserIds.includes(id));
+
+    // Remove assignments for users no longer in the list
+    if (toRemove.length > 0) {
+      await this.userServiceOptionRepository.delete({
+        serviceOptionId,
+        userId: In(toRemove),
+      });
+    }
+
+    // Add new assignments
+    if (toAdd.length > 0) {
+      const newAssignments = toAdd.map(userId =>
+        this.userServiceOptionRepository.create({
+          userId,
+          serviceOptionId,
+          isActive: true,
+        }),
+      );
+      await this.userServiceOptionRepository.save(newAssignments);
+    }
+
+    return {
+      added: toAdd.length,
+      removed: toRemove.length,
+      total: resolvedUserIds.length,
+    };
   }
 }

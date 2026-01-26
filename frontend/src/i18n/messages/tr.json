@@ -580,6 +580,7 @@
     "description": "Müşterilerin rezervasyon yapabileceği hizmetleri tanımlayın. Her seçeneğin kendi süresi vardır.",
     "addService": "Hizmet Ekle",
     "noDescription": "Açıklama yok",
+    "assignMembers": "Ata",
     "empty": {
       "title": "Henüz hizmet seçeneği yok",
       "description": "İlkini oluşturun!",
@@ -588,19 +589,40 @@
     "dialog": {
       "editTitle": "Hizmet Seçeneğini Düzenle",
       "createTitle": "Hizmet Seçeneği Oluştur",
+      "detailsTab": "Detaylar",
+      "membersTab": "Üye Ata",
       "title": "Başlık",
       "titlePlaceholder": "örn., Saç Kesimi, Danışmanlık",
       "description": "Açıklama",
       "descriptionPlaceholder": "Bu hizmeti tanımlayın...",
       "imageUrl": "Resim URL'si (isteğe bağlı)",
       "imageUrlPlaceholder": "https://example.com/resim.jpg",
-      "duration": "Süre (dakika)"
+      "duration": "Süre (dakika)",
+      "assignMembersOnCreate": "Oluşturduktan sonra bu hizmete ekip üyelerini atayın"
+    },
+    "assignDialog": {
+      "title": "Üye Ata",
+      "description": "Bu hizmeti sunabilecek ekip üyelerini seçin",
+      "noMembers": "Ekip üyesi bulunamadı",
+      "saving": "Kaydediliyor...",
+      "save": "Atamaları Kaydet",
+      "selectAll": "Tümünü Seç",
+      "deselectAll": "Tümünü Kaldır",
+      "membersSelected": "{count} üye seçildi"
     },
     "confirmDelete": "Bu hizmet seçeneğini silmek istediğinizden emin misiniz?",
     "messages": {
       "created": "Hizmet seçeneği oluşturuldu",
+      "createdWithAssignments": "Hizmet seçeneği üye atamaları ile oluşturuldu",
       "updated": "Hizmet seçeneği güncellendi",
-      "deleted": "Hizmet seçeneği silindi"
+      "deleted": "Hizmet seçeneği silindi",
+      "saveFailed": "Hizmet seçeneği kaydedilemedi",
+      "deleteFailed": "Hizmet seçeneği silinemedi",
+      "updateFailed": "Hizmet seçeneği güncellenemedi",
+      "loadMembersFailed": "Üyeler yüklenemedi",
+      "assignmentsUpdated": "Atamalar güncellendi",
+      "assignmentsUpdatedDesc": "Üye atamaları kaydedildi",
+      "assignmentsFailed": "Atamalar güncellenemedi"
     }
   },
   "calendarPage": {

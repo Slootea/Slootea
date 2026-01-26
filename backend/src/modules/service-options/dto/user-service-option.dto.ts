@@ -31,6 +31,13 @@ export class BulkAssignServicesDto {
   serviceOptionIds: string[];
 }
 
+export class BulkAssignMembersToServiceDto {
+  @ApiProperty({ description: 'Array of member IDs (Clerk IDs or internal UUIDs) to assign to this service', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  memberIds: string[];
+}
+
 export class UpdateUserServiceDto {
   @ApiPropertyOptional({ description: 'Whether this assignment is active' })
   @IsOptional()
