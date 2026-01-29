@@ -5,7 +5,7 @@ import {
   IsBoolean,
   Min,
   Max,
-  IsUrl,
+  Matches,
   ValidateIf,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -20,11 +20,14 @@ export class CreateServiceOptionDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Image URL for the service' })
+  @ApiPropertyOptional({ description: 'Base64 encoded image data (data:image/...;base64,...)' })
   @IsOptional()
-  @ValidateIf((o) => o.imageUrl !== '')
-  @IsUrl()
-  imageUrl?: string;
+  @ValidateIf((o) => o.imageBase64 !== '' && o.imageBase64 !== null)
+  @IsString()
+  @Matches(/^data:image\/(png|jpeg|jpg|gif|webp);base64,/, {
+    message: 'Image must be a valid base64 encoded image (data:image/...;base64,...)',
+  })
+  imageBase64?: string;
 
   @ApiProperty({ description: 'Duration in minutes', minimum: 5, maximum: 480 })
   @IsInt()
@@ -54,11 +57,14 @@ export class UpdateServiceOptionDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Base64 encoded image data (data:image/...;base64,...)' })
   @IsOptional()
-  @ValidateIf((o) => o.imageUrl !== '')
-  @IsUrl()
-  imageUrl?: string;
+  @ValidateIf((o) => o.imageBase64 !== '' && o.imageBase64 !== null)
+  @IsString()
+  @Matches(/^data:image\/(png|jpeg|jpg|gif|webp);base64,/, {
+    message: 'Image must be a valid base64 encoded image (data:image/...;base64,...)',
+  })
+  imageBase64?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

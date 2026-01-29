@@ -121,10 +121,10 @@ export default function BookingPage() {
                 onClick={() => handleSelectService(option)}
               >
                 <CardContent className="p-0">
-                  {option.imageUrl ? (
+                  {option.imageBase64 ? (
                     <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                       <img
-                        src={option.imageUrl}
+                        src={option.imageBase64}
                         alt={option.title}
                         className="w-full h-full object-cover"
                       />

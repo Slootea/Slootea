@@ -490,9 +490,9 @@ export default function GamifiedBookingPage() {
                       onClick={() => handleSelectService(option)}
                     >
                       <CardContent className="p-4 flex items-center gap-4">
-                        {option.imageUrl ? (
+                        {option.imageBase64 ? (
                           <img
-                            src={option.imageUrl}
+                            src={option.imageBase64}
                             alt={option.title}
                             className="w-20 h-20 rounded-lg object-cover"
                           />

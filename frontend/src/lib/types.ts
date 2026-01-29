@@ -17,7 +17,7 @@ export interface ServiceOption {
   id: string;
   title: string;
   description?: string;
-  imageUrl?: string;
+  imageBase64?: string;
   duration: number;
   isActive: boolean;
   sortOrder: number;

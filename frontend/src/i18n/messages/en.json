@@ -595,8 +595,8 @@
       "titlePlaceholder": "e.g., Haircut, Consultation",
       "description": "Description",
       "descriptionPlaceholder": "Describe this service...",
-      "imageUrl": "Image URL (optional)",
-      "imageUrlPlaceholder": "https://example.com/image.jpg",
+      "image": "Image",
+      "imagePlaceholder": "Click to upload image",
       "duration": "Duration (minutes)",
       "assignMembersOnCreate": "Assign team members to this service after creation"
     },

@@ -595,8 +595,8 @@
       "titlePlaceholder": "örn., Saç Kesimi, Danışmanlık",
       "description": "Açıklama",
       "descriptionPlaceholder": "Bu hizmeti tanımlayın...",
-      "imageUrl": "Resim URL'si (isteğe bağlı)",
-      "imageUrlPlaceholder": "https://example.com/resim.jpg",
+      "image": "Resim",
+      "imagePlaceholder": "Resim yüklemek için tıklayın",
       "duration": "Süre (dakika)",
       "assignMembersOnCreate": "Oluşturduktan sonra bu hizmete ekip üyelerini atayın"
     },

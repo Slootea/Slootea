@@ -25,8 +25,8 @@ export class ServiceOption {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ nullable: true })
-  imageUrl: string;
+  @Column({ type: 'text', nullable: true, comment: 'Base64 encoded image data' })
+  imageBase64: string;
 
   @Column({ type: 'int', comment: 'Duration in minutes' })
   duration: number;

@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ImageCropUpload } from "@/components/ui/image-crop-upload";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +41,7 @@ export default function ServiceOptionsPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    imageUrl: "",
+    imageBase64: "" as string | undefined,
     duration: 30,
   });
 
@@ -134,7 +135,7 @@ export default function ServiceOptionsPage() {
 
   const openCreateDialog = async () => {
     setEditingOption(null);
-    setFormData({ title: "", description: "", imageUrl: "", duration: 30 });
+    setFormData({ title: "", description: "", imageBase64: undefined, duration: 30 });
     setServiceProviders([]);
     setActiveTab("details");
     setDialogOpen(true);
@@ -150,7 +151,7 @@ export default function ServiceOptionsPage() {
     setFormData({
       title: option.title,
       description: option.description || "",
-      imageUrl: option.imageUrl || "",
+      imageBase64: option.imageBase64 || undefined,
       duration: option.duration,
     });
     setActiveTab("details");
@@ -449,16 +450,16 @@ export default function ServiceOptionsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {option.imageUrl && (
+                {option.imageBase64 && (
                   <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      src={option.imageUrl}
+                      src={option.imageBase64}
                       alt={option.title}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
-                {!option.imageUrl && (
+                {!option.imageBase64 && (
                   <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
                     <Image className="h-12 w-12 text-gray-300" />
                   </div>
@@ -544,14 +545,14 @@ export default function ServiceOptionsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="imageUrl">{t("dialog.imageUrl")}</Label>
-                  <Input
-                    id="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={(e) =>
-                      setFormData({ ...formData, imageUrl: e.target.value })
+                  <Label>{t("dialog.image")}</Label>
+                  <ImageCropUpload
+                    value={formData.imageBase64}
+                    onChange={(base64) =>
+                      setFormData({ ...formData, imageBase64: base64 })
                     }
-                    placeholder="https://example.com/image.jpg"
+                    aspectRatio={16 / 9}
+                    placeholder={t("dialog.imagePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
@@ -626,14 +627,14 @@ export default function ServiceOptionsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="imageUrl">{t("dialog.imageUrl")}</Label>
-                <Input
-                  id="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
+                <Label>{t("dialog.image")}</Label>
+                <ImageCropUpload
+                  value={formData.imageBase64}
+                  onChange={(base64) =>
+                    setFormData({ ...formData, imageBase64: base64 })
                   }
-                  placeholder="https://example.com/image.jpg"
+                  aspectRatio={16 / 9}
+                  placeholder={t("dialog.imagePlaceholder")}
                 />
               </div>
               <div className="space-y-2">

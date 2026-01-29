@@ -31,18 +31,18 @@ export const setOrganizationContext = (organizationId: string | null) => {
 export const serviceOptionsApi = {
   getAll: () => api.get('/service-options'),
   getOne: (id: string) => api.get(`/service-options/${id}`),
-  create: (data: { title: string; description?: string; imageUrl?: string; duration: number }) =>
+  create: (data: { title: string; description?: string; imageBase64?: string; duration: number }) =>
     api.post('/service-options', data),
-  update: (id: string, data: Partial<{ title: string; description: string; imageUrl: string; duration: number; isActive: boolean }>) =>
+  update: (id: string, data: Partial<{ title: string; description: string; imageBase64: string; duration: number; isActive: boolean }>) =>
     api.put(`/service-options/${id}`, data),
   delete: (id: string) => api.delete(`/service-options/${id}`),
   // Organization service options (admin)
   getAllForOrganization: () => api.get('/service-options/organization/all'),
   getActiveForOrganization: () => api.get('/service-options/organization/active'),
   getOneInOrganization: (id: string) => api.get(`/service-options/organization/${id}`),
-  createForOrganization: (data: { title: string; description?: string; imageUrl?: string; duration: number }) =>
+  createForOrganization: (data: { title: string; description?: string; imageBase64?: string; duration: number }) =>
     api.post('/service-options/organization', data),
-  updateInOrganization: (id: string, data: Partial<{ title: string; description: string; imageUrl: string; duration: number; isActive: boolean }>) =>
+  updateInOrganization: (id: string, data: Partial<{ title: string; description: string; imageBase64: string; duration: number; isActive: boolean }>) =>
     api.put(`/service-options/organization/${id}`, data),
   deleteFromOrganization: (id: string) => api.delete(`/service-options/organization/${id}`),
 };
