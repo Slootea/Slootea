@@ -31,9 +31,10 @@ export class CreateAppointmentDto {
   @IsString()
   clientName: string;
 
-  @ApiProperty({ description: 'Client email' })
+  @ApiPropertyOptional({ description: 'Client email' })
+  @IsOptional()
   @IsEmail()
-  clientEmail: string;
+  clientEmail?: string;
 
   @ApiPropertyOptional({ description: 'Client phone' })
   @IsOptional()

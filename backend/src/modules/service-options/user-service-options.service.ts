@@ -5,6 +5,7 @@ import { UserServiceOption } from './entities/user-service-option.entity';
 import { ServiceOption } from './entities/service-option.entity';
 import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto, BulkAssignMembersToServiceDto } from './dto/user-service-option.dto';
 import { UsersService } from '../users/users.service';
+import { ClerkService } from '../auth/clerk.service';
 
 @Injectable()
 export class UserServiceOptionsService {
@@ -14,6 +15,7 @@ export class UserServiceOptionsService {
     @InjectRepository(ServiceOption)
     private readonly serviceOptionRepository: Repository<ServiceOption>,
     private readonly usersService: UsersService,
+    private readonly clerkService: ClerkService,
   ) {}
 
   /**
@@ -230,14 +232,21 @@ export class UserServiceOptionsService {
   }
 
   /**
-   * Get providers for a service in an organization (for booking)
+   * Get providers for a service in an organization (for booking/dashboard)
+   * Returns enhanced provider data with Clerk profile info
    */
   async getProvidersForService(
     serviceOptionId: string,
     organizationId: string,
-  ): Promise<UserServiceOption[]> {
-    // Simple query - just get assignments for this service
-    // and verify the service belongs to the organization
+  ): Promise<Array<{
+    id: string;
+    clerkId: string;
+    firstName?: string;
+    lastName?: string;
+    imageUrl?: string;
+    email: string;
+  }>> {
+    // Verify the service belongs to the organization
     const service = await this.serviceOptionRepository.findOne({
       where: { id: serviceOptionId, organizationId },
     });
@@ -246,10 +255,46 @@ export class UserServiceOptionsService {
       return [];
     }
 
-    return this.userServiceOptionRepository.find({
-      where: { serviceOptionId },
+    // Get all assignments for this service with active status
+    const assignments = await this.userServiceOptionRepository.find({
+      where: { serviceOptionId, isActive: true },
       relations: ['user'],
     });
+
+    // Enhance each provider with Clerk profile data
+    const providers = await Promise.all(
+      assignments.map(async (assignment) => {
+        const user = assignment.user;
+        if (!user) return null;
+
+        try {
+          // Fetch fresh Clerk data for image and latest name
+          const clerkUser = await this.clerkService.getUserById(user.clerkId);
+          return {
+            id: user.id,
+            clerkId: user.clerkId,
+            firstName: clerkUser.firstName || user.firstName,
+            lastName: clerkUser.lastName || user.lastName,
+            imageUrl: clerkUser.imageUrl,
+            email: clerkUser.email || user.email,
+          };
+        } catch (error) {
+          // Fallback to database data if Clerk fetch fails
+          console.error(`Failed to fetch Clerk data for user ${user.clerkId}:`, error);
+          return {
+            id: user.id,
+            clerkId: user.clerkId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            imageUrl: undefined,
+            email: user.email,
+          };
+        }
+      }),
+    );
+
+    // Filter out any null results
+    return providers.filter((p): p is NonNullable<typeof p> => p !== null);
   }
 
   /**

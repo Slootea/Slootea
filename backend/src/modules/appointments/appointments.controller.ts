@@ -117,6 +117,40 @@ export class AppointmentsController {
     return this.appointmentsService.findOne(id, req.user.dbUserId);
   }
 
+  @Post()
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
+  @ApiOperation({ summary: 'Create a new appointment from dashboard' })
+  async createFromDashboard(
+    @Request() req: any,
+    @Body() createDto: CreateAppointmentDto,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    
+    // If provider ID is specified and user is admin, use that provider
+    // Otherwise, use the current user as provider
+    let targetUserId = req.user.dbUserId;
+    
+    if (createDto.providerId && isOrgAdmin && organizationId) {
+      // Admin can assign to any provider - providerId is a Clerk ID
+      const targetUser = await this.usersService.findByClerkId(createDto.providerId);
+      if (targetUser) {
+        targetUserId = targetUser.id;
+      }
+    } else if (createDto.providerId && !isOrgAdmin) {
+      // Non-admin cannot assign to other providers - ignore providerId
+      delete createDto.providerId;
+    }
+    
+    return this.appointmentsService.createFromDashboard(
+      targetUserId,
+      createDto,
+      organizationId,
+    );
+  }
+
   @Put(':id')
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()

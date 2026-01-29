@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import {
   appointmentsApi,
   serviceOptionsApi,
@@ -18,49 +18,9 @@ import {
   BlockedTime,
   DayOfWeek,
 } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  User,
-  Phone,
-  Mail,
-  CalendarDays,
-  Calendar as CalendarIcon,
-  Pencil,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  ArrowLeftRight,
-  GripVertical,
-  Users,
-} from "lucide-react";
 import {
   format,
   parseISO,
@@ -70,55 +30,32 @@ import {
   addWeeks,
   subWeeks,
   isSameDay,
-  isToday,
   setHours,
-  setMinutes,
-  differenceInMinutes,
-  startOfDay,
-  endOfDay,
 } from "date-fns";
-import { useOrganizationContext, OrganizationMember } from "@/components/providers/organization-provider";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 
-// Types
-interface CalendarEvent {
-  appointment: Appointment;
-  top: number;
-  height: number;
-  left: number;
-  width: number;
-  overlappingIndex: number;
-  overlappingCount: number;
-}
-
-interface DragState {
-  isDragging: boolean;
-  hasMoved: boolean;
-  appointmentId: string | null;
-  originalTop: number;
-  currentTop: number;
-  originalDay: Date | null;
-  currentDay: Date | null;
-  offsetY: number;
-}
-
-interface PendingChange {
-  type: "move" | "swap";
-  appointment: Appointment;
-  newStartTime: Date;
-  newEndTime: Date;
-  swapWith?: Appointment;
-  swapWithNewStartTime?: Date;
-  swapWithNewEndTime?: Date;
-}
-
-// Constants
-const HOUR_HEIGHT = 60; // pixels per hour
-const START_HOUR = 6; // 6 AM
-const END_HOUR = 22; // 10 PM
-const TOTAL_HOURS = END_HOUR - START_HOUR;
+// Import components
+import {
+  CalendarEvent,
+  DragState,
+  PendingChange,
+  TimeSlot,
+  HOUR_HEIGHT,
+  START_HOUR,
+  END_HOUR,
+  TOTAL_HOURS,
+} from "@/components/calendar/types";
+import { CalendarHeader } from "@/components/calendar/CalendarHeader";
+import { TimeColumn } from "@/components/calendar/TimeColumn";
+import { DayColumn } from "@/components/calendar/DayColumn";
+import { EditAppointmentDialog } from "@/components/calendar/EditAppointmentDialog";
+import { MoveConfirmationDialog } from "@/components/calendar/MoveConfirmationDialog";
+import { CalendarSkeleton } from "@/components/calendar/CalendarSkeleton";
+import { CreateAppointmentDialog } from "@/components/calendar/CreateAppointmentDialog";
 
 export default function CalendarPage() {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const { currentOrganization, isAdmin, members } = useOrganizationContext();
 
@@ -130,7 +67,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "day">("week");
-  
+
   // Member filter state (for organization admins)
   const [selectedMember, setSelectedMember] = useState<string>("all");
 
@@ -140,7 +77,14 @@ export default function CalendarPage() {
   const [newStartTime, setNewStartTime] = useState("");
   const [newDate, setNewDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [sendNotification, setSendNotification] = useState(true);
+
+  // Create appointment state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedSlotDate, setSelectedSlotDate] = useState<Date>(new Date());
+  const [selectedSlotTime, setSelectedSlotTime] = useState<string>("09:00");
+  const [createSaving, setCreateSaving] = useState(false);
 
   // Drag and drop state
   const [dragState, setDragState] = useState<DragState>({
@@ -154,6 +98,7 @@ export default function CalendarPage() {
     offsetY: 0,
   });
   const dragMovedRef = useRef(false);
+  const justFinishedDragRef = useRef(false);
   const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const dayColumnsRef = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -173,7 +118,7 @@ export default function CalendarPage() {
   }, [weekStart]);
 
   // Generate time slots for the sidebar
-  const timeSlots = useMemo(() => {
+  const timeSlots: TimeSlot[] = useMemo(() => {
     const slots = [];
     for (let hour = START_HOUR; hour < END_HOUR; hour++) {
       slots.push({
@@ -188,7 +133,6 @@ export default function CalendarPage() {
   const fetchData = useCallback(async () => {
     const token = await getToken();
     if (!token) {
-      // Not authenticated yet, skip fetch
       return;
     }
     setAuthToken(token);
@@ -202,7 +146,6 @@ export default function CalendarPage() {
       const startDate = format(viewMode === "week" ? weekStart : currentDate, "yyyy-MM-dd");
       const endDate = format(viewMode === "week" ? weekEnd : currentDate, "yyyy-MM-dd");
 
-      // Build query params including member filter for org admins
       const appointmentParams: Record<string, unknown> = {
         startDate,
         endDate,
@@ -211,14 +154,16 @@ export default function CalendarPage() {
         sortOrder: "ASC",
       };
 
-      // If admin and a specific member is selected, filter by userId
       if (currentOrganization && isAdmin && selectedMember !== "all") {
         appointmentParams.userId = selectedMember;
       }
 
       const [appointmentsRes, servicesRes, availabilityRes, blockedRes] = await Promise.all([
         appointmentsApi.getAll(appointmentParams),
-        serviceOptionsApi.getAll(),
+        // Admin gets organization services, members get personal services
+        currentOrganization && isAdmin
+          ? serviceOptionsApi.getAllForOrganization()
+          : serviceOptionsApi.getAll(),
         availabilityApi.getAll(),
         blockedTimesApi.getAll({ startDate, endDate }),
       ]);
@@ -263,12 +208,10 @@ export default function CalendarPage() {
         isSameDay(parseISO(apt.startTime), day)
       );
 
-      // Sort by start time
       dayAppointments.sort(
         (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
       );
 
-      // Find overlapping appointments
       const events: CalendarEvent[] = [];
       const columns: Appointment[][] = [];
 
@@ -276,13 +219,11 @@ export default function CalendarPage() {
         const aptStart = parseISO(apt.startTime);
         const aptEnd = parseISO(apt.endTime);
 
-        // Calculate position
         const startHour = aptStart.getHours() + aptStart.getMinutes() / 60;
         const endHour = aptEnd.getHours() + aptEnd.getMinutes() / 60;
         const top = (startHour - START_HOUR) * HOUR_HEIGHT;
         const height = Math.max((endHour - startHour) * HOUR_HEIGHT, 20);
 
-        // Find column for this appointment
         let columnIndex = 0;
         for (let i = 0; i < columns.length; i++) {
           const lastInColumn = columns[i][columns[i].length - 1];
@@ -309,7 +250,6 @@ export default function CalendarPage() {
         });
       }
 
-      // Adjust widths for overlapping events
       const totalColumns = columns.length || 1;
       return events.map((event) => ({
         ...event,
@@ -325,9 +265,7 @@ export default function CalendarPage() {
   const getAvailabilityForDay = useCallback(
     (day: Date) => {
       const dayOfWeek = ((day.getDay() + 6) % 7) as DayOfWeek;
-      return availabilities.filter(
-        (av) => av.dayOfWeek === dayOfWeek && av.isActive
-      );
+      return availabilities.filter((av) => av.dayOfWeek === dayOfWeek && av.isActive);
     },
     [availabilities]
   );
@@ -335,9 +273,7 @@ export default function CalendarPage() {
   // Check if a time slot is blocked
   const getBlockedTimesForDay = useCallback(
     (day: Date) => {
-      return blockedTimes.filter((bt) =>
-        isSameDay(parseISO(bt.date), day)
-      );
+      return blockedTimes.filter((bt) => isSameDay(parseISO(bt.date), day));
     },
     [blockedTimes]
   );
@@ -351,7 +287,7 @@ export default function CalendarPage() {
   // Calculate time from Y position
   const calculateTimeFromPosition = useCallback((y: number, day: Date): Date => {
     const hours = Math.floor(y / HOUR_HEIGHT) + START_HOUR;
-    const minutes = Math.round(((y % HOUR_HEIGHT) / HOUR_HEIGHT) * 60 / 15) * 15; // Round to 15-min intervals
+    const minutes = Math.round(((y % HOUR_HEIGHT) / HOUR_HEIGHT) * 60 / 15) * 15;
     const newTime = new Date(day);
     newTime.setHours(hours, minutes, 0, 0);
     return newTime;
@@ -372,7 +308,6 @@ export default function CalendarPage() {
         const aptStart = parseISO(apt.startTime);
         const aptEnd = parseISO(apt.endTime);
 
-        // Check if there's overlap
         if (newStart < aptEnd && newEnd > aptStart) {
           return apt;
         }
@@ -429,7 +364,6 @@ export default function CalendarPage() {
       const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
       const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
 
-      // Find which day column we're over
       let targetDay = dragState.currentDay;
       dayColumnsRef.current.forEach((element, dateStr) => {
         const rect = element.getBoundingClientRect();
@@ -438,23 +372,19 @@ export default function CalendarPage() {
         }
       });
 
-      // Calculate new top position relative to the time grid
-      // Find the actual viewport element inside ScrollArea
       const scrollArea = scrollAreaRef.current;
       if (scrollArea) {
         const viewport = scrollArea.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
         const scrollRect = viewport?.getBoundingClientRect() || scrollArea.getBoundingClientRect();
         const scrollTop = viewport?.scrollTop || 0;
-        
-        // Calculate position: mouse Y relative to viewport, plus scroll offset, minus header (48px)
+
         const relativeY = clientY - scrollRect.top + scrollTop - 48;
-        // Subtract the grab offset to keep appointment under the mouse at grab point
         const newTop = Math.max(0, Math.min(relativeY - dragState.offsetY, TOTAL_HOURS * HOUR_HEIGHT - 20));
 
-        // Check if actually moved (more than 5px threshold)
-        const hasMoved = Math.abs(newTop - dragState.originalTop) > 5 || 
+        const hasMoved =
+          Math.abs(newTop - dragState.originalTop) > 5 ||
           (targetDay && dragState.originalDay && !isSameDay(targetDay, dragState.originalDay));
-        
+
         if (hasMoved) {
           dragMovedRef.current = true;
         }
@@ -473,7 +403,15 @@ export default function CalendarPage() {
   // Handle drag end
   const handleDragEnd = useCallback(() => {
     const wasDragged = dragMovedRef.current;
-    
+
+    // Mark that we just finished a drag operation to prevent click handler
+    if (wasDragged) {
+      justFinishedDragRef.current = true;
+      setTimeout(() => {
+        justFinishedDragRef.current = false;
+      }, 100);
+    }
+
     if (!dragState.isDragging || !dragState.appointmentId || !dragState.currentDay) {
       dragMovedRef.current = false;
       setDragState({
@@ -489,7 +427,6 @@ export default function CalendarPage() {
       return;
     }
 
-    // If didn't actually move, just reset state (click handler will open edit dialog)
     if (!wasDragged) {
       dragMovedRef.current = false;
       setDragState({
@@ -525,7 +462,6 @@ export default function CalendarPage() {
     const newStartTime = calculateTimeFromPosition(dragState.currentTop, dragState.currentDay);
     const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
 
-    // Check if position actually changed
     const originalStart = parseISO(appointment.startTime);
     if (
       newStartTime.getTime() === originalStart.getTime() &&
@@ -545,7 +481,6 @@ export default function CalendarPage() {
       return;
     }
 
-    // Check for overlapping appointments
     const overlappingApt = findOverlappingAppointment(
       newStartTime,
       newEndTime,
@@ -554,7 +489,6 @@ export default function CalendarPage() {
     );
 
     if (overlappingApt) {
-      // Swap times
       const overlappingStart = parseISO(overlappingApt.startTime);
       const overlappingEnd = parseISO(overlappingApt.endTime);
 
@@ -568,7 +502,6 @@ export default function CalendarPage() {
         swapWithNewEndTime: newEndTime,
       });
     } else {
-      // Simple move
       setPendingChange({
         type: "move",
         appointment,
@@ -622,7 +555,6 @@ export default function CalendarPage() {
     setSaving(true);
     try {
       if (pendingChange.type === "swap" && pendingChange.swapWith && pendingChange.swapWithNewStartTime) {
-        // Update both appointments
         await Promise.all([
           appointmentsApi.update(pendingChange.appointment.id, {
             startTime: pendingChange.newStartTime.toISOString(),
@@ -639,7 +571,6 @@ export default function CalendarPage() {
             : "Appointment times swapped successfully",
         });
       } else {
-        // Simple move
         await appointmentsApi.update(pendingChange.appointment.id, {
           startTime: pendingChange.newStartTime.toISOString(),
         });
@@ -697,9 +628,6 @@ export default function CalendarPage() {
       const newStart = new Date(newDate);
       newStart.setHours(hours, minutes, 0, 0);
 
-      const duration = editingAppointment.serviceOption?.duration || 60;
-      const newEnd = new Date(newStart.getTime() + duration * 60000);
-
       await appointmentsApi.update(editingAppointment.id, {
         startTime: newStart.toISOString(),
       });
@@ -725,700 +653,212 @@ export default function CalendarPage() {
     }
   };
 
-  // Get status color
-  const getStatusColor = (status: AppointmentStatus) => {
-    switch (status) {
-      case AppointmentStatus.CONFIRMED:
-        return "bg-green-500/90 hover:bg-green-500 border-green-600";
-      case AppointmentStatus.PENDING_CONFIRMATION:
-        return "bg-yellow-500/90 hover:bg-yellow-500 border-yellow-600";
-      case AppointmentStatus.CANCELLED:
-        return "bg-red-500/90 hover:bg-red-500 border-red-600";
-      case AppointmentStatus.COMPLETED:
-        return "bg-blue-500/90 hover:bg-blue-500 border-blue-600";
-      case AppointmentStatus.NO_SHOW:
-        return "bg-gray-500/90 hover:bg-gray-500 border-gray-600";
-      default:
-        return "bg-primary/90 hover:bg-primary border-primary";
+  // Cancel appointment
+  const handleCancelAppointment = async (id: string) => {
+    setCancelling(true);
+    try {
+      await appointmentsApi.cancel(id);
+
+      toast({
+        title: "Appointment cancelled",
+        description: "The appointment has been cancelled and the client has been notified",
+      });
+
+      setEditDialogOpen(false);
+      setEditingAppointment(null);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to cancel appointment",
+        variant: "destructive",
+      });
+    } finally {
+      setCancelling(false);
     }
   };
 
-  // Render time column
-  const renderTimeColumn = () => (
-    <div className="w-16 flex-shrink-0 border-r bg-muted/30">
-      <div className="h-12 border-b" /> {/* Header spacer */}
-      {timeSlots.map((slot) => (
-        <div
-          key={slot.hour}
-          className="h-[60px] border-b text-xs text-muted-foreground pr-2 text-right pt-0 -translate-y-2"
-        >
-          {slot.label}
-        </div>
-      ))}
-    </div>
-  );
+  // Day column ref handler
+  const handleDayColumnRef = useCallback((el: HTMLDivElement | null, dayKey: string) => {
+    if (el) {
+      dayColumnsRef.current.set(dayKey, el);
+    } else {
+      dayColumnsRef.current.delete(dayKey);
+    }
+  }, []);
 
-  // Render day column
-  const renderDayColumn = (day: Date, isOnly: boolean = false) => {
-    const events = getEventsForDay(day);
-    const dayAvailability = getAvailabilityForDay(day);
-    const dayBlockedTimes = getBlockedTimesForDay(day);
-    const isDayToday = isToday(day);
-    const dayKey = day.toISOString();
+  // Handle empty slot click to create appointment
+  const handleEmptySlotClick = useCallback((day: Date, time: string) => {
+    setSelectedSlotDate(day);
+    setSelectedSlotTime(time);
+    setCreateDialogOpen(true);
+  }, []);
 
-    // Check if dragged appointment should show in this column
-    const draggedEvent = dragState.isDragging && dragState.currentDay && isSameDay(dragState.currentDay, day)
-      ? (() => {
-          const apt = findAppointmentById(dragState.appointmentId || "");
-          if (!apt) return null;
-          // Use actual appointment times for consistent height calculation
-          const aptStart = parseISO(apt.startTime);
-          const aptEnd = parseISO(apt.endTime);
-          const durationMinutes = differenceInMinutes(aptEnd, aptStart);
-          const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 20);
-          return { appointment: apt, top: dragState.currentTop, height };
-        })()
-      : null;
+  // Handle add appointment from header button
+  const handleAddAppointmentFromHeader = useCallback(() => {
+    setSelectedSlotDate(currentDate);
+    setSelectedSlotTime("09:00");
+    setCreateDialogOpen(true);
+  }, [currentDate]);
 
-    return (
-      <div
-        key={dayKey}
-        ref={(el) => {
-          if (el) {
-            dayColumnsRef.current.set(dayKey, el);
-          } else {
-            dayColumnsRef.current.delete(dayKey);
-          }
-        }}
-        className={`flex-1 min-w-[120px] border-r last:border-r-0 relative ${
-          isOnly ? "flex-grow" : ""
-        } ${dragState.isDragging ? "cursor-grabbing" : ""}`}
-      >
-        {/* Day Header */}
-        <div
-          className={`h-12 border-b px-2 py-1 flex flex-col items-center justify-center sticky top-0 bg-background z-10 ${
-            isDayToday ? "bg-primary/10" : ""
-          }`}
-        >
-          <span className="text-xs text-muted-foreground uppercase">
-            {format(day, "EEE")}
-          </span>
-          <span
-            className={`text-lg font-semibold ${
-              isDayToday
-                ? "bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center"
-                : ""
-            }`}
-          >
-            {format(day, "d")}
-          </span>
-        </div>
+  // Handle create appointment
+  const handleCreateAppointment = async (data: {
+    startTime: string;
+    serviceOptionId: string;
+    clientName: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    providerId?: string;
+    notes?: string;
+  }) => {
+    setCreateSaving(true);
+    try {
+      await appointmentsApi.create(data);
+      
+      toast({
+        title: "Appointment created",
+        description: "The appointment has been successfully created",
+      });
 
-        {/* Time Grid */}
-        <div className="relative">
-          {/* Hour lines */}
-          {timeSlots.map((slot) => (
-            <div key={slot.hour} className="h-[60px] border-b border-dashed border-muted" />
-          ))}
-
-          {/* Availability background */}
-          {dayAvailability.map((av, idx) => {
-            const [startH, startM] = av.startTime.split(":").map(Number);
-            const [endH, endM] = av.endTime.split(":").map(Number);
-            const startHour = startH + startM / 60;
-            const endHour = endH + endM / 60;
-            const top = Math.max(0, (startHour - START_HOUR) * HOUR_HEIGHT);
-            const bottom = Math.min(TOTAL_HOURS * HOUR_HEIGHT, (endHour - START_HOUR) * HOUR_HEIGHT);
-            const height = bottom - top;
-
-            return (
-              <div
-                key={`av-${idx}`}
-                className="absolute left-0 right-0 bg-green-100/50 dark:bg-green-900/20 pointer-events-none"
-                style={{ top: `${top}px`, height: `${height}px` }}
-              />
-            );
-          })}
-
-          {/* Blocked times */}
-          {dayBlockedTimes.map((bt, idx) => {
-            if (bt.isFullDay) {
-              return (
-                <div
-                  key={`bt-${idx}`}
-                  className="absolute inset-0 bg-red-100/50 dark:bg-red-900/20 pointer-events-none flex items-center justify-center"
-                >
-                  <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                    {bt.reason || "Blocked"}
-                  </span>
-                </div>
-              );
-            }
-
-            if (!bt.startTime || !bt.endTime) return null;
-
-            const [startH, startM] = bt.startTime.split(":").map(Number);
-            const [endH, endM] = bt.endTime.split(":").map(Number);
-            const startHour = startH + startM / 60;
-            const endHour = endH + endM / 60;
-            const top = Math.max(0, (startHour - START_HOUR) * HOUR_HEIGHT);
-            const bottom = Math.min(TOTAL_HOURS * HOUR_HEIGHT, (endHour - START_HOUR) * HOUR_HEIGHT);
-            const height = bottom - top;
-
-            return (
-              <div
-                key={`bt-${idx}`}
-                className="absolute left-0 right-0 bg-red-100/50 dark:bg-red-900/20 pointer-events-none"
-                style={{ top: `${top}px`, height: `${height}px` }}
-              >
-                {height > 20 && (
-                  <span className="text-xs text-red-600 dark:text-red-400 p-1 truncate block">
-                    {bt.reason || "Blocked"}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Events */}
-          {events.map((event) => {
-            const isDragging = dragState.isDragging && dragState.appointmentId === event.appointment.id;
-            const canDrag =
-              event.appointment.status !== AppointmentStatus.CANCELLED &&
-              event.appointment.status !== AppointmentStatus.COMPLETED;
-
-            // Don't render if this is the dragged item (we'll show it as ghost)
-            if (isDragging && !isSameDay(dragState.currentDay!, day)) {
-              return null;
-            }
-
-            return (
-              <div
-                key={event.appointment.id}
-                className={`absolute rounded-md border-l-4 p-1 text-white text-xs overflow-hidden transition-shadow shadow-sm ${getStatusColor(
-                  event.appointment.status
-                )} ${canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"} ${
-                  isDragging ? "opacity-50 ring-2 ring-primary ring-offset-2" : ""
-                }`}
-                style={{
-                  top: isDragging ? `${dragState.currentTop}px` : `${event.top}px`,
-                  height: `${event.height}px`,
-                  left: `${event.left}%`,
-                  width: `calc(${event.width}% - 4px)`,
-                  marginLeft: "2px",
-                  zIndex: isDragging ? 50 : 1,
-                }}
-                onMouseDown={(e) => canDrag && handleDragStart(e, event.appointment, day)}
-                onTouchStart={(e) => canDrag && handleDragStart(e, event.appointment, day)}
-                onClick={(e) => {
-                  // Only open edit dialog if we didn't drag (just a click)
-                  if (!dragMovedRef.current) {
-                    handleAppointmentClick(event.appointment);
-                  }
-                  dragMovedRef.current = false;
-                }}
-              >
-                <div className="flex items-start gap-1">
-                  {canDrag && (
-                    <GripVertical className="h-3 w-3 flex-shrink-0 opacity-70 mt-0.5" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">
-                      {event.appointment.clientName}
-                    </div>
-                    {event.height > 35 && (
-                      <div className="opacity-90 truncate">
-                        {format(parseISO(event.appointment.startTime), "h:mm a")}
-                      </div>
-                    )}
-                    {event.height > 55 && event.appointment.serviceOption && (
-                      <div className="opacity-80 truncate">
-                        {event.appointment.serviceOption.title}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Dragged event ghost (when moving to different day) */}
-          {draggedEvent && !events.some((e) => e.appointment.id === draggedEvent.appointment.id) && (
-            <div
-              className={`absolute rounded-md border-l-4 border-dashed p-1 text-white text-xs overflow-hidden ${getStatusColor(
-                draggedEvent.appointment.status
-              )} opacity-70 ring-2 ring-primary ring-offset-2 pointer-events-none`}
-              style={{
-                top: `${draggedEvent.top}px`,
-                height: `${draggedEvent.height}px`,
-                left: "2px",
-                right: "2px",
-                zIndex: 50,
-              }}
-            >
-              <div className="font-medium truncate">
-                {draggedEvent.appointment.clientName}
-              </div>
-              {draggedEvent.height > 35 && (
-                <div className="opacity-90 truncate">
-                  {format(
-                    calculateTimeFromPosition(draggedEvent.top, day),
-                    "h:mm a"
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Current time indicator */}
-          {isDayToday && (
-            <div
-              className="absolute left-0 right-0 border-t-2 border-red-500 pointer-events-none z-20"
-              style={{
-                top: `${
-                  (new Date().getHours() +
-                    new Date().getMinutes() / 60 -
-                    START_HOUR) *
-                  HOUR_HEIGHT
-                }px`,
-              }}
-            >
-              <div className="w-2 h-2 bg-red-500 rounded-full -mt-1 -ml-1" />
-            </div>
-          )}
-        </div>
-      </div>
-    );
+      setCreateDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error("Failed to create appointment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create appointment",
+        variant: "destructive",
+      });
+    } finally {
+      setCreateSaving(false);
+    }
   };
 
   // Loading skeleton
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-8 w-48" />
-              <div className="flex gap-2">
-                <Skeleton className="h-10 w-24" />
-                <Skeleton className="h-10 w-10" />
-                <Skeleton className="h-10 w-10" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-[600px] w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <CalendarSkeleton />;
   }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                <CalendarDays className="h-5 w-5" />
-                {viewMode === "week"
-                  ? `${format(weekStart, "MMM d")} - ${format(weekEnd, "MMM d, yyyy")}`
-                  : format(currentDate, "EEEE, MMMM d, yyyy")}
-              </CardTitle>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Member Filter (Organization Admin only) */}
-              {currentOrganization && isAdmin && members.length > 0 && (
-                <Select value={selectedMember} onValueChange={setSelectedMember}>
-                  <SelectTrigger className="w-[200px]">
-                    <Users className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="All Members" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        All Members
-                      </div>
-                    </SelectItem>
-                    {members.map((member) => (
-                      <SelectItem key={member.clerkId} value={member.clerkId}>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={member.imageUrl} />
-                            <AvatarFallback className="text-xs">
-                              {(member.firstName?.[0] || member.email[0]).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>
-                            {member.firstName 
-                              ? `${member.firstName} ${member.lastName || ''}`
-                              : member.email.split('@')[0]}
-                          </span>
-                          {member.role === 'org:admin' && (
-                            <Badge variant="outline" className="text-xs ml-1">Admin</Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              {/* View Mode Toggle */}
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "week" | "day")}>
-                <TabsList>
-                  <TabsTrigger value="week" className="px-3">
-                    <CalendarIcon className="h-4 w-4 mr-1" />
-                    Week
-                  </TabsTrigger>
-                  <TabsTrigger value="day" className="px-3">
-                    <Clock className="h-4 w-4 mr-1" />
-                    Day
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-
-              {/* Navigation */}
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={goToToday}>
-                  Today
-                </Button>
-                <Button variant="outline" size="icon" onClick={goToPrevious}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" onClick={goToNext}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="flex flex-wrap gap-4 mt-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-green-500" />
-              <span className="text-muted-foreground">Confirmed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-yellow-500" />
-              <span className="text-muted-foreground">Pending</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-blue-500" />
-              <span className="text-muted-foreground">Completed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-red-500" />
-              <span className="text-muted-foreground">Cancelled</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-green-200 dark:bg-green-900" />
-              <span className="text-muted-foreground">Available</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-red-200 dark:bg-red-900" />
-              <span className="text-muted-foreground">Blocked</span>
-            </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Drag to reschedule</span>
-            </div>
-          </div>
+          <CalendarHeader
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            currentDate={currentDate}
+            weekStart={weekStart}
+            weekEnd={weekEnd}
+            goToToday={goToToday}
+            goToPrevious={goToPrevious}
+            goToNext={goToNext}
+            showMemberFilter={!!(currentOrganization && isAdmin)}
+            selectedMember={selectedMember}
+            setSelectedMember={setSelectedMember}
+            members={members}
+            onAddAppointment={handleAddAppointmentFromHeader}
+          />
         </CardHeader>
 
         <CardContent className="p-0">
-          <ScrollArea 
+          <ScrollArea
             className={`h-[calc(100vh-220px)] min-h-[600px] ${dragState.isDragging ? "select-none" : ""}`}
             ref={scrollAreaRef}
           >
             <div className="flex">
               {/* Time Column */}
-              {renderTimeColumn()}
+              <TimeColumn timeSlots={timeSlots} />
 
               {/* Day Columns */}
-              {viewMode === "week" ? (
-                weekDays.map((day) => renderDayColumn(day))
-              ) : (
-                renderDayColumn(currentDate, true)
-              )}
+              {viewMode === "week"
+                ? weekDays.map((day) => (
+                    <DayColumn
+                      key={day.toISOString()}
+                      day={day}
+                      events={getEventsForDay(day)}
+                      dayAvailability={getAvailabilityForDay(day)}
+                      dayBlockedTimes={getBlockedTimesForDay(day)}
+                      timeSlots={timeSlots}
+                      dragState={dragState}
+                      onDragStart={handleDragStart}
+                      onAppointmentClick={handleAppointmentClick}
+                      findAppointmentById={findAppointmentById}
+                      calculateTimeFromPosition={calculateTimeFromPosition}
+                      dayColumnRef={handleDayColumnRef}
+                      dragMovedRef={dragMovedRef}
+                      justFinishedDragRef={justFinishedDragRef}
+                      onEmptySlotClick={handleEmptySlotClick}
+                    />
+                  ))
+                : (
+                    <DayColumn
+                      day={currentDate}
+                      isOnly
+                      events={getEventsForDay(currentDate)}
+                      dayAvailability={getAvailabilityForDay(currentDate)}
+                      dayBlockedTimes={getBlockedTimesForDay(currentDate)}
+                      timeSlots={timeSlots}
+                      dragState={dragState}
+                      onDragStart={handleDragStart}
+                      onAppointmentClick={handleAppointmentClick}
+                      findAppointmentById={findAppointmentById}
+                      calculateTimeFromPosition={calculateTimeFromPosition}
+                      dayColumnRef={handleDayColumnRef}
+                      dragMovedRef={dragMovedRef}
+                      justFinishedDragRef={justFinishedDragRef}
+                      onEmptySlotClick={handleEmptySlotClick}
+                    />
+                  )}
             </div>
           </ScrollArea>
         </CardContent>
       </Card>
 
       {/* Edit Appointment Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Pencil className="h-5 w-5" />
-              Edit Appointment
-            </DialogTitle>
-            <DialogDescription>
-              Update the appointment time. The client will be notified of any changes.
-            </DialogDescription>
-          </DialogHeader>
-
-          {editingAppointment && (
-            <div className="space-y-6 py-4">
-              {/* Client Info */}
-              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{editingAppointment.clientName}</span>
-                  <Badge variant="outline" className="ml-auto">
-                    {editingAppointment.status.replace("_", " ")}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  {editingAppointment.clientEmail}
-                </div>
-                {editingAppointment.clientPhone && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4" />
-                    {editingAppointment.clientPhone}
-                  </div>
-                )}
-                {editingAppointment.serviceOption && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    {editingAppointment.serviceOption.title} ({editingAppointment.serviceOption.duration} min)
-                  </div>
-                )}
-              </div>
-
-              {/* Current Time */}
-              <div>
-                <Label className="text-muted-foreground">Current Time</Label>
-                <p className="text-sm font-medium mt-1">
-                  {format(parseISO(editingAppointment.startTime), "EEEE, MMMM d, yyyy 'at' h:mm a")}
-                </p>
-              </div>
-
-              {/* New Date & Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-date">New Date</Label>
-                  <Input
-                    id="new-date"
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    min={format(new Date(), "yyyy-MM-dd")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-time">New Time</Label>
-                  <Input
-                    id="new-time"
-                    type="time"
-                    value={newStartTime}
-                    onChange={(e) => setNewStartTime(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* New Time Preview */}
-              {newDate && newStartTime && (
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">New appointment time: </span>
-                    <span className="font-medium">
-                      {format(
-                        new Date(`${newDate}T${newStartTime}`),
-                        "EEEE, MMMM d, yyyy 'at' h:mm a"
-                      )}
-                    </span>
-                  </p>
-                </div>
-              )}
-
-              {/* Notification Toggle */}
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium text-sm">Notify Client</p>
-                  <p className="text-xs text-muted-foreground">
-                    Send an email/SMS notification about the time change
-                  </p>
-                </div>
-                <Button
-                  variant={sendNotification ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSendNotification(!sendNotification)}
-                >
-                  {sendNotification ? "On" : "Off"}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={saving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAppointment} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditAppointmentDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        appointment={editingAppointment}
+        newDate={newDate}
+        setNewDate={setNewDate}
+        newStartTime={newStartTime}
+        setNewStartTime={setNewStartTime}
+        sendNotification={sendNotification}
+        setSendNotification={setSendNotification}
+        saving={saving}
+        onSave={handleSaveAppointment}
+        onCancel={handleCancelAppointment}
+        cancelling={cancelling}
+      />
 
       {/* Drag & Drop Confirmation Dialog */}
-      <Dialog open={confirmDialogOpen} onOpenChange={(open) => {
-        if (!open && !saving) {
+      <MoveConfirmationDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        pendingChange={pendingChange}
+        sendNotification={sendNotification}
+        setSendNotification={setSendNotification}
+        saving={saving}
+        onConfirm={confirmPendingChange}
+        onCancel={() => {
           setConfirmDialogOpen(false);
           setPendingChange(null);
-        }
-      }}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {pendingChange?.type === "swap" ? (
-                <>
-                  <ArrowLeftRight className="h-5 w-5" />
-                  Swap Appointment Times
-                </>
-              ) : (
-                <>
-                  <CalendarDays className="h-5 w-5" />
-                  Move Appointment
-                </>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              {pendingChange?.type === "swap"
-                ? "The appointments overlap. Their times will be swapped."
-                : "Confirm the new appointment time."}
-            </DialogDescription>
-          </DialogHeader>
+        }}
+      />
 
-          {pendingChange && (
-            <div className="space-y-4 py-4">
-              {/* Primary appointment */}
-              <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{pendingChange.appointment.clientName}</span>
-                  <Badge variant="outline" className="ml-auto">
-                    {pendingChange.appointment.status.replace("_", " ")}
-                  </Badge>
-                </div>
-                {pendingChange.appointment.serviceOption && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    {pendingChange.appointment.serviceOption.title}
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Current Time</p>
-                    <p className="text-sm font-medium">
-                      {format(parseISO(pendingChange.appointment.startTime), "MMM d, h:mm a")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">New Time</p>
-                    <p className="text-sm font-medium text-primary">
-                      {format(pendingChange.newStartTime, "MMM d, h:mm a")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Swap target appointment */}
-              {pendingChange.type === "swap" && pendingChange.swapWith && pendingChange.swapWithNewStartTime && (
-                <>
-                  <div className="flex items-center justify-center">
-                    <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{pendingChange.swapWith.clientName}</span>
-                      <Badge variant="outline" className="ml-auto">
-                        {pendingChange.swapWith.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                    {pendingChange.swapWith.serviceOption && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {pendingChange.swapWith.serviceOption.title}
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Current Time</p>
-                        <p className="text-sm font-medium">
-                          {format(parseISO(pendingChange.swapWith.startTime), "MMM d, h:mm a")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">New Time</p>
-                        <p className="text-sm font-medium text-primary">
-                          {format(pendingChange.swapWithNewStartTime, "MMM d, h:mm a")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Notification Toggle */}
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium text-sm">Notify Client{pendingChange.type === "swap" ? "s" : ""}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Send email/SMS notification about the time change
-                  </p>
-                </div>
-                <Button
-                  variant={sendNotification ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSendNotification(!sendNotification)}
-                >
-                  {sendNotification ? "On" : "Off"}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setConfirmDialogOpen(false);
-                setPendingChange(null);
-              }}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button onClick={confirmPendingChange} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  {pendingChange?.type === "swap" ? "Swap Times" : "Move Appointment"}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Create Appointment Dialog */}
+      <CreateAppointmentDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        selectedDate={selectedSlotDate}
+        onSelectedDateChange={setSelectedSlotDate}
+        selectedTime={selectedSlotTime}
+        serviceOptions={serviceOptions}
+        isAdmin={isAdmin}
+        currentUserClerkId={user?.id || ""}
+        saving={createSaving}
+        onSave={handleCreateAppointment}
+      />
     </div>
   );
 }

@@ -179,6 +179,7 @@ export interface Appointment {
   clientName: string;
   clientEmail: string;
   clientPhone?: string;
+  clientId?: string;
   status: AppointmentStatus;
   confirmationToken: string;
   confirmedAt?: string;

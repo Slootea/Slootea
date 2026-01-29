@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useSearchParams, useRouter } from "next/navigation";
 import { clientsApi, appointmentsApi, gamificationApi, clientPenaltiesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import {
   Client,
@@ -115,6 +116,10 @@ export default function ClientsPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
   const { currentOrganization } = useOrganizationContext();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const highlightClientId = searchParams.get('highlight');
+  const highlightHandledRef = useRef<string | null>(null);
 
   // State
   const [clients, setClients] = useState<Client[]>([]);
@@ -254,6 +259,46 @@ export default function ClientsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Handle highlight query parameter - open client profile directly
+  useEffect(() => {
+    if (!highlightClientId || loading || !clients.length) return;
+    // Prevent re-triggering for the same highlight ID
+    if (highlightHandledRef.current === highlightClientId) return;
+    
+    const clientToHighlight = clients.find(c => c.id === highlightClientId);
+    if (clientToHighlight) {
+      highlightHandledRef.current = highlightClientId;
+      handleViewDetails(clientToHighlight);
+      // Clear the highlight parameter from URL to prevent re-opening on refresh
+      router.replace('/dashboard/clients', { scroll: false });
+    } else {
+      // Client not in current page - try to fetch directly
+      const fetchAndOpenClient = async () => {
+        try {
+          const token = await getToken();
+          if (!token || !currentOrganization) return;
+          setAuthToken(token);
+          setOrganizationContext(currentOrganization.id);
+          const response = await clientsApi.getOne(highlightClientId);
+          if (response.data) {
+            highlightHandledRef.current = highlightClientId;
+            handleViewDetails(response.data);
+            router.replace('/dashboard/clients', { scroll: false });
+          }
+        } catch (error) {
+          console.error('Failed to fetch highlighted client:', error);
+          toast({
+            title: 'Client not found',
+            description: 'The requested client could not be found',
+            variant: 'destructive',
+          });
+          router.replace('/dashboard/clients', { scroll: false });
+        }
+      };
+      fetchAndOpenClient();
+    }
+  }, [highlightClientId, loading, clients, router, getToken, currentOrganization, toast]);
 
   // Reset page when search or organization changes
   useEffect(() => {

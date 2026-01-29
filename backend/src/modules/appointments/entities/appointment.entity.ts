@@ -34,7 +34,7 @@ export class Appointment {
   @Column()
   clientName: string;
 
-  @Column()
+  @Column({ nullable: true })
   clientEmail: string;
 
   @Column({ nullable: true })

@@ -139,6 +139,15 @@ export const appointmentsApi = {
   getPending: () => api.get('/appointments/pending'),
   getStats: () => api.get('/appointments/stats'),
   getOne: (id: string) => api.get(`/appointments/${id}`),
+  create: (data: {
+    startTime: string;
+    serviceOptionId: string;
+    clientName: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    providerId?: string;
+    notes?: string;
+  }) => api.post('/appointments', data),
   update: (id: string, data: Partial<{ startTime: string; status: string; clientName: string; clientEmail: string; clientPhone: string; notes: string }>) =>
     api.put(`/appointments/${id}`, data),
   cancel: (id: string) => api.put(`/appointments/${id}/cancel`),

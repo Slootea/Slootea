@@ -745,8 +745,8 @@ export class AppointmentsService {
 
     // Filter to specific provider if requested
     const providerIds = providerId 
-      ? providers.filter(p => p.user?.id === providerId).map(p => p.user!.id)
-      : providers.map(p => p.user!.id);
+      ? providers.filter(p => p.id === providerId).map(p => p.id)
+      : providers.map(p => p.id);
 
     if (providerIds.length === 0) {
       return [];
@@ -943,7 +943,7 @@ export class AppointmentsService {
     const dayOfWeek = (startTime.getDay() + 6) % 7 as DayOfWeek;
 
     for (const provider of providers) {
-      const providerUserId = provider.user!.id;
+      const providerUserId = provider.id;
 
       // Check availability
       const availabilities = await this.availabilityService.findByUserAndDay(
@@ -1047,6 +1047,68 @@ export class AppointmentsService {
         await this.gamificationService.awardBookingPoints(clientId, assignedUserId, savedAppointment.id);
       } catch (error) {
         // Don't fail the booking if gamification fails
+        console.error('Failed to award booking points:', error);
+      }
+    }
+
+    return this.appointmentRepository.findOneOrFail({
+      where: { id: savedAppointment.id },
+      relations: ['serviceOption'],
+    });
+  }
+
+  /**
+   * Create an appointment from dashboard (authenticated user)
+   */
+  async createFromDashboard(
+    userId: string,
+    createDto: CreateAppointmentDto,
+    organizationId?: string,
+  ): Promise<Appointment> {
+    // Get service option
+    const serviceOption = await this.serviceOptionsService.findById(
+      createDto.serviceOptionId,
+    );
+
+    // Calculate times
+    const startTime = new Date(createDto.startTime);
+    const endTime = createDto.endTime 
+      ? new Date(createDto.endTime)
+      : new Date(startTime.getTime() + serviceOption.duration * 60000);
+
+    // Create or find client by phone number (clients belong to organization)
+    let clientId: string | undefined;
+    if (createDto.clientPhone && organizationId) {
+      const client = await this.clientsService.findOrCreate(
+        organizationId,
+        createDto.clientPhone,
+        createDto.clientName,
+        createDto.clientEmail,
+      );
+      await this.clientsService.incrementAppointmentCount(client.id, organizationId);
+      clientId = client.id;
+    }
+
+    // Create appointment - dashboard appointments are confirmed by default
+    const confirmationToken = uuidv4();
+    const appointment = this.appointmentRepository.create({
+      ...createDto,
+      startTime,
+      endTime,
+      userId,
+      clientId,
+      confirmationToken,
+      status: AppointmentStatus.CONFIRMED,
+      confirmedAt: new Date(),
+    });
+
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    // Award booking points if gamification is enabled
+    if (clientId) {
+      try {
+        await this.gamificationService.awardBookingPoints(clientId, userId, savedAppointment.id);
+      } catch (error) {
         console.error('Failed to award booking points:', error);
       }
     }

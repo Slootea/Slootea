@@ -168,27 +168,14 @@ export class PublicController {
       bookingLink.organizationId,
     );
 
-    // Fetch Clerk user data for each provider to get profile images
-    const filteredProviders = await Promise.all(
-      providers.map(async (p) => {
-        let clerkUser = null;
-        if (p.user?.clerkId) {
-          try {
-            clerkUser = await this.clerkService.getUserById(p.user.clerkId);
-          } catch (error) {
-            console.error(`Failed to fetch Clerk user for ${p.user.clerkId}:`, error);
-          }
-        }
-
-        return {
-          id: p.user?.id,
-          clerkId: p.user?.clerkId,
-          firstName: settings.showProviderNames ? (clerkUser?.firstName || p.user?.firstName) : undefined,
-          lastName: settings.showProviderNames ? (clerkUser?.lastName || p.user?.lastName) : undefined,
-          imageUrl: settings.showProviderPhotos ? clerkUser?.imageUrl : undefined,
-        };
-      })
-    );
+    // The providers already have Clerk profile data
+    const filteredProviders = providers.map((p) => ({
+      id: p.id,
+      clerkId: p.clerkId,
+      firstName: settings.showProviderNames ? p.firstName : undefined,
+      lastName: settings.showProviderNames ? p.lastName : undefined,
+      imageUrl: settings.showProviderPhotos ? p.imageUrl : undefined,
+    }));
 
     return {
       providers: filteredProviders,
