@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Clock, User, Phone, Mail, Pencil, Loader2, XCircle, ExternalLink, CheckCircle } from "lucide-react";
+import { Clock, User, Phone, Mail, Pencil, Loader2, XCircle, ExternalLink, CheckCircle, CheckCheck } from "lucide-react";
 import { Appointment, AppointmentStatus } from "@/lib/types";
 
 interface EditAppointmentDialogProps {
@@ -43,8 +43,10 @@ interface EditAppointmentDialogProps {
   onSave: () => void;
   onCancel?: (id: string) => Promise<void>;
   onConfirm?: (id: string) => Promise<void>;
+  onComplete?: (id: string) => Promise<void>;
   cancelling?: boolean;
   confirming?: boolean;
+  completing?: boolean;
 }
 
 export function EditAppointmentDialog({
@@ -61,8 +63,10 @@ export function EditAppointmentDialog({
   onSave,
   onCancel,
   onConfirm,
+  onComplete,
   cancelling = false,
   confirming = false,
+  completing = false,
 }: EditAppointmentDialogProps) {
   const router = useRouter();
   const [showCancelAlert, setShowCancelAlert] = useState(false);
@@ -70,8 +74,10 @@ export function EditAppointmentDialog({
   const isCancelled = appointment?.status === AppointmentStatus.CANCELLED;
   const isCompleted = appointment?.status === AppointmentStatus.COMPLETED;
   const isPending = appointment?.status === AppointmentStatus.PENDING_CONFIRMATION;
+  const isConfirmed = appointment?.status === AppointmentStatus.CONFIRMED;
   const canCancel = !isCancelled && !isCompleted;
   const canConfirm = isPending && onConfirm;
+  const canComplete = isConfirmed && onComplete;
   
   const handleViewClientProfile = () => {
     if (appointment?.clientId) {
@@ -94,6 +100,12 @@ export function EditAppointmentDialog({
   const handleConfirmAppointment = async () => {
     if (!appointment || !onConfirm) return;
     await onConfirm(appointment.id);
+    onOpenChange(false);
+  };
+
+  const handleCompleteAppointment = async () => {
+    if (!appointment || !onComplete) return;
+    await onComplete(appointment.id);
     onOpenChange(false);
   };
 
@@ -200,7 +212,7 @@ export function EditAppointmentDialog({
             )}
 
             {/* Appointment Actions */}
-            {(canConfirm || (canCancel && onCancel)) && (
+            {(canConfirm || canComplete || (canCancel && onCancel)) && (
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Appointment Status</Label>
                 <div className="flex gap-2">
@@ -208,7 +220,7 @@ export function EditAppointmentDialog({
                     <Button 
                       variant="default" 
                       onClick={handleConfirmAppointment} 
-                      disabled={saving || cancelling || confirming}
+                      disabled={saving || cancelling || confirming || completing}
                       className="flex-1 bg-green-600 hover:bg-green-700"
                     >
                       {confirming ? (
@@ -219,11 +231,26 @@ export function EditAppointmentDialog({
                       {confirming ? "Confirming..." : "Confirm"}
                     </Button>
                   )}
+                  {canComplete && (
+                    <Button 
+                      variant="default" 
+                      onClick={handleCompleteAppointment} 
+                      disabled={saving || cancelling || confirming || completing}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {completing ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCheck className="h-4 w-4 mr-2" />
+                      )}
+                      {completing ? "Completing..." : "Complete"}
+                    </Button>
+                  )}
                   {canCancel && onCancel && (
                     <Button 
                       variant="destructive" 
                       onClick={handleCancelClick} 
-                      disabled={saving || cancelling || confirming}
+                      disabled={saving || cancelling || confirming || completing}
                       className="flex-1"
                     >
                       {cancelling ? (
@@ -261,7 +288,7 @@ export function EditAppointmentDialog({
 
         <DialogFooter>
           {!isCancelled && (
-            <Button onClick={onSave} disabled={saving || cancelling || confirming}>
+            <Button onClick={onSave} disabled={saving || cancelling || confirming || completing}>
               {saving ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}

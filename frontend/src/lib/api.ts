@@ -152,6 +152,7 @@ export const appointmentsApi = {
     api.put(`/appointments/${id}`, data),
   cancel: (id: string) => api.put(`/appointments/${id}/cancel`),
   confirm: (id: string) => api.put(`/appointments/${id}/confirm`),
+  complete: (id: string) => api.put(`/appointments/${id}/complete`),
 };
 
 // Settings API

@@ -180,6 +180,14 @@ export class AppointmentsController {
     return this.appointmentsService.confirmFromDashboard(id, req.user.dbUserId);
   }
 
+  @Put(':id/complete')
+  @UseGuards(ClerkAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark an appointment as completed from dashboard' })
+  async completeFromDashboard(@Request() req: any, @Param('id') id: string) {
+    return this.appointmentsService.completeFromDashboard(id, req.user.dbUserId);
+  }
+
   // Public routes (no authentication required)
   @Get('public/slots')
   @ApiOperation({ summary: 'Get available slots for booking (public)' })

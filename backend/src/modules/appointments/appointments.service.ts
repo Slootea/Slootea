@@ -497,6 +497,19 @@ export class AppointmentsService {
     return this.appointmentRepository.save(appointment);
   }
 
+  async completeFromDashboard(id: string, userId: string): Promise<Appointment> {
+    const appointment = await this.findOne(id, userId);
+
+    if (appointment.status !== AppointmentStatus.CONFIRMED) {
+      throw new BadRequestException(
+        'Only confirmed appointments can be marked as completed',
+      );
+    }
+
+    appointment.status = AppointmentStatus.COMPLETED;
+    return this.appointmentRepository.save(appointment);
+  }
+
   async getAvailableSlots(
     userId: string,
     serviceOptionId: string,
