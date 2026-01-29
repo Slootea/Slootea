@@ -78,6 +78,7 @@ export default function CalendarPage() {
   const [newDate, setNewDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [sendNotification, setSendNotification] = useState(true);
 
   // Create appointment state
@@ -678,6 +679,31 @@ export default function CalendarPage() {
     }
   };
 
+  // Confirm appointment
+  const handleConfirmAppointment = async (id: string) => {
+    setConfirming(true);
+    try {
+      await appointmentsApi.confirm(id);
+
+      toast({
+        title: "Appointment confirmed",
+        description: "The appointment has been confirmed successfully",
+      });
+
+      setEditDialogOpen(false);
+      setEditingAppointment(null);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to confirm appointment",
+        variant: "destructive",
+      });
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   // Day column ref handler
   const handleDayColumnRef = useCallback((el: HTMLDivElement | null, dayKey: string) => {
     if (el) {
@@ -828,7 +854,9 @@ export default function CalendarPage() {
         saving={saving}
         onSave={handleSaveAppointment}
         onCancel={handleCancelAppointment}
+        onConfirm={handleConfirmAppointment}
         cancelling={cancelling}
+        confirming={confirming}
       />
 
       {/* Drag & Drop Confirmation Dialog */}

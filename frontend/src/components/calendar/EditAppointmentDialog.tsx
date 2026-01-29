@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, User, Phone, Mail, Pencil, Loader2, XCircle, ExternalLink } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Clock, User, Phone, Mail, Pencil, Loader2, XCircle, ExternalLink, CheckCircle } from "lucide-react";
 import { Appointment, AppointmentStatus } from "@/lib/types";
 
 interface EditAppointmentDialogProps {
@@ -30,7 +42,9 @@ interface EditAppointmentDialogProps {
   saving: boolean;
   onSave: () => void;
   onCancel?: (id: string) => Promise<void>;
+  onConfirm?: (id: string) => Promise<void>;
   cancelling?: boolean;
+  confirming?: boolean;
 }
 
 export function EditAppointmentDialog({
@@ -46,13 +60,18 @@ export function EditAppointmentDialog({
   saving,
   onSave,
   onCancel,
+  onConfirm,
   cancelling = false,
+  confirming = false,
 }: EditAppointmentDialogProps) {
   const router = useRouter();
+  const [showCancelAlert, setShowCancelAlert] = useState(false);
   
   const isCancelled = appointment?.status === AppointmentStatus.CANCELLED;
   const isCompleted = appointment?.status === AppointmentStatus.COMPLETED;
+  const isPending = appointment?.status === AppointmentStatus.PENDING_CONFIRMATION;
   const canCancel = !isCancelled && !isCompleted;
+  const canConfirm = isPending && onConfirm;
   
   const handleViewClientProfile = () => {
     if (appointment?.clientId) {
@@ -61,10 +80,20 @@ export function EditAppointmentDialog({
     }
   };
 
+  const handleCancelClick = () => {
+    setShowCancelAlert(true);
+  };
+
   const handleCancelAppointment = async () => {
     if (!appointment || !onCancel) return;
-    if (!confirm("Are you sure you want to cancel this appointment?")) return;
+    setShowCancelAlert(false);
     await onCancel(appointment.id);
+    onOpenChange(false);
+  };
+
+  const handleConfirmAppointment = async () => {
+    if (!appointment || !onConfirm) return;
+    await onConfirm(appointment.id);
     onOpenChange(false);
   };
 
@@ -170,12 +199,51 @@ export function EditAppointmentDialog({
               </div>
             )}
 
+            {/* Appointment Actions */}
+            {(canConfirm || (canCancel && onCancel)) && (
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Appointment Status</Label>
+                <div className="flex gap-2">
+                  {canConfirm && (
+                    <Button 
+                      variant="default" 
+                      onClick={handleConfirmAppointment} 
+                      disabled={saving || cancelling || confirming}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      {confirming ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {confirming ? "Confirming..." : "Confirm"}
+                    </Button>
+                  )}
+                  {canCancel && onCancel && (
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleCancelClick} 
+                      disabled={saving || cancelling || confirming}
+                      className="flex-1"
+                    >
+                      {cancelling ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <XCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {cancelling ? "Cancelling..." : "Cancel"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Notification Toggle */}
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
                 <p className="font-medium text-sm">Notify Client</p>
                 <p className="text-xs text-muted-foreground">
-                  Send an email/SMS notification about the time change
+                  Send notification about changes
                 </p>
               </div>
               <Button
@@ -189,48 +257,40 @@ export function EditAppointmentDialog({
           </div>
         )}
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <div className="flex gap-2 w-full sm:w-auto">
-            {canCancel && onCancel && (
-              <Button 
-                variant="destructive" 
-                onClick={handleCancelAppointment} 
-                disabled={saving || cancelling}
-                className="flex-1 sm:flex-none"
-              >
-                {cancelling ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Cancelling...
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Cancel Appointment
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving || cancelling}>
-              Close
+        <Separator />
+
+        <DialogFooter>
+          {!isCancelled && (
+            <Button onClick={onSave} disabled={saving || cancelling || confirming}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
-            {!isCancelled && (
-              <Button onClick={onSave} disabled={saving || cancelling}>
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-            )}
-          </div>
+          )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Cancel Confirmation Alert */}
+      <AlertDialog open={showCancelAlert} onOpenChange={setShowCancelAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this appointment? This action cannot be undone{sendNotification ? " and the client will be notified" : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep it</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelAppointment}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, cancel appointment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

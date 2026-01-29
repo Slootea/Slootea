@@ -483,6 +483,20 @@ export class AppointmentsService {
     return this.appointmentRepository.save(appointment);
   }
 
+  async confirmFromDashboard(id: string, userId: string): Promise<Appointment> {
+    const appointment = await this.findOne(id, userId);
+
+    if (appointment.status !== AppointmentStatus.PENDING_CONFIRMATION) {
+      throw new BadRequestException(
+        'This appointment cannot be confirmed',
+      );
+    }
+
+    appointment.status = AppointmentStatus.CONFIRMED;
+    appointment.confirmedAt = new Date();
+    return this.appointmentRepository.save(appointment);
+  }
+
   async getAvailableSlots(
     userId: string,
     serviceOptionId: string,

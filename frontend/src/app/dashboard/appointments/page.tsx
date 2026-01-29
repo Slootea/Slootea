@@ -66,10 +66,12 @@ import {
   Bell,
   Hourglass,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isToday, isTomorrow, isPast, isFuture, differenceInMinutes, differenceInHours, addHours } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { CreateAppointmentDialog } from "@/components/calendar/CreateAppointmentDialog";
 
 export default function AppointmentsPage() {
   const { getToken } = useAuth();
@@ -90,6 +92,11 @@ export default function AppointmentsPage() {
   
   // Member filter state (for organization admins)
   const [selectedMember, setSelectedMember] = useState<string>("all");
+
+  // Create appointment dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedSlotDate, setSelectedSlotDate] = useState<Date>(new Date());
+  const [createSaving, setCreateSaving] = useState(false);
 
   // Pagination & Filters
   const [filters, setFilters] = useState<AppointmentFilters>({
@@ -220,7 +227,10 @@ export default function AppointmentsPage() {
       setNextAppointment(confirmedFuture.length > 0 ? confirmedFuture[0] : null);
 
       // Finally fetch service options
-      const servicesRes = await serviceOptionsApi.getAll();
+      // Admin gets organization services, members get personal services
+      const servicesRes = currentOrganization && isAdmin
+        ? await serviceOptionsApi.getAllForOrganization()
+        : await serviceOptionsApi.getAll();
       setServiceOptions(servicesRes.data);
     } catch (error) {
       console.error("Failed to fetch data", error);
@@ -271,6 +281,39 @@ export default function AppointmentsPage() {
         description: t("messages.cancelFailed"),
         variant: "destructive",
       });
+    }
+  };
+
+  // Handle create appointment
+  const handleCreateAppointment = async (data: {
+    startTime: string;
+    serviceOptionId: string;
+    clientName: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    providerId?: string;
+    notes?: string;
+  }) => {
+    setCreateSaving(true);
+    try {
+      await appointmentsApi.create(data);
+      
+      toast({
+        title: "Appointment created",
+        description: "The appointment has been successfully created",
+      });
+
+      setCreateDialogOpen(false);
+      fetchData(true);
+    } catch (error) {
+      console.error("Failed to create appointment:", error);
+      toast({
+        title: tCommon("error"),
+        description: "Failed to create appointment",
+        variant: "destructive",
+      });
+    } finally {
+      setCreateSaving(false);
     }
   };
 
@@ -348,18 +391,29 @@ export default function AppointmentsPage() {
                 Complete history and management of all appointments
               </CardDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchData(true)}
-              disabled={refreshing}
-              className="self-start sm:self-auto"
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
+            <div className="flex gap-2 self-start sm:self-auto">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setSelectedSlotDate(new Date());
+                  setCreateDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Appointment
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchData(true)}
+                disabled={refreshing}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -534,6 +588,20 @@ export default function AppointmentsPage() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Create Appointment Dialog */}
+      <CreateAppointmentDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        selectedDate={selectedSlotDate}
+        onSelectedDateChange={setSelectedSlotDate}
+        selectedTime="09:00"
+        serviceOptions={serviceOptions}
+        isAdmin={isAdmin}
+        currentUserClerkId={user?.id || ""}
+        saving={createSaving}
+        onSave={handleCreateAppointment}
+      />
     </div>
   );
 }

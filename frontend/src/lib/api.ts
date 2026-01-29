@@ -151,6 +151,7 @@ export const appointmentsApi = {
   update: (id: string, data: Partial<{ startTime: string; status: string; clientName: string; clientEmail: string; clientPhone: string; notes: string }>) =>
     api.put(`/appointments/${id}`, data),
   cancel: (id: string) => api.put(`/appointments/${id}/cancel`),
+  confirm: (id: string) => api.put(`/appointments/${id}/confirm`),
 };
 
 // Settings API
