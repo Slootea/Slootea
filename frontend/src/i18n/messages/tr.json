@@ -157,6 +157,7 @@
     "bookingLinks": "Rezervasyon Linkleri",
     "serviceOptions": "Hizmet Seçenekleri",
     "gamification": "Oyunlaştırma",
+    "reports": "Raporlar",
     "settings": "Ayarlar",
     "main": "Ana Menü",
     "configuration": "Yapılandırma",
@@ -916,5 +917,81 @@
     "completedAppointments": "Tamamlanan",
     "cancelledAppointments": "İptal Edilen",
     "activeServices": "Aktif Hizmetler"
+  },
+  "reports": {
+    "title": "Raporlar ve Analiz",
+    "subtitle": "{organization} için performans özeti",
+    "accessDenied": "Erişim Engellendi",
+    "adminOnly": "Raporları sadece organizasyon yöneticileri görüntüleyebilir.",
+    "noData": "Veri Yok",
+    "noDataDescription": "Seçilen dönem için görüntülenecek veri bulunmuyor.",
+    "selectPeriod": "Dönem Seç",
+    "periods": {
+      "7d": "Son 7 Gün",
+      "30d": "Son 30 Gün",
+      "90d": "Son 90 Gün",
+      "thisMonth": "Bu Ay",
+      "lastMonth": "Geçen Ay"
+    },
+    "metrics": {
+      "totalAppointments": "Toplam Randevu",
+      "completionRate": "Tamamlanma Oranı",
+      "noShowRate": "Gelmeme Oranı",
+      "totalClients": "Toplam Müşteri",
+      "thisMonth": "bu ay",
+      "completed": "Tamamlanan",
+      "cancelled": "İptal Edilen",
+      "noShows": "Gelmeyenler",
+      "avgPerDay": "Gün/Ort",
+      "activeMembers": "Aktif Üyeler"
+    },
+    "tabs": {
+      "overview": "Genel Bakış",
+      "trends": "Trendler",
+      "members": "Ekip Performansı",
+      "services": "Hizmetler"
+    },
+    "charts": {
+      "monthlyTrend": "Aylık Randevular",
+      "monthlyTrendDesc": "Son 12 ayın randevu trendleri",
+      "statusDistribution": "Durum Dağılımı",
+      "statusDistributionDesc": "Randevu durumlarının dağılımı",
+      "byDayOfWeek": "Güne Göre Randevular",
+      "busiestDay": "En yoğun gün",
+      "byHour": "Saate Göre Randevular",
+      "busiestHour": "En yoğun saat",
+      "dailyTrend": "Günlük Randevu Trendi",
+      "dailyTrendDesc": "Günlük randevu aktivitesi",
+      "newClientsTrend": "Yeni Müşteri Trendi",
+      "newClientsTrendDesc": "Zaman içinde yeni müşteri kazanımı"
+    },
+    "legend": {
+      "total": "Toplam",
+      "completed": "Tamamlanan",
+      "cancelled": "İptal Edilen",
+      "noShow": "Gelmedi",
+      "newClients": "Yeni Müşteriler"
+    },
+    "members": {
+      "title": "Ekip Performansı",
+      "description": "Ekip üyeleri arasında performans metriklerini karşılaştırın",
+      "name": "Üye",
+      "totalAppointments": "Toplam",
+      "completed": "Tamamlanan",
+      "completionRate": "Tamamlanma %",
+      "noShowRate": "Gelmeme %",
+      "avgPerDay": "Gün/Ort",
+      "noMembers": "Ekip üyesi bulunamadı",
+      "comparison": "Üye Karşılaştırması",
+      "comparisonDesc": "Ekip üyesi başına duruma göre randevular"
+    },
+    "services": {
+      "title": "Hizmet Analizi",
+      "description": "Hizmet türüne göre performans dağılımı",
+      "topServices": "En Çok Tercih Edilen Hizmetler",
+      "completed": "tamamlanan",
+      "total": "toplam",
+      "noServices": "Hizmet verisi bulunmuyor"
+    }
   }
 }

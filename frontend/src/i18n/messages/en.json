@@ -157,6 +157,7 @@
     "bookingLinks": "Booking Links",
     "serviceOptions": "Service Options",
     "gamification": "Gamification",
+    "reports": "Reports",
     "settings": "Settings",
     "main": "Main",
     "configuration": "Configuration",
@@ -929,5 +930,81 @@
     "completedAppointments": "Completed",
     "cancelledAppointments": "Cancelled",
     "activeServices": "Active Services"
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "subtitle": "Performance overview for {organization}",
+    "accessDenied": "Access Denied",
+    "adminOnly": "Only organization admins can view reports.",
+    "noData": "No Data Available",
+    "noDataDescription": "There's no data to display for the selected period.",
+    "selectPeriod": "Select Period",
+    "periods": {
+      "7d": "Last 7 Days",
+      "30d": "Last 30 Days",
+      "90d": "Last 90 Days",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month"
+    },
+    "metrics": {
+      "totalAppointments": "Total Appointments",
+      "completionRate": "Completion Rate",
+      "noShowRate": "No-Show Rate",
+      "totalClients": "Total Clients",
+      "thisMonth": "this month",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShows": "No-Shows",
+      "avgPerDay": "Avg/Day",
+      "activeMembers": "Active Members"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "trends": "Trends",
+      "members": "Team Performance",
+      "services": "Services"
+    },
+    "charts": {
+      "monthlyTrend": "Monthly Appointments",
+      "monthlyTrendDesc": "Appointment trends over the past 12 months",
+      "statusDistribution": "Status Distribution",
+      "statusDistributionDesc": "Breakdown of appointment statuses",
+      "byDayOfWeek": "Appointments by Day",
+      "busiestDay": "Busiest day",
+      "byHour": "Appointments by Hour",
+      "busiestHour": "Busiest hour",
+      "dailyTrend": "Daily Appointment Trend",
+      "dailyTrendDesc": "Day-by-day appointment activity",
+      "newClientsTrend": "New Clients Trend",
+      "newClientsTrendDesc": "New client acquisition over time"
+    },
+    "legend": {
+      "total": "Total",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No-Show",
+      "newClients": "New Clients"
+    },
+    "members": {
+      "title": "Team Performance",
+      "description": "Compare performance metrics across team members",
+      "name": "Member",
+      "totalAppointments": "Total",
+      "completed": "Completed",
+      "completionRate": "Completion %",
+      "noShowRate": "No-Show %",
+      "avgPerDay": "Avg/Day",
+      "noMembers": "No team members found",
+      "comparison": "Member Comparison",
+      "comparisonDesc": "Appointments by status per team member"
+    },
+    "services": {
+      "title": "Service Analytics",
+      "description": "Performance breakdown by service type",
+      "topServices": "Top Services",
+      "completed": "completed",
+      "total": "total",
+      "noServices": "No services data available"
+    }
   }
 }

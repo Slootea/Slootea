@@ -15,12 +15,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
   Clock,
   User,
-  Phone,
   Mail,
   Loader2,
   Users,
@@ -471,16 +471,13 @@ export default function SchedulePage() {
 
                   <div>
                     <Label htmlFor="phone">{t('phone')} *</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        value={clientPhone}
-                        onChange={(e) => setClientPhone(e.target.value)}
-                        placeholder={t('phonePlaceholder')}
-                        className="pl-10"
-                      />
-                    </div>
+                    <PhoneInput
+                      id="phone"
+                      value={clientPhone}
+                      onChange={(value) => setClientPhone(value || "")}
+                      placeholder={t('phonePlaceholder')}
+                      defaultCountry="TR"
+                    />
                   </div>
 
                   <div>

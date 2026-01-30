@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { format, addDays, startOfDay, parseISO } from "date-fns";
 import {
   ArrowLeft,
@@ -377,17 +378,14 @@ export default function GamifiedBookingPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="phone">{t('phone')} *</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        value={clientPhone}
-                        onChange={(e) => setClientPhone(e.target.value)}
-                        onBlur={handlePhoneBlur}
-                        placeholder={t('phonePlaceholder')}
-                        className="pl-10"
-                      />
-                    </div>
+                    <PhoneInput
+                      id="phone"
+                      value={clientPhone}
+                      onChange={(value) => setClientPhone(value || "")}
+                      onBlur={handlePhoneBlur}
+                      placeholder={t('phonePlaceholder')}
+                      defaultCountry="TR"
+                    />
                     {gamificationStatus?.enabled && (
                       <p className="text-xs text-muted-foreground">
                         We'll check if you have an existing rewards account

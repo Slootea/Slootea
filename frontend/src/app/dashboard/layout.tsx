@@ -33,6 +33,7 @@ export default function DashboardLayout({
     { href: "/dashboard/blocks", label: t("blockedTimes") },
     { href: "/dashboard/appointments", label: t("appointments") },
     { href: "/dashboard/links", label: t("bookingLinks") },
+    { href: "/dashboard/reports", label: t("reports") || "Reports" },
     { href: "/dashboard/settings", label: t("settings") },
   ];
 
@@ -65,17 +66,25 @@ export default function DashboardLayout({
       <AppSidebar />
       <SidebarInset>
         {/* Header */}
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-50 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <h1 className="text-xl font-semibold">
             {navItems.find((item) => item.href === pathname)?.label || t("dashboard")}
           </h1>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {user?.firstName || user?.username || user?.emailAddresses[0]?.emailAddress}
-            </span>
-            <UserButton afterSignOutUrl="/" />
+          <div className="ml-auto">
+            <UserButton 
+              afterSignOutUrl="/" 
+              showName
+              appearance={{
+                elements: {
+                  userButtonTrigger: "flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 hover:bg-[var(--muted)] transition-colors",
+                  userButtonBox: "flex-row-reverse",
+                  userButtonOuterIdentifier: "text-sm font-medium text-[var(--foreground)]",
+                  avatarBox: "h-6 w-6",
+                }
+              }}
+            />
           </div>
         </header>
 

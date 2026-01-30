@@ -83,7 +83,6 @@ export function CalendarHeader({
           {showMemberFilter && members.length > 0 && (
             <Select value={selectedMember} onValueChange={setSelectedMember}>
               <SelectTrigger className="w-[200px]">
-                <Users className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="All Members" />
               </SelectTrigger>
               <SelectContent>
@@ -107,11 +106,7 @@ export function CalendarHeader({
                           ? `${member.firstName} ${member.lastName || ""}`
                           : member.email.split("@")[0]}
                       </span>
-                      {member.role === "org:admin" && (
-                        <Badge variant="outline" className="text-xs ml-1">
-                          Admin
-                        </Badge>
-                      )}
+                   
                     </div>
                   </SelectItem>
                 ))}

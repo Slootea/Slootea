@@ -14,6 +14,7 @@ import { PublicModule } from './modules/public/public.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { OrganizationsModule } from './modules/organizations/organizations.modul
     PublicModule,
     ClientsModule,
     GamificationModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}

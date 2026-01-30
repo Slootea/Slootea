@@ -362,3 +362,21 @@ export const publicVirtualPetApi = {
   updatePetName: (slug: string, clientId: string, name: string) =>
     api.put(`/public/virtual-pet/${slug}/${clientId}/name`, { name }),
 };
+
+// Reports API (Admin only)
+export const reportsApi = {
+  getOverview: (params?: { startDate?: string; endDate?: string }) =>
+    api.get('/reports/overview', { params }),
+  getStats: (params?: { startDate?: string; endDate?: string }) =>
+    api.get('/reports/stats', { params }),
+  getMemberStats: (params?: { startDate?: string; endDate?: string }) =>
+    api.get('/reports/members', { params }),
+  getMemberDetailedStats: (memberId: string, params?: { startDate?: string; endDate?: string }) =>
+    api.get(`/reports/members/${memberId}`, { params }),
+  getMonthlyAnalytics: (months?: number) =>
+    api.get('/reports/monthly', { params: { months } }),
+  getDailyTrend: (days?: number) =>
+    api.get('/reports/daily-trend', { params: { days } }),
+  getServiceAnalytics: (params?: { startDate?: string; endDate?: string }) =>
+    api.get('/reports/services', { params }),
+};

@@ -632,3 +632,95 @@ export interface VirtualPetStatus {
   enabled: boolean;
   gamificationEnabled: boolean;
 }
+
+// Reports Types
+export interface MonthlyAnalytics {
+  month: string;
+  year: number;
+  totalAppointments: number;
+  completedAppointments: number;
+  cancelledAppointments: number;
+  noShowAppointments: number;
+  pendingAppointments: number;
+  newClients: number;
+  revenue: number;
+}
+
+export interface MemberStats {
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  totalAppointments: number;
+  completedAppointments: number;
+  cancelledAppointments: number;
+  noShowAppointments: number;
+  completionRate: number;
+  noShowRate: number;
+  averageAppointmentsPerDay: number;
+}
+
+export interface MemberDetailedStats extends MemberStats {
+  monthlyData: MonthlyAnalytics[];
+}
+
+export interface ServiceStat {
+  serviceId: string;
+  serviceName: string;
+  totalAppointments: number;
+  completedAppointments: number;
+  percentage: number;
+}
+
+export interface StatusBreakdown {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DayBreakdown {
+  day: string;
+  dayIndex: number;
+  count: number;
+}
+
+export interface HourBreakdown {
+  hour: number;
+  count: number;
+}
+
+export interface TrendData {
+  date: string;
+  appointments: number;
+  completed: number;
+  cancelled: number;
+  noShow: number;
+}
+
+export interface OrganizationStats {
+  totalAppointments: number;
+  completedAppointments: number;
+  cancelledAppointments: number;
+  noShowAppointments: number;
+  pendingAppointments: number;
+  totalClients: number;
+  newClientsThisMonth: number;
+  repeatClients: number;
+  totalMembers: number;
+  activeMembers: number;
+  completionRate: number;
+  noShowRate: number;
+  cancelRate: number;
+  averageAppointmentsPerDay: number;
+  busiestDay: string;
+  busiestHour: number;
+  topServices: ServiceStat[];
+  appointmentsByStatus: StatusBreakdown[];
+  appointmentsByDayOfWeek: DayBreakdown[];
+  appointmentsByHour: HourBreakdown[];
+}
+
+export interface OrganizationOverview extends OrganizationStats {
+  monthlyAnalytics: MonthlyAnalytics[];
+  memberStats: MemberStats[];
+  dailyTrend: TrendData[];
+}
