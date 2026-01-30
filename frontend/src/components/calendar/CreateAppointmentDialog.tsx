@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { format } from "date-fns";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -50,9 +51,12 @@ import {
   ChevronsUpDown,
   UserPlus,
   Users,
+  AlertTriangle,
+  CalendarClock,
+  Sparkles,
 } from "lucide-react";
-import { ServiceOption, Client, Provider } from "@/lib/types";
-import { clientsApi, userServiceOptionsApi } from "@/lib/api";
+import { ServiceOption, Client, Provider, AvailabilityCheckResult } from "@/lib/types";
+import { clientsApi, userServiceOptionsApi, appointmentsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface CreateAppointmentDialogProps {
@@ -74,6 +78,10 @@ interface CreateAppointmentDialogProps {
     notes?: string;
     startTime: string;
   }) => void;
+  /** If true, dialog was opened from "Add Appointment" button, not calendar click */
+  fromButton?: boolean;
+  /** Pre-selected provider ID (Clerk ID) from calendar member filter */
+  preselectedProviderId?: string;
 }
 
 export function CreateAppointmentDialog({
@@ -87,6 +95,8 @@ export function CreateAppointmentDialog({
   currentUserClerkId,
   saving,
   onSave,
+  fromButton = false,
+  preselectedProviderId,
 }: CreateAppointmentDialogProps) {
   // Form state
   const [selectedService, setSelectedService] = useState<string>("");
@@ -111,11 +121,55 @@ export function CreateAppointmentDialog({
   const [newClientPhone, setNewClientPhone] = useState("");
 
   // Time state
+  const [appointmentDate, setAppointmentDate] = useState<Date | null>(selectedDate);
   const [appointmentTime, setAppointmentTime] = useState(selectedTime);
 
-  // Reset form when dialog opens
+  // Conflict state
+  const [availabilityCheck, setAvailabilityCheck] = useState<AvailabilityCheckResult | null>(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  
+  // Ref to skip availability checks when time was just set from "Use this slot" button
+  // Uses a counter to handle multiple effect triggers from date/time/selectedDate changes
+  const skipAvailabilityCheckCountRef = useRef(0);
+  
+  // Ref to track previous open state to only reset form on actual dialog open
+  const wasOpenRef = useRef(false);
+
+  // Check availability when time changes
+  const checkAvailability = useCallback(async (
+    serviceId: string, 
+    date: Date, 
+    time: string, 
+    providerId?: string
+  ) => {
+    if (!serviceId || !date || !time) return;
+    
+    const [hours, minutes] = time.split(":").map(Number);
+    const startTime = new Date(date);
+    startTime.setHours(hours, minutes, 0, 0);
+    
+    setCheckingAvailability(true);
+    setAvailabilityCheck(null);
+    
+    try {
+      const response = await appointmentsApi.checkAvailability({
+        serviceOptionId: serviceId,
+        startTime: startTime.toISOString(),
+        providerId: providerId || undefined,
+      });
+      
+      setAvailabilityCheck(response.data as AvailabilityCheckResult);
+    } catch (error) {
+      console.error("Failed to check availability:", error);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  }, []);
+
+  // Reset form when dialog opens (only on actual open, not when selectedDate changes)
   useEffect(() => {
-    if (open) {
+    // Only reset when dialog is opening (was closed, now open)
+    if (open && !wasOpenRef.current) {
       setSelectedService("");
       setSelectedProvider("");
       setServiceProviders([]);
@@ -125,10 +179,14 @@ export function CreateAppointmentDialog({
       setNewClientName("");
       setNewClientEmail("");
       setNewClientPhone("");
+      setAppointmentDate(selectedDate);
       setAppointmentTime(selectedTime);
       setClientSearchQuery("");
+      setAvailabilityCheck(null);
+      skipAvailabilityCheckCountRef.current = 0;
     }
-  }, [open, selectedTime]);
+    wasOpenRef.current = open;
+  }, [open, selectedDate, selectedTime]);
 
   // Fetch providers when service changes
   useEffect(() => {
@@ -153,14 +211,22 @@ export function CreateAppointmentDialog({
         // Reset provider selection when service changes
         setSelectedProvider("");
         
-        // If current user is in the providers list, auto-select them
-        const currentUserProvider = uniqueProviders.find((p: Provider) => p.clerkId === currentUserClerkId);
-        if (currentUserProvider) {
-          setSelectedProvider(currentUserClerkId);
+        // Priority for provider selection:
+        // 1. If preselectedProviderId is set and that provider is in the list, use it
+        // 2. If only one provider, auto-select them
+        // 3. Otherwise, don't auto-select (let admin choose)
+        if (preselectedProviderId && preselectedProviderId !== "all") {
+          const preselectedProvider = uniqueProviders.find((p: Provider) => p.clerkId === preselectedProviderId);
+          if (preselectedProvider) {
+            setSelectedProvider(preselectedProviderId);
+          } else if (uniqueProviders.length === 1) {
+            setSelectedProvider(uniqueProviders[0].clerkId || uniqueProviders[0].id);
+          }
         } else if (uniqueProviders.length === 1) {
           // If only one provider, auto-select them
           setSelectedProvider(uniqueProviders[0].clerkId || uniqueProviders[0].id);
         }
+        // If multiple providers and no preselection, don't auto-select
       } catch (error) {
         console.error("Failed to fetch providers for service:", error);
         setServiceProviders([]);
@@ -170,12 +236,45 @@ export function CreateAppointmentDialog({
     };
 
     fetchProviders();
-  }, [selectedService, isAdmin, currentUserClerkId]);
+  }, [selectedService, isAdmin, preselectedProviderId]);
+
+  // Check availability when date/time changes
+  useEffect(() => {
+    if (!selectedService || !appointmentDate || !appointmentTime) return;
+    
+    // Skip if we just set the time from next available result
+    // Decrement counter each time effect runs until it reaches 0
+    if (skipAvailabilityCheckCountRef.current > 0) {
+      skipAvailabilityCheckCountRef.current--;
+      return;
+    }
+    
+    // Debounce the availability check
+    const timeoutId = setTimeout(() => {
+      checkAvailability(
+        selectedService, 
+        appointmentDate, 
+        appointmentTime, 
+        isAdmin ? selectedProvider : undefined
+      );
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [selectedService, appointmentDate, appointmentTime, selectedProvider, isAdmin, checkAvailability]);
+
+  // Update date when selectedDate changes (from calendar click)
+  useEffect(() => {
+    if (selectedDate && !fromButton) {
+      setAppointmentDate(selectedDate);
+    }
+  }, [selectedDate, fromButton]);
 
   // Update time when selectedTime changes
   useEffect(() => {
-    setAppointmentTime(selectedTime);
-  }, [selectedTime]);
+    if (!fromButton) {
+      setAppointmentTime(selectedTime);
+    }
+  }, [selectedTime, fromButton]);
 
   // Fetch clients for search
   const fetchClients = useCallback(async (search?: string) => {
@@ -217,9 +316,31 @@ export function CreateAppointmentDialog({
   // Get selected service details
   const selectedServiceOption = serviceOptions.find((s) => s.id === selectedService);
 
+  // Use next available suggestion from conflict check
+  const useNextAvailable = () => {
+    const nextSlot = availabilityCheck?.nextAvailable;
+    
+    if (nextSlot) {
+      const nextDate = new Date(nextSlot.startTime);
+      
+      // Skip the next availability checks since we're using a suggested available slot
+      // Set to 3 to handle multiple effect triggers (date change, time change, parent selectedDate change)
+      skipAvailabilityCheckCountRef.current = 3;
+      // Clear any conflict state
+      setAvailabilityCheck(null);
+      
+      setAppointmentDate(nextDate);
+      setAppointmentTime(format(nextDate, "HH:mm"));
+      if (onSelectedDateChange) {
+        onSelectedDateChange(nextDate);
+      }
+      // Don't change provider - only update date and time
+    }
+  };
+
   // Handle save
   const handleSave = () => {
-    if (!selectedService || !selectedDate) return;
+    if (!selectedService || !appointmentDate) return;
 
     let clientName = "";
     let clientEmail = "";
@@ -241,7 +362,7 @@ export function CreateAppointmentDialog({
 
     // Build start time from date and time
     const [hours, minutes] = appointmentTime.split(":").map(Number);
-    const startTime = new Date(selectedDate);
+    const startTime = new Date(appointmentDate);
     startTime.setHours(hours, minutes, 0, 0);
 
     onSave({
@@ -257,11 +378,13 @@ export function CreateAppointmentDialog({
 
   // Validation - for admin, require provider selection if providers exist
   const providerValid = !isAdmin || serviceProviders.length === 0 || selectedProvider;
+  const hasConflict = availabilityCheck && !availabilityCheck.available;
   const isValid =
     selectedService &&
-    selectedDate &&
+    appointmentDate &&
     appointmentTime &&
     providerValid &&
+    !hasConflict &&
     ((clientTab === "existing" && selectedClient) ||
       (clientTab === "new" && newClientName && newClientPhone));
 
@@ -274,45 +397,16 @@ export function CreateAppointmentDialog({
             Create Appointment
           </DialogTitle>
           <DialogDescription>
-            {selectedDate 
-              ? `Schedule a new appointment for ${format(selectedDate, "EEEE, MMMM d, yyyy")}`
-              : "Schedule a new appointment by selecting a date and time"
+            {fromButton 
+              ? "Schedule a new appointment. Select a service to see the next available time."
+              : appointmentDate 
+                ? `Schedule a new appointment for ${format(appointmentDate, "EEEE, MMMM d, yyyy")}`
+                : "Schedule a new appointment by selecting a date and time"
             }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Date & Time */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Date
-              </Label>
-              <Input
-                type="date"
-                value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""}
-                onChange={(e) => {
-                  if (e.target.value && onSelectedDateChange) {
-                    onSelectedDateChange(new Date(e.target.value + "T12:00:00"));
-                  }
-                }}
-                min={format(new Date(), "yyyy-MM-dd")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Time
-              </Label>
-              <Input
-                type="time"
-                value={appointmentTime}
-                onChange={(e) => setAppointmentTime(e.target.value)}
-              />
-            </div>
-          </div>
-
           {/* Service Selection */}
           <div className="space-y-2">
             <Label>Service *</Label>
@@ -395,6 +489,73 @@ export function CreateAppointmentDialog({
                 </Select>
               )}
             </div>
+          )}
+
+          {/* Date & Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Date
+              </Label>
+              <Input
+                type="date"
+                value={appointmentDate ? format(appointmentDate, "yyyy-MM-dd") : ""}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const newDate = new Date(e.target.value + "T12:00:00");
+                    setAppointmentDate(newDate);
+                    if (onSelectedDateChange) {
+                      onSelectedDateChange(newDate);
+                    }
+                  }
+                }}
+                min={format(new Date(), "yyyy-MM-dd")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Time
+                {checkingAvailability && (
+                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                )}
+              </Label>
+              <Input
+                type="time"
+                value={appointmentTime}
+                onChange={(e) => setAppointmentTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Conflict Warning */}
+          {availabilityCheck && !availabilityCheck.available && !checkingAvailability && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Time Slot Unavailable</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>{availabilityCheck.conflict?.reason || "This time slot is not available."}</p>
+                {availabilityCheck.nextAvailable && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <CalendarClock className="h-4 w-4" />
+                    <span className="text-sm">
+                      Next available: {format(parseISO(availabilityCheck.nextAvailable.startTime), "MMM d 'at' h:mm a")}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={useNextAvailable}
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Use this slot
+                    </Button>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Client Selection */}
@@ -602,13 +763,17 @@ export function CreateAppointmentDialog({
                   {clientTab === "existing" ? selectedClient?.name : newClientName}
                 </p>
                 <p>
+                  <span className="text-muted-foreground">Date:</span>{" "}
+                  {appointmentDate && format(appointmentDate, "EEEE, MMMM d, yyyy")}
+                </p>
+                <p>
                   <span className="text-muted-foreground">Time:</span>{" "}
-                  {selectedDate &&
+                  {appointmentDate && appointmentTime &&
                     format(
                       new Date(
-                        selectedDate.getFullYear(),
-                        selectedDate.getMonth(),
-                        selectedDate.getDate(),
+                        appointmentDate.getFullYear(),
+                        appointmentDate.getMonth(),
+                        appointmentDate.getDate(),
                         parseInt(appointmentTime.split(":")[0]),
                         parseInt(appointmentTime.split(":")[1])
                       ),

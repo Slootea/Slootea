@@ -358,4 +358,54 @@ export class UserServiceOptionsService {
       total: resolvedUserIds.length,
     };
   }
+
+  /**
+   * Get user by Clerk ID
+   */
+  async getUserByClerkId(clerkId: string): Promise<{
+    id: string;
+    clerkId: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+  } | null> {
+    try {
+      const user = await this.usersService.findByClerkId(clerkId);
+      if (!user) return null;
+      return {
+        id: user.id,
+        clerkId: user.clerkId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get user by internal ID
+   */
+  async getUserById(userId: string): Promise<{
+    id: string;
+    clerkId: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+  } | null> {
+    try {
+      const user = await this.usersService.findById(userId);
+      if (!user) return null;
+      return {
+        id: user.id,
+        clerkId: user.clerkId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      };
+    } catch {
+      return null;
+    }
+  }
 }

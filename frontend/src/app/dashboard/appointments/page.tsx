@@ -97,6 +97,7 @@ export default function AppointmentsPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date>(new Date());
   const [createSaving, setCreateSaving] = useState(false);
+  const [createFromButton, setCreateFromButton] = useState(true);
 
   // Pagination & Filters
   const [filters, setFilters] = useState<AppointmentFilters>({
@@ -396,6 +397,7 @@ export default function AppointmentsPage() {
                 size="sm"
                 onClick={() => {
                   setSelectedSlotDate(new Date());
+                  setCreateFromButton(true);
                   setCreateDialogOpen(true);
                 }}
               >
@@ -601,6 +603,7 @@ export default function AppointmentsPage() {
         currentUserClerkId={user?.id || ""}
         saving={createSaving}
         onSave={handleCreateAppointment}
+        fromButton={createFromButton}
       />
     </div>
   );

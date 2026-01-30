@@ -250,6 +250,36 @@ export interface AvailableSlot {
   providerId?: string;
 }
 
+export interface NextAvailableResult {
+  available: boolean;
+  nextSlot: {
+    startTime: string;
+    endTime: string;
+    providerId?: string;
+    providerName?: string;
+  } | null;
+  message?: string;
+}
+
+export interface AvailabilityCheckResult {
+  available: boolean;
+  conflict?: {
+    reason: string;
+    existingAppointment?: {
+      id: string;
+      clientName: string;
+      startTime: string;
+      endTime: string;
+    };
+  };
+  nextAvailable?: {
+    startTime: string;
+    endTime: string;
+    providerId?: string;
+    providerName?: string;
+  };
+}
+
 export interface Provider {
   id: string;
   clerkId: string;

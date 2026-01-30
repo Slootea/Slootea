@@ -6,13 +6,31 @@ import {
   CreateAvailabilityDto,
   UpdateAvailabilityDto,
 } from './dto/availability.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AvailabilityService {
   constructor(
     @InjectRepository(Availability)
     private readonly availabilityRepository: Repository<Availability>,
+    private readonly usersService: UsersService,
   ) {}
+
+  /**
+   * Resolve a user ID that could be either a Clerk ID or a database UUID
+   */
+  private async resolveUserId(userIdOrClerkId: string): Promise<string> {
+    // Check if it's a Clerk ID (starts with 'user_')
+    if (userIdOrClerkId.startsWith('user_')) {
+      const user = await this.usersService.findByClerkId(userIdOrClerkId);
+      if (!user) {
+        throw new NotFoundException(`User with Clerk ID ${userIdOrClerkId} not found`);
+      }
+      return user.id;
+    }
+    // Assume it's already a database UUID
+    return userIdOrClerkId;
+  }
 
   async create(
     userId: string,
@@ -29,12 +47,13 @@ export class AvailabilityService {
    * Admin creates availability for a specific member
    */
   async createForMember(
-    targetUserId: string,
+    targetUserIdOrClerkId: string,
     createDto: CreateAvailabilityDto,
   ): Promise<Availability> {
+    const userId = await this.resolveUserId(targetUserIdOrClerkId);
     const availability = this.availabilityRepository.create({
       ...createDto,
-      userId: targetUserId,
+      userId,
     });
     return this.availabilityRepository.save(availability);
   }
@@ -56,19 +75,21 @@ export class AvailabilityService {
    * Admin creates bulk availability for a specific member
    */
   async createBulkForMember(
-    targetUserId: string,
+    targetUserIdOrClerkId: string,
     createDtos: CreateAvailabilityDto[],
   ): Promise<Availability[]> {
+    const userId = await this.resolveUserId(targetUserIdOrClerkId);
     const availabilities = createDtos.map((dto) =>
       this.availabilityRepository.create({
         ...dto,
-        userId: targetUserId,
+        userId,
       }),
     );
     return this.availabilityRepository.save(availabilities);
   }
 
-  async findAllByUser(userId: string): Promise<Availability[]> {
+  async findAllByUser(userIdOrClerkId: string): Promise<Availability[]> {
+    const userId = await this.resolveUserId(userIdOrClerkId);
     return this.availabilityRepository.find({
       where: { userId },
       relations: ['serviceOption'],

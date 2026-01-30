@@ -172,3 +172,64 @@ export interface PaginatedResult<T> {
     hasPreviousPage: boolean;
   };
 }
+
+export class GetNextAvailableDto {
+  @ApiProperty({ description: 'Service option ID' })
+  @IsUUID()
+  serviceOptionId: string;
+
+  @ApiPropertyOptional({ description: 'Provider ID (Clerk ID) - optional, if not provided will check all providers' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
+  @ApiPropertyOptional({ description: 'Start searching from this date (ISO format), defaults to now' })
+  @IsOptional()
+  @IsString()
+  fromDate?: string;
+}
+
+export class CheckAvailabilityDto {
+  @ApiProperty({ description: 'Service option ID' })
+  @IsUUID()
+  serviceOptionId: string;
+
+  @ApiProperty({ description: 'Start time in ISO format' })
+  @IsDateString()
+  startTime: string;
+
+  @ApiPropertyOptional({ description: 'Provider ID (Clerk ID)' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+}
+
+export interface NextAvailableResult {
+  available: boolean;
+  nextSlot: {
+    startTime: string;
+    endTime: string;
+    providerId?: string;
+    providerName?: string;
+  } | null;
+  message?: string;
+}
+
+export interface AvailabilityCheckResult {
+  available: boolean;
+  conflict?: {
+    reason: string;
+    existingAppointment?: {
+      id: string;
+      clientName: string;
+      startTime: string;
+      endTime: string;
+    };
+  };
+  nextAvailable?: {
+    startTime: string;
+    endTime: string;
+    providerId?: string;
+    providerName?: string;
+  };
+}

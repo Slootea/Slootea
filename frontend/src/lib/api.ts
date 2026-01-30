@@ -106,6 +106,12 @@ export const blockedTimesApi = {
   update: (id: string, data: Partial<{ date: string; startTime: string; endTime: string; isFullDay: boolean; reason: string }>) =>
     api.put(`/blocked-times/${id}`, data),
   delete: (id: string) => api.delete(`/blocked-times/${id}`),
+  // Admin endpoints
+  getForMember: (memberId: string, params?: { startDate?: string; endDate?: string }) =>
+    api.get(`/blocked-times/admin/member/${memberId}`, { params }),
+  createForMember: (memberId: string, data: { date: string; startTime?: string; endTime?: string; isFullDay?: boolean; reason?: string }) =>
+    api.post(`/blocked-times/admin/member/${memberId}`, data),
+  deleteAsAdmin: (id: string) => api.delete(`/blocked-times/admin/${id}`),
 };
 
 // Booking Links API (Organization only)
@@ -139,6 +145,16 @@ export const appointmentsApi = {
   getPending: () => api.get('/appointments/pending'),
   getStats: () => api.get('/appointments/stats'),
   getOne: (id: string) => api.get(`/appointments/${id}`),
+  getNextAvailable: (params: {
+    serviceOptionId: string;
+    providerId?: string;
+    fromDate?: string;
+  }) => api.get('/appointments/next-available', { params }),
+  checkAvailability: (data: {
+    serviceOptionId: string;
+    startTime: string;
+    providerId?: string;
+  }) => api.post('/appointments/check-availability', data),
   create: (data: {
     startTime: string;
     serviceOptionId: string;

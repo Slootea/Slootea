@@ -16,6 +16,8 @@ import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
   AppointmentQueryDto,
+  GetNextAvailableDto,
+  CheckAvailabilityDto,
 } from './dto/appointment.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
@@ -107,6 +109,49 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Get dashboard statistics' })
   async getStats(@Request() req: any) {
     return this.appointmentsService.getDashboardStats(req.user.dbUserId);
+  }
+
+  @Get('next-available')
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
+  @ApiOperation({ summary: 'Get next available time slot for a service' })
+  @ApiQuery({ name: 'serviceOptionId', required: true, type: String })
+  @ApiQuery({ name: 'providerId', required: false, type: String, description: 'Provider Clerk ID' })
+  @ApiQuery({ name: 'fromDate', required: false, type: String, description: 'Start searching from this date (ISO format)' })
+  async getNextAvailable(
+    @Request() req: any,
+    @Query('serviceOptionId') serviceOptionId: string,
+    @Query('providerId') providerId?: string,
+    @Query('fromDate') fromDate?: string,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.getNextAvailableTime(
+      req.user.dbUserId,
+      serviceOptionId,
+      providerId,
+      fromDate,
+      organizationId,
+    );
+  }
+
+  @Post('check-availability')
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
+  @ApiOperation({ summary: 'Check if a time slot is available' })
+  async checkAvailability(
+    @Request() req: any,
+    @Body() checkDto: CheckAvailabilityDto,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.checkTimeSlotAvailability(
+      req.user.dbUserId,
+      checkDto.serviceOptionId,
+      checkDto.startTime,
+      checkDto.providerId,
+      organizationId,
+    );
   }
 
   @Get(':id')

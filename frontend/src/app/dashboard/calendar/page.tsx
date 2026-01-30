@@ -87,6 +87,7 @@ export default function CalendarPage() {
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date>(new Date());
   const [selectedSlotTime, setSelectedSlotTime] = useState<string>("09:00");
   const [createSaving, setCreateSaving] = useState(false);
+  const [createFromButton, setCreateFromButton] = useState(false);
 
   // Drag and drop state
   const [dragState, setDragState] = useState<DragState>({
@@ -160,14 +161,23 @@ export default function CalendarPage() {
         appointmentParams.userId = selectedMember;
       }
 
+      // Determine if we should fetch member-specific availability/blocked times
+      const shouldFetchMemberData = currentOrganization && isAdmin && selectedMember !== "all";
+
       const [appointmentsRes, servicesRes, availabilityRes, blockedRes] = await Promise.all([
         appointmentsApi.getAll(appointmentParams),
         // Admin gets organization services, members get personal services
         currentOrganization && isAdmin
           ? serviceOptionsApi.getAllForOrganization()
           : serviceOptionsApi.getAll(),
-        availabilityApi.getAll(),
-        blockedTimesApi.getAll({ startDate, endDate }),
+        // Fetch availability for selected member or current user
+        shouldFetchMemberData
+          ? availabilityApi.getForMember(selectedMember)
+          : availabilityApi.getAll(),
+        // Fetch blocked times for selected member or current user
+        shouldFetchMemberData
+          ? blockedTimesApi.getForMember(selectedMember, { startDate, endDate })
+          : blockedTimesApi.getAll({ startDate, endDate }),
       ]);
 
       setAppointments(appointmentsRes.data.data || appointmentsRes.data);
@@ -743,6 +753,7 @@ export default function CalendarPage() {
   const handleEmptySlotClick = useCallback((day: Date, time: string) => {
     setSelectedSlotDate(day);
     setSelectedSlotTime(time);
+    setCreateFromButton(false);
     setCreateDialogOpen(true);
   }, []);
 
@@ -750,6 +761,7 @@ export default function CalendarPage() {
   const handleAddAppointmentFromHeader = useCallback(() => {
     setSelectedSlotDate(currentDate);
     setSelectedSlotTime("09:00");
+    setCreateFromButton(true);
     setCreateDialogOpen(true);
   }, [currentDate]);
 
@@ -914,6 +926,8 @@ export default function CalendarPage() {
         currentUserClerkId={user?.id || ""}
         saving={createSaving}
         onSave={handleCreateAppointment}
+        fromButton={createFromButton}
+        preselectedProviderId={selectedMember !== "all" ? selectedMember : undefined}
       />
     </div>
   );

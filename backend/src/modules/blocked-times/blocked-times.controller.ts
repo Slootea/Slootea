@@ -10,13 +10,15 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { BlockedTimesService } from './blocked-times.service';
 import {
   CreateBlockedTimeDto,
   UpdateBlockedTimeDto,
 } from './dto/blocked-time.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
 
 @ApiTags('blocked-times')
 @Controller('blocked-times')
@@ -71,5 +73,48 @@ export class BlockedTimesController {
   @ApiOperation({ summary: 'Delete a blocked time' })
   async remove(@Request() req: any, @Param('id') id: string) {
     return this.blockedTimesService.remove(id, req.user.dbUserId);
+  }
+
+  // ==================== Admin Endpoints (View Any Member's Blocked Times) ====================
+
+  @Get('admin/member/:memberId')
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Admin: Get all blocked times for a member' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  async findAllForMember(
+    @Param('memberId') memberId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    if (startDate && endDate) {
+      return this.blockedTimesService.findByUserAndDateRange(
+        memberId,
+        startDate,
+        endDate,
+      );
+    }
+    return this.blockedTimesService.findAllByUser(memberId);
+  }
+
+  @Post('admin/member/:memberId')
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Admin: Create blocked time for a member' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  async createForMember(
+    @Param('memberId') memberId: string,
+    @Body() createDto: CreateBlockedTimeDto,
+  ) {
+    return this.blockedTimesService.create(memberId, createDto);
+  }
+
+  @Delete('admin/:id')
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Admin: Delete any blocked time' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  async removeAsAdmin(@Param('id') id: string) {
+    return this.blockedTimesService.removeAsAdmin(id);
   }
 }

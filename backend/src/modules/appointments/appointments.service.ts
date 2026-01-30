@@ -13,6 +13,8 @@ import {
   UpdateAppointmentDto,
   AppointmentQueryDto,
   PaginatedResult,
+  NextAvailableResult,
+  AvailabilityCheckResult,
 } from './dto/appointment.dto';
 import { ServiceOptionsService } from '../service-options/service-options.service';
 import { AvailabilityService } from '../availability/availability.service';
@@ -1144,5 +1146,368 @@ export class AppointmentsService {
       where: { id: savedAppointment.id },
       relations: ['serviceOption'],
     });
+  }
+
+  /**
+   * Get the next available time slot for a service/provider
+   * Used by dashboard to auto-populate appointment time
+   */
+  async getNextAvailableTime(
+    userId: string,
+    serviceOptionId: string,
+    providerId?: string,
+    fromDate?: string,
+    organizationId?: string,
+  ): Promise<NextAvailableResult> {
+    const serviceOption = await this.serviceOptionsService.findById(serviceOptionId);
+    
+    // Get settings based on context
+    const settings = organizationId 
+      ? await this.organizationSettingsService.findByOrganizationId(organizationId)
+      : await this.settingsService.findByUserId(userId);
+
+    const searchStartDate = fromDate ? new Date(fromDate) : new Date();
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+
+    // If provider is specified, search only that provider's slots
+    // Otherwise, if in org context, search all providers for the service
+    let targetUserIds: string[] = [];
+    
+    if (providerId) {
+      // providerId is a Clerk ID, we need to convert to db user ID
+      const targetUser = await this.userServiceOptionsService.getUserByClerkId(providerId);
+      if (targetUser) {
+        targetUserIds = [targetUser.id];
+      }
+    } else if (organizationId) {
+      // Get all providers for this service in the organization
+      const providers = await this.userServiceOptionsService.getProvidersForService(
+        serviceOptionId,
+        organizationId,
+      );
+      targetUserIds = providers.map(p => p.id);
+    } else {
+      // Individual user context
+      targetUserIds = [userId];
+    }
+
+    if (targetUserIds.length === 0) {
+      return {
+        available: false,
+        nextSlot: null,
+        message: 'No providers available for this service',
+      };
+    }
+
+    const duration = serviceOption.duration;
+    const buffer = settings.bufferTimeMinutes;
+    const minAdvanceDate = new Date();
+    minAdvanceDate.setHours(minAdvanceDate.getHours() + settings.minAdvanceBookingHours);
+
+    // Search day by day until we find an available slot
+    const currentDate = new Date(Math.max(searchStartDate.getTime(), minAdvanceDate.getTime()));
+    currentDate.setHours(0, 0, 0, 0);
+
+    while (currentDate <= maxDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const dayOfWeek = ((currentDate.getDay() + 6) % 7) as DayOfWeek;
+
+      for (const targetUserId of targetUserIds) {
+        // Get availability for this day
+        const availabilities = await this.availabilityService.findByUserAndDay(
+          targetUserId,
+          dayOfWeek,
+          serviceOptionId,
+        );
+
+        if (availabilities.length === 0) continue;
+
+        // Get blocked times
+        const blockedTimes = await this.blockedTimesService.findByUserAndDate(
+          targetUserId,
+          dateStr,
+        );
+
+        if (blockedTimes.some((bt) => bt.isFullDay)) continue;
+
+        // Get existing appointments
+        const startOfDay = new Date(dateStr);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(dateStr);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const existingAppointments = await this.appointmentRepository.find({
+          where: {
+            userId: targetUserId,
+            startTime: Between(startOfDay, endOfDay),
+            status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+          },
+        });
+
+        // Check each availability window
+        for (const availability of availabilities) {
+          const [startHour, startMin] = availability.startTime.split(':').map(Number);
+          const [endHour, endMin] = availability.endTime.split(':').map(Number);
+
+          let slotStart = new Date(dateStr);
+          slotStart.setHours(startHour, startMin, 0, 0);
+
+          const availabilityEnd = new Date(dateStr);
+          availabilityEnd.setHours(endHour, endMin, 0, 0);
+
+          while (slotStart.getTime() + duration * 60000 <= availabilityEnd.getTime()) {
+            const slotEnd = new Date(slotStart.getTime() + duration * 60000);
+
+            // Check if slot is in the future and after min advance booking
+            if (slotStart > minAdvanceDate) {
+              // Check if blocked
+              const isBlocked = blockedTimes.some((bt) => {
+                if (bt.isFullDay) return true;
+                const blockStart = new Date(dateStr);
+                const [bsH, bsM] = bt.startTime.split(':').map(Number);
+                blockStart.setHours(bsH, bsM, 0, 0);
+                const blockEnd = new Date(dateStr);
+                const [beH, beM] = bt.endTime.split(':').map(Number);
+                blockEnd.setHours(beH, beM, 0, 0);
+                return slotStart < blockEnd && slotEnd > blockStart;
+              });
+
+              // Check if booked
+              const isBooked = existingAppointments.some((apt) => {
+                const aptStart = new Date(apt.startTime);
+                const aptEnd = new Date(apt.endTime);
+                const aptEndWithBuffer = new Date(aptEnd.getTime() + buffer * 60000);
+                return slotStart < aptEndWithBuffer && slotEnd > aptStart;
+              });
+
+              if (!isBlocked && !isBooked) {
+                // Found an available slot!
+                // Get provider info
+                const providerUser = await this.userServiceOptionsService.getUserById(targetUserId);
+                
+                return {
+                  available: true,
+                  nextSlot: {
+                    startTime: slotStart.toISOString(),
+                    endTime: slotEnd.toISOString(),
+                    providerId: providerUser?.clerkId,
+                    providerName: providerUser?.firstName 
+                      ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
+                      : undefined,
+                  },
+                };
+              }
+            }
+
+            // Move to next slot
+            slotStart = new Date(slotStart.getTime() + (duration + buffer) * 60000);
+          }
+        }
+      }
+
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return {
+      available: false,
+      nextSlot: null,
+      message: 'No available slots found within the booking window',
+    };
+  }
+
+  /**
+   * Check if a specific time slot is available
+   * Returns availability status and next available if not available
+   */
+  async checkTimeSlotAvailability(
+    userId: string,
+    serviceOptionId: string,
+    startTime: string,
+    providerId?: string,
+    organizationId?: string,
+  ): Promise<AvailabilityCheckResult> {
+    const serviceOption = await this.serviceOptionsService.findById(serviceOptionId);
+    
+    // Get settings based on context
+    const settings = organizationId 
+      ? await this.organizationSettingsService.findByOrganizationId(organizationId)
+      : await this.settingsService.findByUserId(userId);
+
+    const requestedStart = new Date(startTime);
+    const requestedEnd = new Date(requestedStart.getTime() + serviceOption.duration * 60000);
+    const dateStr = requestedStart.toISOString().split('T')[0];
+    const dayOfWeek = ((requestedStart.getDay() + 6) % 7) as DayOfWeek;
+    const buffer = settings.bufferTimeMinutes;
+
+    // Determine target user
+    let targetUserId: string;
+    
+    if (providerId) {
+      const targetUser = await this.userServiceOptionsService.getUserByClerkId(providerId);
+      if (!targetUser) {
+        return {
+          available: false,
+          conflict: {
+            reason: 'Provider not found',
+          },
+        };
+      }
+      targetUserId = targetUser.id;
+    } else {
+      targetUserId = userId;
+    }
+
+    // Check min advance booking
+    const minAdvanceDate = new Date();
+    minAdvanceDate.setHours(minAdvanceDate.getHours() + settings.minAdvanceBookingHours);
+    
+    if (requestedStart < minAdvanceDate) {
+      const nextAvailable = await this.getNextAvailableTime(
+        userId, 
+        serviceOptionId, 
+        providerId, 
+        undefined, 
+        organizationId
+      );
+      return {
+        available: false,
+        conflict: {
+          reason: `Appointments must be booked at least ${settings.minAdvanceBookingHours} hours in advance`,
+        },
+        nextAvailable: nextAvailable.nextSlot || undefined,
+      };
+    }
+
+    // Check max advance booking
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+    
+    if (requestedStart > maxDate) {
+      return {
+        available: false,
+        conflict: {
+          reason: `Appointments can only be booked up to ${settings.maxAdvanceBookingDays} days in advance`,
+        },
+      };
+    }
+
+    // Check availability for this day
+    const availabilities = await this.availabilityService.findByUserAndDay(
+      targetUserId,
+      dayOfWeek,
+      serviceOptionId,
+    );
+
+    const hasAvailability = availabilities.some((av) => {
+      const [avStartH, avStartM] = av.startTime.split(':').map(Number);
+      const [avEndH, avEndM] = av.endTime.split(':').map(Number);
+      const avStart = new Date(dateStr);
+      avStart.setHours(avStartH, avStartM, 0, 0);
+      const avEnd = new Date(dateStr);
+      avEnd.setHours(avEndH, avEndM, 0, 0);
+      return requestedStart >= avStart && requestedEnd <= avEnd;
+    });
+
+    if (!hasAvailability) {
+      const nextAvailable = await this.getNextAvailableTime(
+        userId, 
+        serviceOptionId, 
+        providerId, 
+        startTime, 
+        organizationId
+      );
+      return {
+        available: false,
+        conflict: {
+          reason: 'Provider is not available at this time',
+        },
+        nextAvailable: nextAvailable.nextSlot || undefined,
+      };
+    }
+
+    // Check blocked times
+    const blockedTimes = await this.blockedTimesService.findByUserAndDate(
+      targetUserId,
+      dateStr,
+    );
+
+    const isBlocked = blockedTimes.some((bt) => {
+      if (bt.isFullDay) return true;
+      const blockStart = new Date(dateStr);
+      const [bsH, bsM] = bt.startTime.split(':').map(Number);
+      blockStart.setHours(bsH, bsM, 0, 0);
+      const blockEnd = new Date(dateStr);
+      const [beH, beM] = bt.endTime.split(':').map(Number);
+      blockEnd.setHours(beH, beM, 0, 0);
+      return requestedStart < blockEnd && requestedEnd > blockStart;
+    });
+
+    if (isBlocked) {
+      const nextAvailable = await this.getNextAvailableTime(
+        userId, 
+        serviceOptionId, 
+        providerId, 
+        startTime, 
+        organizationId
+      );
+      return {
+        available: false,
+        conflict: {
+          reason: 'This time is blocked',
+        },
+        nextAvailable: nextAvailable.nextSlot || undefined,
+      };
+    }
+
+    // Check existing appointments
+    const startOfDay = new Date(dateStr);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateStr);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingAppointments = await this.appointmentRepository.find({
+      where: {
+        userId: targetUserId,
+        startTime: Between(startOfDay, endOfDay),
+        status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+      },
+    });
+
+    const conflictingAppointment = existingAppointments.find((apt) => {
+      const aptStart = new Date(apt.startTime);
+      const aptEnd = new Date(apt.endTime);
+      const aptEndWithBuffer = new Date(aptEnd.getTime() + buffer * 60000);
+      return requestedStart < aptEndWithBuffer && requestedEnd > aptStart;
+    });
+
+    if (conflictingAppointment) {
+      const nextAvailable = await this.getNextAvailableTime(
+        userId, 
+        serviceOptionId, 
+        providerId, 
+        startTime, 
+        organizationId
+      );
+      return {
+        available: false,
+        conflict: {
+          reason: 'This time slot is already booked',
+          existingAppointment: {
+            id: conflictingAppointment.id,
+            clientName: conflictingAppointment.clientName,
+            startTime: conflictingAppointment.startTime.toISOString(),
+            endTime: conflictingAppointment.endTime.toISOString(),
+          },
+        },
+        nextAvailable: nextAvailable.nextSlot || undefined,
+      };
+    }
+
+    // All checks passed - slot is available
+    return {
+      available: true,
+    };
   }
 }
