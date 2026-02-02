@@ -379,12 +379,16 @@ export function CreateAppointmentDialog({
   // Validation - for admin, require provider selection if providers exist
   const providerValid = !isAdmin || serviceProviders.length === 0 || selectedProvider;
   const hasConflict = availabilityCheck && !availabilityCheck.available;
+  // Check if the conflict is only about minimum advance booking time - allow override for manual creation
+  const isMinAdvanceBookingConflict = hasConflict && availabilityCheck?.conflict?.reason?.includes('hours in advance');
+  // Block form submission only for real conflicts (not minimum advance booking which admins can override)
+  const hasBlockingConflict = hasConflict && !isMinAdvanceBookingConflict;
   const isValid =
     selectedService &&
     appointmentDate &&
     appointmentTime &&
     providerValid &&
-    !hasConflict &&
+    !hasBlockingConflict &&
     ((clientTab === "existing" && selectedClient) ||
       (clientTab === "new" && newClientName && newClientPhone));
 
@@ -531,11 +535,14 @@ export function CreateAppointmentDialog({
 
           {/* Conflict Warning */}
           {availabilityCheck && !availabilityCheck.available && !checkingAvailability && (
-            <Alert variant="destructive">
+            <Alert variant={isMinAdvanceBookingConflict ? "default" : "destructive"}>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Time Slot Unavailable</AlertTitle>
+              <AlertTitle>{isMinAdvanceBookingConflict ? "Note" : "Time Slot Unavailable"}</AlertTitle>
               <AlertDescription className="space-y-2">
-                <p>{availabilityCheck.conflict?.reason || "This time slot is not available."}</p>
+                <p>
+                  {availabilityCheck.conflict?.reason || "This time slot is not available."}
+                  {isMinAdvanceBookingConflict && " You can still create this appointment manually."}
+                </p>
                 {availabilityCheck.nextAvailable && (
                   <div className="flex items-center gap-2 mt-2">
                     <CalendarClock className="h-4 w-4" />

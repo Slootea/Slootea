@@ -848,13 +848,17 @@ export class AppointmentsService {
               return slotStart < blockEnd && slotEnd > blockStart;
             });
 
-            // Check if slot overlaps with existing appointments
+            // Check if slot overlaps with existing appointments (considering buffer time before AND after)
+            // The slot must:
+            // 1. Not start before any existing appointment ends + buffer (buffer after previous)
+            // 2. End + buffer must not overlap with any existing appointment start (buffer before next)
             const isBooked = existingAppointments.some((apt) => {
               const aptStart = new Date(apt.startTime);
               const aptEnd = new Date(apt.endTime);
               // Add buffer time
               const aptEndWithBuffer = new Date(aptEnd.getTime() + buffer * 60000);
-              return slotStart < aptEndWithBuffer && slotEnd > aptStart;
+              const slotEndWithBuffer = new Date(slotEnd.getTime() + buffer * 60000);
+              return slotStart < aptEndWithBuffer && slotEndWithBuffer > aptStart;
             });
 
             if (!isBlocked && !isBooked) {
@@ -1273,12 +1277,17 @@ export class AppointmentsService {
                 return slotStart < blockEnd && slotEnd > blockStart;
               });
 
-              // Check if booked
+              // Check if booked (considering buffer time before AND after)
+              // The suggested slot must:
+              // 1. Not start before any existing appointment ends + buffer (buffer after previous)
+              // 2. End + buffer must not overlap with any existing appointment start (buffer before next)
               const isBooked = existingAppointments.some((apt) => {
                 const aptStart = new Date(apt.startTime);
                 const aptEnd = new Date(apt.endTime);
                 const aptEndWithBuffer = new Date(aptEnd.getTime() + buffer * 60000);
-                return slotStart < aptEndWithBuffer && slotEnd > aptStart;
+                const slotEndWithBuffer = new Date(slotEnd.getTime() + buffer * 60000);
+                // Check overlap: slot conflicts if it starts before apt ends+buffer OR if slot ends+buffer is after apt starts
+                return slotStart < aptEndWithBuffer && slotEndWithBuffer > aptStart;
               });
 
               if (!isBlocked && !isBooked) {
@@ -1475,11 +1484,18 @@ export class AppointmentsService {
       },
     });
 
+    // Check for conflicts considering buffer time before AND after
+    // The requested slot must:
+    // 1. Not start before any existing appointment ends + buffer (buffer after previous)
+    // 2. End + buffer must not overlap with any existing appointment start (buffer before next)
+    const requestedEndWithBuffer = new Date(requestedEnd.getTime() + buffer * 60000);
+    
     const conflictingAppointment = existingAppointments.find((apt) => {
       const aptStart = new Date(apt.startTime);
       const aptEnd = new Date(apt.endTime);
       const aptEndWithBuffer = new Date(aptEnd.getTime() + buffer * 60000);
-      return requestedStart < aptEndWithBuffer && requestedEnd > aptStart;
+      // Check overlap: requested conflicts if it starts before apt ends+buffer OR if requested ends+buffer is after apt starts
+      return requestedStart < aptEndWithBuffer && requestedEndWithBuffer > aptStart;
     });
 
     if (conflictingAppointment) {
