@@ -535,9 +535,9 @@ export default function GamifiedBookingPage() {
               {/* Selected service mini card */}
               <Card className="mb-4">
                 <CardContent className="p-3 flex items-center gap-3">
-                  {selectedService.imageUrl ? (
+                  {selectedService.imageBase64 ? (
                     <img
-                      src={selectedService.imageUrl}
+                      src={selectedService.imageBase64}
                       alt={selectedService.title}
                       className="w-12 h-12 rounded-lg object-cover"
                     />
@@ -635,9 +635,9 @@ export default function GamifiedBookingPage() {
                 <CardContent className="space-y-4">
                   {/* Service */}
                   <div className="flex items-center gap-3">
-                    {selectedService.imageUrl ? (
+                    {selectedService.imageBase64 ? (
                       <img
-                        src={selectedService.imageUrl}
+                        src={selectedService.imageBase64}
                         alt={selectedService.title}
                         className="w-16 h-16 rounded-lg object-cover"
                       />

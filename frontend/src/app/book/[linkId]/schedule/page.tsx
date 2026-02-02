@@ -271,9 +271,9 @@ export default function SchedulePage() {
         {/* Selected service info */}
         <Card className="mb-6">
           <CardContent className="p-4 flex items-center gap-4">
-            {selectedService.imageUrl ? (
+            {selectedService.imageBase64 ? (
               <img
-                src={selectedService.imageUrl}
+                src={selectedService.imageBase64}
                 alt={selectedService.title}
                 className="w-16 h-16 rounded-lg object-cover"
               />
