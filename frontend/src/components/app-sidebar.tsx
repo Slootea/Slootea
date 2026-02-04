@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Gift, Building2, BarChart3 } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Building2, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -44,7 +44,6 @@ export function AppSidebar() {
     { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
     { href: "/dashboard/reports", label: t('reports') || 'Reports', icon: BarChart3 },
-    { href: "/dashboard/gamification", label: t('gamification'), icon: Gift, badge: "alfa" },
     { href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 },
   ];
 

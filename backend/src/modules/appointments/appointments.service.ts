@@ -23,7 +23,6 @@ import { SettingsService } from '../settings/settings.service';
 import { OrganizationSettingsService } from '../settings/organization-settings.service';
 import { BookingLinksService } from '../booking-links/booking-links.service';
 import { ClientsService } from '../clients/clients.service';
-import { GamificationService } from '../gamification/gamification.service';
 import { UserServiceOptionsService } from '../service-options/user-service-options.service';
 import { DayOfWeek } from '../availability/entities/availability.entity';
 import { v4 as uuidv4 } from 'uuid';
@@ -150,8 +149,6 @@ export class AppointmentsService {
     private readonly bookingLinksService: BookingLinksService,
     @Inject(forwardRef(() => ClientsService))
     private readonly clientsService: ClientsService,
-    @Inject(forwardRef(() => GamificationService))
-    private readonly gamificationService: GamificationService,
     @Inject(forwardRef(() => UserServiceOptionsService))
     private readonly userServiceOptionsService: UserServiceOptionsService,
   ) {}
@@ -501,25 +498,6 @@ export class AppointmentsService {
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
-    // Award booking points if gamification is enabled
-    if (clientId) {
-      try {
-        await this.gamificationService.awardBookingPoints(clientId, userId, savedAppointment.id);
-        
-        // Process referral code if provided
-        if ((createDto as any).referralCode) {
-          await this.gamificationService.processReferral(
-            (createDto as any).referralCode,
-            clientId,
-            userId,
-          );
-        }
-      } catch (error) {
-        // Log but don't fail the booking if gamification fails
-        console.error('Gamification error:', error);
-      }
-    }
-
     return { ...savedAppointment, clientId } as Appointment;
   }
 
@@ -563,12 +541,6 @@ export class AppointmentsService {
             organizationId,
             'completed',
           );
-          // Award completion points for gamification
-          try {
-            await this.gamificationService.awardCompletionPoints(appointment.clientId, userId, savedAppointment.id);
-          } catch (error) {
-            console.error('Gamification completion points error:', error);
-          }
         } else if (updateDto.status === AppointmentStatus.CANCELLED) {
           await this.clientsService.updateAppointmentStats(
             appointment.clientId,
@@ -581,12 +553,6 @@ export class AppointmentsService {
             organizationId,
             'no_show',
           );
-          // Reset streak on no-show
-          try {
-            await this.gamificationService.updateStreak(appointment.clientId, userId, false);
-          } catch (error) {
-            console.error('Gamification streak reset error:', error);
-          }
         }
       } catch (error) {
         console.error('Failed to update client stats:', error);
@@ -1182,16 +1148,6 @@ export class AppointmentsService {
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
-    // Award booking points if gamification is enabled
-    if (clientId) {
-      try {
-        await this.gamificationService.awardBookingPoints(clientId, assignedUserId, savedAppointment.id);
-      } catch (error) {
-        // Don't fail the booking if gamification fails
-        console.error('Failed to award booking points:', error);
-      }
-    }
-
     return this.appointmentRepository.findOneOrFail({
       where: { id: savedAppointment.id },
       relations: ['serviceOption'],
@@ -1244,15 +1200,6 @@ export class AppointmentsService {
     });
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
-
-    // Award booking points if gamification is enabled
-    if (clientId) {
-      try {
-        await this.gamificationService.awardBookingPoints(clientId, userId, savedAppointment.id);
-      } catch (error) {
-        console.error('Failed to award booking points:', error);
-      }
-    }
 
     return this.appointmentRepository.findOneOrFail({
       where: { id: savedAppointment.id },

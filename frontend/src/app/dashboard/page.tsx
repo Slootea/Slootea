@@ -169,14 +169,14 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {remainingAppointments.slice(0, 5).map((apt, index) => (
+                  {remainingAppointments.slice(0, 2).map((apt, index) => (
                     <ScheduleItem key={apt.id} appointment={apt} index={index} tAppointments={tAppointments} />
                   ))}
-                  {remainingAppointments.length > 5 && (
+                  {remainingAppointments.length > 2 && (
                     <div className="pt-2">
                       <Link href="/dashboard/appointments">
                         <Button variant="outline" className="w-full" size="sm">
-                          +{remainingAppointments.length - 5} {t("todaysSchedule.moreAppointments")}
+                          +{remainingAppointments.length - 2} {t("todaysSchedule.moreAppointments")}
                         </Button>
                       </Link>
                     </div>
@@ -244,30 +244,6 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Quick Stats Summary */}
-          <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold">{t("performance.title")}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {stats?.upcomingAppointments || 0}{" "}
-                  {t("performance.completedThisWeek")}
-                </p>
-                <div className="pt-2">
-                  <Link href="/dashboard/appointments?tab=completed">
-                    <Button variant="outline" size="sm" className="gap-1">
-                      {t("performance.viewHistory")}
-                      <ArrowRight className="h-3 w-3" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -656,7 +632,6 @@ function DashboardSkeleton() {
               </div>
             </CardContent>
           </Card>
-          <Skeleton className="h-40 w-full rounded-lg" />
         </div>
       </div>
     </div>

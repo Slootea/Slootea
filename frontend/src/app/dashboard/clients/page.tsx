@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
-import { clientsApi, appointmentsApi, gamificationApi, clientPenaltiesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { clientsApi, appointmentsApi, clientPenaltiesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import {
   Client,
   ClientFilters,
@@ -11,9 +11,6 @@ import {
   Appointment,
   AppointmentStatus,
   PaginatedResult,
-  ClientGamificationSummary,
-  PointsHistory,
-  GamificationSettings,
   ClientPenalty,
   PenaltyType,
   PenaltyStatus,
@@ -92,20 +89,13 @@ import {
   XCircle,
   AlertCircle,
   History,
-  Gift,
-  Star,
-  Flame,
-  Share2,
-  Trophy,
   Plus,
-  Minus,
   Building2,
   Ban,
   ShieldOff,
   ShieldAlert,
   CalendarOff,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import {
   format,
   parseISO,
@@ -150,15 +140,6 @@ export default function ClientsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  // Gamification state
-  const [gamificationEnabled, setGamificationEnabled] = useState(false);
-  const [clientGamification, setClientGamification] = useState<ClientGamificationSummary | null>(null);
-  const [pointsHistory, setPointsHistory] = useState<PointsHistory[]>([]);
-  const [gamificationLoading, setGamificationLoading] = useState(false);
-  const [adjustPointsDialogOpen, setAdjustPointsDialogOpen] = useState(false);
-  const [pointsAdjustment, setPointsAdjustment] = useState({ points: 0, reason: "" });
-  const [adjustingPoints, setAdjustingPoints] = useState(false);
 
   // Penalty state
   const [clientPenalty, setClientPenalty] = useState<ClientPenalty | null>(null);
@@ -327,46 +308,6 @@ export default function ClientsPage() {
     }
   };
 
-  // Fetch gamification settings
-  useEffect(() => {
-    const checkGamification = async () => {
-      if (!currentOrganization) return;
-      try {
-        const token = await getToken();
-        if (!token) return;
-        setAuthToken(token);
-        setOrganizationContext(currentOrganization.id);
-        const response = await gamificationApi.getSettings();
-        setGamificationEnabled(response.data?.enabled ?? false);
-      } catch (error) {
-        console.error("Failed to fetch gamification settings", error);
-      }
-    };
-    checkGamification();
-  }, [getToken, currentOrganization]);
-
-  // Fetch client gamification data
-  const fetchClientGamification = async (clientId: string) => {
-    if (!gamificationEnabled || !currentOrganization) return;
-    
-    setGamificationLoading(true);
-    try {
-      const token = await getToken();
-      setAuthToken(token);
-      setOrganizationContext(currentOrganization.id);
-      const [summaryRes, historyRes] = await Promise.all([
-        gamificationApi.getClientGamification(clientId),
-        gamificationApi.getPointsHistory(clientId),
-      ]);
-      setClientGamification(summaryRes.data);
-      setPointsHistory(historyRes.data || []);
-    } catch (error) {
-      console.error("Failed to fetch gamification data", error);
-    } finally {
-      setGamificationLoading(false);
-    }
-  };
-
   // Fetch client penalty
   const fetchClientPenalty = async (clientId: string) => {
     if (!currentOrganization) return;
@@ -466,50 +407,12 @@ export default function ClientsPage() {
     }
   };
 
-  // Handle points adjustment
-  const handleAdjustPoints = async () => {
-    if (!selectedClient || pointsAdjustment.points === 0 || !currentOrganization) return;
-    
-    setAdjustingPoints(true);
-    try {
-      const token = await getToken();
-      setAuthToken(token);
-      setOrganizationContext(currentOrganization.id);
-      await gamificationApi.adjustPoints(selectedClient.id, {
-        points: pointsAdjustment.points,
-        reason: pointsAdjustment.reason || (pointsAdjustment.points > 0 ? "Manual bonus" : "Manual deduction"),
-      });
-      
-      toast({
-        title: "Success",
-        description: `Points ${pointsAdjustment.points > 0 ? "added" : "deducted"} successfully`,
-      });
-      
-      // Refresh gamification data
-      await fetchClientGamification(selectedClient.id);
-      setAdjustPointsDialogOpen(false);
-      setPointsAdjustment({ points: 0, reason: "" });
-    } catch (error) {
-      console.error("Failed to adjust points", error);
-      toast({
-        title: "Error",
-        description: "Failed to adjust points",
-        variant: "destructive",
-      });
-    } finally {
-      setAdjustingPoints(false);
-    }
-  };
-
   const handleViewDetails = async (client: Client) => {
     setSelectedClient(client);
     setDetailSheetOpen(true);
-    setClientGamification(null);
-    setPointsHistory([]);
     setClientPenalty(null);
     await Promise.all([
       fetchClientAppointments(client.id),
-      fetchClientGamification(client.id),
       fetchClientPenalty(client.id),
     ]);
   };
@@ -989,138 +892,6 @@ export default function ClientsPage() {
 
                   <Separator />
 
-                  {/* Gamification Section */}
-                  {gamificationEnabled && (
-                    <>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                            <Gift className="h-4 w-4" />
-                            Gamification
-                          </h4>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setPointsAdjustment({ points: 0, reason: "" });
-                              setAdjustPointsDialogOpen(true);
-                            }}
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            Adjust Points
-                          </Button>
-                        </div>
-
-                        {gamificationLoading ? (
-                          <div className="space-y-2">
-                            <Skeleton className="h-20 w-full" />
-                            <Skeleton className="h-16 w-full" />
-                          </div>
-                        ) : clientGamification ? (
-                          <div className="space-y-4">
-                            {/* Level & Points */}
-                            <div className="rounded-lg border p-4 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Trophy className={`h-5 w-5 ${
-                                    clientGamification.level === 'platinum' ? 'text-purple-500' :
-                                    clientGamification.level === 'gold' ? 'text-yellow-500' :
-                                    clientGamification.level === 'silver' ? 'text-gray-400' :
-                                    'text-amber-700'
-                                  }`} />
-                                  <span className="font-medium capitalize">
-                                    {clientGamification.level} Level
-                                  </span>
-                                </div>
-                                <Badge variant="secondary">
-                                  <Star className="h-3 w-3 mr-1" />
-                                  {clientGamification.availablePoints} pts
-                                </Badge>
-                              </div>
-                              
-                              {/* Progress to next level */}
-                              {clientGamification.nextLevel && (
-                                <div className="space-y-1">
-                                  <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span>Progress to {clientGamification.nextLevel}</span>
-                                    <span>
-                                      {clientGamification.totalPoints} / {clientGamification.pointsToNextLevel + clientGamification.totalPoints}
-                                    </span>
-                                  </div>
-                                  <Progress 
-                                    value={(clientGamification.totalPoints / (clientGamification.pointsToNextLevel + clientGamification.totalPoints)) * 100} 
-                                    className="h-2"
-                                  />
-                                </div>
-                              )}
-
-                              <div className="text-xs text-muted-foreground">
-                                Total earned: {clientGamification.totalPoints} points
-                              </div>
-                            </div>
-
-                            {/* Streak & Referrals */}
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="rounded-lg border p-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Flame className="h-4 w-4 text-orange-500" />
-                                  <span className="text-xs text-muted-foreground">Streak</span>
-                                </div>
-                                <p className="text-xl font-bold">{clientGamification.currentStreak}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Best: {clientGamification.longestStreak}
-                                </p>
-                              </div>
-                              <div className="rounded-lg border p-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Share2 className="h-4 w-4 text-blue-500" />
-                                  <span className="text-xs text-muted-foreground">Referrals</span>
-                                </div>
-                                <p className="text-xl font-bold">{clientGamification.successfulReferrals}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Total: {clientGamification.totalReferrals}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Referral Code */}
-                            {clientGamification.referralCode && (
-                              <div className="rounded-lg bg-muted/50 p-3">
-                                <p className="text-xs text-muted-foreground mb-1">Referral Code</p>
-                                <code className="text-sm font-mono font-bold">
-                                  {clientGamification.referralCode}
-                                </code>
-                              </div>
-                            )}
-
-                            {/* Recent Points History */}
-                            {pointsHistory.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-muted-foreground">Recent Activity</p>
-                                <div className="space-y-1">
-                                  {pointsHistory.slice(0, 5).map((history, idx) => (
-                                    <div key={idx} className="flex items-center justify-between text-xs p-2 rounded bg-muted/30">
-                                      <span className="truncate max-w-[60%]">{history.description || history.transactionType}</span>
-                                      <span className={history.points >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                        {history.points >= 0 ? '+' : ''}{history.points}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">
-                            No gamification data available
-                          </p>
-                        )}
-                      </div>
-
-                      <Separator />
-                    </>
-                  )}
-
                   {/* Notes */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -1310,72 +1081,6 @@ export default function ClientsPage() {
               disabled={deleting}
             >
               {deleting ? "Deleting..." : "Delete Client"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Adjust Points Dialog */}
-      <Dialog open={adjustPointsDialogOpen} onOpenChange={setAdjustPointsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Adjust Points</DialogTitle>
-            <DialogDescription>
-              Manually add or deduct points for {selectedClient?.name}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Points Adjustment</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setPointsAdjustment(prev => ({ ...prev, points: prev.points - 10 }))}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={pointsAdjustment.points}
-                  onChange={(e) => setPointsAdjustment(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
-                  className="text-center w-24"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setPointsAdjustment(prev => ({ ...prev, points: prev.points + 10 }))}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Use positive values to add points, negative to deduct
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reason">Reason</Label>
-              <Textarea
-                id="reason"
-                value={pointsAdjustment.reason}
-                onChange={(e) => setPointsAdjustment(prev => ({ ...prev, reason: e.target.value }))}
-                placeholder="e.g., Loyalty bonus, Compensation for issue..."
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAdjustPointsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAdjustPoints} 
-              disabled={adjustingPoints || pointsAdjustment.points === 0}
-            >
-              {adjustingPoints ? "Adjusting..." : pointsAdjustment.points >= 0 ? "Add Points" : "Deduct Points"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -156,7 +156,6 @@
     "blockedTimes": "Engelli Zamanlar",
     "bookingLinks": "Rezervasyon Linkleri",
     "serviceOptions": "Hizmet Seçenekleri",
-    "gamification": "Oyunlaştırma",
     "reports": "Raporlar",
     "settings": "Ayarlar",
     "main": "Ana Menü",
@@ -691,113 +690,6 @@
     "thankYou": "Onayladığınız için teşekkürler! Sizi görmeyi dört gözle bekliyoruz.",
     "confirmSuccess": "Katılımınız onaylanmıştır",
     "confirmError": "Onaylama başarısız"
-  },
-  "gamification": {
-    "title": "Oyunlaştırma",
-    "description": "Müşteri sadakatini ödüllendirmek için oyunlaştırma özelliklerini yapılandırın",
-    "enabled": "Oyunlaştırmayı Etkinleştir",
-    "enabledDescription": "Etkinleştirildiğinde, müşteriler puan kazanabilir, tavsiye ödülleri alabilir ve çarkı çevirebilir",
-    "stats": {
-      "totalPoints": "Toplam Kazanılan Puan",
-      "activeReferrals": "Aktif Tavsiyeler",
-      "topLevel": "En Yüksek Seviye Müşteriler",
-      "spinWheelUses": "Çark Çevirme Kullanımları"
-    },
-    "tabs": {
-      "points": "Puan Ayarları",
-      "levels": "Seviyeler",
-      "referrals": "Tavsiyeler",
-      "spinWheel": "Çark Çevir"
-    },
-    "points": {
-      "perBooking": "Rezervasyon Başına Puan",
-      "perReferral": "Başarılı Tavsiye Başına Puan",
-      "streakBonus": "Seri Bonus Puanı",
-      "streakBonusHint": "Ardışık ziyaretler için verilen bonus puanlar"
-    },
-    "levels": {
-      "title": "Seviye Yapılandırması",
-      "bronze": "Bronz",
-      "silver": "Gümüş",
-      "gold": "Altın",
-      "platinum": "Platin",
-      "threshold": "Gereken Puan",
-      "discount": "İndirim %"
-    },
-    "referrals": {
-      "title": "Tavsiye Programı",
-      "enableReferrals": "Tavsiye Programını Etkinleştir",
-      "codePrefix": "Tavsiye Kodu Öneki",
-      "codePrefixHint": "örn., TAV, TAV-ABC123 gibi kodlar oluşturur",
-      "expirationDays": "Kod Geçerlilik Süresi (gün)",
-      "expirationHint": "Sonsuz süre için 0 girin"
-    },
-    "spinWheel": {
-      "title": "Çark Çevir Yapılandırması",
-      "enableSpinWheel": "Çark Çeviri Etkinleştir",
-      "spinAfterBooking": "Rezervasyon Sonrası Çevirme",
-      "spinAfterBookingHint": "Müşterilerin rezervasyon tamamladıktan sonra çark çevirmesine izin ver",
-      "prizes": "Ödüller",
-      "addPrize": "Ödül Ekle",
-      "prizeName": "Ödül Adı",
-      "prizeType": "Tür",
-      "prizeValue": "Değer",
-      "probability": "Olasılık %",
-      "types": {
-        "points": "Puan",
-        "discount": "İndirim",
-        "freeService": "Ücretsiz Hizmet",
-        "nothing": "Ödül Yok"
-      }
-    },
-    "booking": {
-      "welcome": "Rezervasyonumuza hoş geldiniz!",
-      "enterDetails": "Başlamak için bilgilerinizi girin",
-      "haveReferral": "Tavsiye kodunuz var mı?",
-      "enterReferral": "Tavsiye kodunu girin",
-      "referralApplied": "Tavsiye kodu uygulandı!",
-      "referralInvalid": "Geçersiz veya süresi dolmuş tavsiye kodu",
-      "yourReferralCode": "Tavsiye Kodunuz",
-      "shareReferral": "Ödül kazanmak için arkadaşlarınızla paylaşın",
-      "selectService": "Hizmet Seçin",
-      "selectDateTime": "Tarih ve Saat Seçin",
-      "confirmBooking": "Rezervasyonunuzu Onaylayın",
-      "bookingSuccess": "Rezervasyon Onaylandı!",
-      "spinToWin": "Çevir ve Kazan!",
-      "yourRewards": "Ödülleriniz",
-      "pointsEarned": "Kazanılan Puan",
-      "currentStreak": "Mevcut Seri",
-      "level": "Seviye",
-      "congratulations": "Tebrikler!",
-      "youWon": "Kazandınız",
-      "spinAgain": "Bir sonraki rezervasyonunuzdan sonra tekrar çevirin!",
-      "noReward": "Bir dahaki sefere!",
-      "generateCode": "Tavsiye Kodumu Oluştur",
-      "shareCode": "Bu kodu arkadaşlarınızla paylaşın",
-      "copyCode": "Kodu Kopyala",
-      "codeCopied": "Kod panoya kopyalandı!"
-    },
-    "client": {
-      "adjustPoints": "Puan Ayarla",
-      "pointsAdjustment": "Puan Ayarlaması",
-      "adjustReason": "Neden",
-      "adjustReasonPlaceholder": "örn., Sadakat bonusu, Sorun telafisi...",
-      "addPoints": "Puan Ekle",
-      "deductPoints": "Puan Düş",
-      "recentActivity": "Son Aktivite",
-      "totalEarned": "Toplam kazanılan",
-      "progressTo": "İlerleme",
-      "streak": "Seri",
-      "bestStreak": "En İyi",
-      "referrals": "Tavsiyeler",
-      "total": "Toplam"
-    },
-    "messages": {
-      "settingsSaved": "Oyunlaştırma ayarları kaydedildi",
-      "settingsFailed": "Ayarlar kaydedilemedi",
-      "pointsAdjusted": "Puanlar başarıyla ayarlandı",
-      "pointsFailed": "Puanlar ayarlanamadı"
-    }
   },
   "organization": {
     "title": "Organizasyon Ayarları",

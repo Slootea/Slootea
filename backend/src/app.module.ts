@@ -12,7 +12,6 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { PublicModule } from './modules/public/public.module';
 import { ClientsModule } from './modules/clients/clients.module';
-import { GamificationModule } from './modules/gamification/gamification.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { ReportsModule } from './modules/reports/reports.module';
 
@@ -49,7 +48,6 @@ import { ReportsModule } from './modules/reports/reports.module';
     MessagingModule,
     PublicModule,
     ClientsModule,
-    GamificationModule,
     ReportsModule,
   ],
 })
