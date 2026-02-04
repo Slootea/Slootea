@@ -310,3 +310,46 @@ export const reportsApi = {
   getServiceAnalytics: (params?: { startDate?: string; endDate?: string }) =>
     api.get('/reports/services', { params }),
 };
+
+// Notification Settings API (WhatsApp Configuration)
+export const notificationSettingsApi = {
+  // Get WhatsApp notification settings
+  getWhatsAppSettings: (orgId: string) =>
+    api.get(`/organizations/${orgId}/notification-settings/whatsapp`),
+  
+  // Update WhatsApp enabled status and notification parameters
+  updateWhatsAppSettings: (orgId: string, data: {
+    enabled: boolean;
+    parameters: {
+      appointmentCreated?: boolean;
+      reminder24h?: boolean;
+      reminder1h?: boolean;
+      appointmentCanceled?: boolean;
+    };
+  }) => api.put(`/organizations/${orgId}/notification-settings/whatsapp`, data),
+  
+  // Connect WhatsApp Business Account
+  // TODO: In production, this would be called after completing Meta's Embedded Signup flow
+  connectWhatsApp: (orgId: string, data: {
+    wabaId: string;
+    phoneNumberId: string;
+    accessToken: string;
+    tokenExpiresAt?: string;
+    displayPhoneNumber?: string;
+  }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/connect`, data),
+  
+  // Disconnect WhatsApp Business Account
+  disconnectWhatsApp: (orgId: string) =>
+    api.post(`/organizations/${orgId}/notification-settings/whatsapp/disconnect`),
+  
+  // Assign WhatsApp template to event type
+  assignTemplate: (orgId: string, data: {
+    eventType: string;
+    templateName: string;
+    languageCode: string;
+  }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/templates`, data),
+  
+  // Delete template assignment
+  deleteTemplate: (orgId: string, templateId: string) =>
+    api.delete(`/organizations/${orgId}/notification-settings/whatsapp/templates/${templateId}`),
+};

@@ -796,7 +796,11 @@
       "sendSmsNotifications": "SMS Notifications",
       "sendSmsNotificationsHint": "Send SMS notifications to clients",
       "reminderHours": "Reminder Hours",
-      "reminderHoursHint": "Hours before appointment to send reminder"
+      "reminderHoursHint": "Hours before appointment to send reminder",
+      "whatsapp": {
+        "title": "WhatsApp Notifications",
+        "description": "Configure WhatsApp Business API notifications for your appointments"
+      }
     },
     "timezone": {
       "title": "Timezone",

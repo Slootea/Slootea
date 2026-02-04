@@ -14,6 +14,7 @@ import { PublicModule } from './modules/public/public.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { NotificationSettingsModule } from './modules/notification-settings/notification-settings.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ReportsModule } from './modules/reports/reports.module';
     PublicModule,
     ClientsModule,
     ReportsModule,
+    NotificationSettingsModule,
   ],
 })
 export class AppModule {}

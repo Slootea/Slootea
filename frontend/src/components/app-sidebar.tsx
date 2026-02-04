@@ -112,11 +112,6 @@ export function AppSidebar() {
                         <Link href={item.href}>
                           <item.icon />
                           <span>{item.label}</span>
-                          {'badge' in item && item.badge && (
-                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
-                              {item.badge}
-                            </Badge>
-                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -796,7 +796,11 @@
       "sendSmsNotifications": "SMS Bildirimleri",
       "sendSmsNotificationsHint": "Müşterilere SMS bildirimi gönder",
       "reminderHours": "Hatırlatma Saati",
-      "reminderHoursHint": "Randevudan kaç saat önce hatırlatma gönderileceği"
+      "reminderHoursHint": "Randevudan kaç saat önce hatırlatma gönderileceği",
+      "whatsapp": {
+        "title": "WhatsApp Bildirimleri",
+        "description": "Randevularınız için WhatsApp Business API bildirimlerini yapılandırın"
+      }
     },
     "timezone": {
       "title": "Saat Dilimi",

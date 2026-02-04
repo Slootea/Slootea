@@ -508,3 +508,59 @@ export interface OrganizationOverview extends OrganizationStats {
   memberStats: MemberStats[];
   dailyTrend: TrendData[];
 }
+
+// WhatsApp Notification Settings Types
+export enum WhatsAppEventType {
+  APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
+  REMINDER_24H = 'REMINDER_24H',
+  REMINDER_1H = 'REMINDER_1H',
+  APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+}
+
+export enum WhatsAppTemplateStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+export interface WhatsAppTemplate {
+  id: string;
+  eventType: WhatsAppEventType;
+  templateName: string;
+  languageCode: string;
+  status: WhatsAppTemplateStatus;
+}
+
+export interface NotificationParameters {
+  appointmentCreated: boolean;
+  reminder24h: boolean;
+  reminder1h: boolean;
+  appointmentCanceled: boolean;
+}
+
+export interface WhatsAppNotificationSettings {
+  enabled: boolean;
+  isConnected: boolean;
+  displayPhoneNumber?: string;
+  parameters: NotificationParameters;
+  templates: WhatsAppTemplate[];
+}
+
+export interface UpdateWhatsAppSettingsPayload {
+  enabled: boolean;
+  parameters: Partial<NotificationParameters>;
+}
+
+export interface ConnectWhatsAppPayload {
+  wabaId: string;
+  phoneNumberId: string;
+  accessToken: string;
+  tokenExpiresAt?: string;
+  displayPhoneNumber?: string;
+}
+
+export interface AssignWhatsAppTemplatePayload {
+  eventType: WhatsAppEventType;
+  templateName: string;
+  languageCode: string;
+}
