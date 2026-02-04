@@ -7,6 +7,8 @@ import {
   OrganizationWhatsAppSettings,
   OrganizationNotificationParameters,
   OrganizationWhatsAppTemplate,
+  OrganizationSmsSettings,
+  OrganizationEmailSettings,
 } from './entities';
 import { AuthModule } from '../auth/auth.module';
 
@@ -16,6 +18,8 @@ import { AuthModule } from '../auth/auth.module';
       OrganizationWhatsAppSettings,
       OrganizationNotificationParameters,
       OrganizationWhatsAppTemplate,
+      OrganizationSmsSettings,
+      OrganizationEmailSettings,
     ]),
     ConfigModule,
     AuthModule,

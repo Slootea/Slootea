@@ -318,8 +318,6 @@ export class NotificationSettingsService {
   /**
    * Get decrypted access token for sending messages (internal use only)
    * NOTE: This should only be called by the WhatsApp sending service
-   * 
-   * TODO: Implement WhatsApp message sending service that uses this method
    */
   async getDecryptedAccessToken(organizationId: string): Promise<string | null> {
     const settings = await this.whatsappSettingsRepository.findOne({
@@ -340,8 +338,7 @@ export class NotificationSettingsService {
 
   /**
    * Check if WhatsApp is enabled and connected for an organization
-   * 
-   * TODO: Use this in appointment service to determine if WhatsApp notifications should be sent
+   * Used by appointment service to determine if WhatsApp notifications should be sent
    */
   async isWhatsAppReady(organizationId: string): Promise<boolean> {
     const settings = await this.whatsappSettingsRepository.findOne({

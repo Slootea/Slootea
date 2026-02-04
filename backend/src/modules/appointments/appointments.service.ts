@@ -4,6 +4,7 @@ import {
   BadRequestException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThan, Like, ILike, LessThanOrEqual, In } from 'typeorm';
@@ -24,6 +25,7 @@ import { OrganizationSettingsService } from '../settings/organization-settings.s
 import { BookingLinksService } from '../booking-links/booking-links.service';
 import { ClientsService } from '../clients/clients.service';
 import { UserServiceOptionsService } from '../service-options/user-service-options.service';
+import { NotificationService, NotificationData } from '../messaging/notification.service';
 import { DayOfWeek } from '../availability/entities/availability.entity';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -138,6 +140,8 @@ function createDateInTimezone(dateStr: string, time: string, timezone: string = 
 
 @Injectable()
 export class AppointmentsService {
+  private readonly logger = new Logger(AppointmentsService.name);
+
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentRepository: Repository<Appointment>,
@@ -151,6 +155,7 @@ export class AppointmentsService {
     private readonly clientsService: ClientsService,
     @Inject(forwardRef(() => UserServiceOptionsService))
     private readonly userServiceOptionsService: UserServiceOptionsService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(createDto: CreateAppointmentDto): Promise<Appointment> {
@@ -547,6 +552,34 @@ export class AppointmentsService {
             organizationId,
             'cancelled',
           );
+          
+          // Send cancellation notification to all channels
+          if (appointment.clientPhone || appointment.clientEmail) {
+            try {
+              const fullAppointment = await this.appointmentRepository.findOne({
+                where: { id: savedAppointment.id },
+                relations: ['serviceOption'],
+              });
+
+              if (fullAppointment) {
+                const notificationData: NotificationData = {
+                  organizationId,
+                  clientName: fullAppointment.clientName,
+                  clientPhone: fullAppointment.clientPhone || undefined,
+                  clientEmail: fullAppointment.clientEmail || undefined,
+                  serviceName: fullAppointment.serviceOption?.title || 'Appointment',
+                  appointmentDate: fullAppointment.startTime,
+                };
+
+                const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
+                if (result.anySent) {
+                  this.logger.log(`Cancellation notification sent for appointment ${savedAppointment.id}`);
+                }
+              }
+            } catch (notificationError) {
+              this.logger.error(`Failed to send cancellation notification`, notificationError);
+            }
+          }
         } else if (updateDto.status === AppointmentStatus.NO_SHOW) {
           await this.clientsService.updateAppointmentStats(
             appointment.clientId,
@@ -562,10 +595,47 @@ export class AppointmentsService {
     return savedAppointment;
   }
 
-  async cancel(id: string, userId: string): Promise<Appointment> {
+  async cancel(id: string, userId: string, organizationId?: string): Promise<Appointment> {
     const appointment = await this.findOne(id, userId);
+    const previousStatus = appointment.status;
     appointment.status = AppointmentStatus.CANCELLED;
-    return this.appointmentRepository.save(appointment);
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    // Send cancellation notification if status changed and client has contact info
+    if (
+      previousStatus !== AppointmentStatus.CANCELLED &&
+      (appointment.clientPhone || appointment.clientEmail) &&
+      organizationId
+    ) {
+      try {
+        const fullAppointment = await this.appointmentRepository.findOne({
+          where: { id: savedAppointment.id },
+          relations: ['serviceOption', 'user'],
+        });
+
+        if (fullAppointment) {
+          const notificationData: NotificationData = {
+            organizationId,
+            clientName: fullAppointment.clientName,
+            clientPhone: fullAppointment.clientPhone || undefined,
+            clientEmail: fullAppointment.clientEmail || undefined,
+            serviceName: fullAppointment.serviceOption?.title || 'Appointment',
+            appointmentDate: fullAppointment.startTime,
+          };
+
+          const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
+          if (result.anySent) {
+            this.logger.log(`Cancellation notification sent for appointment ${id}`);
+          } else {
+            this.logger.debug(`No cancellation notification sent for appointment ${id} - no channels configured`);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Failed to send cancellation notification for appointment ${id}`, error);
+      }
+    }
+
+    return savedAppointment;
   }
 
   async confirmFromDashboard(id: string, userId: string): Promise<Appointment> {
@@ -1148,10 +1218,45 @@ export class AppointmentsService {
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
-    return this.appointmentRepository.findOneOrFail({
+    const fullAppointment = await this.appointmentRepository.findOneOrFail({
       where: { id: savedAppointment.id },
-      relations: ['serviceOption'],
+      relations: ['serviceOption', 'user'],
     });
+
+    // Send notification for appointment created to all channels
+    if (createDto.clientPhone || createDto.clientEmail) {
+      try {
+        const providerUser = await this.userServiceOptionsService.getUserById(assignedUserId);
+        const notificationData: NotificationData = {
+          organizationId,
+          clientName: createDto.clientName,
+          clientPhone: createDto.clientPhone || undefined,
+          clientEmail: createDto.clientEmail || undefined,
+          serviceName: fullAppointment.serviceOption?.title || 'Appointment',
+          appointmentDate: startTime,
+          providerName: providerUser?.firstName
+            ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
+            : undefined,
+          confirmationLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/confirm/${confirmationToken}`,
+        };
+
+        const result = await this.notificationService.sendAppointmentCreatedNotification(notificationData);
+        if (result.anySent) {
+          this.logger.log(`Notification sent for appointment ${savedAppointment.id}`, {
+            email: result.email?.success,
+            sms: result.sms?.success,
+            whatsapp: result.whatsapp?.success,
+          });
+        } else {
+          this.logger.debug(`No notification sent for appointment ${savedAppointment.id} - no channels configured`);
+        }
+      } catch (error) {
+        // Don't fail the appointment creation if notification fails
+        this.logger.error(`Failed to send notification for appointment ${savedAppointment.id}`, error);
+      }
+    }
+
+    return fullAppointment;
   }
 
   /**

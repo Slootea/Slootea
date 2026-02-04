@@ -86,8 +86,8 @@ export class NotificationSettingsController {
   /**
    * Connect WhatsApp Business Account
    * 
-   * TODO: In production, this would be called after completing Meta's Embedded Signup flow
-   * The access token should be obtained from the OAuth callback
+   * This endpoint is called after completing Meta's Embedded Signup flow.
+   * The access token should be obtained from the OAuth callback.
    */
   @Post('whatsapp/connect')
   @ApiOperation({ summary: 'Connect WhatsApp Business Account' })

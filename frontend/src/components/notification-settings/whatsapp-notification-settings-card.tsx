@@ -87,6 +87,13 @@ interface TemplateFormData {
   languageCode: string;
 }
 
+interface ConnectFormData {
+  wabaId: string;
+  phoneNumberId: string;
+  accessToken: string;
+  displayPhoneNumber: string;
+}
+
 export function WhatsAppNotificationSettingsCard() {
   const { getToken } = useAuth();
   const { toast } = useToast();
@@ -106,6 +113,14 @@ export function WhatsAppNotificationSettingsCard() {
     eventType: "",
     templateName: "",
     languageCode: "en",
+  });
+
+  // Form state for WhatsApp connection
+  const [connectForm, setConnectForm] = useState<ConnectFormData>({
+    wabaId: "",
+    phoneNumberId: "",
+    accessToken: "",
+    displayPhoneNumber: "",
   });
 
   const fetchSettings = useCallback(async () => {
@@ -180,27 +195,42 @@ export function WhatsAppNotificationSettingsCard() {
   };
 
   /**
-   * TODO: Implement Meta WhatsApp Embedded Signup
-   * 
-   * This is a stub for the WhatsApp Business connection flow.
-   * In production, this should:
-   * 1. Open Meta's Embedded Signup flow
-   * 2. Handle OAuth callback
-   * 3. Exchange code for access token
-   * 4. Call connectWhatsApp API with the obtained credentials
-   * 
-   * @see https://developers.facebook.com/docs/whatsapp/embedded-signup
+   * Handle WhatsApp Business connection with provided credentials
    */
   const handleConnectWhatsApp = async () => {
     if (!currentOrganization) return;
 
-    // TODO: Replace with actual Embedded Signup flow
-    toast({
-      title: "WhatsApp Embedded Signup",
-      description: "This feature will be available in a future update. The integration with Meta's Embedded Signup is not yet implemented.",
-    });
-    
-    setConnectDialogOpen(false);
+    // Validate form
+    if (!connectForm.wabaId || !connectForm.phoneNumberId || !connectForm.accessToken) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setConnectingWhatsApp(true);
+    try {
+      const res = await notificationSettingsApi.connectWhatsApp(currentOrganization.id, {
+        wabaId: connectForm.wabaId,
+        phoneNumberId: connectForm.phoneNumberId,
+        accessToken: connectForm.accessToken,
+        displayPhoneNumber: connectForm.displayPhoneNumber || undefined,
+      });
+      setSettings(res.data);
+      setConnectDialogOpen(false);
+      setConnectForm({ wabaId: "", phoneNumberId: "", accessToken: "", displayPhoneNumber: "" });
+      toast({ title: "WhatsApp Business connected successfully" });
+    } catch (error) {
+      toast({
+        title: "Failed to connect WhatsApp",
+        description: "Please check your credentials and try again",
+        variant: "destructive",
+      });
+    } finally {
+      setConnectingWhatsApp(false);
+    }
   };
 
   const handleDisconnectWhatsApp = async () => {
@@ -377,31 +407,81 @@ export function WhatsAppNotificationSettingsCard() {
                     Connect WhatsApp Business
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Connect WhatsApp Business</DialogTitle>
                     <DialogDescription>
-                      Connect your WhatsApp Business Account to send automated notifications to your clients.
+                      Enter your WhatsApp Business API credentials from Meta Business Manager.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="py-4">
-                    <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 text-amber-800">
-                      <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-medium">Coming Soon</p>
-                        <p className="mt-1">
-                          WhatsApp Embedded Signup integration is not yet implemented. 
-                          This will allow you to connect your WhatsApp Business Account 
-                          through Meta's official flow.
-                        </p>
+                  <div className="space-y-4 py-4">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 text-blue-800 text-sm">
+                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p>You can find these values in your <a href="https://business.facebook.com/settings/whatsapp-business-accounts" target="_blank" rel="noopener noreferrer" className="underline font-medium">Meta Business Settings</a> under WhatsApp Accounts.</p>
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="wabaId">WhatsApp Business Account ID *</Label>
+                      <Input
+                        id="wabaId"
+                        value={connectForm.wabaId}
+                        onChange={(e) => setConnectForm({ ...connectForm, wabaId: e.target.value })}
+                        placeholder="e.g., 123456789012345"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumberId">Phone Number ID *</Label>
+                      <Input
+                        id="phoneNumberId"
+                        value={connectForm.phoneNumberId}
+                        onChange={(e) => setConnectForm({ ...connectForm, phoneNumberId: e.target.value })}
+                        placeholder="e.g., 123456789012345"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="accessToken">Permanent Access Token *</Label>
+                      <Input
+                        id="accessToken"
+                        type="password"
+                        value={connectForm.accessToken}
+                        onChange={(e) => setConnectForm({ ...connectForm, accessToken: e.target.value })}
+                        placeholder="Your permanent access token"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Generate a permanent token in Meta Business Settings → System Users
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="displayPhoneNumber">Display Phone Number</Label>
+                      <Input
+                        id="displayPhoneNumber"
+                        value={connectForm.displayPhoneNumber}
+                        onChange={(e) => setConnectForm({ ...connectForm, displayPhoneNumber: e.target.value })}
+                        placeholder="e.g., +1 555 123 4567"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        The phone number to display in the dashboard (optional)
+                      </p>
                     </div>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setConnectDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleConnectWhatsApp} disabled>
+                    <Button 
+                      onClick={handleConnectWhatsApp} 
+                      disabled={connectingWhatsApp || !connectForm.wabaId || !connectForm.phoneNumberId || !connectForm.accessToken}
+                    >
+                      {connectingWhatsApp ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Link className="h-4 w-4 mr-2" />
+                      )}
                       Connect
                     </Button>
                   </DialogFooter>
@@ -630,16 +710,31 @@ export function WhatsAppNotificationSettingsCard() {
         </div>
 
         {/* Info about message sending */}
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 text-blue-800">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div className="text-sm">
-            <p className="font-medium">Note</p>
-            <p className="mt-1">
-              Message sending is not yet implemented. This configuration will be used when 
-              the WhatsApp notification service is enabled in a future update.
-            </p>
+        {!settings.isConnected && (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 text-blue-800">
+            <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium">Get Started</p>
+              <p className="mt-1">
+                Connect your WhatsApp Business Account to start sending automated notifications 
+                to your clients when appointments are booked, confirmed, or cancelled.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+        
+        {settings.isConnected && settings.enabled && (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 text-green-800">
+            <CheckCircle2 className="h-5 w-5 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium">WhatsApp Notifications Active</p>
+              <p className="mt-1">
+                Your clients will receive WhatsApp notifications for the events you have enabled above.
+                Make sure you have approved message templates configured for each event type.
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

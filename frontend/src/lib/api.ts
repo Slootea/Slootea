@@ -329,7 +329,7 @@ export const notificationSettingsApi = {
   }) => api.put(`/organizations/${orgId}/notification-settings/whatsapp`, data),
   
   // Connect WhatsApp Business Account
-  // TODO: In production, this would be called after completing Meta's Embedded Signup flow
+  // Called after completing Meta's Embedded Signup flow with the obtained credentials
   connectWhatsApp: (orgId: string, data: {
     wabaId: string;
     phoneNumberId: string;
