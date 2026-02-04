@@ -30,7 +30,6 @@ export default function DashboardLayout({
     { href: "/dashboard/calendar", label: t("calendar") },
     { href: "/dashboard/options", label: t("serviceOptions") },
     { href: "/dashboard/availability", label: t("availability") },
-    { href: "/dashboard/blocks", label: t("blockedTimes") },
     { href: "/dashboard/appointments", label: t("appointments") },
     { href: "/dashboard/links", label: t("bookingLinks") },
     { href: "/dashboard/reports", label: t("reports") || "Reports" },

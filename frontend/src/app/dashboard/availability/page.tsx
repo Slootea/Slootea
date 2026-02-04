@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { availabilityApi, serviceOptionsApi, userServiceOptionsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
-import { Availability, ServiceOption, DayOfWeek, UserServiceOption } from "@/lib/types";
+import { availabilityApi, serviceOptionsApi, userServiceOptionsApi, blockedTimesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { Availability, ServiceOption, DayOfWeek, UserServiceOption, BlockedTime } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -46,7 +47,9 @@ import {
   Alert,
   AlertDescription,
 } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { format, parseISO, addDays, isSameDay } from "date-fns";
 import { 
   Plus, 
   Trash2, 
@@ -70,7 +73,10 @@ import {
   LayoutGrid,
   List,
   ChevronRight,
-  Edit3
+  Edit3,
+  CalendarX,
+  Ban,
+  CalendarOff
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -425,6 +431,308 @@ function VisualTimeRangePicker({
   );
 }
 
+// Block Time Range Picker Component (similar to VisualTimeRangePicker but with amber theme)
+function BlockTimeRangePicker({
+  startTime,
+  endTime,
+  onTimeChange,
+}: {
+  startTime: string;
+  endTime: string;
+  onTimeChange: (start: string, end: string) => void;
+}) {
+  const t = useTranslations("availability");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState<'start' | 'end' | 'move' | null>(null);
+
+  const totalHours = 24;
+  const snapInterval = 15; // Snap to 15-minute intervals
+
+  const timeToMinutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const minutesToTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  const snapToInterval = (minutes: number) => {
+    return Math.round(minutes / snapInterval) * snapInterval;
+  };
+
+  const getPositionPercent = (minutes: number) => {
+    return (minutes / (totalHours * 60)) * 100;
+  };
+
+  const getMinutesFromPosition = (clientX: number) => {
+    if (!containerRef.current) return 0;
+    const rect = containerRef.current.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return Math.round(percent * totalHours * 60);
+  };
+
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+
+  const handleMouseDown = (e: React.MouseEvent, type: 'start' | 'end' | 'move') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(type);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const minutes = getMinutesFromPosition(e.clientX);
+    const snappedMinutes = snapToInterval(minutes);
+    
+    if (isDragging === 'start') {
+      const newStart = Math.max(0, Math.min(snappedMinutes, endMinutes - snapInterval));
+      onTimeChange(minutesToTime(newStart), endTime);
+    } else if (isDragging === 'end') {
+      const newEnd = Math.min(totalHours * 60, Math.max(snappedMinutes, startMinutes + snapInterval));
+      onTimeChange(startTime, minutesToTime(newEnd));
+    } else if (isDragging === 'move') {
+      const duration = endMinutes - startMinutes;
+      const halfDuration = duration / 2;
+      let newStart = snapToInterval(snappedMinutes - halfDuration);
+      let newEnd = newStart + duration;
+      
+      if (newStart < 0) {
+        newStart = 0;
+        newEnd = duration;
+      }
+      if (newEnd > totalHours * 60) {
+        newEnd = totalHours * 60;
+        newStart = newEnd - duration;
+      }
+      
+      onTimeChange(minutesToTime(newStart), minutesToTime(newEnd));
+    }
+  }, [isDragging, startMinutes, endMinutes, startTime, endTime, onTimeChange]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(null);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Handle click on empty space to move the bar
+  const handleContainerClick = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    const minutes = getMinutesFromPosition(e.clientX);
+    const duration = endMinutes - startMinutes;
+    const halfDuration = duration / 2;
+    
+    let newStart = snapToInterval(minutes - halfDuration);
+    let newEnd = newStart + duration;
+    
+    if (newStart < 0) {
+      newStart = 0;
+      newEnd = duration;
+    }
+    if (newEnd > totalHours * 60) {
+      newEnd = totalHours * 60;
+      newStart = newEnd - duration;
+    }
+    
+    onTimeChange(minutesToTime(newStart), minutesToTime(newEnd));
+  };
+
+  const durationMinutes = endMinutes - startMinutes;
+  const durationHours = Math.floor(durationMinutes / 60);
+  const durationMins = durationMinutes % 60;
+
+  const leftPercent = getPositionPercent(startMinutes);
+  const widthPercent = getPositionPercent(endMinutes - startMinutes);
+
+  return (
+    <div className="p-4 rounded-xl border bg-card space-y-4">
+      {/* Header with time display */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950">
+            <Ban className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">{t("dialog.dragToSelect")}</p>
+            <p className="text-xs text-muted-foreground">Click or drag to adjust</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="font-mono text-base px-3 py-1 bg-background">
+            {startTime} – {endTime}
+          </Badge>
+          <Badge className="font-mono bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 hover:bg-amber-100">
+            {durationHours > 0 && `${durationHours}h `}{durationMins > 0 && `${durationMins}m`}
+            {durationHours === 0 && durationMins === 0 && "0m"}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Time header labels */}
+      <div className="flex items-center text-[10px] font-medium text-muted-foreground px-1">
+        <div className="flex-1 flex justify-between">
+          <span className="tabular-nums">00:00</span>
+          <span className="tabular-nums">06:00</span>
+          <span className="tabular-nums">12:00</span>
+          <span className="tabular-nums">18:00</span>
+          <span className="tabular-nums">24:00</span>
+        </div>
+      </div>
+      
+      {/* Timeline Bar */}
+      <div 
+        ref={containerRef}
+        className="relative h-14 bg-gradient-to-r from-muted/60 to-muted/40 rounded-lg cursor-pointer select-none overflow-hidden border border-border/40"
+        onClick={handleContainerClick}
+      >
+        {/* Time period backgrounds */}
+        <div className="absolute inset-0 flex pointer-events-none">
+          <div className="w-[25%] bg-slate-800/5 dark:bg-slate-300/5" /> {/* Night 0-6 */}
+          <div className="w-[25%] bg-amber-500/5" /> {/* Morning 6-12 */}
+          <div className="w-[25%] bg-sky-500/5" /> {/* Afternoon 12-18 */}
+          <div className="w-[25%] bg-indigo-500/5" /> {/* Evening 18-24 */}
+        </div>
+        
+        {/* Hour markers */}
+        <div className="absolute inset-0 flex pointer-events-none">
+          {Array.from({ length: 24 }).map((_, hour) => (
+            <div 
+              key={hour}
+              className={`flex-1 border-r ${hour % 6 === 0 ? 'border-border/30' : 'border-border/10'}`}
+            />
+          ))}
+        </div>
+        
+        {/* Selected time range bar */}
+        <div
+          className={`
+            absolute top-1.5 bottom-1.5 bg-gradient-to-r from-amber-500 to-amber-400 rounded-md shadow-lg
+            ${isDragging === 'move' ? 'cursor-grabbing' : 'cursor-grab'}
+            transition-shadow hover:shadow-xl
+          `}
+          style={{ 
+            left: `${leftPercent}%`, 
+            width: `${widthPercent}%`,
+            minWidth: '40px'
+          }}
+          onMouseDown={(e) => handleMouseDown(e, 'move')}
+        >
+          {/* Start handle */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize group flex items-center justify-center"
+            onMouseDown={(e) => handleMouseDown(e, 'start')}
+          >
+            <div className="w-1 h-6 bg-white/50 rounded-full group-hover:bg-white/80 transition-colors" />
+          </div>
+          
+          {/* Center content */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+            <span className="text-xs font-semibold text-white drop-shadow-sm truncate">
+              {startTime} – {endTime}
+            </span>
+          </div>
+          
+          {/* End handle */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize group flex items-center justify-center"
+            onMouseDown={(e) => handleMouseDown(e, 'end')}
+          >
+            <div className="w-1 h-6 bg-white/50 rounded-full group-hover:bg-white/80 transition-colors" />
+          </div>
+        </div>
+      </div>
+
+      {/* Quick duration presets */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-muted-foreground">Quick:</span>
+        {[
+          { label: "1h", duration: 60 },
+          { label: "2h", duration: 120 },
+          { label: "4h", duration: 240 },
+          { label: "Morning", start: "06:00", end: "12:00" },
+          { label: "Afternoon", start: "12:00", end: "18:00" },
+          { label: "Full Day", start: "00:00", end: "23:59" },
+        ].map((preset) => {
+          const isActive = 'start' in preset 
+            ? startTime === preset.start && endTime === preset.end
+            : durationMinutes === preset.duration;
+          
+          return (
+            <button
+              key={preset.label}
+              onClick={() => {
+                if ('start' in preset && preset.start && preset.end) {
+                  onTimeChange(preset.start, preset.end);
+                } else if ('duration' in preset && preset.duration) {
+                  const duration = preset.duration;
+                  const newEnd = Math.min(startMinutes + duration, totalHours * 60);
+                  const newStart = newEnd === totalHours * 60 ? newEnd - duration : startMinutes;
+                  onTimeChange(minutesToTime(newStart), minutesToTime(newEnd));
+                }
+              }}
+              className={`
+                px-2.5 py-1 text-xs font-medium rounded-md transition-all border
+                ${isActive 
+                  ? "bg-amber-100 dark:bg-amber-950 border-amber-500 text-amber-700 dark:text-amber-300" 
+                  : "border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }
+              `}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Manual time inputs */}
+      <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">{t("dialog.startTime")}</Label>
+          <Input
+            type="time"
+            value={startTime}
+            onChange={(e) => {
+              const newStartMins = timeToMinutes(e.target.value);
+              if (newStartMins < endMinutes) {
+                onTimeChange(e.target.value, endTime);
+              }
+            }}
+            className="h-9 font-mono text-center"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">{t("dialog.endTime")}</Label>
+          <Input
+            type="time"
+            value={endTime}
+            onChange={(e) => {
+              const newEndMins = timeToMinutes(e.target.value);
+              if (newEndMins > startMinutes) {
+                onTimeChange(startTime, e.target.value);
+              }
+            }}
+            className="h-9 font-mono text-center"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Schedule templates
 const SCHEDULE_TEMPLATES = {
   standard: {
@@ -470,6 +778,7 @@ function WeeklyOverview({
   onAddSlot,
   onEditSlot,
   onOpenEditDialog,
+  onOpenBlockTimeDialog,
   onApplyTemplate,
   onClearAll
 }: { 
@@ -479,6 +788,7 @@ function WeeklyOverview({
   onAddSlot: (day: DayOfWeek) => void;
   onEditSlot: (slot: Availability) => void;
   onOpenEditDialog: () => void;
+  onOpenBlockTimeDialog: () => void;
   onApplyTemplate: (templateKey: keyof typeof SCHEDULE_TEMPLATES) => void;
   onClearAll: () => void;
 }) {
@@ -576,6 +886,15 @@ function WeeklyOverview({
             >
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">{t("addTimeSlot")}</span>
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={onOpenBlockTimeDialog}
+              className="gap-1.5 text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-800 dark:hover:border-amber-700 dark:hover:bg-amber-950/50"
+            >
+              <CalendarOff className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("blockTime") || "Block Time"}</span>
             </Button>
             <Button 
               size="sm"
@@ -1156,8 +1475,10 @@ export default function AvailabilityPage() {
   const { toast } = useToast();
   const { currentOrganization, userRole } = useOrganizationContext();
   const t = useTranslations("availability");
+  const tBlocks = useTranslations("blocksPage");
   const tCommon = useTranslations("common");
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
   const [assignedServices, setAssignedServices] = useState<UserServiceOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1165,6 +1486,7 @@ export default function AvailabilityPage() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [editScheduleDialogOpen, setEditScheduleDialogOpen] = useState(false);
+  const [blockTimeDialogOpen, setBlockTimeDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
   const [copyFromDay, setCopyFromDay] = useState<DayOfWeek | null>(null);
   const [selectedCopyDays, setSelectedCopyDays] = useState<DayOfWeek[]>([]);
@@ -1174,6 +1496,15 @@ export default function AvailabilityPage() {
     endTime: "17:00",
     serviceOptionId: "",
   });
+  const [blockFormData, setBlockFormData] = useState({
+    date: format(new Date(), "yyyy-MM-dd"),
+    startTime: "09:00",
+    endTime: "17:00",
+    isFullDay: false,
+    reason: "",
+  });
+  const [editingBlockTime, setEditingBlockTime] = useState<BlockedTime | null>(null);
+  const [blockTimeTab, setBlockTimeTab] = useState<"add" | "manage">("add");
 
   const isOrgMember = !!(currentOrganization && userRole === 'member');
 
@@ -1199,6 +1530,7 @@ export default function AvailabilityPage() {
     try {
       const requests: Promise<any>[] = [
         availabilityApi.getAll(),
+        blockedTimesApi.getAll(),
       ];
 
       if (currentOrganization) {
@@ -1211,10 +1543,11 @@ export default function AvailabilityPage() {
       const results = await Promise.all(requests);
       
       setAvailabilities(results[0].data);
-      setServiceOptions(results[1].data);
+      setBlockedTimes(results[1].data);
+      setServiceOptions(results[2].data);
       
-      if (results[2]) {
-        setAssignedServices(results[2].data);
+      if (results[3]) {
+        setAssignedServices(results[3].data);
       }
     } catch (error) {
       console.error("Failed to fetch data", error);
@@ -1246,6 +1579,13 @@ export default function AvailabilityPage() {
     }, 0);
     return { activeSlots: activeSlots.length, daysWithAvailability, totalHours };
   }, [availabilities]);
+
+  // Blocked times stats
+  const upcomingBlockedTimes = useMemo(() => {
+    return blockedTimes
+      .filter((bt) => new Date(bt.date) >= new Date(new Date().toDateString()))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [blockedTimes]);
 
   // Get current day of week (Monday = 0)
   const todayDayOfWeek = useMemo(() => {
@@ -1411,6 +1751,94 @@ export default function AvailabilityPage() {
     }
   };
 
+  // Block time handlers
+  const handleCreateBlockTime = async () => {
+    try {
+      const payload: any = {
+        date: blockFormData.date,
+        isFullDay: blockFormData.isFullDay,
+        reason: blockFormData.reason || undefined,
+      };
+      
+      if (!blockFormData.isFullDay) {
+        payload.startTime = blockFormData.startTime;
+        payload.endTime = blockFormData.endTime;
+      }
+
+      if (editingBlockTime) {
+        await blockedTimesApi.update(editingBlockTime.id, payload);
+        toast({ title: tBlocks("messages.updated") || "Blocked time updated" });
+      } else {
+        await blockedTimesApi.create(payload);
+        toast({ title: tBlocks("messages.created") });
+      }
+      
+      resetBlockForm();
+      fetchData();
+    } catch (error) {
+      toast({
+        title: tCommon("error"),
+        description: editingBlockTime 
+          ? (tBlocks("messages.updateError") || "Failed to update blocked time")
+          : tBlocks("messages.createError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditBlockTime = (bt: BlockedTime) => {
+    setEditingBlockTime(bt);
+    setBlockFormData({
+      date: bt.date.split('T')[0], // Handle ISO date format
+      startTime: bt.startTime || "09:00",
+      endTime: bt.endTime || "17:00",
+      isFullDay: bt.isFullDay,
+      reason: bt.reason || "",
+    });
+    setBlockTimeTab("add");
+  };
+
+  const resetBlockForm = () => {
+    setEditingBlockTime(null);
+    setBlockFormData({
+      date: format(new Date(), "yyyy-MM-dd"),
+      startTime: "09:00",
+      endTime: "17:00",
+      isFullDay: false,
+      reason: "",
+    });
+  };
+
+  const handleDeleteBlockTime = async (id: string) => {
+    try {
+      await blockedTimesApi.delete(id);
+      toast({ title: tBlocks("messages.deleted") });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: tCommon("error"),
+        description: tBlocks("messages.deleteError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Grouped blocked times for management tab
+  const groupedBlockedTimes = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    const upcoming = blockedTimes
+      .filter((bt) => new Date(bt.date) >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const past = blockedTimes
+      .filter((bt) => new Date(bt.date) < now)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    return { upcoming, past };
+  }, [blockedTimes]);
+
   if (loading) {
     return <LoadingSkeleton />;
   }
@@ -1499,6 +1927,7 @@ export default function AvailabilityPage() {
           onAddSlot={handleAddSlotToDay}
           onEditSlot={handleEditSlot}
           onOpenEditDialog={() => setEditScheduleDialogOpen(true)}
+          onOpenBlockTimeDialog={() => setBlockTimeDialogOpen(true)}
           onApplyTemplate={handleApplyTemplate}
           onClearAll={handleClearAll}
         />
@@ -1888,6 +2317,326 @@ export default function AvailabilityPage() {
           </div>
           <DialogFooter className="border-t px-6 py-4">
             <Button variant="outline" onClick={() => setEditScheduleDialogOpen(false)}>
+              {tCommon("close") || "Close"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Block Time Dialog */}
+      <Dialog open={blockTimeDialogOpen} onOpenChange={(open) => {
+        setBlockTimeDialogOpen(open);
+        if (!open) {
+          resetBlockForm();
+          setBlockTimeTab("add");
+        }
+      }}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <CalendarOff className="h-5 w-5" />
+              {tBlocks("title") || "Block Time"}
+            </DialogTitle>
+            <DialogDescription>
+              {tBlocks("description") || "Block specific dates and times when you're not available for appointments."}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={blockTimeTab} onValueChange={(v) => setBlockTimeTab(v as "add" | "manage")} className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="grid w-full grid-cols-2 mb-4 flex-shrink-0">
+              <TabsTrigger value="add" className="gap-2">
+                <Plus className="h-4 w-4" />
+                {editingBlockTime ? (tCommon("edit") || "Edit") : (tBlocks("addBlock") || "Add Block")}
+              </TabsTrigger>
+              <TabsTrigger value="manage" className="gap-2">
+                <List className="h-4 w-4" />
+                {tBlocks("manageBlocks") || "Manage Blocks"}
+                {blockedTimes.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    {blockedTimes.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Add/Edit Tab */}
+            <TabsContent value="add" className="flex-1 overflow-y-auto mt-0 space-y-6 pr-1">
+              {editingBlockTime && (
+                <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                  <div className="flex items-center gap-2">
+                    <Edit3 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                      {tBlocks("editingBlock") || "Editing blocked time"}
+                    </span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={resetBlockForm}
+                    className="text-amber-600 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900"
+                  >
+                    {tCommon("cancel")}
+                  </Button>
+                </div>
+              )}
+
+              {/* Quick date selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">{tBlocks("date") || "Select Date"}</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {Array.from({ length: 8 }).map((_, i) => {
+                    const dateObj = addDays(new Date(), i);
+                    const dateStr = format(dateObj, "yyyy-MM-dd");
+                    const isSelected = blockFormData.date === dateStr;
+                    const dayName = format(dateObj, "EEE");
+                    const dayNum = format(dateObj, "d");
+                    const isToday = i === 0;
+                    
+                    return (
+                      <button
+                        key={dateStr}
+                        onClick={() => setBlockFormData({ ...blockFormData, date: dateStr })}
+                        className={`
+                          flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all
+                          ${isSelected 
+                            ? "bg-amber-100 dark:bg-amber-950 border-amber-500 shadow-sm" 
+                            : "border-transparent bg-muted/50 hover:bg-muted hover:border-border"
+                          }
+                        `}
+                      >
+                        <span className={`text-[10px] font-medium uppercase ${isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                          {isToday ? (tCommon("today") || "Today") : dayName}
+                        </span>
+                        <span className={`text-lg font-bold ${isSelected ? 'text-amber-700 dark:text-amber-300' : ''}`}>
+                          {dayNum}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {/* Custom date input */}
+                <div className="flex items-center gap-2 pt-2">
+                  <Label className="text-sm text-muted-foreground shrink-0">{tBlocks("orSelectDate") || "Or select:"}</Label>
+                  <Input
+                    type="date"
+                    value={blockFormData.date}
+                    onChange={(e) => setBlockFormData({ ...blockFormData, date: e.target.value })}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Full day toggle */}
+              <div className="flex items-center justify-between p-4 rounded-xl border bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950">
+                    <Ban className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{tBlocks("fullDay") || "Block Entire Day"}</p>
+                    <p className="text-xs text-muted-foreground">{tBlocks("fullDayDesc") || "No appointments will be available"}</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={blockFormData.isFullDay}
+                  onCheckedChange={(checked) => setBlockFormData({ ...blockFormData, isFullDay: checked })}
+                  className="data-[state=checked]:bg-amber-500"
+                />
+              </div>
+
+              {/* Time range selector - only show if not full day */}
+              {!blockFormData.isFullDay && (
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">{tBlocks("timeRange") || "Time Range to Block"}</Label>
+                  <BlockTimeRangePicker
+                    startTime={blockFormData.startTime}
+                    endTime={blockFormData.endTime}
+                    onTimeChange={(start, end) => setBlockFormData({ ...blockFormData, startTime: start, endTime: end })}
+                  />
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Reason */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{tBlocks("reason") || "Reason (Optional)"}</Label>
+                <Textarea
+                  placeholder={tBlocks("reasonPlaceholder") || "e.g., Vacation, Meeting, Personal time..."}
+                  value={blockFormData.reason}
+                  onChange={(e) => setBlockFormData({ ...blockFormData, reason: e.target.value })}
+                  className="min-h-[80px] resize-none"
+                />
+              </div>
+
+              {/* Action button at bottom of add tab */}
+              <div className="pt-4 border-t">
+                <Button 
+                  onClick={handleCreateBlockTime}
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  {editingBlockTime 
+                    ? (tBlocks("updateBlock") || "Update Block") 
+                    : (tBlocks("blockTime") || "Block Time")
+                  }
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Manage Tab */}
+            <TabsContent value="manage" className="flex-1 overflow-y-auto mt-0 pr-1">
+              {blockedTimes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="rounded-full bg-muted p-4 mb-4">
+                    <CalendarOff className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">{tBlocks("empty.title") || "No blocked times"}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{tBlocks("empty.description") || "You haven't blocked any times yet."}</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setBlockTimeTab("add")}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {tBlocks("addFirst") || "Add your first block"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Upcoming Blocked Times */}
+                  {groupedBlockedTimes.upcoming.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold">{tBlocks("upcomingBlocked") || "Upcoming"}</h3>
+                        <Badge variant="secondary" className="text-xs">{groupedBlockedTimes.upcoming.length}</Badge>
+                      </div>
+                      <div className="space-y-2">
+                        {groupedBlockedTimes.upcoming.map((bt) => (
+                          <div
+                            key={bt.id}
+                            className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950 shrink-0">
+                                <CalendarX className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">
+                                  {format(parseISO(bt.date), "EEEE, MMMM d, yyyy")}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {bt.isFullDay 
+                                    ? (tBlocks("allDay") || "All day") 
+                                    : `${bt.startTime} – ${bt.endTime}`
+                                  }
+                                  {bt.reason && ` • ${bt.reason}`}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => handleEditBlockTime(bt)}
+                                    >
+                                      <Edit3 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{tCommon("edit")}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => handleDeleteBlockTime(bt.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{tCommon("delete")}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Past Blocked Times */}
+                  {groupedBlockedTimes.past.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-muted-foreground">{tBlocks("pastBlocked") || "Past"}</h3>
+                        <Badge variant="outline" className="text-xs">{groupedBlockedTimes.past.length}</Badge>
+                      </div>
+                      <div className="space-y-2 opacity-60">
+                        {groupedBlockedTimes.past.slice(0, 10).map((bt) => (
+                          <div
+                            key={bt.id}
+                            className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30 group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-muted shrink-0">
+                                <CalendarX className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">
+                                  {format(parseISO(bt.date), "EEEE, MMMM d, yyyy")}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {bt.isFullDay 
+                                    ? (tBlocks("allDay") || "All day") 
+                                    : `${bt.startTime} – ${bt.endTime}`
+                                  }
+                                  {bt.reason && ` • ${bt.reason}`}
+                                </p>
+                              </div>
+                            </div>
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => handleDeleteBlockTime(bt.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{tCommon("delete")}</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        ))}
+                        {groupedBlockedTimes.past.length > 10 && (
+                          <p className="text-xs text-center text-muted-foreground pt-2">
+                            +{groupedBlockedTimes.past.length - 10} {tBlocks("moreBlocks") || "more"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="flex-shrink-0 border-t pt-4">
+            <Button variant="outline" onClick={() => setBlockTimeDialogOpen(false)}>
               {tCommon("close") || "Close"}
             </Button>
           </DialogFooter>

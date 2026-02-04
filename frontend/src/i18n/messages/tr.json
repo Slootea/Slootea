@@ -438,6 +438,7 @@
     "weekdays": "Hafta içi",
     "editSchedule": "Programı Düzenle",
     "editScheduleDesc": "Haftalık müsaitlik programınızı yönetin",
+    "blockTime": "Zaman Engelle",
     "addSlot": "Ekle",
     "copy": "Kopyala",
     "noSlotsForDay": "Yapılandırılmış zaman dilimi yok",
@@ -517,15 +518,29 @@
     }
   },
   "blocksPage": {
-    "title": "Engelli Zamanlar",
-    "description": "Müsait olmadığınız belirli tarihleri veya zaman aralıklarını engelleyin.",
+    "title": "Zaman Engelle",
+    "description": "Randevulara müsait olmadığınız belirli tarihleri ve saatleri engelleyin.",
     "blockTime": "Zaman Engelle",
-    "upcomingBlocked": "Yaklaşan Engelli Zamanlar",
-    "pastBlocked": "Geçmiş Engelli Zamanlar",
-    "fullDay": "Tüm gün",
+    "addBlock": "Engel Ekle",
+    "manageBlocks": "Engelleri Yönet",
+    "editingBlock": "Engelli zaman düzenleniyor",
+    "updateBlock": "Engeli Güncelle",
+    "addFirst": "İlk engelinizi ekleyin",
+    "moreBlocks": "daha fazla",
+    "date": "Tarih Seçin",
+    "orSelectDate": "Veya seçin:",
+    "fullDay": "Tüm Günü Engelle",
+    "fullDayDesc": "Hiçbir randevu mümkün olmayacak",
+    "timeRange": "Engellenecek Zaman Aralığı",
+    "reason": "Sebep (İsteğe Bağlı)",
+    "reasonPlaceholder": "örn., Tatil, Toplantı, Kişisel zaman...",
+    "upcoming": "Yaklaşan Engelli Zamanlar",
+    "allDay": "Tüm gün",
+    "upcomingBlocked": "Yaklaşan",
+    "pastBlocked": "Geçmiş",
     "empty": {
-      "title": "Henüz engelli zaman yok",
-      "description": "Müsait olmadığınız zamanları engelleyin."
+      "title": "Engelli zaman yok",
+      "description": "Henüz hiçbir zamanı engellemediz."
     },
     "dialog": {
       "title": "Zaman Engelle",
@@ -538,7 +553,11 @@
     },
     "messages": {
       "created": "Engelli zaman oluşturuldu",
-      "deleted": "Engelli zaman silindi"
+      "updated": "Engelli zaman güncellendi",
+      "deleted": "Engelli zaman silindi",
+      "createError": "Engelli zaman oluşturulamadı",
+      "updateError": "Engelli zaman güncellenemedi",
+      "deleteError": "Engelli zaman silinemedi"
     }
   },
   "linksPage": {

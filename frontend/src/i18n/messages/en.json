@@ -438,6 +438,7 @@
     "weekdays": "Weekdays",
     "editSchedule": "Edit Schedule",
     "editScheduleDesc": "Manage your weekly availability schedule",
+    "blockTime": "Block Time",
     "addSlot": "Add",
     "copy": "Copy",
     "noSlotsForDay": "No time slots configured",
@@ -517,15 +518,29 @@
     }
   },
   "blocksPage": {
-    "title": "Blocked Times",
-    "description": "Block specific dates or time ranges when you're not available.",
+    "title": "Block Time",
+    "description": "Block specific dates and times when you're not available for appointments.",
     "blockTime": "Block Time",
-    "upcomingBlocked": "Upcoming Blocked Times",
-    "pastBlocked": "Past Blocked Times",
-    "fullDay": "Full day",
+    "addBlock": "Add Block",
+    "manageBlocks": "Manage Blocks",
+    "editingBlock": "Editing blocked time",
+    "updateBlock": "Update Block",
+    "addFirst": "Add your first block",
+    "moreBlocks": "more",
+    "date": "Select Date",
+    "orSelectDate": "Or select:",
+    "fullDay": "Block Entire Day",
+    "fullDayDesc": "No appointments will be available",
+    "timeRange": "Time Range to Block",
+    "reason": "Reason (Optional)",
+    "reasonPlaceholder": "e.g., Vacation, Meeting, Personal time...",
+    "upcoming": "Upcoming Blocked Times",
+    "allDay": "All day",
+    "upcomingBlocked": "Upcoming",
+    "pastBlocked": "Past",
     "empty": {
-      "title": "No blocked times yet",
-      "description": "Block times when you're unavailable."
+      "title": "No blocked times",
+      "description": "You haven't blocked any times yet."
     },
     "dialog": {
       "title": "Block Time",
@@ -538,7 +553,11 @@
     },
     "messages": {
       "created": "Blocked time created",
-      "deleted": "Blocked time deleted"
+      "updated": "Blocked time updated",
+      "deleted": "Blocked time deleted",
+      "createError": "Failed to create blocked time",
+      "updateError": "Failed to update blocked time",
+      "deleteError": "Failed to delete blocked time"
     }
   },
   "linksPage": {

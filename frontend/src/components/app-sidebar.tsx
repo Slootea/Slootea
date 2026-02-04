@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, CalendarX, List, Users, Calendar, Building2, BarChart3 } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -36,7 +36,6 @@ export function AppSidebar() {
   // Members can see their own services, but only in org context
   const memberConfigItems = [
     { href: "/dashboard/availability", label: t('availability'), icon: Clock },
-    { href: "/dashboard/blocks", label: t('blockedTimes'), icon: CalendarX },
   ];
 
   // Admin-only configuration items (members management is handled by Clerk in org switcher)
