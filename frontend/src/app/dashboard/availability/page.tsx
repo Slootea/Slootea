@@ -58,18 +58,19 @@ import {
   Moon, 
   MoreHorizontal,
   CheckCircle2,
-  XCircle,
   Zap,
   ChevronDown,
   Info,
-  Settings2,
   CalendarDays,
   Timer,
-  GripVertical,
   Sun,
-  Coffee,
   Sunset,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  LayoutGrid,
+  List,
+  ChevronRight,
+  Edit3
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -90,38 +91,31 @@ function VisualTimeRangePicker({
   const [initialStart, setInitialStart] = useState(0);
   const [initialEnd, setInitialEnd] = useState(0);
 
-  // Time configuration - Full 24-hour range
-  const startHour = 0; // Midnight
-  const endHour = 24; // Midnight (next day)
+  const startHour = 0;
+  const endHour = 24;
   const totalHours = endHour - startHour;
-  const snapMinutes = 5; // Snap to 5-minute intervals
+  const snapMinutes = 5;
 
-  // Convert time string to minutes from start
   const timeToMinutes = (time: string): number => {
     const [h, m] = time.split(':').map(Number);
     return (h - startHour) * 60 + m;
   };
 
-  // Convert minutes to time string
   const minutesToTime = (minutes: number): string => {
-    // Cap at 23:59 (1439 minutes) to ensure valid time format for backend
     const totalMinutes = Math.max(0, Math.min(minutes, 23 * 60 + 59));
     const h = Math.floor(totalMinutes / 60) + startHour;
     const m = totalMinutes % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
   };
 
-  // Snap to nearest interval
   const snapToInterval = (minutes: number): number => {
     return Math.round(minutes / snapMinutes) * snapMinutes;
   };
 
-  // Get position from minutes
   const getPositionPercent = (minutes: number): number => {
     return (minutes / (totalHours * 60)) * 100;
   };
 
-  // Get minutes from mouse position
   const getMinutesFromPosition = (clientX: number): number => {
     if (!containerRef.current) return 0;
     const rect = containerRef.current.getBoundingClientRect();
@@ -133,7 +127,6 @@ function VisualTimeRangePicker({
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
 
-  // Handle mouse/touch events
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent, type: 'start' | 'end' | 'range') => {
     e.preventDefault();
     setIsDragging(type);
@@ -193,7 +186,6 @@ function VisualTimeRangePicker({
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Click on timeline to set time
   const handleTimelineClick = (e: React.MouseEvent) => {
     if (isDragging) return;
     const minutes = getMinutesFromPosition(e.clientX);
@@ -215,130 +207,189 @@ function VisualTimeRangePicker({
     onTimeChange(minutesToTime(newStart), minutesToTime(newEnd));
   };
 
-  // Calculate duration
   const durationMinutes = endMinutes - startMinutes;
   const durationHours = Math.floor(durationMinutes / 60);
   const durationMins = durationMinutes % 60;
 
-  // Quick presets
   const presets = [
-    { label: t("presets.morning"), icon: Sunrise, start: "06:00", end: "12:00" },
-    { label: t("presets.afternoon"), icon: Sun, start: "12:00", end: "18:00" },
-    { label: t("presets.evening"), icon: Sunset, start: "18:00", end: "23:00" },
-    { label: t("presets.fullDay"), icon: Clock, start: "00:00", end: "23:59" },
+    { label: t("presets.morning"), icon: Sunrise, start: "06:00", end: "12:00", color: "text-amber-500" },
+    { label: t("presets.afternoon"), icon: Sun, start: "12:00", end: "18:00", color: "text-sky-500" },
+    { label: t("presets.evening"), icon: Sunset, start: "18:00", end: "23:00", color: "text-indigo-500" },
+    { label: t("presets.fullDay"), icon: Clock, start: "00:00", end: "23:59", color: "text-emerald-500" },
   ];
 
+  const leftPercent = getPositionPercent(startMinutes);
+  const widthPercent = getPositionPercent(endMinutes - startMinutes);
+
   return (
-    <div className="space-y-4">
-      {/* Quick presets */}
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-5">
+      {/* Quick Presets */}
+      <div className="grid grid-cols-4 gap-2">
         {presets.map((preset) => {
           const Icon = preset.icon;
           const isActive = startTime === preset.start && endTime === preset.end;
           return (
-            <Button
+            <button
               key={preset.label}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
-              className="h-8 text-xs"
               onClick={() => onTimeChange(preset.start, preset.end)}
+              className={`
+                flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all
+                ${isActive 
+                  ? "bg-primary/10 border-primary shadow-sm" 
+                  : "border-transparent bg-muted/50 hover:bg-muted hover:border-border"
+                }
+              `}
             >
-              <Icon className="h-3 w-3 mr-1.5" />
-              {preset.label}
-            </Button>
+              <div className={`p-2 rounded-lg ${isActive ? 'bg-primary/20' : 'bg-background'}`}>
+                <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : preset.color}`} />
+              </div>
+              <span className={`text-xs font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                {preset.label}
+              </span>
+              <span className="text-[10px] text-muted-foreground/70 font-mono">
+                {preset.start.slice(0, 5)}
+              </span>
+            </button>
           );
         })}
       </div>
 
-      {/* Visual timeline */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
+      {/* Visual Timeline - matching WeeklyOverview style */}
+      <div className="space-y-3 p-4 rounded-xl border bg-card">
+        {/* Header with time display */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950">
+              <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">{t("dialog.dragToSelect")}</p>
+              <p className="text-xs text-muted-foreground">Click or drag to adjust</p>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">{t("dialog.dragToSelect")}</span>
-            <Badge variant="outline" className="font-mono text-primary">
-              {startTime} - {endTime}
+            <Badge variant="outline" className="font-mono text-base px-3 py-1 bg-background">
+              {startTime} – {endTime}
+            </Badge>
+            <Badge className="font-mono bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-100">
+              {durationHours > 0 && `${durationHours}h `}{durationMins > 0 && `${durationMins}m`}
+              {durationHours === 0 && durationMins === 0 && "0m"}
             </Badge>
           </div>
-          <Badge variant="secondary" className="font-mono">
-            {durationHours > 0 && `${durationHours}h `}{durationMins > 0 && `${durationMins}m`}
-            {durationHours === 0 && durationMins === 0 && "0m"}
-          </Badge>
+        </div>
+
+        {/* Time header labels */}
+        <div className="flex items-center text-[10px] font-medium text-muted-foreground px-1">
+          <div className="flex-1 flex justify-between">
+            <span className="tabular-nums">00:00</span>
+            <span className="tabular-nums">06:00</span>
+            <span className="tabular-nums">12:00</span>
+            <span className="tabular-nums">18:00</span>
+            <span className="tabular-nums">24:00</span>
+          </div>
         </div>
         
+        {/* Timeline Bar */}
         <div 
           ref={containerRef}
-          className="relative h-16 bg-muted/50 rounded-lg cursor-pointer select-none overflow-hidden"
+          className="relative h-14 bg-gradient-to-r from-muted/60 to-muted/40 rounded-lg cursor-pointer select-none overflow-hidden border border-border/40"
           onClick={handleTimelineClick}
         >
-          {/* Hour markers */}
+          {/* Background grid pattern - 24 hours */}
           <div className="absolute inset-0 flex">
-            {Array.from({ length: totalHours + 1 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex-1 border-l border-border/30 first:border-l-0"
-              >
-                {i % 3 === 0 && (
-                  <span className="absolute top-1 text-[10px] text-muted-foreground -translate-x-1/2">
-                    {(startHour + i) % 24}:00
-                  </span>
-                )}
-              </div>
+            {Array.from({ length: 24 }).map((_, hour) => (
+              <div 
+                key={hour} 
+                className={`flex-1 border-r ${
+                  hour % 6 === 5 
+                    ? 'border-border/40' 
+                    : 'border-border/10'
+                } last:border-r-0`} 
+              />
             ))}
           </div>
 
-          {/* Selected range */}
+          {/* Time period backgrounds */}
+          <div className="absolute inset-0 flex pointer-events-none">
+            {/* Night (0-6) */}
+            <div className="w-1/4 bg-slate-900/5 dark:bg-slate-100/5" />
+            {/* Morning (6-12) */}
+            <div className="w-1/4 bg-amber-500/5" />
+            {/* Afternoon (12-18) */}
+            <div className="w-1/4 bg-sky-500/5" />
+            {/* Evening (18-24) */}
+            <div className="w-1/4 bg-indigo-500/5" />
+          </div>
+
+          {/* Selected Range - Matching WeeklyOverview style */}
           <div
-            className={`absolute top-6 bottom-2 bg-primary/20 border-2 border-primary rounded-md transition-colors ${isDragging === 'range' ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`absolute top-2 bottom-2 rounded-md cursor-grab transition-all duration-100 shadow-md hover:shadow-lg ${isDragging === 'range' ? 'cursor-grabbing scale-y-105' : ''}`}
             style={{
-              left: `${getPositionPercent(startMinutes)}%`,
-              width: `${getPositionPercent(endMinutes - startMinutes)}%`,
+              left: `${leftPercent}%`,
+              width: `${Math.max(widthPercent, 2)}%`,
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
             }}
             onMouseDown={(e) => handleMouseDown(e, 'range')}
             onTouchStart={(e) => handleMouseDown(e, 'range')}
-          />
+          >
+            {/* Inner highlight */}
+            <div className="absolute inset-0 rounded-md bg-gradient-to-b from-white/25 to-transparent" />
+            {/* Time label inside if wide enough */}
+            {widthPercent > 15 && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-semibold text-white drop-shadow-sm">
+                  {startTime} – {endTime}
+                </span>
+              </div>
+            )}
+          </div>
 
-          {/* Start handle */}
+          {/* Start Handle */}
           <div
-            className={`absolute top-6 bottom-2 w-3 -ml-1.5 flex items-center justify-center cursor-ew-resize z-10 group ${isDragging === 'start' ? 'cursor-grabbing' : ''}`}
-            style={{ left: `${getPositionPercent(startMinutes)}%` }}
+            className={`absolute top-1 bottom-1 w-5 -ml-2.5 flex items-center justify-center cursor-ew-resize z-10 group ${isDragging === 'start' ? 'cursor-grabbing' : ''}`}
+            style={{ left: `${leftPercent}%` }}
             onMouseDown={(e) => handleMouseDown(e, 'start')}
             onTouchStart={(e) => handleMouseDown(e, 'start')}
           >
-            <div className="w-1.5 h-8 bg-primary rounded-full shadow-md group-hover:scale-110 transition-transform" />
+            <div className="w-1.5 h-10 bg-white rounded-full shadow-lg border-2 border-emerald-500 group-hover:scale-110 group-hover:border-emerald-400 transition-all" />
           </div>
 
-          {/* End handle */}
+          {/* End Handle */}
           <div
-            className={`absolute top-6 bottom-2 w-3 -ml-1.5 flex items-center justify-center cursor-ew-resize z-10 group ${isDragging === 'end' ? 'cursor-grabbing' : ''}`}
-            style={{ left: `${getPositionPercent(endMinutes)}%` }}
+            className={`absolute top-1 bottom-1 w-5 -ml-2.5 flex items-center justify-center cursor-ew-resize z-10 group ${isDragging === 'end' ? 'cursor-grabbing' : ''}`}
+            style={{ left: `${leftPercent + widthPercent}%` }}
             onMouseDown={(e) => handleMouseDown(e, 'end')}
             onTouchStart={(e) => handleMouseDown(e, 'end')}
           >
-            <div className="w-1.5 h-8 bg-primary rounded-full shadow-md group-hover:scale-110 transition-transform" />
+            <div className="w-1.5 h-10 bg-white rounded-full shadow-lg border-2 border-emerald-500 group-hover:scale-110 group-hover:border-emerald-400 transition-all" />
           </div>
         </div>
 
-        {/* Time period indicators */}
-        <div className="flex text-[10px] text-muted-foreground">
-          <div className="flex-1 text-center">
-            <Sunrise className="h-3 w-3 mx-auto mb-0.5" />
-            {t("periods.morning")}
+        {/* Time period legend */}
+        <div className="flex items-center justify-center gap-6 pt-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Moon className="h-3 w-3" />
+            <span>Night</span>
           </div>
-          <div className="flex-1 text-center">
-            <Sun className="h-3 w-3 mx-auto mb-0.5" />
-            {t("periods.afternoon")}
+          <div className="flex items-center gap-1.5">
+            <Sunrise className="h-3 w-3 text-amber-500" />
+            <span>{t("periods.morning")}</span>
           </div>
-          <div className="flex-1 text-center">
-            <Sunset className="h-3 w-3 mx-auto mb-0.5" />
-            {t("periods.evening")}
+          <div className="flex items-center gap-1.5">
+            <Sun className="h-3 w-3 text-sky-500" />
+            <span>{t("periods.afternoon")}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Sunset className="h-3 w-3 text-indigo-500" />
+            <span>{t("periods.evening")}</span>
           </div>
         </div>
       </div>
 
-      {/* Fine-tune inputs */}
-      <div className="grid grid-cols-2 gap-4 pt-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="startTime" className="text-xs">{t("dialog.startTime")}</Label>
+      {/* Manual Time Input */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="startTime" className="text-xs font-medium">{t("dialog.startTime")}</Label>
           <Input
             id="startTime"
             type="time"
@@ -350,11 +401,11 @@ function VisualTimeRangePicker({
                 onTimeChange(newStart, endTime);
               }
             }}
-            className="h-9"
+            className="h-10 font-mono text-center"
           />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="endTime" className="text-xs">{t("dialog.endTime")}</Label>
+        <div className="space-y-2">
+          <Label htmlFor="endTime" className="text-xs font-medium">{t("dialog.endTime")}</Label>
           <Input
             id="endTime"
             type="time"
@@ -366,7 +417,7 @@ function VisualTimeRangePicker({
                 onTimeChange(startTime, newEnd);
               }
             }}
-            className="h-9"
+            className="h-10 font-mono text-center"
           />
         </div>
       </div>
@@ -411,8 +462,396 @@ const SCHEDULE_TEMPLATES = {
   },
 };
 
-// Time slot component
-function TimeSlotItem({ 
+// Weekly Overview Timeline Component
+function WeeklyOverview({ 
+  groupedByDay, 
+  dayNumbers,
+  todayDayOfWeek,
+  onAddSlot,
+  onEditSlot,
+  onOpenEditDialog,
+  onApplyTemplate,
+  onClearAll
+}: { 
+  groupedByDay: Record<DayOfWeek, Availability[]>;
+  dayNumbers: DayOfWeek[];
+  todayDayOfWeek: number;
+  onAddSlot: (day: DayOfWeek) => void;
+  onEditSlot: (slot: Availability) => void;
+  onOpenEditDialog: () => void;
+  onApplyTemplate: (templateKey: keyof typeof SCHEDULE_TEMPLATES) => void;
+  onClearAll: () => void;
+}) {
+  const t = useTranslations("availability");
+  
+  const timeToPercent = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return ((h * 60 + m) / (24 * 60)) * 100;
+  };
+
+  // Calculate total hours for the week
+  const totalWeeklyHours = useMemo(() => {
+    return dayNumbers.reduce((total, day) => {
+      const slots = groupedByDay[day] || [];
+      const activeSlots = slots.filter(s => s.isActive);
+      return total + activeSlots.reduce((dayTotal, slot) => {
+        const [startH, startM] = slot.startTime.split(':').map(Number);
+        const [endH, endM] = slot.endTime.split(':').map(Number);
+        return dayTotal + (endH * 60 + endM - startH * 60 - startM) / 60;
+      }, 0);
+    }, 0);
+  }, [groupedByDay, dayNumbers]);
+
+  // Calculate hours per day for bar comparison
+  const hoursPerDay = useMemo(() => {
+    return dayNumbers.map(day => {
+      const slots = groupedByDay[day] || [];
+      const activeSlots = slots.filter(s => s.isActive);
+      return activeSlots.reduce((total, slot) => {
+        const [startH, startM] = slot.startTime.split(':').map(Number);
+        const [endH, endM] = slot.endTime.split(':').map(Number);
+        return total + (endH * 60 + endM - startH * 60 - startM) / 60;
+      }, 0);
+    });
+  }, [groupedByDay, dayNumbers]);
+
+  const maxHoursInDay = Math.max(...hoursPerDay, 1);
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-4 border-b bg-muted/30">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-primary/10">
+              <CalendarDays className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-semibold">{t("weeklyOverview") || "Weekly Overview"}</CardTitle>
+              <CardDescription className="text-sm">{t("weeklyOverviewDesc") || "Your availability at a glance"}</CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground mr-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-gradient-to-r from-emerald-500 to-emerald-400" />
+                <span>Available</span>
+              </div>
+            </div>
+            <Badge variant="secondary" className="font-mono text-xs">
+              {totalWeeklyHours.toFixed(1)}h/week
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t("quickSetup")}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {Object.entries(SCHEDULE_TEMPLATES).map(([key, template]) => {
+                  const Icon = template.icon;
+                  return (
+                    <DropdownMenuItem key={key} onClick={() => onApplyTemplate(key as keyof typeof SCHEDULE_TEMPLATES)}>
+                      <Icon className="h-4 w-4 mr-2" />
+                      {t(`templates.${key}`)}
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={onClearAll}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("clearAll")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onAddSlot(todayDayOfWeek as DayOfWeek)}
+              className="gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("addTimeSlot")}</span>
+            </Button>
+            <Button 
+              size="sm"
+              onClick={onOpenEditDialog}
+              className="gap-1.5"
+            >
+              <Edit3 className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("editSchedule") || "Edit Schedule"}</span>
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-4 pb-5">
+        <div className="space-y-1">
+          {/* Time header */}
+          <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground mb-2 px-1">
+            <div className="w-16 sm:w-24 shrink-0"></div>
+            <div className="flex-1 flex justify-between pr-1">
+              <span className="tabular-nums">00:00</span>
+              <span className="tabular-nums hidden sm:inline">06:00</span>
+              <span className="tabular-nums">12:00</span>
+              <span className="tabular-nums hidden sm:inline">18:00</span>
+              <span className="tabular-nums">24:00</span>
+            </div>
+            <div className="w-14 shrink-0 text-right hidden sm:block">Hours</div>
+          </div>
+          
+          {dayNumbers.map((day, idx) => {
+            const slots = groupedByDay[day] || [];
+            const activeSlots = slots.filter(s => s.isActive);
+            const isWeekend = day === 5 || day === 6;
+            const isToday = day === todayDayOfWeek;
+            const dayHours = hoursPerDay[idx];
+            
+            return (
+              <div 
+                key={day} 
+                className={`
+                  flex items-center gap-3 py-1.5 px-1 rounded-lg transition-all
+                  ${isToday ? 'bg-primary/5 ring-1 ring-primary/20' : 'hover:bg-muted/30'}
+                  ${isWeekend && !isToday ? 'opacity-60' : ''}
+                `}
+              >
+                <div className="w-16 sm:w-24 shrink-0 flex items-center gap-2">
+                  {isToday && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse hidden sm:block" />
+                  )}
+                  <span className={`text-sm font-medium ${isToday ? 'text-primary' : isWeekend ? 'text-muted-foreground' : ''}`}>
+                    <span className="sm:hidden">{t(`dayOfWeek.${day}`).slice(0, 2)}</span>
+                    <span className="hidden sm:inline">{t(`dayOfWeek.${day}`).slice(0, 3)}</span>
+                  </span>
+                </div>
+                <div className="flex-1 relative h-9 bg-gradient-to-r from-muted/60 to-muted/40 rounded-md overflow-hidden border border-border/40">
+                  {/* Background grid pattern */}
+                  <div className="absolute inset-0 flex">
+                    {Array.from({ length: 24 }).map((_, hour) => (
+                      <div 
+                        key={hour} 
+                        className={`flex-1 border-r ${
+                          hour % 6 === 5 
+                            ? 'border-border/40' 
+                            : 'border-border/10'
+                        } last:border-r-0`} 
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Time period backgrounds */}
+                  <div className="absolute inset-0 flex pointer-events-none">
+                    {/* Night (0-6) */}
+                    <div className="w-1/4 bg-slate-900/5 dark:bg-slate-100/5" />
+                    {/* Morning (6-12) */}
+                    <div className="w-1/4 bg-amber-500/5" />
+                    {/* Afternoon (12-18) */}
+                    <div className="w-1/4 bg-sky-500/5" />
+                    {/* Evening (18-24) */}
+                    <div className="w-1/4 bg-indigo-500/5" />
+                  </div>
+                  
+                  {/* Availability slots */}
+                  {activeSlots.map((slot) => {
+                    const leftPercent = timeToPercent(slot.startTime);
+                    const widthPercent = timeToPercent(slot.endTime) - leftPercent;
+                    
+                    return (
+                      <TooltipProvider key={slot.id} delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => onEditSlot(slot)}
+                              className="absolute top-1 bottom-1 rounded-[4px] cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md hover:scale-y-110 hover:z-10 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                              style={{
+                                left: `${leftPercent}%`,
+                                width: `${Math.max(widthPercent, 1)}%`,
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                              }}
+                            >
+                              {/* Inner highlight */}
+                              <div className="absolute inset-0 rounded-[4px] bg-gradient-to-b from-white/20 to-transparent" />
+                              {/* Show time if slot is wide enough */}
+                              {widthPercent > 12 && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className="text-[9px] font-medium text-white drop-shadow-sm truncate px-1">
+                                    {slot.startTime}
+                                  </span>
+                                </div>
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs p-3 shadow-lg">
+                            <div className="space-y-1">
+                              <p className="font-semibold text-sm">{slot.startTime} - {slot.endTime}</p>
+                              {slot.serviceOption && (
+                                <p className="text-muted-foreground flex items-center gap-1">
+                                  <Briefcase className="h-3 w-3" />
+                                  {slot.serviceOption.title}
+                                </p>
+                              )}
+                              <p className="text-muted-foreground/70 text-[10px]">
+                                {(() => {
+                                  const [startH, startM] = slot.startTime.split(':').map(Number);
+                                  const [endH, endM] = slot.endTime.split(':').map(Number);
+                                  const duration = (endH * 60 + endM - startH * 60 - startM) / 60;
+                                  return `${duration.toFixed(1)} hours`;
+                                })()}
+                              </p>
+                              <p className="text-primary text-[10px] font-medium pt-1 border-t border-border/50 mt-1">
+                                Click to edit
+                              </p>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
+                  
+                  {/* No availability indicator - clickable to add */}
+                  {activeSlots.length === 0 && (
+                    <button
+                      onClick={() => onAddSlot(day)}
+                      className="absolute inset-0 flex items-center justify-center gap-1.5 hover:bg-muted/50 transition-colors group"
+                    >
+                      <Plus className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                      <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground font-medium transition-colors">Add slot</span>
+                    </button>
+                  )}
+                  
+                  {/* Current time indicator if today */}
+                  {isToday && (
+                    <div 
+                      className="absolute top-0 bottom-0 w-0.5 bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.5)] z-20"
+                      style={{ left: `${timeToPercent(new Date().toTimeString().slice(0, 5))}%` }}
+                    >
+                      <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-red-500 shadow-sm" />
+                    </div>
+                  )}
+                </div>
+                {/* Hours indicator */}
+                <div className="w-14 shrink-0 text-right hidden sm:block">
+                  <span className={`
+                    text-xs font-medium tabular-nums
+                    ${dayHours > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground/40'}
+                  `}>
+                    {dayHours > 0 ? `${dayHours.toFixed(1)}h` : '—'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Time period legend */}
+          <div className="flex items-center gap-3 pt-3 mt-2 border-t text-[10px] text-muted-foreground justify-center">
+            <div className="flex items-center gap-1.5">
+              <Moon className="h-3 w-3" />
+              <span>Night</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Sunrise className="h-3 w-3 text-amber-500" />
+              <span>Morning</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Sun className="h-3 w-3 text-sky-500" />
+              <span>Afternoon</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Sunset className="h-3 w-3 text-indigo-500" />
+              <span>Evening</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Compact Time Slot Row for List View
+function TimeSlotRow({ 
+  slot, 
+  dayName,
+  onToggle, 
+  onDelete, 
+  onEdit,
+}: { 
+  slot: Availability;
+  dayName: string;
+  onToggle: () => void; 
+  onDelete: () => void;
+  onEdit: () => void;
+}) {
+  const t = useTranslations("availability");
+  
+  return (
+    <div
+      className={`
+        group flex items-center gap-4 px-4 py-3 border-b last:border-b-0
+        transition-all duration-200 hover:bg-muted/50
+        ${!slot.isActive && "opacity-60"}
+      `}
+    >
+      <div className="w-24 shrink-0">
+        <span className="text-sm font-medium">{dayName}</span>
+      </div>
+      
+      <div className="flex items-center gap-2 w-36 shrink-0">
+        <Clock className="h-4 w-4 text-muted-foreground" />
+        <span className="font-mono text-sm">{slot.startTime} - {slot.endTime}</span>
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <Badge variant="outline" className="text-xs truncate">
+          {slot.serviceOption?.title || t("allServices")}
+        </Badge>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Switch
+                  checked={slot.isActive}
+                  onCheckedChange={onToggle}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {slot.isActive ? t("disable") : t("enable")}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onEdit}
+        >
+          <Edit3 className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Time slot component for grid view
+function TimeSlotCard({ 
   slot, 
   onToggle, 
   onDelete, 
@@ -431,8 +870,8 @@ function TimeSlotItem({
         group flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border
         transition-all duration-200 hover:shadow-sm
         ${slot.isActive 
-          ? "bg-card border-border hover:border-primary/50" 
-          : "bg-muted/50 border-border/50 opacity-70"
+          ? "bg-card border-border hover:border-primary/30" 
+          : "bg-muted/50 border-border/50 opacity-60"
         }
       `}
     >
@@ -441,7 +880,7 @@ function TimeSlotItem({
         className="flex items-center gap-3 flex-1 min-w-0 text-left"
       >
         <div className={`
-          flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0
+          flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0
           ${slot.isActive 
             ? "bg-primary/10 text-primary" 
             : "bg-muted text-muted-foreground"
@@ -450,8 +889,8 @@ function TimeSlotItem({
           <Clock className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">
-            {slot.startTime} - {slot.endTime}
+          <p className="font-semibold text-sm tabular-nums">
+            {slot.startTime} – {slot.endTime}
           </p>
           <p className="text-xs text-muted-foreground truncate">
             {slot.serviceOption?.title || t("allServices")}
@@ -459,7 +898,7 @@ function TimeSlotItem({
         </div>
       </button>
       
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -490,7 +929,7 @@ function TimeSlotItem({
   );
 }
 
-// Day card component
+// Day card component with improved design
 function DayCard({ 
   day, 
   dayName, 
@@ -500,7 +939,8 @@ function DayCard({
   onDeleteSlot,
   onEditSlot,
   onCopyDay,
-  isWeekend 
+  isWeekend,
+  isToday
 }: {
   day: DayOfWeek;
   dayName: string;
@@ -511,6 +951,7 @@ function DayCard({
   onEditSlot: (slot: Availability) => void;
   onCopyDay: (fromDay: DayOfWeek) => void;
   isWeekend: boolean;
+  isToday: boolean;
 }) {
   const t = useTranslations("availability");
   const activeSlots = slots.filter(s => s.isActive);
@@ -526,16 +967,35 @@ function DayCard({
   }, [activeSlots]);
 
   return (
-    <Card className={`overflow-hidden ${isWeekend ? "bg-muted/30" : ""}`}>
-      <CardHeader className="pb-3">
+    <Card className={`
+      overflow-hidden transition-all duration-200
+      ${isWeekend ? "bg-muted/20" : ""}
+      ${isToday ? "ring-2 ring-primary/50 shadow-md" : ""}
+    `}>
+      <CardHeader className="pb-3 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-base font-semibold">{dayName}</CardTitle>
-            {activeSlots.length > 0 && (
-              <Badge variant="secondary" className="font-normal">
-                {totalHours.toFixed(1)}h
-              </Badge>
-            )}
+            <div className={`
+              w-10 h-10 rounded-lg flex items-center justify-center font-semibold text-sm
+              ${isToday 
+                ? "bg-primary text-primary-foreground" 
+                : isWeekend 
+                  ? "bg-muted text-muted-foreground" 
+                  : "bg-muted/80 text-foreground"
+              }
+            `}>
+              {dayName.slice(0, 2)}
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold">{dayName}</CardTitle>
+              {activeSlots.length > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {activeSlots.length} {activeSlots.length === 1 ? 'slot' : 'slots'} • {totalHours.toFixed(1)}h
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("noAvailability") || "Not available"}</p>
+              )}
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -561,19 +1021,21 @@ function DayCard({
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-3">
         {!hasSlots ? (
           <button
             onClick={() => onAddSlot(day)}
-            className="w-full py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground rounded-lg border-2 border-dashed border-muted hover:border-primary/50 hover:bg-muted/50 transition-all"
+            className="w-full py-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground rounded-lg border-2 border-dashed border-muted hover:border-primary/50 hover:bg-muted/30 transition-all"
           >
-            <Plus className="h-5 w-5" />
-            <span className="text-sm">{t("clickToAdd")}</span>
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+              <Plus className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium">{t("clickToAdd")}</span>
           </button>
         ) : (
           <div className="space-y-2">
             {slots.map((slot) => (
-              <TimeSlotItem
+              <TimeSlotCard
                 key={slot.id}
                 slot={slot}
                 onToggle={() => onToggleSlot(slot)}
@@ -584,7 +1046,7 @@ function DayCard({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full mt-2 text-muted-foreground hover:text-foreground"
+              className="w-full mt-2 text-muted-foreground hover:text-foreground border border-dashed border-transparent hover:border-muted"
               onClick={() => onAddSlot(day)}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -601,24 +1063,55 @@ function DayCard({
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-64" />
-          <Skeleton className="h-4 w-48" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-32" />
-        </div>
+      {/* Stats skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+      
+      {/* Overview skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-8 flex-1 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Grid skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {Array.from({ length: 7 }).map((_, i) => (
           <Card key={i}>
             <CardHeader className="pb-3">
-              <Skeleton className="h-5 w-24" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-20 w-full rounded-lg" />
             </CardContent>
           </Card>
         ))}
@@ -627,35 +1120,41 @@ function LoadingSkeleton() {
   );
 }
 
-// Stats card
+// Stats card with improved design
 function StatsCard({ 
   icon: Icon, 
   label, 
   value, 
-  color 
+  color,
+  bgColor
 }: { 
   icon: React.ElementType; 
   label: string; 
   value: string | number;
   color: string;
+  bgColor: string;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50">
-      <div className={`p-2 rounded-full ${color}`}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div>
-        <p className="text-2xl font-semibold">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 rounded-lg ${bgColor}`}>
+            <Icon className={`h-6 w-6 ${color}`} />
+          </div>
+          <div>
+            <p className="text-3xl font-bold tracking-tight">{value}</p>
+            <p className="text-sm text-muted-foreground">{label}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 export default function AvailabilityPage() {
   const { getToken } = useAuth();
   const { toast } = useToast();
-  const { currentOrganization, isAdmin, userRole } = useOrganizationContext();
+  const { currentOrganization, userRole } = useOrganizationContext();
   const t = useTranslations("availability");
   const tCommon = useTranslations("common");
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -665,6 +1164,7 @@ export default function AvailabilityPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  const [editScheduleDialogOpen, setEditScheduleDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
   const [copyFromDay, setCopyFromDay] = useState<DayOfWeek | null>(null);
   const [selectedCopyDays, setSelectedCopyDays] = useState<DayOfWeek[]>([]);
@@ -675,31 +1175,23 @@ export default function AvailabilityPage() {
     serviceOptionId: "",
   });
 
-  // Determine if user is a regular member in an organization (not admin/owner)
   const isOrgMember = !!(currentOrganization && userRole === 'member');
 
-  // Get the list of services available for selection
-  // For org members, only show their assigned services
-  // For admins or personal users, show all services
   const availableServicesForSelection = useMemo(() => {
     if (isOrgMember) {
-      // Members can only set availability for their assigned services
       return assignedServices
         .filter(as => as.isActive && as.serviceOption)
         .map(as => as.serviceOption!);
     }
-    // Admins and personal users see all services
     return serviceOptions;
   }, [isOrgMember, assignedServices, serviceOptions]);
 
-  // Check if member has no assigned services
   const hasNoAssignedServices = isOrgMember && availableServicesForSelection.length === 0;
 
   const fetchData = useCallback(async () => {
     const token = await getToken();
     setAuthToken(token);
 
-    // Set organization context if in an organization
     if (currentOrganization) {
       setOrganizationContext(currentOrganization.id);
     }
@@ -709,10 +1201,8 @@ export default function AvailabilityPage() {
         availabilityApi.getAll(),
       ];
 
-      // Fetch organization services or personal services based on context
       if (currentOrganization) {
         requests.push(serviceOptionsApi.getAllForOrganization());
-        // Also fetch user's assigned services if they're an org member
         requests.push(userServiceOptionsApi.getMyServices());
       } else {
         requests.push(serviceOptionsApi.getAll());
@@ -756,6 +1246,12 @@ export default function AvailabilityPage() {
     }, 0);
     return { activeSlots: activeSlots.length, daysWithAvailability, totalHours };
   }, [availabilities]);
+
+  // Get current day of week (Monday = 0)
+  const todayDayOfWeek = useMemo(() => {
+    const jsDay = new Date().getDay();
+    return jsDay === 0 ? 6 : jsDay - 1; // Convert JS day (Sunday=0) to our format (Monday=0)
+  }, []);
 
   const handleCreate = async () => {
     try {
@@ -816,7 +1312,6 @@ export default function AvailabilityPage() {
 
   const handleAddSlotToDay = (day: DayOfWeek) => {
     setEditingSlot(null);
-    // For org members, default to their first assigned service (they must select one)
     const defaultServiceId = isOrgMember && availableServicesForSelection.length > 0
       ? availableServicesForSelection[0].id
       : "";
@@ -934,92 +1429,59 @@ export default function AvailabilityPage() {
         </Alert>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      {/* Page Header */}
+      {availabilities.length > 0 && (
         <div className="space-y-1">
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground max-w-2xl">
             {isOrgMember ? t("descriptionMember") : t("description")}
           </p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="default">
-                <Settings2 className="h-4 w-4 mr-2" />
-                {t("quickSetup")}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {Object.entries(SCHEDULE_TEMPLATES).map(([key, template]) => {
-                const Icon = template.icon;
-                return (
-                  <DropdownMenuItem key={key} onClick={() => handleApplyTemplate(key as keyof typeof SCHEDULE_TEMPLATES)}>
-                    <Icon className="h-4 w-4 mr-2" />
-                    {t(`templates.${key}`)}
-                  </DropdownMenuItem>
-                );
-              })}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={handleClearAll}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {t("clearAll")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <Button onClick={() => handleAddSlotToDay(DayOfWeek.MONDAY)}>
-            <Plus className="h-4 w-4 mr-2" />
-            {t("addTimeSlot")}
-          </Button>
-        </div>
-      </div>
+      )}
 
-      {/* Stats */}
+      {/* Stats Cards */}
       {availabilities.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatsCard
             icon={CheckCircle2}
             label={t("activeSlots")}
             value={stats.activeSlots}
-            color="bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400"
+            color="text-emerald-600 dark:text-emerald-400"
+            bgColor="bg-emerald-100 dark:bg-emerald-950"
           />
           <StatsCard
             icon={CalendarDays}
             label={t("daysConfigured")}
-            value={stats.daysWithAvailability}
-            color="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+            value={`${stats.daysWithAvailability}/7`}
+            color="text-blue-600 dark:text-blue-400"
+            bgColor="bg-blue-100 dark:bg-blue-950"
           />
           <StatsCard
             icon={Timer}
             label={t("hoursPerWeek")}
-            value={stats.totalHours.toFixed(1)}
-            color="bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400"
+            value={`${stats.totalHours.toFixed(1)}h`}
+            color="text-purple-600 dark:text-purple-400"
+            bgColor="bg-purple-100 dark:bg-purple-950"
           />
         </div>
       )}
 
       {/* Empty State */}
       {availabilities.length === 0 && (
-        <Card>
+        <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <Calendar className="h-8 w-8 text-muted-foreground" />
+            <div className="rounded-full bg-muted p-6 mb-6">
+              <Calendar className="h-12 w-12 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">{t("emptyState.title")}</h3>
-            <p className="text-muted-foreground text-center max-w-md mb-6">
+            <h3 className="text-xl font-semibold mb-2">{t("emptyState.title")}</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-8">
               {t("emptyState.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={() => setTemplateDialogOpen(true)} variant="outline">
+              <Button onClick={() => setTemplateDialogOpen(true)} variant="outline" size="lg">
                 <Zap className="h-4 w-4 mr-2" />
                 {t("useTemplate")}
               </Button>
-              <Button onClick={() => handleAddSlotToDay(DayOfWeek.MONDAY)}>
+              <Button onClick={() => handleAddSlotToDay(DayOfWeek.MONDAY)} size="lg">
                 <Plus className="h-4 w-4 mr-2" />
                 {t("addManually")}
               </Button>
@@ -1028,44 +1490,26 @@ export default function AvailabilityPage() {
         </Card>
       )}
 
-      {/* Weekly Grid */}
+      {/* Weekly Overview */}
       {availabilities.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {dayNumbers.map((day) => (
-            <DayCard
-              key={day}
-              day={day}
-              dayName={t(`dayOfWeek.${day}`)}
-              slots={groupedByDay[day] || []}
-              onAddSlot={handleAddSlotToDay}
-              onToggleSlot={handleToggleActive}
-              onDeleteSlot={handleDelete}
-              onEditSlot={handleEditSlot}
-              onCopyDay={handleCopyDay}
-              isWeekend={day === 5 || day === 6}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Tips */}
-      {availabilities.length > 0 && (
-        <Card className="bg-muted/50">
-          <CardContent className="flex items-start gap-3 py-4">
-            <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium">{t("tips.title")}</p>
-              <p className="text-muted-foreground">{t("tips.description")}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <WeeklyOverview 
+          groupedByDay={groupedByDay} 
+          dayNumbers={dayNumbers} 
+          todayDayOfWeek={todayDayOfWeek}
+          onAddSlot={handleAddSlotToDay}
+          onEditSlot={handleEditSlot}
+          onOpenEditDialog={() => setEditScheduleDialogOpen(true)}
+          onApplyTemplate={handleApplyTemplate}
+          onClearAll={handleClearAll}
+        />
       )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingSlot(null); }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {editingSlot ? <Edit3 className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               {editingSlot ? t("dialog.editTitle") : t("dialog.title")}
             </DialogTitle>
             <DialogDescription>
@@ -1074,9 +1518,9 @@ export default function AvailabilityPage() {
           </DialogHeader>
           <div className="space-y-5 py-2">
             {/* Day selector with visual pills */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-sm font-medium">{t("dialog.dayOfWeek")}</Label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {dayNumbers.map((value) => {
                   const isSelected = formData.dayOfWeek === value;
                   const isWeekend = value === 5 || value === 6;
@@ -1085,12 +1529,12 @@ export default function AvailabilityPage() {
                       key={value}
                       onClick={() => setFormData({ ...formData, dayOfWeek: value })}
                       className={`
-                        px-3 py-1.5 text-sm font-medium rounded-full transition-all
+                        px-4 py-2 text-sm font-medium rounded-lg transition-all border
                         ${isSelected 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm" 
                           : isWeekend
-                            ? "bg-muted/70 text-muted-foreground hover:bg-muted"
-                            : "bg-muted text-foreground hover:bg-muted/80"
+                            ? "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted hover:border-muted"
+                            : "bg-background text-foreground border-border hover:bg-muted hover:border-muted"
                         }
                       `}
                     >
@@ -1104,7 +1548,7 @@ export default function AvailabilityPage() {
             <Separator />
 
             {/* Visual Time Range Picker */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-sm font-medium">{t("dialog.selectTime")}</Label>
               <VisualTimeRangePicker
                 startTime={formData.startTime}
@@ -1117,7 +1561,7 @@ export default function AvailabilityPage() {
             {!editingSlot && (
               <>
                 <Separator />
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-sm font-medium">{t("dialog.service")}</Label>
                   {isOrgMember && availableServicesForSelection.length === 0 ? (
                     <Alert variant="default" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
@@ -1138,7 +1582,6 @@ export default function AvailabilityPage() {
                           <SelectValue placeholder={tCommon("allServices")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Only show "All Services" option for admins/personal users */}
                           {!isOrgMember && (
                             <SelectItem value="__all__">{tCommon("allServices")}</SelectItem>
                           )}
@@ -1179,7 +1622,10 @@ export default function AvailabilityPage() {
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("templateDialog.title")}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              {t("templateDialog.title")}
+            </DialogTitle>
             <DialogDescription>
               {t("templateDialog.description")}
             </DialogDescription>
@@ -1192,10 +1638,10 @@ export default function AvailabilityPage() {
                   <button
                     key={key}
                     onClick={() => handleApplyTemplate(key as keyof typeof SCHEDULE_TEMPLATES)}
-                    className="w-full flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left"
+                    className="w-full flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 hover:border-primary/30 transition-all text-left group"
                   >
-                    <div className="rounded-full bg-muted p-3">
-                      <Icon className="h-5 w-5 text-muted-foreground" />
+                    <div className="rounded-lg bg-muted p-3 group-hover:bg-primary/10 transition-colors">
+                      <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium">{t(`templates.${key}`)}</p>
@@ -1205,6 +1651,7 @@ export default function AvailabilityPage() {
                         {template.days.length === 7 ? t("allDays") : t("weekdays")}
                       </p>
                     </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 );
               })}
@@ -1217,7 +1664,10 @@ export default function AvailabilityPage() {
       <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("copyDialog.title")}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Copy className="h-5 w-5" />
+              {t("copyDialog.title")}
+            </DialogTitle>
             <DialogDescription>
               {t("copyDialog.description", { day: copyFromDay !== null ? t(`dayOfWeek.${copyFromDay}`) : "" })}
             </DialogDescription>
@@ -1227,6 +1677,7 @@ export default function AvailabilityPage() {
               .filter((d) => d !== copyFromDay)
               .map((day) => {
                 const isSelected = selectedCopyDays.includes(day);
+                const isWeekend = day === 5 || day === 6;
                 return (
                   <button
                     key={day}
@@ -1241,7 +1692,9 @@ export default function AvailabilityPage() {
                       flex items-center gap-3 p-3 rounded-lg border transition-all
                       ${isSelected 
                         ? "bg-primary/10 border-primary text-primary" 
-                        : "hover:bg-muted/50"
+                        : isWeekend
+                          ? "bg-muted/30 hover:bg-muted/50"
+                          : "hover:bg-muted/50"
                       }
                     `}
                   >
@@ -1269,6 +1722,173 @@ export default function AvailabilityPage() {
             >
               <Copy className="h-4 w-4 mr-2" />
               {t("copyDialog.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={editScheduleDialogOpen} onOpenChange={setEditScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Edit3 className="h-5 w-5" />
+              {t("editSchedule") || "Edit Schedule"}
+            </DialogTitle>
+            <DialogDescription>
+              {t("editScheduleDesc") || "Manage your weekly availability schedule"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6">
+            <div className="space-y-4 pb-4">
+              {dayNumbers.map((day) => {
+                const slots = groupedByDay[day] || [];
+                const isWeekend = day === 5 || day === 6;
+                const isToday = day === todayDayOfWeek;
+                const activeSlots = slots.filter(s => s.isActive);
+                const totalHours = activeSlots.reduce((total, slot) => {
+                  const [startH, startM] = slot.startTime.split(":").map(Number);
+                  const [endH, endM] = slot.endTime.split(":").map(Number);
+                  return total + (endH * 60 + endM - startH * 60 - startM) / 60;
+                }, 0);
+
+                return (
+                  <div 
+                    key={day} 
+                    className={`
+                      rounded-lg border p-4 transition-all
+                      ${isToday ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
+                      ${isWeekend && !isToday ? 'bg-muted/30' : ''}
+                    `}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`
+                          w-10 h-10 rounded-lg flex items-center justify-center font-semibold text-sm
+                          ${isToday 
+                            ? "bg-primary text-primary-foreground" 
+                            : isWeekend 
+                              ? "bg-muted text-muted-foreground" 
+                              : "bg-muted/80 text-foreground"
+                          }
+                        `}>
+                          {t(`dayOfWeek.${day}`).slice(0, 2)}
+                        </div>
+                        <div>
+                          <p className="font-semibold">{t(`dayOfWeek.${day}`)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {activeSlots.length > 0 
+                              ? `${activeSlots.length} ${activeSlots.length === 1 ? 'slot' : 'slots'} • ${totalHours.toFixed(1)}h`
+                              : t("noAvailability") || "Not available"
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {slots.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyDay(day)}
+                            className="text-muted-foreground"
+                          >
+                            <Copy className="h-4 w-4 mr-1" />
+                            {t("copy")}
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditScheduleDialogOpen(false);
+                            handleAddSlotToDay(day);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          {t("addSlot") || "Add"}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {slots.length === 0 ? (
+                      <div className="text-center py-4 text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                        {t("noSlotsForDay") || "No time slots configured"}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {slots.map((slot) => (
+                          <div
+                            key={slot.id}
+                            className={`
+                              flex items-center justify-between gap-3 p-3 rounded-lg border
+                              ${slot.isActive ? 'bg-card' : 'bg-muted/50 opacity-60'}
+                            `}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`
+                                p-2 rounded-lg
+                                ${slot.isActive ? 'bg-emerald-100 dark:bg-emerald-950' : 'bg-muted'}
+                              `}>
+                                <Clock className={`h-4 w-4 ${slot.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
+                              </div>
+                              <div>
+                                <p className="font-mono font-medium">
+                                  {slot.startTime} – {slot.endTime}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {slot.serviceOption?.title || t("allServices")}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div>
+                                      <Switch
+                                        checked={slot.isActive}
+                                        onCheckedChange={() => handleToggleActive(slot)}
+                                        className="data-[state=checked]:bg-emerald-500"
+                                      />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs">
+                                    {slot.isActive ? t("disable") : t("enable")}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setEditScheduleDialogOpen(false);
+                                  handleEditSlot(slot);
+                                }}
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDelete(slot.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <DialogFooter className="border-t px-6 py-4">
+            <Button variant="outline" onClick={() => setEditScheduleDialogOpen(false)}>
+              {tCommon("close") || "Close"}
             </Button>
           </DialogFooter>
         </DialogContent>
