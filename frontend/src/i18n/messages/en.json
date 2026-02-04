@@ -581,6 +581,20 @@
     "addService": "Add Service",
     "noDescription": "No description",
     "assignMembers": "Assign",
+    "searchPlaceholder": "Search services...",
+    "totalServices": "{count} total services",
+    "activeServices": "{count} active",
+    "searchResults": "{count} found",
+    "table": {
+      "service": "Service",
+      "duration": "Duration",
+      "description": "Description",
+      "status": "Status"
+    },
+    "noResults": {
+      "title": "No services found",
+      "description": "Try adjusting your search query"
+    },
     "empty": {
       "title": "No service options yet",
       "description": "Create your first one!",

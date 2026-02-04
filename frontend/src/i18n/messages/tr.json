@@ -581,6 +581,20 @@
     "addService": "Hizmet Ekle",
     "noDescription": "Açıklama yok",
     "assignMembers": "Ata",
+    "searchPlaceholder": "Hizmet ara...",
+    "totalServices": "{count} toplam hizmet",
+    "activeServices": "{count} aktif",
+    "searchResults": "{count} bulundu",
+    "table": {
+      "service": "Hizmet",
+      "duration": "Süre",
+      "description": "Açıklama",
+      "status": "Durum"
+    },
+    "noResults": {
+      "title": "Hizmet bulunamadı",
+      "description": "Arama sorgunuzu değiştirmeyi deneyin"
+    },
     "empty": {
       "title": "Henüz hizmet seçeneği yok",
       "description": "İlkini oluşturun!",

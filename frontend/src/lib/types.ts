@@ -7,6 +7,7 @@ export interface User {
   businessName?: string;
   phone?: string;
   timezone?: string;
+  imageUrl?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
