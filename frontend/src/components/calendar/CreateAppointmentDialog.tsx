@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { format, parseISO } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +83,8 @@ interface CreateAppointmentDialogProps {
   fromButton?: boolean;
   /** Pre-selected provider ID (Clerk ID) from calendar member filter */
   preselectedProviderId?: string;
+  /** Organization timezone (e.g., 'Europe/Istanbul', 'America/New_York'). Defaults to 'UTC' */
+  timezone?: string;
 }
 
 export function CreateAppointmentDialog({
@@ -97,6 +100,7 @@ export function CreateAppointmentDialog({
   onSave,
   fromButton = false,
   preselectedProviderId,
+  timezone = 'UTC',
 }: CreateAppointmentDialogProps) {
   // Form state
   const [selectedService, setSelectedService] = useState<string>("");
@@ -321,7 +325,7 @@ export function CreateAppointmentDialog({
     const nextSlot = availabilityCheck?.nextAvailable;
     
     if (nextSlot) {
-      const nextDate = new Date(nextSlot.startTime);
+      const nextDateUtc = new Date(nextSlot.startTime);
       
       // Skip the next availability checks since we're using a suggested available slot
       // Set to 3 to handle multiple effect triggers (date change, time change, parent selectedDate change)
@@ -329,10 +333,19 @@ export function CreateAppointmentDialog({
       // Clear any conflict state
       setAvailabilityCheck(null);
       
-      setAppointmentDate(nextDate);
-      setAppointmentTime(format(nextDate, "HH:mm"));
+      // Extract date and time in the organization's timezone
+      // The startTime is in UTC, we need to get the local date/time in the org timezone
+      const dateInTz = formatInTimeZone(nextDateUtc, timezone, "yyyy-MM-dd");
+      const timeInTz = formatInTimeZone(nextDateUtc, timezone, "HH:mm");
+      
+      // Create a date object for the calendar (using the date part in org timezone)
+      // We add T12:00:00 to avoid timezone edge cases when creating the date
+      const localDate = new Date(dateInTz + "T12:00:00");
+      
+      setAppointmentDate(localDate);
+      setAppointmentTime(timeInTz);
       if (onSelectedDateChange) {
-        onSelectedDateChange(nextDate);
+        onSelectedDateChange(localDate);
       }
       // Don't change provider - only update date and time
     }
@@ -547,7 +560,7 @@ export function CreateAppointmentDialog({
                   <div className="flex items-center gap-2 mt-2">
                     <CalendarClock className="h-4 w-4" />
                     <span className="text-sm">
-                      Next available: {format(parseISO(availabilityCheck.nextAvailable.startTime), "MMM d 'at' h:mm a")}
+                      Next available: {formatInTimeZone(parseISO(availabilityCheck.nextAvailable.startTime), timezone, "MMM d 'at' h:mm a")}
                     </span>
                     <Button
                       type="button"

@@ -208,6 +208,7 @@ export const organizationSettingsApi = {
     sendEmailReminders: boolean;
     sendSmsReminders: boolean;
     reminderHoursBefore: number;
+    timezone: string;
   }>) => api.put('/organization-settings', data),
   getPublic: (organizationId: string) => api.get(`/organization-settings/public/${organizationId}`),
 };

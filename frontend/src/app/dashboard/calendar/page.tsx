@@ -7,6 +7,7 @@ import {
   serviceOptionsApi,
   availabilityApi,
   blockedTimesApi,
+  organizationSettingsApi,
   setAuthToken,
   setOrganizationContext,
 } from "@/lib/api";
@@ -64,6 +65,7 @@ export default function CalendarPage() {
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
+  const [organizationTimezone, setOrganizationTimezone] = useState<string>("UTC");
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "day">("week");
@@ -164,7 +166,7 @@ export default function CalendarPage() {
       // Determine if we should fetch member-specific availability/blocked times
       const shouldFetchMemberData = currentOrganization && isAdmin && selectedMember !== "all";
 
-      const [appointmentsRes, servicesRes, availabilityRes, blockedRes] = await Promise.all([
+      const [appointmentsRes, servicesRes, availabilityRes, blockedRes, orgSettingsRes] = await Promise.all([
         appointmentsApi.getAll(appointmentParams),
         // Admin gets organization services, members get personal services
         currentOrganization && isAdmin
@@ -178,12 +180,17 @@ export default function CalendarPage() {
         shouldFetchMemberData
           ? blockedTimesApi.getForMember(selectedMember, { startDate, endDate })
           : blockedTimesApi.getAll({ startDate, endDate }),
+        // Fetch organization settings for timezone
+        currentOrganization
+          ? organizationSettingsApi.get().catch(() => ({ data: { timezone: 'UTC' } }))
+          : Promise.resolve({ data: { timezone: 'UTC' } }),
       ]);
 
       setAppointments(appointmentsRes.data.data || appointmentsRes.data);
       setServiceOptions(servicesRes.data);
       setAvailabilities(availabilityRes.data);
       setBlockedTimes(blockedRes.data);
+      setOrganizationTimezone(orgSettingsRes.data?.timezone || 'UTC');
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({
@@ -229,17 +236,23 @@ export default function CalendarPage() {
 
       for (const apt of dayAppointments) {
         const aptStart = parseISO(apt.startTime);
-        const aptEnd = parseISO(apt.endTime);
 
+        // Calculate position based on local time hours
         const startHour = aptStart.getHours() + aptStart.getMinutes() / 60;
-        const endHour = aptEnd.getHours() + aptEnd.getMinutes() / 60;
         const top = (startHour - START_HOUR) * HOUR_HEIGHT;
-        const height = Math.max((endHour - startHour) * HOUR_HEIGHT, 20);
+        
+        // Calculate height based on service duration (not stored endTime)
+        // This ensures consistent display regardless of stored endTime
+        const durationMinutes = apt.serviceOption?.duration || 60;
+        const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 20);
 
         let columnIndex = 0;
         for (let i = 0; i < columns.length; i++) {
           const lastInColumn = columns[i][columns[i].length - 1];
-          if (new Date(lastInColumn.endTime) <= aptStart) {
+          // Calculate end time from service duration instead of stored endTime
+          const lastDuration = lastInColumn.serviceOption?.duration || 60;
+          const lastEndTime = new Date(new Date(lastInColumn.startTime).getTime() + lastDuration * 60000);
+          if (lastEndTime <= aptStart) {
             columnIndex = i;
             break;
           }
@@ -318,7 +331,9 @@ export default function CalendarPage() {
 
       for (const apt of dayAppointments) {
         const aptStart = parseISO(apt.startTime);
-        const aptEnd = parseISO(apt.endTime);
+        // Calculate end time from service duration instead of stored endTime
+        const durationMinutes = apt.serviceOption?.duration || 60;
+        const aptEnd = new Date(aptStart.getTime() + durationMinutes * 60000);
 
         if (newStart < aptEnd && newEnd > aptStart) {
           return apt;
@@ -502,7 +517,9 @@ export default function CalendarPage() {
 
     if (overlappingApt) {
       const overlappingStart = parseISO(overlappingApt.startTime);
-      const overlappingEnd = parseISO(overlappingApt.endTime);
+      // Calculate end time from service duration
+      const overlappingDuration = overlappingApt.serviceOption?.duration || 60;
+      const overlappingEnd = new Date(overlappingStart.getTime() + overlappingDuration * 60000);
 
       setPendingChange({
         type: "swap",
@@ -928,6 +945,7 @@ export default function CalendarPage() {
         onSave={handleCreateAppointment}
         fromButton={createFromButton}
         preselectedProviderId={selectedMember !== "all" ? selectedMember : undefined}
+        timezone={organizationTimezone}
       />
     </div>
   );

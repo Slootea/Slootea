@@ -123,4 +123,9 @@ export class UpdateOrganizationSettingsDto {
   @Min(1)
   @Max(168)
   reminderHoursBefore?: number;
+
+  @ApiPropertyOptional({ description: 'Organization timezone (e.g., UTC, Europe/Istanbul, America/New_York)' })
+  @IsOptional()
+  @IsString()
+  timezone?: string;
 }

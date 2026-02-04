@@ -123,6 +123,14 @@ export class OrganizationSettings {
   })
   reminderHoursBefore: number;
 
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: 'UTC',
+    comment: 'Organization timezone (e.g., UTC, Europe/Istanbul, America/New_York)',
+  })
+  timezone: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

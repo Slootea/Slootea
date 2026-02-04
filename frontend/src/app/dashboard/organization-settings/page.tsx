@@ -12,8 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell } from "lucide-react";
+import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2 } from "lucide-react";
 
 export default function OrganizationSettingsPage() {
   const { getToken } = useAuth();
@@ -70,6 +77,7 @@ export default function OrganizationSettingsPage() {
         confirmationRequiredHours: settings.confirmationRequiredHours,
         confirmationDeadlineHours: settings.confirmationDeadlineHours,
         autoCancelUnconfirmed: settings.autoCancelUnconfirmed,
+        timezone: settings.timezone,
       });
       toast({ title: t('messages.saved') });
     } catch (error) {
@@ -466,6 +474,59 @@ export default function OrganizationSettingsPage() {
             />
             <p className="text-xs text-muted-foreground">
               {t('notifications.reminderHoursHint')}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Timezone Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe2 className="h-5 w-5" />
+            {t('timezone.title') || 'Timezone'}
+          </CardTitle>
+          <CardDescription>
+            {t('timezone.description') || 'Set the timezone for your organization. All appointments and availability times will be based on this timezone.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="timezone">
+              {t('timezone.label') || 'Organization Timezone'}
+            </Label>
+            <Select
+              value={settings.timezone || 'UTC'}
+              onValueChange={(value) =>
+                setSettings({ ...settings, timezone: value })
+              }
+            >
+              <SelectTrigger id="timezone" className="w-full">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="UTC">UTC (Coordinated Universal Time)</SelectItem>
+                <SelectItem value="Europe/London">Europe/London (GMT/BST)</SelectItem>
+                <SelectItem value="Europe/Paris">Europe/Paris (CET/CEST)</SelectItem>
+                <SelectItem value="Europe/Berlin">Europe/Berlin (CET/CEST)</SelectItem>
+                <SelectItem value="Europe/Istanbul">Europe/Istanbul (TRT)</SelectItem>
+                <SelectItem value="Europe/Moscow">Europe/Moscow (MSK)</SelectItem>
+                <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+                <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
+                <SelectItem value="Asia/Singapore">Asia/Singapore (SGT)</SelectItem>
+                <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                <SelectItem value="Asia/Shanghai">Asia/Shanghai (CST)</SelectItem>
+                <SelectItem value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</SelectItem>
+                <SelectItem value="Pacific/Auckland">Pacific/Auckland (NZST/NZDT)</SelectItem>
+                <SelectItem value="America/New_York">America/New_York (EST/EDT)</SelectItem>
+                <SelectItem value="America/Chicago">America/Chicago (CST/CDT)</SelectItem>
+                <SelectItem value="America/Denver">America/Denver (MST/MDT)</SelectItem>
+                <SelectItem value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</SelectItem>
+                <SelectItem value="America/Sao_Paulo">America/Sao_Paulo (BRT)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {t('timezone.hint') || 'This timezone will be used for calculating available appointment slots and displaying times.'}
             </p>
           </div>
         </CardContent>

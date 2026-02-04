@@ -38,8 +38,8 @@ export interface TimeSlot {
 
 // Constants
 export const HOUR_HEIGHT = 60; // pixels per hour
-export const START_HOUR = 6; // 6 AM
-export const END_HOUR = 22; // 10 PM
+export const START_HOUR = 0; // 12 AM (midnight)
+export const END_HOUR = 24; // 12 AM (next day)
 export const TOTAL_HOURS = END_HOUR - START_HOUR;
 
 // Helper function for status colors

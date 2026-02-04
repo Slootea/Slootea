@@ -102,6 +102,8 @@ export interface OrganizationSettings {
   sendEmailReminders: boolean;
   sendSmsReminders: boolean;
   reminderHoursBefore: number;
+  // Timezone
+  timezone: string;
   createdAt: string;
   updatedAt: string;
 }

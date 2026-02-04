@@ -864,6 +864,12 @@
       "reminderHours": "Reminder Hours",
       "reminderHoursHint": "Hours before appointment to send reminder"
     },
+    "timezone": {
+      "title": "Timezone",
+      "description": "Set the timezone for your organization. All appointments and availability times will be based on this timezone.",
+      "label": "Organization Timezone",
+      "hint": "This timezone will be used for calculating available appointment slots and displaying times."
+    },
     "messages": {
       "saved": "Organization settings saved",
       "saveFailed": "Failed to save settings",

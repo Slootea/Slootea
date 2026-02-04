@@ -72,6 +72,7 @@ export class OrganizationSettingsService {
       cancellationPolicy: settings.cancellationPolicy,
       minAdvanceBookingHours: settings.minAdvanceBookingHours,
       maxAdvanceBookingDays: settings.maxAdvanceBookingDays,
+      timezone: settings.timezone,
     };
   }
 }

@@ -5,6 +5,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import {
   appointmentsApi,
   serviceOptionsApi,
+  organizationSettingsApi,
   setAuthToken,
   setOrganizationContext,
 } from "@/lib/api";
@@ -86,6 +87,7 @@ export default function AppointmentsPage() {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
+  const [organizationTimezone, setOrganizationTimezone] = useState<string>("UTC");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -233,6 +235,16 @@ export default function AppointmentsPage() {
         ? await serviceOptionsApi.getAllForOrganization()
         : await serviceOptionsApi.getAll();
       setServiceOptions(servicesRes.data);
+
+      // Fetch organization settings for timezone
+      if (currentOrganization) {
+        try {
+          const orgSettingsRes = await organizationSettingsApi.get();
+          setOrganizationTimezone(orgSettingsRes.data?.timezone || 'UTC');
+        } catch {
+          setOrganizationTimezone('UTC');
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({
@@ -604,6 +616,7 @@ export default function AppointmentsPage() {
         saving={createSaving}
         onSave={handleCreateAppointment}
         fromButton={createFromButton}
+        timezone={organizationTimezone}
       />
     </div>
   );

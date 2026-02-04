@@ -864,6 +864,12 @@
       "reminderHours": "Hatırlatma Saati",
       "reminderHoursHint": "Randevudan kaç saat önce hatırlatma gönderileceği"
     },
+    "timezone": {
+      "title": "Saat Dilimi",
+      "description": "Organizasyonunuz için saat dilimini ayarlayın. Tüm randevular ve müsaitlik zamanları bu saat dilimine göre hesaplanacaktır.",
+      "label": "Organizasyon Saat Dilimi",
+      "hint": "Bu saat dilimi, mevcut randevu slotlarını hesaplamak ve zamanları göstermek için kullanılacaktır."
+    },
     "messages": {
       "saved": "Organizasyon ayarları kaydedildi",
       "saveFailed": "Ayarlar kaydedilemedi",
