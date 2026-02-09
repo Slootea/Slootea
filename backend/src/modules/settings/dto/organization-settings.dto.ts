@@ -28,6 +28,11 @@ export class UpdateOrganizationSettingsDto {
   @IsBoolean()
   autoCancelUnconfirmed?: boolean;
 
+  @ApiPropertyOptional({ description: 'Auto-confirm pending appointments when created' })
+  @IsOptional()
+  @IsBoolean()
+  autoConfirmAppointments?: boolean;
+
   @ApiPropertyOptional({ description: 'Buffer time between appointments in minutes' })
   @IsOptional()
   @IsInt()

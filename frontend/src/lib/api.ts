@@ -192,6 +192,7 @@ export const organizationSettingsApi = {
     confirmationRequiredHours: number;
     confirmationDeadlineHours: number;
     autoCancelUnconfirmed: boolean;
+    autoConfirmAppointments: boolean;
     bufferTimeMinutes: number;
     maxAppointmentsPerDay: number;
     minAdvanceBookingHours: number;

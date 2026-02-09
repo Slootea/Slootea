@@ -36,6 +36,12 @@ export class OrganizationSettings {
   autoCancelUnconfirmed: boolean;
 
   @Column({
+    default: true,
+    comment: 'Auto-confirm pending appointments when created',
+  })
+  autoConfirmAppointments: boolean;
+
+  @Column({
     type: 'int',
     default: 15,
     comment: 'Buffer time between appointments in minutes',

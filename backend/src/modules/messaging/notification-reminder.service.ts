@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, In } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Appointment, AppointmentStatus } from '../appointments/entities/appointment.entity';
 import { NotificationService, NotificationEventType, NotificationData } from './notification.service';
 
@@ -71,10 +71,12 @@ export class NotificationReminderService {
   ): Promise<void> {
     try {
       // Get confirmed appointments in the time window
+      // Only send reminders to CONFIRMED appointments (auto-confirmed by organization)
+      // PENDING_CONFIRMATION appointments already received a confirmation request when created
       const appointments = await this.appointmentRepository.find({
         where: {
           startTime: Between(windowStart, windowEnd),
-          status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+          status: AppointmentStatus.CONFIRMED,
         },
         relations: ['serviceOption', 'user'],
       });

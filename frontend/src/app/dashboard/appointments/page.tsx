@@ -64,8 +64,6 @@ import {
   ArrowUpDown,
   RefreshCw,
   Users,
-  Bell,
-  Hourglass,
   Sparkles,
   Plus,
 } from "lucide-react";
@@ -133,18 +131,6 @@ export default function AppointmentsPage() {
       );
     }).sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
   }, [allAppointments]);
-
-  // Computed: Get the next pending confirmation appointment for current user (provider)
-  const nextPendingAppointment = useMemo(() => {
-    const pending = allAppointments.filter(
-      (apt) => 
-        apt.status === AppointmentStatus.PENDING_CONFIRMATION && 
-        isFuture(parseISO(apt.startTime)) &&
-        apt.user?.clerkId === user?.id // Only show if current user is the provider
-    ).sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
-    
-    return pending.length > 0 ? pending[0] : null; // Return only the nearest one
-  }, [allAppointments, user?.id]);
 
   // Debounce search
   useEffect(() => {
@@ -382,15 +368,6 @@ export default function AppointmentsPage() {
         />
       )}
 
-      {/* Pending Confirmation Section - Shows next pending appointment for current provider */}
-      {nextPendingAppointment && (
-        <PendingConfirmationSection
-          appointment={nextPendingAppointment}
-          onStatusChange={handleStatusChange}
-          onCancel={handleCancel}
-        />
-      )}
-
       {/* Main Appointments List */}
       <Card className="shadow-sm">
         <CardHeader className="pb-4 border-b bg-muted/30">
@@ -440,12 +417,6 @@ export default function AppointmentsPage() {
               </TabsTrigger>
               <TabsTrigger value="upcoming" className="text-xs sm:text-sm">
                 Upcoming
-              </TabsTrigger>
-              <TabsTrigger
-                value={AppointmentStatus.PENDING_CONFIRMATION}
-                className="text-xs sm:text-sm"
-              >
-                Pending
               </TabsTrigger>
               <TabsTrigger
                 value={AppointmentStatus.CONFIRMED}
@@ -821,139 +792,6 @@ function UpcomingAppointmentCard({
         </div>
       )}
     </div>
-  );
-}
-
-// Pending Confirmation Section - Shows single pending appointment
-function PendingConfirmationSection({
-  appointment,
-  onStatusChange,
-  onCancel,
-}: {
-  appointment: Appointment;
-  onStatusChange: (id: string, status: AppointmentStatus) => void;
-  onCancel: (id: string) => void;
-}) {
-  const startTime = parseISO(appointment.startTime);
-  const endTime = parseISO(appointment.endTime);
-
-  return (
-    <Card className="border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20 shadow-lg overflow-hidden">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-md">
-              <Hourglass className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-semibold text-amber-900 dark:text-amber-100">
-                Pending Confirmation
-              </CardTitle>
-              <CardDescription className="text-amber-700/70 dark:text-amber-300/70">
-                New booking request awaiting your response
-              </CardDescription>
-            </div>
-          </div>
-          <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-700">
-            <Bell className="h-3.5 w-3.5 mr-1" />
-            Action Required
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="p-5 rounded-xl bg-white/80 dark:bg-gray-900/40 border border-amber-100 dark:border-amber-800/30">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            {/* Client Info */}
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-800/50">
-                <User className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {appointment.clientName}
-                </h4>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {appointment.clientEmail}
-                </p>
-                {appointment.clientPhone && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                    <Phone className="h-3.5 w-3.5" />
-                    {appointment.clientPhone}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Appointment Details */}
-            <div className="flex flex-wrap items-center gap-4 lg:gap-6">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30">
-                  <Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    {isToday(startTime)
-                      ? "Today"
-                      : isTomorrow(startTime)
-                      ? "Tomorrow"
-                      : format(startTime, "EEE, MMM d")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30">
-                  <Timer className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    {appointment.serviceOption?.title || "Service"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {appointment.serviceOption?.duration || 30} minutes
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3 lg:ml-auto">
-              <Button
-                size="lg"
-                variant="default"
-                className="bg-emerald-600 hover:bg-emerald-700 shadow-md"
-                onClick={() => onStatusChange(appointment.id, AppointmentStatus.CONFIRMED)}
-              >
-                <CheckCircle2 className="h-5 w-5 mr-2" />
-                Confirm
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-800"
-                onClick={() => onCancel(appointment.id)}
-              >
-                <XCircle className="h-5 w-5 mr-2" />
-                Decline
-              </Button>
-            </div>
-          </div>
-          
-          {appointment.notes && (
-            <div className="mt-4 pt-4 border-t border-amber-100 dark:border-amber-800/30">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Client Notes:</span>{" "}
-                {appointment.notes}
-              </p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

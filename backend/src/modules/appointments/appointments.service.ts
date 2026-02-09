@@ -6,6 +6,7 @@ import {
   forwardRef,
   Logger,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThan, Like, ILike, LessThanOrEqual, In } from 'typeorm';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
@@ -860,27 +861,61 @@ export class AppointmentsService {
     };
   }
 
+  /**
+   * Cron job to auto-cancel pending appointments that have passed their confirmation deadline.
+   * Runs every 5 minutes.
+   */
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async processUnconfirmedAppointments(): Promise<void> {
-    // Find all pending appointments past their confirmation deadline
+    this.logger.debug('Processing unconfirmed appointments for auto-cancellation...');
+    
+    // Find all pending appointments
     const appointments = await this.appointmentRepository.find({
       where: {
         status: AppointmentStatus.PENDING_CONFIRMATION,
       },
-      relations: ['user', 'user.settings'],
+      relations: ['user'],
     });
 
+    if (appointments.length === 0) {
+      this.logger.debug('No pending appointments found');
+      return;
+    }
+
+    // Group appointments by organization
+    const appointmentsByOrg = new Map<string, Appointment[]>();
     for (const appointment of appointments) {
-      const settings = appointment.user.settings;
-      if (!settings?.autoCancelUnconfirmed) continue;
+      const orgId = appointment.user?.organizationId;
+      if (!orgId) continue;
+      
+      if (!appointmentsByOrg.has(orgId)) {
+        appointmentsByOrg.set(orgId, []);
+      }
+      appointmentsByOrg.get(orgId)!.push(appointment);
+    }
 
-      const deadline = new Date(appointment.startTime);
-      deadline.setHours(
-        deadline.getHours() - settings.confirmationDeadlineHours,
-      );
+    // Process each organization's appointments
+    for (const [orgId, orgAppointments] of appointmentsByOrg) {
+      try {
+        const settings = await this.organizationSettingsService.findByOrganizationId(orgId);
+        
+        // Skip if auto-cancel is not enabled
+        if (!settings.autoCancelUnconfirmed) continue;
 
-      if (new Date() > deadline) {
-        appointment.status = AppointmentStatus.CANCELLED;
-        await this.appointmentRepository.save(appointment);
+        for (const appointment of orgAppointments) {
+          const deadline = new Date(appointment.startTime);
+          deadline.setHours(
+            deadline.getHours() - settings.confirmationDeadlineHours,
+          );
+
+          if (new Date() > deadline) {
+            appointment.status = AppointmentStatus.CANCELLED;
+            await this.appointmentRepository.save(appointment);
+            this.logger.log(`Auto-cancelled appointment ${appointment.id} for org ${orgId} (past deadline)`);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error processing pending appointments for org ${orgId}`, error);
       }
     }
   }
@@ -1204,6 +1239,12 @@ export class AppointmentsService {
       clientId = client.id;
     }
 
+    // Determine appointment status based on auto-confirm setting
+    const autoConfirm = settings.autoConfirmAppointments !== false; // Default to true
+    const appointmentStatus = autoConfirm
+      ? AppointmentStatus.CONFIRMED
+      : AppointmentStatus.PENDING_CONFIRMATION;
+
     // Create appointment
     const confirmationToken = uuidv4();
     const appointment = this.appointmentRepository.create({
@@ -1213,7 +1254,8 @@ export class AppointmentsService {
       userId: assignedUserId,
       clientId,
       confirmationToken,
-      status: AppointmentStatus.PENDING_CONFIRMATION,
+      status: appointmentStatus,
+      confirmedAt: autoConfirm ? new Date() : undefined,
     });
 
     const savedAppointment = await this.appointmentRepository.save(appointment);

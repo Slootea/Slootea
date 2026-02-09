@@ -780,13 +780,15 @@
     },
     "confirmation": {
       "title": "Onay Ayarları",
-      "description": "Randevu onaylarının nasıl ve ne zaman gerekli olduğunu kontrol edin",
-      "sendReminder": "Hatırlatma gönder (randevudan kaç saat önce)",
-      "sendReminderHint": "Onay talebinin randevudan kaç saat önce gönderileceği",
-      "deadline": "Onay son tarihi (randevudan kaç saat önce)",
-      "deadlineHint": "Müşteri bu son tarihe kadar onaylamalı yoksa randevu iptal edilebilir",
+      "description": "Randevuların nasıl onaylandığını ve müşteri katılım hatırlatmalarını kontrol edin",
+      "autoConfirm": "Randevuları otomatik onayla",
+      "autoConfirmHint": "Rezerve edildiğinde randevuları otomatik olarak onayla. Devre dışı bırakıldığında, müşteriler randevu güvence altına alınmadan önce rezervasyonlarını onaylamalıdır.",
+      "sendReminder": "Katılım hatırlatması gönder (kaç saat önce)",
+      "sendReminderHint": "Sadece otomatik onaylanan randevular için. Müşterilere katılacaklarını onaylamalarını isteyen bir hatırlatma gönderir.",
+      "deadline": "Katılım onayı son tarihi (kaç saat önce)",
+      "deadlineHint": "Müşteri bu son tarihe kadar katılımı onaylamalı yoksa randevu iptal edilebilir",
       "autoCancel": "Onaylanmamış randevuları otomatik iptal et",
-      "autoCancelHint": "Son tarihe kadar onaylanmazsa slotları otomatik olarak iptal et ve boşalt"
+      "autoCancelHint": "Müşteri son tarihe kadar katılımı onaylamazsa slotları otomatik olarak iptal et ve boşalt"
     },
     "notifications": {
       "title": "Bildirim Ayarları",

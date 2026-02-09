@@ -780,13 +780,15 @@
     },
     "confirmation": {
       "title": "Confirmation Settings",
-      "description": "Control how and when appointment confirmations are required",
-      "sendReminder": "Send reminder (hours before appointment)",
-      "sendReminderHint": "How many hours before the appointment to send a confirmation request",
-      "deadline": "Confirmation deadline (hours before appointment)",
-      "deadlineHint": "Client must confirm by this deadline or the appointment may be cancelled",
+      "description": "Control how appointments are confirmed and client attendance reminders",
+      "autoConfirm": "Auto-confirm appointments",
+      "autoConfirmHint": "Automatically confirm appointments when booked. When disabled, clients must confirm their booking before the appointment is secured.",
+      "sendReminder": "Send attendance reminder (hours before)",
+      "sendReminderHint": "For auto-confirmed appointments only. Send a reminder asking clients to confirm they will attend.",
+      "deadline": "Attendance confirmation deadline (hours before)",
+      "deadlineHint": "Client must confirm attendance by this deadline or the appointment may be cancelled",
       "autoCancel": "Auto-cancel unconfirmed appointments",
-      "autoCancelHint": "Automatically cancel and free up slots if not confirmed by deadline"
+      "autoCancelHint": "Automatically cancel and free up slots if client doesn't confirm attendance by deadline"
     },
     "notifications": {
       "title": "Notification Settings",

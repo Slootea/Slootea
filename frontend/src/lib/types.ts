@@ -84,6 +84,7 @@ export interface OrganizationSettings {
   confirmationRequiredHours: number;
   confirmationDeadlineHours: number;
   autoCancelUnconfirmed: boolean;
+  autoConfirmAppointments: boolean;
   bufferTimeMinutes: number;
   maxAppointmentsPerDay: number;
   minAdvanceBookingHours: number;
