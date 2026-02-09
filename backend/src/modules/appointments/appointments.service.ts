@@ -1151,15 +1151,18 @@ export class AppointmentsService {
       throw new BadRequestException('No providers available for this service');
     }
 
-    // Find an available provider for this slot
-    // TODO: If providerId is specified in DTO, use that provider
-    let assignedUserId: string | null = null;
+    // Find all available providers for this slot, then pick the one with least appointments (load balancing)
     const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
     const buffer = settings.bufferTimeMinutes;
     const timezone = (settings as any).timezone || 'UTC';
 
     const dateStr = formatDateInTimezone(startTime, timezone);
     const dayOfWeek = getDayOfWeekInTimezone(startTime, timezone);
+    const dayStartInTz = createDateInTimezone(dateStr, '00:00', timezone);
+    const dayEndInTz = createDateInTimezone(dateStr, '23:59', timezone);
+
+    // Collect all available providers with their appointment counts
+    const availableProviders: Array<{ userId: string; appointmentCount: number }> = [];
 
     for (const provider of providers) {
       const providerUserId = provider.id;
@@ -1194,10 +1197,7 @@ export class AppointmentsService {
 
       if (isBlocked) continue;
 
-      // Check existing appointments in the organization's timezone
-      const dayStartInTz = createDateInTimezone(dateStr, '00:00', timezone);
-      const dayEndInTz = createDateInTimezone(dateStr, '23:59', timezone);
-
+      // Get existing appointments for this provider
       const existingAppointments = await this.appointmentRepository.find({
         where: {
           userId: providerUserId,
@@ -1206,6 +1206,7 @@ export class AppointmentsService {
         },
       });
 
+      // Check if the specific slot has a conflict
       const hasConflict = existingAppointments.some((apt) => {
         const aptStart = new Date(apt.startTime);
         const aptEnd = new Date(apt.endTime);
@@ -1217,14 +1218,21 @@ export class AppointmentsService {
       });
 
       if (!hasConflict) {
-        assignedUserId = providerUserId;
-        break;
+        // This provider is available - add with their appointment count for load balancing
+        availableProviders.push({
+          userId: providerUserId,
+          appointmentCount: existingAppointments.length,
+        });
       }
     }
 
-    if (!assignedUserId) {
+    if (availableProviders.length === 0) {
       throw new BadRequestException('This time slot is no longer available');
     }
+
+    // Pick the provider with the least appointments (load balancing)
+    availableProviders.sort((a, b) => a.appointmentCount - b.appointmentCount);
+    const assignedUserId = availableProviders[0].userId;
 
     // Create or find client by phone number (clients belong to organization)
     let clientId: string | undefined;

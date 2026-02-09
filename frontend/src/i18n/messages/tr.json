@@ -791,14 +791,12 @@
       "autoCancelHint": "Müşteri son tarihe kadar katılımı onaylamazsa slotları otomatik olarak iptal et ve boşalt"
     },
     "notifications": {
-      "title": "Bildirim Ayarları",
-      "description": "Bildirimlerin nasıl gönderileceğini yapılandırın",
+      "title": "Bildirim Kanalları",
+      "description": "Müşterilere bildirim göndermek için hangi kanalların kullanılacağını seçin",
       "sendEmailNotifications": "E-posta Bildirimleri",
-      "sendEmailNotificationsHint": "Müşterilere e-posta bildirimi gönder",
+      "sendEmailNotificationsHint": "Rezervasyon onaylarını ve hatırlatmaları e-posta ile gönder",
       "sendSmsNotifications": "SMS Bildirimleri",
-      "sendSmsNotificationsHint": "Müşterilere SMS bildirimi gönder",
-      "reminderHours": "Hatırlatma Saati",
-      "reminderHoursHint": "Randevudan kaç saat önce hatırlatma gönderileceği",
+      "sendSmsNotificationsHint": "Rezervasyon onaylarını ve hatırlatmaları SMS ile gönder",
       "whatsapp": {
         "title": "WhatsApp Bildirimleri",
         "description": "Randevularınız için WhatsApp Business API bildirimlerini yapılandırın"

@@ -74,7 +74,6 @@ export default function OrganizationSettingsPage() {
         maxAppointmentsPerDay: settings.maxAppointmentsPerDay,
         sendEmailReminders: settings.sendEmailReminders,
         sendSmsReminders: settings.sendSmsReminders,
-        reminderHoursBefore: settings.reminderHoursBefore,
         confirmationRequiredHours: settings.confirmationRequiredHours,
         confirmationDeadlineHours: settings.confirmationDeadlineHours,
         autoCancelUnconfirmed: settings.autoCancelUnconfirmed,
@@ -434,7 +433,7 @@ export default function OrganizationSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Notification Settings */}
+      {/* Notification Channels */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -478,28 +477,6 @@ export default function OrganizationSettingsPage() {
                 setSettings({ ...settings, sendSmsReminders: checked })
               }
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="reminderHoursBefore">
-              {t('notifications.reminderHours')}
-            </Label>
-            <Input
-              id="reminderHoursBefore"
-              type="number"
-              min={1}
-              max={168}
-              value={settings.reminderHoursBefore}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  reminderHoursBefore: parseInt(e.target.value) || 24,
-                })
-              }
-            />
-            <p className="text-xs text-muted-foreground">
-              {t('notifications.reminderHoursHint')}
-            </p>
           </div>
         </CardContent>
       </Card>

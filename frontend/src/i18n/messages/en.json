@@ -791,14 +791,12 @@
       "autoCancelHint": "Automatically cancel and free up slots if client doesn't confirm attendance by deadline"
     },
     "notifications": {
-      "title": "Notification Settings",
-      "description": "Configure how notifications are sent",
+      "title": "Notification Channels",
+      "description": "Choose which channels to use for sending notifications to clients",
       "sendEmailNotifications": "Email Notifications",
-      "sendEmailNotificationsHint": "Send email notifications to clients",
+      "sendEmailNotificationsHint": "Send booking confirmations and reminders via email",
       "sendSmsNotifications": "SMS Notifications",
-      "sendSmsNotificationsHint": "Send SMS notifications to clients",
-      "reminderHours": "Reminder Hours",
-      "reminderHoursHint": "Hours before appointment to send reminder",
+      "sendSmsNotificationsHint": "Send booking confirmations and reminders via SMS",
       "whatsapp": {
         "title": "WhatsApp Notifications",
         "description": "Configure WhatsApp Business API notifications for your appointments"
