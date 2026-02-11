@@ -809,7 +809,54 @@
       "emailSubject": "Email Subject",
       "messageContent": "Message Content",
       "contentHint": "Use placeholders above to personalize messages. The same content is used for Email body, SMS, and WhatsApp.",
-      "resetToDefault": "Reset to Default"
+      "resetToDefault": "Reset to Default",
+      "resetSuccess": "Template reset to default",
+      "placeholders": {
+        "clientName": "Client's full name",
+        "serviceName": "Service being booked",
+        "appointmentDate": "Date of appointment",
+        "appointmentTime": "Time of appointment",
+        "providerName": "Service provider's name",
+        "organizationName": "Your organization name",
+        "appointmentLink": "Link to view/edit/cancel",
+        "confirmationLink": "Link to confirm attendance"
+      },
+      "templateTypes": {
+        "APPOINTMENT_BOOKED": {
+          "label": "Appointment Confirmation",
+          "description": "Sent when a client books an appointment. Includes the appointment link for editing or canceling."
+        },
+        "APPOINTMENT_REMINDER": {
+          "label": "Appointment Reminder",
+          "description": "Sent before the appointment as a reminder. Includes a confirmation link."
+        },
+        "APPOINTMENT_UPDATED": {
+          "label": "Appointment Updated",
+          "description": "Sent when an organization reschedules or updates an appointment."
+        },
+        "APPOINTMENT_CANCELED": {
+          "label": "Appointment Cancellation",
+          "description": "Sent when an appointment is canceled by the organization."
+        }
+      },
+      "defaults": {
+        "APPOINTMENT_BOOKED": {
+          "emailSubject": "{{organizationName}} - Appointment Confirmed",
+          "messageContent": "Hi {{clientName}},\n\nYour appointment has been booked!\n\n📅 Date: {{appointmentDate}}\n⏰ Time: {{appointmentTime}}\n📋 Service: {{serviceName}}\n{{providerName}}\n\nTo view, edit, or cancel your appointment, click here:\n{{appointmentLink}}\n\nWe look forward to seeing you!\n\nBest regards,\n{{organizationName}}"
+        },
+        "APPOINTMENT_REMINDER": {
+          "emailSubject": "{{organizationName}} - Appointment Reminder",
+          "messageContent": "Hi {{clientName}},\n\nThis is a reminder about your upcoming appointment:\n\n📅 Date: {{appointmentDate}}\n⏰ Time: {{appointmentTime}}\n📋 Service: {{serviceName}}\n{{providerName}}\n\nPlease confirm your attendance:\n{{confirmationLink}}\n\nTo view, edit, or cancel your appointment:\n{{appointmentLink}}\n\nWe look forward to seeing you!\n\nBest regards,\n{{organizationName}}"
+        },
+        "APPOINTMENT_UPDATED": {
+          "emailSubject": "{{organizationName}} - Appointment Updated",
+          "messageContent": "Hi {{clientName}},\n\nYour appointment has been updated by {{organizationName}}.\n\n📅 New Date: {{appointmentDate}}\n⏰ New Time: {{appointmentTime}}\n📋 Service: {{serviceName}}\n{{providerName}}\n\nTo view your updated appointment details:\n{{appointmentLink}}\n\nIf you have any questions, please contact us.\n\nBest regards,\n{{organizationName}}"
+        },
+        "APPOINTMENT_CANCELED": {
+          "emailSubject": "{{organizationName}} - Appointment Canceled",
+          "messageContent": "Hi {{clientName}},\n\nYour appointment has been canceled.\n\n📅 Original Date: {{appointmentDate}}\n⏰ Original Time: {{appointmentTime}}\n📋 Service: {{serviceName}}\n\nIf you would like to reschedule, please book a new appointment.\n\nBest regards,\n{{organizationName}}"
+        }
+      }
     },
     "timezone": {
       "title": "Timezone",

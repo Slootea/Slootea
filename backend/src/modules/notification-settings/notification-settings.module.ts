@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationSettingsController } from './notification-settings.controller';
 import { NotificationSettingsService } from './notification-settings.service';
-import { MessageTemplateController } from './message-template.controller';
+import { MessageTemplateController, OrganizationMessageTemplateController } from './message-template.controller';
 import { MessageTemplateService } from './message-template.service';
 import {
   OrganizationWhatsAppSettings,
@@ -28,7 +28,7 @@ import { AuthModule } from '../auth/auth.module';
     ConfigModule,
     AuthModule,
   ],
-  controllers: [NotificationSettingsController, MessageTemplateController],
+  controllers: [NotificationSettingsController, MessageTemplateController, OrganizationMessageTemplateController],
   providers: [NotificationSettingsService, MessageTemplateService],
   exports: [NotificationSettingsService, MessageTemplateService],
 })

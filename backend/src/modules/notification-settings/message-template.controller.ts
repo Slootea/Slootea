@@ -6,10 +6,11 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Headers,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiHeader } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
@@ -19,15 +20,55 @@ import {
   UpdateMessageTemplateDto,
   MessageTemplateResponseDto,
   AllMessageTemplatesResponseDto,
+  AllDefaultTemplatesResponseDto,
+  DefaultTemplateDto,
 } from './dto/message-template.dto';
 import { MessageTemplateType } from './entities/organization-message-template.entity';
+
+@ApiTags('message-templates')
+@Controller('message-templates')
+export class MessageTemplateController {
+  constructor(private readonly messageTemplateService: MessageTemplateService) {}
+
+  /**
+   * Get default templates by language (public, no auth required)
+   */
+  @Get('defaults')
+  @ApiOperation({ summary: 'Get default message templates by language' })
+  @ApiQuery({ name: 'lang', required: false, description: 'Language code (default: en)' })
+  @ApiResponse({ status: 200, type: AllDefaultTemplatesResponseDto })
+  getDefaultTemplates(
+    @Query('lang') lang: string = 'en',
+  ): AllDefaultTemplatesResponseDto {
+    const templates = this.messageTemplateService.getDefaultTemplates(lang);
+    return {
+      language: lang,
+      templates: templates as unknown as Record<string, DefaultTemplateDto>,
+    };
+  }
+
+  /**
+   * Get a single default template by type and language (public, no auth required)
+   */
+  @Get('defaults/:templateType')
+  @ApiOperation({ summary: 'Get a single default template by type and language' })
+  @ApiParam({ name: 'templateType', enum: MessageTemplateType, description: 'Template type' })
+  @ApiQuery({ name: 'lang', required: false, description: 'Language code (default: en)' })
+  @ApiResponse({ status: 200, type: DefaultTemplateDto })
+  getDefaultTemplateByType(
+    @Param('templateType') templateType: MessageTemplateType,
+    @Query('lang') lang: string = 'en',
+  ): DefaultTemplateDto {
+    return this.messageTemplateService.getDefaultTemplateByType(templateType, lang);
+  }
+}
 
 @ApiTags('message-templates')
 @ApiBearerAuth()
 @Controller('organizations/:orgId/message-templates')
 @UseGuards(ClerkAuthGuard, OrgRolesGuard)
 @OrgAdminOnly()
-export class MessageTemplateController {
+export class OrganizationMessageTemplateController {
   constructor(private readonly messageTemplateService: MessageTemplateService) {}
 
   @Get()

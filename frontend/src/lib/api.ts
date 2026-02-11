@@ -402,4 +402,12 @@ export const messageTemplatesApi = {
   // Delete a custom message template
   delete: (orgId: string, templateId: string) =>
     api.delete(`/organizations/${orgId}/message-templates/${templateId}`),
+  
+  // Get default templates by language (public, no auth required)
+  getDefaultTemplates: (lang: string = 'en') =>
+    api.get(`/message-templates/defaults`, { params: { lang } }),
+  
+  // Get a single default template by type and language (public, no auth required)
+  getDefaultTemplateByType: (templateType: string, lang: string = 'en') =>
+    api.get(`/message-templates/defaults/${templateType}`, { params: { lang } }),
 };

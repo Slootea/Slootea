@@ -74,3 +74,27 @@ export class AllMessageTemplatesResponseDto {
   @ApiProperty({ description: 'Available placeholders for templates' })
   availablePlaceholders: string[];
 }
+
+export class DefaultTemplateDto {
+  @ApiProperty({ description: 'Email subject line' })
+  emailSubject: string;
+
+  @ApiProperty({ description: 'Message content' })
+  messageContent: string;
+}
+
+export class DefaultTemplatesResponseDto {
+  @ApiProperty({ enum: MessageTemplateType, description: 'Template type' })
+  templateType: MessageTemplateType;
+
+  @ApiProperty({ type: DefaultTemplateDto })
+  template: DefaultTemplateDto;
+}
+
+export class AllDefaultTemplatesResponseDto {
+  @ApiProperty({ description: 'Language code' })
+  language: string;
+
+  @ApiProperty({ description: 'Map of template types to default templates' })
+  templates: Record<string, DefaultTemplateDto>;
+}

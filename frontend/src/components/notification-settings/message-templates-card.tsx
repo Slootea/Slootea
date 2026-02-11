@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { messageTemplatesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import { MessageTemplate, MessageTemplateType, AllMessageTemplatesResponse } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
@@ -42,19 +42,17 @@ const TEMPLATE_TYPE_INFO: Record<MessageTemplateType, { icon: React.ElementType;
   [MessageTemplateType.APPOINTMENT_CANCELED]: { icon: XCircle, color: "text-red-500" },
 };
 
-const TEMPLATE_TYPE_LABELS: Record<MessageTemplateType, string> = {
-  [MessageTemplateType.APPOINTMENT_BOOKED]: "Appointment Confirmation",
-  [MessageTemplateType.APPOINTMENT_REMINDER]: "Appointment Reminder",
-  [MessageTemplateType.APPOINTMENT_UPDATED]: "Appointment Updated",
-  [MessageTemplateType.APPOINTMENT_CANCELED]: "Appointment Cancellation",
-};
-
-const TEMPLATE_TYPE_DESCRIPTIONS: Record<MessageTemplateType, string> = {
-  [MessageTemplateType.APPOINTMENT_BOOKED]: "Sent when a client books an appointment. Includes the appointment link for editing or canceling.",
-  [MessageTemplateType.APPOINTMENT_REMINDER]: "Sent before the appointment as a reminder. Includes a confirmation link.",
-  [MessageTemplateType.APPOINTMENT_UPDATED]: "Sent when an organization reschedules or updates an appointment.",
-  [MessageTemplateType.APPOINTMENT_CANCELED]: "Sent when an appointment is canceled by the organization.",
-};
+// Placeholder keys for translation lookup (strip {{ and }})
+const PLACEHOLDER_KEYS = [
+  'clientName',
+  'serviceName',
+  'appointmentDate',
+  'appointmentTime',
+  'providerName',
+  'organizationName',
+  'appointmentLink',
+  'confirmationLink',
+];
 
 interface EditingTemplate {
   templateType: MessageTemplateType;
@@ -67,6 +65,7 @@ export function MessageTemplatesCard() {
   const { getToken } = useAuth();
   const { toast } = useToast();
   const t = useTranslations('organization');
+  const locale = useLocale();
   const { currentOrganization, isAdmin } = useOrganizationContext();
   
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
@@ -138,21 +137,28 @@ export function MessageTemplatesCard() {
 
     setResetting(true);
     try {
-      await messageTemplatesApi.resetToDefault(currentOrganization.id, templateType);
-      toast({ title: "Template reset to default" });
+      // Fetch localized default template from backend
+      const response = await messageTemplatesApi.getDefaultTemplateByType(templateType, locale);
+      const defaultTemplate = response.data as { emailSubject: string; messageContent: string };
+      
+      // Save with localized defaults
+      await messageTemplatesApi.createOrUpdate(currentOrganization.id, {
+        templateType,
+        emailSubject: defaultTemplate.emailSubject || undefined,
+        messageContent: defaultTemplate.messageContent || '',
+      });
+      
+      toast({ title: t('messageTemplates.resetSuccess') || "Template reset to default" });
       setShowResetDialog(null);
+      setExpandedTemplate(null);
+      setEditingTemplate(null);
       await fetchTemplates();
     } catch (error: any) {
-      // If no custom template exists, that's okay
-      if (error.response?.status === 404) {
-        toast({ title: "Template is already using default" });
-      } else {
-        console.error("Failed to reset template", error);
-        toast({
-          title: "Failed to reset template",
-          variant: "destructive",
-        });
-      }
+      console.error("Failed to reset template", error);
+      toast({
+        title: "Failed to reset template",
+        variant: "destructive",
+      });
       setShowResetDialog(null);
     } finally {
       setResetting(false);
@@ -202,13 +208,18 @@ export function MessageTemplatesCard() {
           <div className="bg-muted/50 p-4 rounded-lg">
             <div className="flex items-start gap-2">
               <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div className="text-sm">
-                <p className="font-medium mb-2">{t('messageTemplates.placeholdersTitle') || 'Available Placeholders:'}</p>
-                <div className="flex flex-wrap gap-1">
-                  {placeholders.map((ph) => (
-                    <Badge key={ph} variant="secondary" className="font-mono text-xs">
-                      {ph}
-                    </Badge>
+              <div className="text-sm w-full">
+                <p className="font-medium mb-3">{t('messageTemplates.placeholdersTitle') || 'Available Placeholders:'}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PLACEHOLDER_KEYS.map((key) => (
+                    <div key={key} className="flex items-start gap-2">
+                      <Badge variant="secondary" className="font-mono text-xs shrink-0">
+                        {`{{${key}}}`}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {t(`messageTemplates.placeholders.${key}`) || key}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -223,6 +234,10 @@ export function MessageTemplatesCard() {
               const isExpanded = expandedTemplate === template.templateType;
               const isEditing = editingTemplate?.templateType === template.templateType;
               const isSaving = saving === template.templateType;
+              
+              // Get localized label and description
+              const templateLabel = t(`messageTemplates.templateTypes.${template.templateType}.label`) || template.templateType;
+              const templateDescription = t(`messageTemplates.templateTypes.${template.templateType}.description`) || '';
 
               return (
                 <div key={template.templateType} className="border rounded-lg">
@@ -242,10 +257,10 @@ export function MessageTemplatesCard() {
                       <TypeIcon className={`h-5 w-5 ${iconColor}`} />
                       <div className="text-left">
                         <h4 className="font-medium">
-                          {TEMPLATE_TYPE_LABELS[template.templateType]}
+                          {templateLabel}
                         </h4>
                         <p className="text-xs text-muted-foreground">
-                          {TEMPLATE_TYPE_DESCRIPTIONS[template.templateType]}
+                          {templateDescription}
                         </p>
                       </div>
                     </div>

@@ -65,12 +65,13 @@ export class OrganizationMessageTemplate {
 }
 
 /**
- * Default message templates
+ * Default message templates by language
  */
-export const DEFAULT_MESSAGE_TEMPLATES: Record<MessageTemplateType, { emailSubject: string; messageContent: string }> = {
-  [MessageTemplateType.APPOINTMENT_BOOKED]: {
-    emailSubject: '{{organizationName}} - Appointment Confirmed',
-    messageContent: `Hi {{clientName}},
+export const LOCALIZED_DEFAULT_TEMPLATES: Record<string, Record<MessageTemplateType, { emailSubject: string; messageContent: string }>> = {
+  en: {
+    [MessageTemplateType.APPOINTMENT_BOOKED]: {
+      emailSubject: '{{organizationName}} - Appointment Confirmed',
+      messageContent: `Hi {{clientName}},
 
 Your appointment has been booked!
 
@@ -86,10 +87,10 @@ We look forward to seeing you!
 
 Best regards,
 {{organizationName}}`,
-  },
-  [MessageTemplateType.APPOINTMENT_REMINDER]: {
-    emailSubject: '{{organizationName}} - Appointment Reminder',
-    messageContent: `Hi {{clientName}},
+    },
+    [MessageTemplateType.APPOINTMENT_REMINDER]: {
+      emailSubject: '{{organizationName}} - Appointment Reminder',
+      messageContent: `Hi {{clientName}},
 
 This is a reminder about your upcoming appointment:
 
@@ -108,10 +109,10 @@ We look forward to seeing you!
 
 Best regards,
 {{organizationName}}`,
-  },
-  [MessageTemplateType.APPOINTMENT_UPDATED]: {
-    emailSubject: '{{organizationName}} - Appointment Updated',
-    messageContent: `Hi {{clientName}},
+    },
+    [MessageTemplateType.APPOINTMENT_UPDATED]: {
+      emailSubject: '{{organizationName}} - Appointment Updated',
+      messageContent: `Hi {{clientName}},
 
 Your appointment has been updated by {{organizationName}}.
 
@@ -127,10 +128,10 @@ If you have any questions, please contact us.
 
 Best regards,
 {{organizationName}}`,
-  },
-  [MessageTemplateType.APPOINTMENT_CANCELED]: {
-    emailSubject: '{{organizationName}} - Appointment Canceled',
-    messageContent: `Hi {{clientName}},
+    },
+    [MessageTemplateType.APPOINTMENT_CANCELED]: {
+      emailSubject: '{{organizationName}} - Appointment Canceled',
+      messageContent: `Hi {{clientName}},
 
 Your appointment has been canceled.
 
@@ -142,5 +143,103 @@ If you would like to reschedule, please book a new appointment.
 
 Best regards,
 {{organizationName}}`,
+    },
+  },
+  tr: {
+    [MessageTemplateType.APPOINTMENT_BOOKED]: {
+      emailSubject: '{{organizationName}} - Randevu Onaylandı',
+      messageContent: `Merhaba {{clientName}},
+
+Randevunuz başarıyla oluşturuldu!
+
+📅 Tarih: {{appointmentDate}}
+⏰ Saat: {{appointmentTime}}
+📋 Hizmet: {{serviceName}}
+{{providerName}}
+
+Randevunuzu görüntülemek, düzenlemek veya iptal etmek için tıklayın:
+{{appointmentLink}}
+
+Görüşmek üzere!
+
+Saygılarımızla,
+{{organizationName}}`,
+    },
+    [MessageTemplateType.APPOINTMENT_REMINDER]: {
+      emailSubject: '{{organizationName}} - Randevu Hatırlatması',
+      messageContent: `Merhaba {{clientName}},
+
+Yaklaşan randevunuz hakkında hatırlatma:
+
+📅 Tarih: {{appointmentDate}}
+⏰ Saat: {{appointmentTime}}
+📋 Hizmet: {{serviceName}}
+{{providerName}}
+
+Lütfen katılımınızı onaylayın:
+{{confirmationLink}}
+
+Randevunuzu görüntülemek, düzenlemek veya iptal etmek için:
+{{appointmentLink}}
+
+Görüşmek üzere!
+
+Saygılarımızla,
+{{organizationName}}`,
+    },
+    [MessageTemplateType.APPOINTMENT_UPDATED]: {
+      emailSubject: '{{organizationName}} - Randevu Güncellendi',
+      messageContent: `Merhaba {{clientName}},
+
+Randevunuz {{organizationName}} tarafından güncellendi.
+
+📅 Yeni Tarih: {{appointmentDate}}
+⏰ Yeni Saat: {{appointmentTime}}
+📋 Hizmet: {{serviceName}}
+{{providerName}}
+
+Güncellenmiş randevu detaylarını görüntülemek için:
+{{appointmentLink}}
+
+Sorularınız varsa lütfen bizimle iletişime geçin.
+
+Saygılarımızla,
+{{organizationName}}`,
+    },
+    [MessageTemplateType.APPOINTMENT_CANCELED]: {
+      emailSubject: '{{organizationName}} - Randevu İptal Edildi',
+      messageContent: `Merhaba {{clientName}},
+
+Randevunuz iptal edildi.
+
+📅 Orijinal Tarih: {{appointmentDate}}
+⏰ Orijinal Saat: {{appointmentTime}}
+📋 Hizmet: {{serviceName}}
+
+Yeni bir randevu almak isterseniz lütfen tekrar rezervasyon yapın.
+
+Saygılarımızla,
+{{organizationName}}`,
+    },
   },
 };
+
+/**
+ * Default message templates (fallback to English)
+ */
+export const DEFAULT_MESSAGE_TEMPLATES = LOCALIZED_DEFAULT_TEMPLATES.en;
+
+/**
+ * Get default templates by language (falls back to English)
+ */
+export function getDefaultTemplatesByLanguage(lang: string): Record<MessageTemplateType, { emailSubject: string; messageContent: string }> {
+  return LOCALIZED_DEFAULT_TEMPLATES[lang] || LOCALIZED_DEFAULT_TEMPLATES.en;
+}
+
+/**
+ * Get a single default template by type and language
+ */
+export function getDefaultTemplate(templateType: MessageTemplateType, lang: string = 'en'): { emailSubject: string; messageContent: string } {
+  const templates = getDefaultTemplatesByLanguage(lang);
+  return templates[templateType];
+}

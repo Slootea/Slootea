@@ -809,7 +809,54 @@
       "emailSubject": "E-posta Konusu",
       "messageContent": "Mesaj İçeriği",
       "contentHint": "Mesajları kişiselleştirmek için yukarıdaki yer tutucuları kullanın. Aynı içerik E-posta gövdesi, SMS ve WhatsApp için kullanılır.",
-      "resetToDefault": "Varsayılana Sıfırla"
+      "resetToDefault": "Varsayılana Sıfırla",
+      "resetSuccess": "Şablon varsayılana sıfırlandı",
+      "placeholders": {
+        "clientName": "Müşterinin adı soyadı",
+        "serviceName": "Randevu alınan hizmet",
+        "appointmentDate": "Randevu tarihi",
+        "appointmentTime": "Randevu saati",
+        "providerName": "Hizmet sağlayıcının adı",
+        "organizationName": "Organizasyon adınız",
+        "appointmentLink": "Görüntüleme/düzenleme linki",
+        "confirmationLink": "Katılım onay linki"
+      },
+      "templateTypes": {
+        "APPOINTMENT_BOOKED": {
+          "label": "Randevu Onayı",
+          "description": "Müşteri randevu aldığında gönderilir. Düzenleme veya iptal linki içerir."
+        },
+        "APPOINTMENT_REMINDER": {
+          "label": "Randevu Hatırlatma",
+          "description": "Randevudan önce hatırlatma olarak gönderilir. Katılım onay linki içerir."
+        },
+        "APPOINTMENT_UPDATED": {
+          "label": "Randevu Güncellendi",
+          "description": "Organizasyon randevuyu güncellediğinde veya yeniden planladığında gönderilir."
+        },
+        "APPOINTMENT_CANCELED": {
+          "label": "Randevu İptali",
+          "description": "Randevu organizasyon tarafından iptal edildiğinde gönderilir."
+        }
+      },
+      "defaults": {
+        "APPOINTMENT_BOOKED": {
+          "emailSubject": "{{organizationName}} - Randevu Onaylandı",
+          "messageContent": "Merhaba {{clientName}},\n\nRandevunuz oluşturuldu!\n\n📅 Tarih: {{appointmentDate}}\n⏰ Saat: {{appointmentTime}}\n📋 Hizmet: {{serviceName}}\n{{providerName}}\n\nRandevunuzu görüntülemek, düzenlemek veya iptal etmek için:\n{{appointmentLink}}\n\nSizi görmeyi dört gözle bekliyoruz!\n\nSaygılarımızla,\n{{organizationName}}"
+        },
+        "APPOINTMENT_REMINDER": {
+          "emailSubject": "{{organizationName}} - Randevu Hatırlatma",
+          "messageContent": "Merhaba {{clientName}},\n\nYaklaşan randevunuz hakkında hatırlatma:\n\n📅 Tarih: {{appointmentDate}}\n⏰ Saat: {{appointmentTime}}\n📋 Hizmet: {{serviceName}}\n{{providerName}}\n\nLütfen katılımınızı onaylayın:\n{{confirmationLink}}\n\nRandevunuzu görüntülemek, düzenlemek veya iptal etmek için:\n{{appointmentLink}}\n\nSizi görmeyi dört gözle bekliyoruz!\n\nSaygılarımızla,\n{{organizationName}}"
+        },
+        "APPOINTMENT_UPDATED": {
+          "emailSubject": "{{organizationName}} - Randevu Güncellendi",
+          "messageContent": "Merhaba {{clientName}},\n\nRandevunuz {{organizationName}} tarafından güncellendi.\n\n📅 Yeni Tarih: {{appointmentDate}}\n⏰ Yeni Saat: {{appointmentTime}}\n📋 Hizmet: {{serviceName}}\n{{providerName}}\n\nGüncel randevu detaylarını görüntülemek için:\n{{appointmentLink}}\n\nSorularınız varsa lütfen bizimle iletişime geçin.\n\nSaygılarımızla,\n{{organizationName}}"
+        },
+        "APPOINTMENT_CANCELED": {
+          "emailSubject": "{{organizationName}} - Randevu İptal Edildi",
+          "messageContent": "Merhaba {{clientName}},\n\nRandevunuz iptal edilmiştir.\n\n📅 Eski Tarih: {{appointmentDate}}\n⏰ Eski Saat: {{appointmentTime}}\n📋 Hizmet: {{serviceName}}\n\nYeniden randevu almak isterseniz lütfen yeni bir randevu oluşturun.\n\nSaygılarımızla,\n{{organizationName}}"
+        }
+      }
     },
     "timezone": {
       "title": "Saat Dilimi",

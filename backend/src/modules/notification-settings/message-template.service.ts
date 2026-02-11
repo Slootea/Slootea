@@ -5,6 +5,8 @@ import {
   OrganizationMessageTemplate,
   MessageTemplateType,
   DEFAULT_MESSAGE_TEMPLATES,
+  getDefaultTemplatesByLanguage,
+  getDefaultTemplate,
 } from './entities/organization-message-template.entity';
 import {
   CreateMessageTemplateDto,
@@ -193,6 +195,7 @@ export class MessageTemplateService {
   async resetToDefault(
     organizationId: string,
     templateType: MessageTemplateType,
+    lang: string = 'en',
   ): Promise<OrganizationMessageTemplate> {
     const template = await this.templateRepository.findOne({
       where: { organizationId, templateType },
@@ -203,13 +206,27 @@ export class MessageTemplateService {
       throw new NotFoundException('No custom template exists for this type');
     }
 
-    // Reset to default values
-    const defaultTemplate = DEFAULT_MESSAGE_TEMPLATES[templateType];
+    // Reset to localized default values
+    const defaultTemplate = getDefaultTemplate(templateType, lang);
     template.emailSubject = defaultTemplate.emailSubject;
     template.messageContent = defaultTemplate.messageContent;
     template.isActive = true;
 
     return this.templateRepository.save(template);
+  }
+
+  /**
+   * Get default templates for a specific language
+   */
+  getDefaultTemplates(lang: string = 'en'): Record<MessageTemplateType, { emailSubject: string; messageContent: string }> {
+    return getDefaultTemplatesByLanguage(lang);
+  }
+
+  /**
+   * Get a single default template by type and language
+   */
+  getDefaultTemplateByType(templateType: MessageTemplateType, lang: string = 'en'): { emailSubject: string; messageContent: string } {
+    return getDefaultTemplate(templateType, lang);
   }
 
   /**
