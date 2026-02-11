@@ -3,12 +3,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationSettingsController } from './notification-settings.controller';
 import { NotificationSettingsService } from './notification-settings.service';
+import { MessageTemplateController } from './message-template.controller';
+import { MessageTemplateService } from './message-template.service';
 import {
   OrganizationWhatsAppSettings,
   OrganizationNotificationParameters,
   OrganizationWhatsAppTemplate,
   OrganizationSmsSettings,
   OrganizationEmailSettings,
+  OrganizationMessageTemplate,
 } from './entities';
 import { AuthModule } from '../auth/auth.module';
 
@@ -20,12 +23,13 @@ import { AuthModule } from '../auth/auth.module';
       OrganizationWhatsAppTemplate,
       OrganizationSmsSettings,
       OrganizationEmailSettings,
+      OrganizationMessageTemplate,
     ]),
     ConfigModule,
     AuthModule,
   ],
-  controllers: [NotificationSettingsController],
-  providers: [NotificationSettingsService],
-  exports: [NotificationSettingsService],
+  controllers: [NotificationSettingsController, MessageTemplateController],
+  providers: [NotificationSettingsService, MessageTemplateService],
+  exports: [NotificationSettingsService, MessageTemplateService],
 })
 export class NotificationSettingsModule {}

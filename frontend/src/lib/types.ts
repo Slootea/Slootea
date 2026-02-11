@@ -565,3 +565,78 @@ export interface AssignWhatsAppTemplatePayload {
   templateName: string;
   languageCode: string;
 }
+
+// Message Template Types
+export enum MessageTemplateType {
+  APPOINTMENT_BOOKED = 'APPOINTMENT_BOOKED',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
+  APPOINTMENT_UPDATED = 'APPOINTMENT_UPDATED',
+  APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+}
+
+export interface MessageTemplate {
+  id: string;
+  organizationId: string;
+  templateType: MessageTemplateType;
+  emailSubject: string | null;
+  messageContent: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AllMessageTemplatesResponse {
+  templates: MessageTemplate[];
+  availablePlaceholders: string[];
+}
+
+export interface CreateMessageTemplatePayload {
+  templateType: MessageTemplateType;
+  emailSubject?: string;
+  messageContent: string;
+}
+
+export interface UpdateMessageTemplatePayload {
+  emailSubject?: string;
+  messageContent?: string;
+}
+
+// Public Appointment Management Types
+export interface PublicAppointmentDetails {
+  id: string;
+  startTime: string;
+  endTime: string;
+  clientName: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  status: AppointmentStatus;
+  notes?: string;
+  serviceOption: {
+    id: string;
+    title: string;
+    duration: number;
+  };
+  user: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    businessName?: string;
+    organizationId?: string;
+  };
+  canModify: boolean;
+  canCancel: boolean;
+  cancellationPolicy?: string;
+  timezone?: string;
+}
+
+export interface UpdateAppointmentByTokenPayload {
+  startTime?: string;
+  clientName?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  notes?: string;
+}
+
+export interface CancelAppointmentByTokenPayload {
+  reason?: string;
+}

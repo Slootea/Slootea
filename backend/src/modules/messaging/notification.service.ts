@@ -27,6 +27,7 @@ export interface NotificationData {
   providerName?: string;
   organizationName?: string;
   confirmationLink?: string;
+  appointmentLink?: string;
   cancellationReason?: string;
 }
 
@@ -158,6 +159,7 @@ export class NotificationService {
       providerName: data.providerName,
       organizationName: data.organizationName,
       confirmationLink: data.confirmationLink,
+      appointmentLink: data.appointmentLink,
       cancellationReason: data.cancellationReason,
     };
   }

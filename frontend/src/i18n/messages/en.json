@@ -802,6 +802,15 @@
         "description": "Configure WhatsApp Business API notifications for your appointments"
       }
     },
+    "messageTemplates": {
+      "title": "Message Templates",
+      "description": "Customize the messages sent to clients via Email, SMS, and WhatsApp.",
+      "placeholdersTitle": "Available Placeholders:",
+      "emailSubject": "Email Subject",
+      "messageContent": "Message Content",
+      "contentHint": "Use placeholders above to personalize messages. The same content is used for Email body, SMS, and WhatsApp.",
+      "resetToDefault": "Reset to Default"
+    },
     "timezone": {
       "title": "Timezone",
       "description": "Set the timezone for your organization. All appointments and availability times will be based on this timezone.",
@@ -950,5 +959,9 @@
       "total": "total",
       "noServices": "No services data available"
     }
+  },
+  "appointment": {
+    "confirmed": "Attendance Confirmed",
+    "confirmSuccess": "Thank you for confirming your appointment!"
   }
 }

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Param,
   Query,
   Body,
@@ -16,7 +17,7 @@ import { AppointmentsService } from '../appointments/appointments.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BlockedTimesService } from '../blocked-times/blocked-times.service';
 import { OrganizationSettingsService } from '../settings/organization-settings.service';
-import { CreateAppointmentDto } from '../appointments/dto/appointment.dto';
+import { CreateAppointmentDto, UpdateAppointmentByTokenDto, CancelAppointmentByTokenDto } from '../appointments/dto/appointment.dto';
 import { UserServiceOptionsService } from '../service-options/user-service-options.service';
 import { ClerkService } from '../auth/clerk.service';
 import { ClientPenaltyService } from '../clients/client-penalty.service';
@@ -238,5 +239,180 @@ export class PublicController {
     }
 
     return appointment;
+  }
+
+  @Get('appointment/:token')
+  @ApiOperation({ summary: 'Get full appointment details by token for management' })
+  async getAppointmentForManagement(@Param('token') token: string) {
+    const appointment = await this.appointmentsService.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Invalid appointment link');
+    }
+
+    // Get organization settings for timezone and cancellation policy
+    const settings = await this.organizationSettingsService.getPublicSettings(
+      appointment.user?.organizationId || '',
+    );
+
+    // Check if appointment can still be modified
+    const now = new Date();
+    const appointmentStart = new Date(appointment.startTime);
+    const hoursUntilAppointment = (appointmentStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    const canModify = hoursUntilAppointment >= (settings.minAdvanceBookingHours || 24) &&
+      appointment.status !== 'cancelled' &&
+      appointment.status !== 'completed';
+
+    return {
+      ...appointment,
+      canModify,
+      canCancel: hoursUntilAppointment > 0 && 
+        appointment.status !== 'cancelled' && 
+        appointment.status !== 'completed',
+      cancellationPolicy: settings.cancellationPolicy,
+      timezone: settings.timezone,
+    };
+  }
+
+  @Put('appointment/:token')
+  @ApiOperation({ summary: 'Update appointment by token (for clients)' })
+  async updateAppointmentByToken(
+    @Param('token') token: string,
+    @Body() updateDto: UpdateAppointmentByTokenDto,
+  ) {
+    const appointment = await this.appointmentsService.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Invalid appointment link');
+    }
+
+    // Check if appointment can still be modified
+    const now = new Date();
+    const appointmentStart = new Date(appointment.startTime);
+    const hoursUntilAppointment = (appointmentStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    // Get organization settings
+    const settings = await this.organizationSettingsService.findByOrganizationId(
+      appointment.user?.organizationId || '',
+    );
+
+    if (hoursUntilAppointment < settings.minAdvanceBookingHours) {
+      throw new BadRequestException(
+        `Appointments can only be modified at least ${settings.minAdvanceBookingHours} hours in advance`,
+      );
+    }
+
+    if (appointment.status === 'cancelled' || appointment.status === 'completed') {
+      throw new BadRequestException('This appointment cannot be modified');
+    }
+
+    // If changing the start time, validate the new slot is available
+    if (updateDto.startTime) {
+      const updatedAppointment = await this.appointmentsService.updateByToken(
+        token,
+        updateDto,
+        appointment.user?.organizationId || '',
+      );
+      return updatedAppointment;
+    }
+
+    // For non-time updates, just update directly
+    const updatedAppointment = await this.appointmentsService.updateByToken(
+      token,
+      updateDto,
+      appointment.user?.organizationId || '',
+    );
+
+    return updatedAppointment;
+  }
+
+  @Post('appointment/:token/cancel')
+  @ApiOperation({ summary: 'Cancel appointment by token (for clients)' })
+  async cancelAppointmentByToken(
+    @Param('token') token: string,
+    @Body() cancelDto: CancelAppointmentByTokenDto,
+  ) {
+    const appointment = await this.appointmentsService.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Invalid appointment link');
+    }
+
+    if (appointment.status === 'cancelled') {
+      throw new BadRequestException('This appointment is already cancelled');
+    }
+
+    if (appointment.status === 'completed') {
+      throw new BadRequestException('Completed appointments cannot be cancelled');
+    }
+
+    const cancelledAppointment = await this.appointmentsService.cancelByToken(
+      token,
+      cancelDto.reason,
+      appointment.user?.organizationId || '',
+    );
+
+    return cancelledAppointment;
+  }
+
+  @Get('appointment/:token/available-slots')
+  @ApiOperation({ summary: 'Get available slots for rescheduling an appointment' })
+  @ApiQuery({ name: 'date', required: true, description: 'Date in YYYY-MM-DD format' })
+  async getAvailableSlotsForReschedule(
+    @Param('token') token: string,
+    @Query('date') date: string,
+  ) {
+    const appointment = await this.appointmentsService.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Invalid appointment link');
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
+    }
+
+    // Get available slots for the same service and provider
+    const slots = await this.appointmentsService.getAvailableSlotsForOrganization(
+      appointment.user?.organizationId || '',
+      appointment.serviceOptionId,
+      date,
+      appointment.user?.clerkId, // Keep same provider
+    );
+
+    return slots;
+  }
+
+  @Get('appointment/:token/available-dates')
+  @ApiOperation({ summary: 'Get available dates for rescheduling an appointment' })
+  @ApiQuery({ name: 'month', required: true, description: 'Month in YYYY-MM format' })
+  async getAvailableDatesForReschedule(
+    @Param('token') token: string,
+    @Query('month') month: string,
+  ) {
+    const appointment = await this.appointmentsService.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Invalid appointment link');
+    }
+
+    // Validate month format
+    const monthRegex = /^\d{4}-\d{2}$/;
+    if (!monthRegex.test(month)) {
+      throw new BadRequestException('Invalid month format. Use YYYY-MM');
+    }
+
+    // Get available dates for the same service and provider
+    const availableDates = await this.appointmentsService.getAvailableDatesForOrganization(
+      appointment.user?.organizationId || '',
+      appointment.serviceOptionId,
+      month,
+      appointment.user?.clerkId, // Keep same provider
+    );
+
+    return { availableDates };
   }
 }

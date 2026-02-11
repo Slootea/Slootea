@@ -1277,6 +1277,7 @@ export class AppointmentsService {
     if (createDto.clientPhone || createDto.clientEmail) {
       try {
         const providerUser = await this.userServiceOptionsService.getUserById(assignedUserId);
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         const notificationData: NotificationData = {
           organizationId,
           clientName: createDto.clientName,
@@ -1287,7 +1288,8 @@ export class AppointmentsService {
           providerName: providerUser?.firstName
             ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
             : undefined,
-          confirmationLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/confirm/${confirmationToken}`,
+          confirmationLink: `${baseUrl}/confirm/${confirmationToken}`,
+          appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
         };
 
         const result = await this.notificationService.sendAppointmentCreatedNotification(notificationData);
@@ -1765,5 +1767,170 @@ export class AppointmentsService {
     return {
       available: true,
     };
+  }
+
+  // ==================== Public Token-based Operations ====================
+
+  /**
+   * Update an appointment by confirmation token (for clients)
+   */
+  async updateByToken(
+    token: string,
+    updateDto: UpdateAppointmentDto,
+    organizationId: string,
+  ): Promise<Appointment> {
+    const appointment = await this.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    // If startTime is being updated, validate and recalculate 
+    if (updateDto.startTime) {
+      const newStartTime = new Date(updateDto.startTime);
+      const serviceOption = await this.serviceOptionsService.findById(appointment.serviceOptionId);
+      const duration = serviceOption.duration;
+      const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+
+      // Validate new slot is available (excluding current appointment)
+      const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+      const timezone = (settings as any).timezone || 'UTC';
+      const dateStr = formatDateInTimezone(newStartTime, timezone);
+      const dayOfWeek = getDayOfWeekInTimezone(newStartTime, timezone);
+      const buffer = settings.bufferTimeMinutes;
+
+      // Check availability
+      const availabilities = await this.availabilityService.findByUserAndDay(
+        appointment.userId,
+        dayOfWeek,
+        appointment.serviceOptionId,
+      );
+
+      const hasAvailability = availabilities.some((av) => {
+        const avStart = createDateInTimezone(dateStr, av.startTime, timezone);
+        const avEnd = createDateInTimezone(dateStr, av.endTime, timezone);
+        return newStartTime >= avStart && newEndTime <= avEnd;
+      });
+
+      if (!hasAvailability) {
+        throw new BadRequestException('Provider is not available at this time');
+      }
+
+      // Check for conflicts with other appointments
+      const dayStartInTz = createDateInTimezone(dateStr, '00:00', timezone);
+      const dayEndInTz = createDateInTimezone(dateStr, '23:59', timezone);
+
+      const existingAppointments = await this.appointmentRepository.find({
+        where: {
+          userId: appointment.userId,
+          startTime: Between(dayStartInTz, dayEndInTz),
+          status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+        },
+      });
+
+      // Exclude current appointment from conflict check
+      const otherAppointments = existingAppointments.filter(a => a.id !== appointment.id);
+
+      const hasConflict = otherAppointments.some((apt) => {
+        const aptStart = new Date(apt.startTime);
+        const aptEnd = new Date(apt.endTime);
+        const aptStartWithBuffer = new Date(aptStart.getTime() - buffer * 60000);
+        const aptEndWithBuffer = new Date(aptEnd.getTime() + buffer * 60000);
+        const newEndWithBuffer = new Date(newEndTime.getTime() + buffer * 60000);
+        return newStartTime < aptEndWithBuffer && newEndWithBuffer > aptStartWithBuffer;
+      });
+
+      if (hasConflict) {
+        throw new BadRequestException('This time slot is no longer available');
+      }
+
+      appointment.startTime = newStartTime;
+      appointment.endTime = newEndTime;
+    }
+
+    // Update other fields
+    if (updateDto.clientName) appointment.clientName = updateDto.clientName;
+    if (updateDto.clientEmail) appointment.clientEmail = updateDto.clientEmail;
+    if (updateDto.clientPhone) appointment.clientPhone = updateDto.clientPhone;
+    if (updateDto.notes) appointment.notes = updateDto.notes;
+
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    return this.appointmentRepository.findOneOrFail({
+      where: { id: savedAppointment.id },
+      relations: ['serviceOption', 'user'],
+    });
+  }
+
+  /**
+   * Cancel an appointment by confirmation token (for clients)
+   */
+  async cancelByToken(
+    token: string,
+    reason?: string,
+    organizationId?: string,
+  ): Promise<Appointment> {
+    const appointment = await this.findByConfirmationToken(token);
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    const previousStatus = appointment.status;
+    appointment.status = AppointmentStatus.CANCELLED;
+    if (reason) {
+      appointment.notes = appointment.notes 
+        ? `${appointment.notes}\n\nCancellation reason: ${reason}`
+        : `Cancellation reason: ${reason}`;
+    }
+
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    // Update client stats if we have organizationId
+    if (organizationId && appointment.clientId) {
+      try {
+        await this.clientsService.updateAppointmentStats(
+          appointment.clientId,
+          organizationId,
+          'cancelled',
+        );
+      } catch (error) {
+        this.logger.error('Failed to update client stats on cancellation', error);
+      }
+    }
+
+    // Send cancellation notification
+    if (previousStatus !== AppointmentStatus.CANCELLED && (appointment.clientPhone || appointment.clientEmail)) {
+      try {
+        const fullAppointment = await this.appointmentRepository.findOne({
+          where: { id: savedAppointment.id },
+          relations: ['serviceOption', 'user'],
+        });
+
+        if (fullAppointment && organizationId) {
+          const notificationData: NotificationData = {
+            organizationId,
+            clientName: fullAppointment.clientName,
+            clientPhone: fullAppointment.clientPhone || undefined,
+            clientEmail: fullAppointment.clientEmail || undefined,
+            serviceName: fullAppointment.serviceOption?.title || 'Appointment',
+            appointmentDate: fullAppointment.startTime,
+            cancellationReason: reason,
+          };
+
+          const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
+          if (result.anySent) {
+            this.logger.log(`Cancellation notification sent for appointment ${savedAppointment.id}`);
+          }
+        }
+      } catch (error) {
+        this.logger.error('Failed to send cancellation notification', error);
+      }
+    }
+
+    return this.appointmentRepository.findOneOrFail({
+      where: { id: savedAppointment.id },
+      relations: ['serviceOption', 'user'],
+    });
   }
 }

@@ -802,6 +802,15 @@
         "description": "Randevularınız için WhatsApp Business API bildirimlerini yapılandırın"
       }
     },
+    "messageTemplates": {
+      "title": "Mesaj Şablonları",
+      "description": "E-posta, SMS ve WhatsApp ile müşterilere gönderilen mesajları özelleştirin.",
+      "placeholdersTitle": "Kullanılabilir Yer Tutucular:",
+      "emailSubject": "E-posta Konusu",
+      "messageContent": "Mesaj İçeriği",
+      "contentHint": "Mesajları kişiselleştirmek için yukarıdaki yer tutucuları kullanın. Aynı içerik E-posta gövdesi, SMS ve WhatsApp için kullanılır.",
+      "resetToDefault": "Varsayılana Sıfırla"
+    },
     "timezone": {
       "title": "Saat Dilimi",
       "description": "Organizasyonunuz için saat dilimini ayarlayın. Tüm randevular ve müsaitlik zamanları bu saat dilimine göre hesaplanacaktır.",
@@ -937,5 +946,9 @@
       "total": "toplam",
       "noServices": "Hizmet verisi bulunmuyor"
     }
+  },
+  "appointment": {
+    "confirmed": "Katılım Onaylandı",
+    "confirmSuccess": "Randevunuzu onayladığınız için teşekkür ederiz!"
   }
 }

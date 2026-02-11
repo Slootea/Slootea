@@ -22,7 +22,11 @@ import {
 import {
   OrganizationEmailSettings,
 } from '../notification-settings/entities/organization-email-settings.entity';
+import {
+  OrganizationMessageTemplate,
+} from '../notification-settings/entities/organization-message-template.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { MessageTemplateService } from '../notification-settings/message-template.service';
 
 @Module({
   imports: [
@@ -32,6 +36,7 @@ import { Appointment } from '../appointments/entities/appointment.entity';
       OrganizationWhatsAppTemplate,
       OrganizationSmsSettings,
       OrganizationEmailSettings,
+      OrganizationMessageTemplate,
       Appointment,
     ]),
     ConfigModule,
@@ -43,7 +48,8 @@ import { Appointment } from '../appointments/entities/appointment.entity';
     EmailService,
     NotificationService,
     NotificationReminderService,
+    MessageTemplateService,
   ],
-  exports: [MessagingService, WhatsAppService, SmsService, EmailService, NotificationService],
+  exports: [MessagingService, WhatsAppService, SmsService, EmailService, NotificationService, MessageTemplateService],
 })
 export class MessagingModule {}

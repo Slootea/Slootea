@@ -233,3 +233,43 @@ export interface AvailabilityCheckResult {
     providerName?: string;
   };
 }
+
+/**
+ * DTO for updating an appointment via public token (for clients)
+ */
+export class UpdateAppointmentByTokenDto {
+  @ApiPropertyOptional({ description: 'New start time in ISO format' })
+  @IsOptional()
+  @IsDateString()
+  startTime?: string;
+
+  @ApiPropertyOptional({ description: 'Client name' })
+  @IsOptional()
+  @IsString()
+  clientName?: string;
+
+  @ApiPropertyOptional({ description: 'Client email' })
+  @IsOptional()
+  @IsEmail()
+  clientEmail?: string;
+
+  @ApiPropertyOptional({ description: 'Client phone' })
+  @IsOptional()
+  @IsString()
+  clientPhone?: string;
+
+  @ApiPropertyOptional({ description: 'Notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+/**
+ * DTO for cancellation reason
+ */
+export class CancelAppointmentByTokenDto {
+  @ApiPropertyOptional({ description: 'Reason for cancellation' })
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}

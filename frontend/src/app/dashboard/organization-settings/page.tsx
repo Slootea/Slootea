@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2 } from "lucide-react";
-import { WhatsAppNotificationSettingsCard } from "@/components/notification-settings";
+import { WhatsAppChannelSettings, MessageTemplatesCard } from "@/components/notification-settings";
 
 export default function OrganizationSettingsPage() {
   const { getToken } = useAuth();
@@ -478,11 +478,14 @@ export default function OrganizationSettingsPage() {
               }
             />
           </div>
+
+          {/* WhatsApp */}
+          <WhatsAppChannelSettings />
         </CardContent>
       </Card>
 
-      {/* WhatsApp Notification Settings */}
-      <WhatsAppNotificationSettingsCard />
+      {/* Message Templates */}
+      <MessageTemplatesCard />
 
       {/* Timezone Settings */}
       <Card>

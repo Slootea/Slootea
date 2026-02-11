@@ -253,6 +253,21 @@ export const publicApi = {
   }) => api.post(`/public/book/${slug}`, data),
   getAppointmentByToken: (token: string) => api.get(`/public/confirm/${token}`),
   confirmAppointment: (token: string) => api.post(`/public/confirm/${token}`),
+  // Appointment management endpoints (for clients)
+  getAppointmentForManagement: (token: string) => api.get(`/public/appointment/${token}`),
+  updateAppointmentByToken: (token: string, data: {
+    startTime?: string;
+    clientName?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    notes?: string;
+  }) => api.put(`/public/appointment/${token}`, data),
+  cancelAppointmentByToken: (token: string, reason?: string) =>
+    api.post(`/public/appointment/${token}/cancel`, { reason }),
+  getAvailableSlotsForReschedule: (token: string, date: string) =>
+    api.get(`/public/appointment/${token}/available-slots`, { params: { date } }),
+  getAvailableDatesForReschedule: (token: string, month: string) =>
+    api.get(`/public/appointment/${token}/available-dates`, { params: { month } }),
 };
 
 // Users API
@@ -353,4 +368,38 @@ export const notificationSettingsApi = {
   // Delete template assignment
   deleteTemplate: (orgId: string, templateId: string) =>
     api.delete(`/organizations/${orgId}/notification-settings/whatsapp/templates/${templateId}`),
+};
+
+// Message Templates API
+export const messageTemplatesApi = {
+  // Get all message templates for an organization
+  getAll: (orgId: string) =>
+    api.get(`/organizations/${orgId}/message-templates`),
+  
+  // Get a specific message template
+  getOne: (orgId: string, templateId: string) =>
+    api.get(`/organizations/${orgId}/message-templates/${templateId}`),
+  
+  // Create or update a message template
+  createOrUpdate: (orgId: string, data: {
+    templateType: string;
+    emailSubject?: string;
+    messageContent: string;
+    isActive?: boolean;
+  }) => api.post(`/organizations/${orgId}/message-templates`, data),
+  
+  // Update a message template
+  update: (orgId: string, templateId: string, data: {
+    emailSubject?: string;
+    messageContent?: string;
+    isActive?: boolean;
+  }) => api.put(`/organizations/${orgId}/message-templates/${templateId}`, data),
+  
+  // Reset a message template to default
+  resetToDefault: (orgId: string, templateType: string) =>
+    api.post(`/organizations/${orgId}/message-templates/reset/${templateType}`),
+  
+  // Delete a custom message template
+  delete: (orgId: string, templateId: string) =>
+    api.delete(`/organizations/${orgId}/message-templates/${templateId}`),
 };
