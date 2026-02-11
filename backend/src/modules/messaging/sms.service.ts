@@ -9,6 +9,8 @@ import {
 import {
   OrganizationNotificationParameters,
 } from '../notification-settings/entities/organization-notification-parameters.entity';
+import { MessageTemplateService, MessageTemplateData } from '../notification-settings/message-template.service';
+import { MessageTemplateType } from '../notification-settings/entities/organization-message-template.entity';
 
 /**
  * SMS notification event types (aligned with WhatsApp events)
@@ -18,6 +20,7 @@ export enum SmsEventType {
   REMINDER_24H = 'REMINDER_24H',
   REMINDER_1H = 'REMINDER_1H',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+  APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
 
 /**
@@ -56,6 +59,7 @@ export class SmsService {
     @InjectRepository(OrganizationNotificationParameters)
     private readonly notificationParamsRepository: Repository<OrganizationNotificationParameters>,
     private readonly configService: ConfigService,
+    private readonly messageTemplateService: MessageTemplateService,
   ) {
     // Get encryption key from environment or generate a default for development
     const keyString = this.configService.get<string>('SMS_TOKEN_ENCRYPTION_KEY') ||
@@ -132,7 +136,18 @@ export class SmsService {
       where: { organizationId },
     });
 
-    return !!(settings?.enabled && settings?.accountSid && settings?.authToken && settings?.fromPhoneNumber);
+    // Check org-specific settings first
+    if (settings?.enabled && settings?.accountSid && settings?.authToken && settings?.fromPhoneNumber) {
+      return true;
+    }
+
+    // Fallback: check if env vars are configured (for development)
+    const envAccountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
+    const envAuthToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const envMessagingServiceSid = this.configService.get<string>('TWILIO_MESSAGING_SERVICE_SID') ||
+                                   this.configService.get<string>('TWILIO_PHONE_NUMBER');
+    
+    return !!(envAccountSid && envAuthToken && envMessagingServiceSid);
   }
 
   /**
@@ -147,8 +162,13 @@ export class SmsService {
       this.notificationParamsRepository.findOne({ where: { organizationId } }),
     ]);
 
-    if (!isReady || !params) {
+    if (!isReady) {
       return false;
+    }
+
+    // If no params exist, default to sending all notifications (useful for development with env vars)
+    if (!params) {
+      return true;
     }
 
     switch (eventType) {
@@ -160,15 +180,83 @@ export class SmsService {
         return params.reminder1h;
       case SmsEventType.APPOINTMENT_CANCELED:
         return params.appointmentCanceled;
+      case SmsEventType.APPOINTMENT_RESCHEDULED:
+        return params.appointmentRescheduled;
       default:
         return false;
     }
   }
 
   /**
-   * Generate SMS message based on event type
+   * Map SMS event type to message template type
    */
-  private generateMessage(eventType: SmsEventType, data: SmsNotificationData): string {
+  private mapEventToTemplateType(eventType: SmsEventType): MessageTemplateType {
+    switch (eventType) {
+      case SmsEventType.APPOINTMENT_CREATED:
+        return MessageTemplateType.APPOINTMENT_BOOKED;
+      case SmsEventType.REMINDER_24H:
+      case SmsEventType.REMINDER_1H:
+        return MessageTemplateType.APPOINTMENT_REMINDER;
+      case SmsEventType.APPOINTMENT_CANCELED:
+        return MessageTemplateType.APPOINTMENT_CANCELED;
+      case SmsEventType.APPOINTMENT_RESCHEDULED:
+        return MessageTemplateType.APPOINTMENT_UPDATED;
+      default:
+        return MessageTemplateType.APPOINTMENT_BOOKED;
+    }
+  }
+
+  /**
+   * Generate SMS message based on event type using organization templates
+   */
+  private async generateMessage(eventType: SmsEventType, data: SmsNotificationData): Promise<string> {
+    const templateType = this.mapEventToTemplateType(eventType);
+    
+    // Format date and time for template
+    const formattedDate = data.appointmentDate.toLocaleDateString('en', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const formattedTime = data.appointmentDate.toLocaleTimeString('en', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const templateData: MessageTemplateData = {
+      clientName: data.clientName,
+      serviceName: data.serviceName,
+      appointmentDate: formattedDate,
+      appointmentTime: formattedTime,
+      providerName: data.providerName,
+      organizationName: data.organizationName || 'Our clinic',
+      appointmentLink: data.confirmationLink,
+      confirmationLink: data.confirmationLink,
+    };
+
+    try {
+      const rendered = await this.messageTemplateService.getRenderedMessage(
+        data.organizationId,
+        templateType,
+        templateData,
+      );
+
+      if (rendered?.body) {
+        return rendered.body;
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to get message template, using fallback: ${error.message}`);
+    }
+
+    // Fallback to hardcoded message if template fails
+    return this.generateFallbackMessage(eventType, data);
+  }
+
+  /**
+   * Fallback message generation if template service fails
+   */
+  private generateFallbackMessage(eventType: SmsEventType, data: SmsNotificationData): string {
     const formattedDate = this.formatDateTime(data.appointmentDate);
     const orgName = data.organizationName || 'Our clinic';
 
@@ -193,6 +281,14 @@ export class SmsService {
       case SmsEventType.APPOINTMENT_CANCELED:
         return `Hi ${data.clientName}, your ${data.serviceName} appointment on ${formattedDate} has been cancelled.${data.cancellationReason ? ` Reason: ${data.cancellationReason}` : ''} Please rebook if needed. - ${orgName}`;
 
+      case SmsEventType.APPOINTMENT_RESCHEDULED:
+        let rescheduleMsg = `Hi ${data.clientName}, your ${data.serviceName} appointment has been rescheduled to ${formattedDate}.`;
+        if (data.providerName) {
+          rescheduleMsg += ` Provider: ${data.providerName}.`;
+        }
+        rescheduleMsg += ` - ${orgName}`;
+        return rescheduleMsg;
+
       default:
         return '';
     }
@@ -212,18 +308,35 @@ export class SmsService {
         where: { organizationId },
       });
 
-      if (!settings?.authToken || !settings?.accountSid || !settings?.fromPhoneNumber) {
+      // Try to get credentials from org settings, fall back to env vars for development
+      let accountSid: string | null = null;
+      let authToken: string | null = null;
+      let messagingServiceSid: string | null = null;
+
+      if (settings?.authToken && settings?.accountSid && settings?.fromPhoneNumber) {
+        // Use organization-specific settings
+        accountSid = settings.accountSid;
+        authToken = this.decrypt(settings.authToken);
+        messagingServiceSid = settings.fromPhoneNumber; // Can store messaging service SID here
+      } else {
+        // Fallback to environment variables (for development)
+        accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID') || null;
+        authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN') || null;
+        messagingServiceSid = this.configService.get<string>('TWILIO_MESSAGING_SERVICE_SID') || 
+                              this.configService.get<string>('TWILIO_PHONE_NUMBER') || null;
+        
+        if (accountSid && authToken && messagingServiceSid) {
+          this.logger.debug(`Using Twilio credentials from environment for organization ${organizationId}`);
+        }
+      }
+
+      if (!authToken || !accountSid || !messagingServiceSid) {
         this.logger.warn(`SMS not configured for organization ${organizationId}`);
         return {
           success: false,
           error: 'SMS not configured for this organization',
         };
       }
-
-      // Decrypt auth token
-      const authToken = this.decrypt(settings.authToken);
-      const accountSid = settings.accountSid;
-      const fromNumber = settings.fromPhoneNumber;
 
       // Format phone number
       const formattedPhone = this.formatPhoneNumber(to);
@@ -235,7 +348,12 @@ export class SmsService {
       
       const params = new URLSearchParams();
       params.append('To', formattedPhone);
-      params.append('From', fromNumber);
+      // Use MessagingServiceSid if it starts with 'MG', otherwise use as From number
+      if (messagingServiceSid.startsWith('MG')) {
+        params.append('MessagingServiceSid', messagingServiceSid);
+      } else {
+        params.append('From', messagingServiceSid);
+      }
       params.append('Body', body);
 
       const credentials = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
@@ -250,7 +368,10 @@ export class SmsService {
       });
 
       const responseData = await response.json();
-
+      this.logger.debug('Twilio API response', {
+        status: response.status,
+        response: responseData,
+      });
       if (!response.ok) {
         this.logger.error('Twilio API error', {
           status: response.status,
@@ -297,8 +418,8 @@ export class SmsService {
         };
       }
 
-      // Generate message
-      const message = this.generateMessage(eventType, data);
+      // Generate message using organization templates
+      const message = await this.generateMessage(eventType, data);
 
       // Send the message
       return this.sendSms(data.organizationId, data.clientPhone, message);
@@ -315,6 +436,7 @@ export class SmsService {
    * Send appointment created notification
    */
   async sendAppointmentCreatedNotification(data: SmsNotificationData): Promise<SmsSendResult> {
+    this.logger.debug(`Sending appointment created SMS notification to ${data.clientPhone} for organization ${data.organizationId}`);
     return this.sendAppointmentNotification(SmsEventType.APPOINTMENT_CREATED, data);
   }
 
@@ -337,6 +459,13 @@ export class SmsService {
    */
   async sendAppointmentCanceledNotification(data: SmsNotificationData): Promise<SmsSendResult> {
     return this.sendAppointmentNotification(SmsEventType.APPOINTMENT_CANCELED, data);
+  }
+
+  /**
+   * Send appointment rescheduled notification
+   */
+  async sendAppointmentRescheduledNotification(data: SmsNotificationData): Promise<SmsSendResult> {
+    return this.sendAppointmentNotification(SmsEventType.APPOINTMENT_RESCHEDULED, data);
   }
 
   /**

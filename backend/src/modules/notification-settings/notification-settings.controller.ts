@@ -27,6 +27,11 @@ import {
   WhatsAppNotificationSettingsResponseDto,
   WhatsAppTemplateResponseDto,
 } from './dto/whatsapp-notification-settings.dto';
+import {
+  UpdateSmsSettingsDto,
+  ConnectSmsDto,
+  SmsNotificationSettingsResponseDto,
+} from './dto/sms-notification-settings.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
@@ -169,5 +174,92 @@ export class NotificationSettingsController {
   ): Promise<void> {
     const organizationId = orgId || headerOrgId;
     return this.notificationSettingsService.deleteTemplate(organizationId, templateId);
+  }
+
+  // ==================== SMS Settings Endpoints ====================
+
+  /**
+   * Get SMS notification settings for an organization
+   */
+  @Get('sms')
+  @ApiOperation({ summary: 'Get SMS notification settings' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'SMS notification settings',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async getSmsSettings(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.notificationSettingsService.getSmsSettings(organizationId);
+  }
+
+  /**
+   * Update SMS enabled status and notification parameters
+   */
+  @Put('sms')
+  @ApiOperation({ summary: 'Update SMS settings (enable/disable and parameters)' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Updated SMS notification settings',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async updateSmsSettings(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+    @Body() dto: UpdateSmsSettingsDto,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.notificationSettingsService.updateSmsSettings(organizationId, dto);
+  }
+
+  /**
+   * Connect Twilio SMS
+   * 
+   * This endpoint stores the Twilio credentials for sending SMS.
+   */
+  @Post('sms/connect')
+  @ApiOperation({ summary: 'Connect Twilio SMS' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Twilio SMS connected successfully',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async connectSms(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+    @Body() dto: ConnectSmsDto,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.notificationSettingsService.connectSms(organizationId, dto);
+  }
+
+  /**
+   * Disconnect Twilio SMS
+   */
+  @Post('sms/disconnect')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Disconnect Twilio SMS' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Twilio SMS disconnected successfully',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async disconnectSms(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.notificationSettingsService.disconnectSms(organizationId);
   }
 }

@@ -164,7 +164,7 @@ export const appointmentsApi = {
     providerId?: string;
     notes?: string;
   }) => api.post('/appointments', data),
-  update: (id: string, data: Partial<{ startTime: string; status: string; clientName: string; clientEmail: string; clientPhone: string; notes: string }>) =>
+  update: (id: string, data: Partial<{ startTime: string; status: string; clientName: string; clientEmail: string; clientPhone: string; notes: string; sendNotification: boolean }>) =>
     api.put(`/appointments/${id}`, data),
   cancel: (id: string) => api.put(`/appointments/${id}/cancel`),
   confirm: (id: string) => api.put(`/appointments/${id}/confirm`),

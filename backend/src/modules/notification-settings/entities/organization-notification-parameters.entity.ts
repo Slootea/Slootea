@@ -33,6 +33,9 @@ export class OrganizationNotificationParameters {
   @Column({ default: true, comment: 'Send notification when appointment is canceled' })
   appointmentCanceled: boolean;
 
+  @Column({ default: true, comment: 'Send notification when appointment is rescheduled' })
+  appointmentRescheduled: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

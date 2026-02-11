@@ -587,9 +587,11 @@ export default function CalendarPage() {
         await Promise.all([
           appointmentsApi.update(pendingChange.appointment.id, {
             startTime: pendingChange.newStartTime.toISOString(),
+            sendNotification,
           }),
           appointmentsApi.update(pendingChange.swapWith.id, {
             startTime: pendingChange.swapWithNewStartTime.toISOString(),
+            sendNotification,
           }),
         ]);
 
@@ -602,6 +604,7 @@ export default function CalendarPage() {
       } else {
         await appointmentsApi.update(pendingChange.appointment.id, {
           startTime: pendingChange.newStartTime.toISOString(),
+          sendNotification,
         });
 
         toast({
@@ -659,6 +662,7 @@ export default function CalendarPage() {
 
       await appointmentsApi.update(editingAppointment.id, {
         startTime: newStart.toISOString(),
+        sendNotification,
       });
 
       toast({

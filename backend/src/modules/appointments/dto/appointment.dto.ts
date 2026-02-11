@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsEnum,
   IsNumber,
+  IsBoolean,
   Min,
   Max,
 } from 'class-validator';
@@ -87,6 +88,11 @@ export class UpdateAppointmentDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({ description: 'Whether to send notification for this update (default: true)' })
+  @IsOptional()
+  @IsBoolean()
+  sendNotification?: boolean;
 }
 
 export class GetAvailableSlotsDto {

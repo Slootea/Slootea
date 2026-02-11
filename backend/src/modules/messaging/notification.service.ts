@@ -12,6 +12,7 @@ export enum NotificationEventType {
   REMINDER_24H = 'REMINDER_24H',
   REMINDER_1H = 'REMINDER_1H',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+  APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
 
 /**
@@ -97,6 +98,8 @@ export class NotificationService {
         return WhatsAppEventType.REMINDER_1H;
       case NotificationEventType.APPOINTMENT_CANCELED:
         return WhatsAppEventType.APPOINTMENT_CANCELED;
+      case NotificationEventType.APPOINTMENT_RESCHEDULED:
+        return WhatsAppEventType.APPOINTMENT_RESCHEDULED;
     }
   }
 
@@ -206,6 +209,7 @@ export class NotificationService {
     // Send SMS notification
     const smsData = this.toSmsData(data);
     if (smsData) {
+      this.logger.debug(`Sending SMS notification to ${smsData.clientPhone} for event ${eventType}`);
       promises.push(
         this.sendSmsNotification(eventType, smsData)
           .then((r) => {
@@ -283,6 +287,8 @@ export class NotificationService {
           return this.whatsAppService.sendReminder1hNotification(data);
         case NotificationEventType.APPOINTMENT_CANCELED:
           return this.whatsAppService.sendAppointmentCanceledNotification(data);
+        case NotificationEventType.APPOINTMENT_RESCHEDULED:
+          return this.whatsAppService.sendAppointmentRescheduledNotification(data);
         default:
           return { success: false, error: 'Unknown event type' };
       }
@@ -302,6 +308,7 @@ export class NotificationService {
     data: SmsNotificationData,
   ): Promise<ChannelResult> {
     try {
+      this.logger.debug(`Sending SMS notification to ${data.clientPhone} for event ${eventType}`);
       switch (eventType) {
         case NotificationEventType.APPOINTMENT_CREATED:
           return this.smsService.sendAppointmentCreatedNotification(data);
@@ -311,6 +318,8 @@ export class NotificationService {
           return this.smsService.sendReminder1hNotification(data);
         case NotificationEventType.APPOINTMENT_CANCELED:
           return this.smsService.sendAppointmentCanceledNotification(data);
+        case NotificationEventType.APPOINTMENT_RESCHEDULED:
+          return this.smsService.sendAppointmentRescheduledNotification(data);
         default:
           return { success: false, error: 'Unknown event type' };
       }
@@ -339,6 +348,8 @@ export class NotificationService {
           return this.emailService.sendReminder1hNotification(data);
         case NotificationEventType.APPOINTMENT_CANCELED:
           return this.emailService.sendAppointmentCanceledNotification(data);
+        case NotificationEventType.APPOINTMENT_RESCHEDULED:
+          return this.emailService.sendAppointmentRescheduledNotification(data);
         default:
           return { success: false, error: 'Unknown event type' };
       }
@@ -356,6 +367,7 @@ export class NotificationService {
    * Send appointment created notification
    */
   async sendAppointmentCreatedNotification(data: NotificationData): Promise<NotificationResult> {
+   this.logger.debug(`Sending appointment created notification for organization ${data.organizationId} to client ${data.clientName} (${data.clientPhone}, ${data.clientEmail}) for service ${data.serviceName} on ${data.appointmentDate}`);
     return this.sendNotification(NotificationEventType.APPOINTMENT_CREATED, data);
   }
 
@@ -378,6 +390,13 @@ export class NotificationService {
    */
   async sendAppointmentCanceledNotification(data: NotificationData): Promise<NotificationResult> {
     return this.sendNotification(NotificationEventType.APPOINTMENT_CANCELED, data);
+  }
+
+  /**
+   * Send appointment rescheduled notification
+   */
+  async sendAppointmentRescheduledNotification(data: NotificationData): Promise<NotificationResult> {
+    return this.sendNotification(NotificationEventType.APPOINTMENT_RESCHEDULED, data);
   }
 
   // ===================== Channel Status Checks =====================

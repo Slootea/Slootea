@@ -26,6 +26,11 @@ export class NotificationParametersDto {
   @IsBoolean()
   @IsOptional()
   appointmentCanceled?: boolean;
+
+  @ApiProperty({ description: 'Send notification when appointment is rescheduled' })
+  @IsBoolean()
+  @IsOptional()
+  appointmentRescheduled?: boolean;
 }
 
 /**
@@ -129,6 +134,7 @@ export class WhatsAppNotificationSettingsResponseDto {
     reminder24h: boolean;
     reminder1h: boolean;
     appointmentCanceled: boolean;
+    appointmentRescheduled: boolean;
   };
 
   @ApiProperty({ description: 'Template mappings for each event type', type: [WhatsAppTemplateResponseDto] })

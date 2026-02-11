@@ -214,7 +214,8 @@ export class AppointmentsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel an appointment' })
   async cancel(@Request() req: any, @Param('id') id: string) {
-    return this.appointmentsService.cancel(id, req.user.dbUserId);
+    const organizationId = req.organizationId || req.headers['x-organization-id'];
+    return this.appointmentsService.cancel(id, req.user.dbUserId, organizationId);
   }
 
   @Put(':id/confirm')

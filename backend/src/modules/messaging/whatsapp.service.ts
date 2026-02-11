@@ -201,6 +201,8 @@ export class WhatsAppService {
         return params.reminder1h;
       case WhatsAppEventType.APPOINTMENT_CANCELED:
         return params.appointmentCanceled;
+      case WhatsAppEventType.APPOINTMENT_RESCHEDULED:
+        return params.appointmentRescheduled;
       default:
         return false;
     }
@@ -459,6 +461,15 @@ export class WhatsAppService {
     data: AppointmentNotificationData,
   ): Promise<WhatsAppSendResult> {
     return this.sendAppointmentNotification(WhatsAppEventType.APPOINTMENT_CANCELED, data);
+  }
+
+  /**
+   * Send appointment rescheduled notification
+   */
+  async sendAppointmentRescheduledNotification(
+    data: AppointmentNotificationData,
+  ): Promise<WhatsAppSendResult> {
+    return this.sendAppointmentNotification(WhatsAppEventType.APPOINTMENT_RESCHEDULED, data);
   }
 
   /**

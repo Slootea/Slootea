@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { MessagingService } from './messaging.service';
 import { WhatsAppService } from './whatsapp.service';
 import { SmsService } from './sms.service';
 import { EmailService } from './email.service';
@@ -42,7 +41,6 @@ import { MessageTemplateService } from '../notification-settings/message-templat
     ConfigModule,
   ],
   providers: [
-    MessagingService,
     WhatsAppService,
     SmsService,
     EmailService,
@@ -50,6 +48,6 @@ import { MessageTemplateService } from '../notification-settings/message-templat
     NotificationReminderService,
     MessageTemplateService,
   ],
-  exports: [MessagingService, WhatsAppService, SmsService, EmailService, NotificationService, MessageTemplateService],
+  exports: [WhatsAppService, SmsService, EmailService, NotificationService, MessageTemplateService],
 })
 export class MessagingModule {}

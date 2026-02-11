@@ -15,12 +15,20 @@ import {
   WhatsAppTemplateStatus,
 } from './entities/organization-whatsapp-template.entity';
 import {
+  OrganizationSmsSettings,
+} from './entities/organization-sms-settings.entity';
+import {
   UpdateWhatsAppSettingsDto,
   ConnectWhatsAppDto,
   AssignWhatsAppTemplateDto,
   WhatsAppNotificationSettingsResponseDto,
   WhatsAppTemplateResponseDto,
 } from './dto/whatsapp-notification-settings.dto';
+import {
+  UpdateSmsSettingsDto,
+  ConnectSmsDto,
+  SmsNotificationSettingsResponseDto,
+} from './dto/sms-notification-settings.dto';
 
 @Injectable()
 export class NotificationSettingsService {
@@ -35,6 +43,8 @@ export class NotificationSettingsService {
     private readonly notificationParamsRepository: Repository<OrganizationNotificationParameters>,
     @InjectRepository(OrganizationWhatsAppTemplate)
     private readonly whatsappTemplateRepository: Repository<OrganizationWhatsAppTemplate>,
+    @InjectRepository(OrganizationSmsSettings)
+    private readonly smsSettingsRepository: Repository<OrganizationSmsSettings>,
     private readonly configService: ConfigService,
   ) {
     // Get encryption key from environment or generate a default for development
@@ -120,6 +130,7 @@ export class NotificationSettingsService {
         reminder24h: true,
         reminder1h: true,
         appointmentCanceled: true,
+        appointmentRescheduled: true,
       });
       params = await this.notificationParamsRepository.save(params);
     }
@@ -166,6 +177,7 @@ export class NotificationSettingsService {
         reminder24h: notificationParams.reminder24h,
         reminder1h: notificationParams.reminder1h,
         appointmentCanceled: notificationParams.appointmentCanceled,
+        appointmentRescheduled: notificationParams.appointmentRescheduled,
       },
       templates: templateResponses,
     };
@@ -197,6 +209,9 @@ export class NotificationSettingsService {
       }
       if (dto.parameters.appointmentCanceled !== undefined) {
         notificationParams.appointmentCanceled = dto.parameters.appointmentCanceled;
+      }
+      if (dto.parameters.appointmentRescheduled !== undefined) {
+        notificationParams.appointmentRescheduled = dto.parameters.appointmentRescheduled;
       }
       await this.notificationParamsRepository.save(notificationParams);
     }
@@ -346,5 +361,152 @@ export class NotificationSettingsService {
     });
 
     return !!(settings?.enabled && settings?.wabaId && settings?.phoneNumberId && settings?.accessToken);
+  }
+
+  // ==================== SMS Settings Management ====================
+
+  /**
+   * Get or create SMS settings for an organization
+   */
+  private async getOrCreateSmsSettings(organizationId: string): Promise<OrganizationSmsSettings> {
+    let settings = await this.smsSettingsRepository.findOne({
+      where: { organizationId },
+    });
+
+    if (!settings) {
+      settings = this.smsSettingsRepository.create({
+        organizationId,
+        enabled: false,
+      });
+      settings = await this.smsSettingsRepository.save(settings);
+    }
+
+    return settings;
+  }
+
+  /**
+   * Mask Account SID for display (show first 4 and last 4 characters)
+   */
+  private maskAccountSid(accountSid: string): string {
+    if (accountSid.length <= 8) {
+      return '****';
+    }
+    return `${accountSid.slice(0, 4)}...${accountSid.slice(-4)}`;
+  }
+
+  /**
+   * Get complete SMS notification settings for an organization
+   */
+  async getSmsSettings(organizationId: string): Promise<SmsNotificationSettingsResponseDto> {
+    const [smsSettings, notificationParams] = await Promise.all([
+      this.getOrCreateSmsSettings(organizationId),
+      this.getOrCreateNotificationParams(organizationId),
+    ]);
+
+    // Check if connected (has accountSid, authToken, and fromPhoneNumber)
+    const isConnected = !!(smsSettings.accountSid && smsSettings.authToken && smsSettings.fromPhoneNumber);
+
+    return {
+      enabled: smsSettings.enabled,
+      isConnected,
+      fromPhoneNumber: smsSettings.fromPhoneNumber || undefined,
+      accountSidMasked: smsSettings.accountSid ? this.maskAccountSid(smsSettings.accountSid) : undefined,
+      parameters: {
+        appointmentCreated: notificationParams.appointmentCreated,
+        reminder24h: notificationParams.reminder24h,
+        reminder1h: notificationParams.reminder1h,
+        appointmentCanceled: notificationParams.appointmentCanceled,
+        appointmentRescheduled: notificationParams.appointmentRescheduled,
+      },
+    };
+  }
+
+  /**
+   * Update SMS enabled status and notification parameters
+   */
+  async updateSmsSettings(
+    organizationId: string,
+    dto: UpdateSmsSettingsDto,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    // Update SMS settings (enabled flag)
+    let smsSettings = await this.getOrCreateSmsSettings(organizationId);
+    smsSettings.enabled = dto.enabled;
+    await this.smsSettingsRepository.save(smsSettings);
+
+    // Update notification parameters if provided
+    if (dto.parameters) {
+      let notificationParams = await this.getOrCreateNotificationParams(organizationId);
+      if (dto.parameters.appointmentCreated !== undefined) {
+        notificationParams.appointmentCreated = dto.parameters.appointmentCreated;
+      }
+      if (dto.parameters.reminder24h !== undefined) {
+        notificationParams.reminder24h = dto.parameters.reminder24h;
+      }
+      if (dto.parameters.reminder1h !== undefined) {
+        notificationParams.reminder1h = dto.parameters.reminder1h;
+      }
+      if (dto.parameters.appointmentCanceled !== undefined) {
+        notificationParams.appointmentCanceled = dto.parameters.appointmentCanceled;
+      }
+      if (dto.parameters.appointmentRescheduled !== undefined) {
+        notificationParams.appointmentRescheduled = dto.parameters.appointmentRescheduled;
+      }
+      await this.notificationParamsRepository.save(notificationParams);
+    }
+
+    return this.getSmsSettings(organizationId);
+  }
+
+  /**
+   * Connect Twilio SMS
+   * Stores encrypted auth token
+   */
+  async connectSms(
+    organizationId: string,
+    dto: ConnectSmsDto,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    let settings = await this.getOrCreateSmsSettings(organizationId);
+
+    settings.accountSid = dto.accountSid;
+    settings.authToken = this.encrypt(dto.authToken);
+    settings.fromPhoneNumber = dto.fromPhoneNumber;
+
+    await this.smsSettingsRepository.save(settings);
+
+    this.logger.log(`Twilio SMS connected for organization ${organizationId}`);
+
+    return this.getSmsSettings(organizationId);
+  }
+
+  /**
+   * Disconnect Twilio SMS
+   */
+  async disconnectSms(organizationId: string): Promise<SmsNotificationSettingsResponseDto> {
+    let settings = await this.smsSettingsRepository.findOne({
+      where: { organizationId },
+    });
+
+    if (settings) {
+      settings.accountSid = null;
+      settings.authToken = null;
+      settings.fromPhoneNumber = null;
+      settings.enabled = false;
+      await this.smsSettingsRepository.save(settings);
+    }
+
+    this.logger.log(`Twilio SMS disconnected for organization ${organizationId}`);
+
+    return this.getSmsSettings(organizationId);
+  }
+
+  /**
+   * Check if SMS is enabled and connected for an organization
+   */
+  async isSmsReady(organizationId: string): Promise<boolean> {
+    const settings = await this.smsSettingsRepository.findOne({
+      where: { organizationId },
+    });
+
+    return !!(settings?.enabled && settings?.accountSid && settings?.authToken && settings?.fromPhoneNumber);
   }
 }
