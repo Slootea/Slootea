@@ -1066,7 +1066,7 @@ export default function ClientsPage() {
           <DialogHeader>
             <DialogTitle>{t('delete.title')}</DialogTitle>
             <DialogDescription>
-              {t('delete.description', { name: clientToDelete?.name })}
+              {t('delete.description', { name: clientToDelete?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
 
