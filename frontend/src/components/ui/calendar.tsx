@@ -7,7 +7,7 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
-import { format } from "date-fns"
+import { format, Locale } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -40,7 +40,7 @@ function Calendar({
       locale={locale}
       formatters={{
         formatMonthDropdown: (date) =>
-          format(date, "MMM", { locale }),
+          format(date, "MMM", { locale: locale as Locale }),
         ...formatters,
       }}
       classNames={{

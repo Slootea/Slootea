@@ -1094,7 +1094,7 @@ export default function ClientsPage() {
           <DialogHeader>
             <DialogTitle>{t('penalty.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              {t('penalty.dialogDescription', { name: selectedClient?.name })}
+              {t('penalty.dialogDescription', { name: selectedClient?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
 
@@ -1174,7 +1174,7 @@ export default function ClientsPage() {
             <DialogDescription>
               {t('penalty.removeDescription', { 
                 type: clientPenalty?.type === PenaltyType.BAN ? t('penalty.banned').toLowerCase() : t('penalty.suspended').toLowerCase(),
-                name: selectedClient?.name 
+                name: selectedClient?.name ?? ''
               })}
             </DialogDescription>
           </DialogHeader>
