@@ -596,8 +596,8 @@ export class AppointmentsService {
             'cancelled',
           );
           
-          // Send cancellation notification to all channels
-          if (appointment.clientPhone || appointment.clientEmail) {
+          // Send cancellation notification to all channels (respecting sendNotification flag)
+          if (shouldSendNotification && (appointment.clientPhone || appointment.clientEmail)) {
             try {
               const fullAppointment = await this.appointmentRepository.findOne({
                 where: { id: savedAppointment.id },
@@ -1838,12 +1838,21 @@ export class AppointmentsService {
       throw new NotFoundException('Appointment not found');
     }
 
+    // Track if time was updated for notification
+    const previousStartTime = appointment.startTime;
+    let timeWasUpdated = false;
+
     // If startTime is being updated, validate and recalculate 
     if (updateDto.startTime) {
       const newStartTime = new Date(updateDto.startTime);
       const serviceOption = await this.serviceOptionsService.findById(appointment.serviceOptionId);
       const duration = serviceOption.duration;
       const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+
+      // Check if time actually changed
+      if (previousStartTime.getTime() !== newStartTime.getTime()) {
+        timeWasUpdated = true;
+      }
 
       // Validate new slot is available (excluding current appointment)
       const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
@@ -1908,6 +1917,37 @@ export class AppointmentsService {
     if (updateDto.notes) appointment.notes = updateDto.notes;
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    // Send reschedule notification if time was updated (for client-initiated reschedules)
+    if (timeWasUpdated && (appointment.clientPhone || appointment.clientEmail)) {
+      try {
+        const fullAppointment = await this.appointmentRepository.findOne({
+          where: { id: savedAppointment.id },
+          relations: ['serviceOption', 'user'],
+        });
+
+        if (fullAppointment) {
+          const notificationData: NotificationData = {
+            organizationId,
+            clientName: fullAppointment.clientName,
+            clientPhone: fullAppointment.clientPhone || undefined,
+            clientEmail: fullAppointment.clientEmail || undefined,
+            serviceName: fullAppointment.serviceOption?.title || 'Appointment',
+            appointmentDate: fullAppointment.startTime,
+            providerName: fullAppointment.user?.firstName
+              ? `${fullAppointment.user.firstName} ${fullAppointment.user.lastName || ''}`.trim()
+              : undefined,
+          };
+
+          const result = await this.notificationService.sendAppointmentRescheduledNotification(notificationData);
+          if (result.anySent) {
+            this.logger.log(`Reschedule notification sent for appointment ${savedAppointment.id} (client-initiated)`);
+          }
+        }
+      } catch (notificationError) {
+        this.logger.error(`Failed to send reschedule notification`, notificationError);
+      }
+    }
 
     return this.appointmentRepository.findOneOrFail({
       where: { id: savedAppointment.id },
