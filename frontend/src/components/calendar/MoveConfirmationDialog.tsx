@@ -1,7 +1,10 @@
 "use client";
 
-import { format, parseISO } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { format, parseISO, type Locale } from "date-fns";
+import { enUS, tr } from "date-fns/locale";
+import { useTranslations } from "next-intl";
+import { useLocale } from "@/components/providers/locale-provider";
+import { Button } from "@/components/ui/button";;
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -35,6 +38,10 @@ export function MoveConfirmationDialog({
   onConfirm,
   onCancel,
 }: MoveConfirmationDialogProps) {
+  const t = useTranslations("calendarPage.swapDialog");
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
+
   return (
     <Dialog
       open={open}
@@ -51,19 +58,19 @@ export function MoveConfirmationDialog({
             {pendingChange?.type === "swap" ? (
               <>
                 <ArrowLeftRight className="h-5 w-5" />
-                Swap Appointment Times
+                {t("swapTitle")}
               </>
             ) : (
               <>
                 <CalendarDays className="h-5 w-5" />
-                Move Appointment
+                {t("moveTitle")}
               </>
             )}
           </DialogTitle>
           <DialogDescription>
             {pendingChange?.type === "swap"
-              ? "The appointments overlap. Their times will be swapped."
-              : "Confirm the new appointment time."}
+              ? t("swapDescription")
+              : t("moveDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -76,6 +83,8 @@ export function MoveConfirmationDialog({
               serviceTitle={pendingChange.appointment.serviceOption?.title}
               currentTime={parseISO(pendingChange.appointment.startTime)}
               newTime={pendingChange.newStartTime}
+              t={t}
+              dateLocale={dateLocale}
             />
 
             {/* Swap target appointment */}
@@ -92,6 +101,8 @@ export function MoveConfirmationDialog({
                     serviceTitle={pendingChange.swapWith.serviceOption?.title}
                     currentTime={parseISO(pendingChange.swapWith.startTime)}
                     newTime={pendingChange.swapWithNewStartTime}
+                    t={t}
+                    dateLocale={dateLocale}
                   />
                 </>
               )}
@@ -100,10 +111,10 @@ export function MoveConfirmationDialog({
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
                 <p className="font-medium text-sm">
-                  Notify Client{pendingChange.type === "swap" ? "s" : ""}
+                  {pendingChange.type === "swap" ? t("notifyClients") : t("notifyClient")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Send email/SMS notification about the time change
+                  {t("notifyClientDesc")}
                 </p>
               </div>
               <Button
@@ -119,16 +130,16 @@ export function MoveConfirmationDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={saving}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={onConfirm} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
+                {t("saving")}
               </>
             ) : (
-              <>{pendingChange?.type === "swap" ? "Swap Times" : "Move Appointment"}</>
+              <>{pendingChange?.type === "swap" ? t("swapTimes") : t("moveAppointment")}</>
             )}
           </Button>
         </DialogFooter>
@@ -143,6 +154,8 @@ interface AppointmentCardProps {
   serviceTitle?: string;
   currentTime: Date;
   newTime: Date;
+  t: (key: string) => string;
+  dateLocale: Locale;
 }
 
 function AppointmentCard({
@@ -151,6 +164,8 @@ function AppointmentCard({
   serviceTitle,
   currentTime,
   newTime,
+  t,
+  dateLocale,
 }: AppointmentCardProps) {
   return (
     <div className="p-4 bg-muted/50 rounded-lg space-y-3">
@@ -169,12 +184,12 @@ function AppointmentCard({
       )}
       <div className="grid grid-cols-2 gap-4 pt-2 border-t">
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Current Time</p>
-          <p className="text-sm font-medium">{format(currentTime, "MMM d, h:mm a")}</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("currentTime")}</p>
+          <p className="text-sm font-medium">{format(currentTime, "MMM d, h:mm a", { locale: dateLocale })}</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">New Time</p>
-          <p className="text-sm font-medium text-primary">{format(newTime, "MMM d, h:mm a")}</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("newTime")}</p>
+          <p className="text-sm font-medium text-primary">{format(newTime, "MMM d, h:mm a", { locale: dateLocale })}</p>
         </div>
       </div>
     </div>

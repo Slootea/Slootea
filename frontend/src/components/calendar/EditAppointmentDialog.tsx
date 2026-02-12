@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
+import { enUS, tr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
+import { useLocale } from "@/components/providers/locale-provider";
+import { Button } from "@/components/ui/button";;
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +72,9 @@ export function EditAppointmentDialog({
   completing = false,
 }: EditAppointmentDialogProps) {
   const router = useRouter();
+  const t = useTranslations("calendarPage.editDialog");
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   
   const isCancelled = appointment?.status === AppointmentStatus.CANCELLED;
@@ -115,10 +121,10 @@ export function EditAppointmentDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Pencil className="h-5 w-5" />
-            Edit Appointment
+            {t("title")}
           </DialogTitle>
           <DialogDescription>
-            Update the appointment time. The client will be notified of any changes.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -144,7 +150,7 @@ export function EditAppointmentDialog({
                   onClick={handleViewClientProfile}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  View Client Profile
+                  {t("viewClientProfile")}
                 </Button>
               )}
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -167,16 +173,16 @@ export function EditAppointmentDialog({
 
             {/* Current Time */}
             <div>
-              <Label className="text-muted-foreground">Current Time</Label>
+              <Label className="text-muted-foreground">{t("currentTime")}</Label>
               <p className="text-sm font-medium mt-1">
-                {format(parseISO(appointment.startTime), "EEEE, MMMM d, yyyy 'at' h:mm a")}
+                {format(parseISO(appointment.startTime), "EEEE, MMMM d, yyyy 'at' h:mm a", { locale: dateLocale })}
               </p>
             </div>
 
             {/* New Date & Time */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="new-date">New Date</Label>
+                <Label htmlFor="new-date">{t("newDate")}</Label>
                 <Input
                   id="new-date"
                   type="date"
@@ -186,7 +192,7 @@ export function EditAppointmentDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-time">New Time</Label>
+                <Label htmlFor="new-time">{t("newTime")}</Label>
                 <Input
                   id="new-time"
                   type="time"
@@ -200,11 +206,12 @@ export function EditAppointmentDialog({
             {newDate && newStartTime && (
               <div className="p-3 bg-primary/10 rounded-lg">
                 <p className="text-sm">
-                  <span className="text-muted-foreground">New appointment time: </span>
+                  <span className="text-muted-foreground">{t("newAppointmentTime")} </span>
                   <span className="font-medium">
                     {format(
                       new Date(`${newDate}T${newStartTime}`),
-                      "EEEE, MMMM d, yyyy 'at' h:mm a"
+                      "EEEE, MMMM d, yyyy 'at' h:mm a",
+                      { locale: dateLocale }
                     )}
                   </span>
                 </p>
@@ -214,7 +221,7 @@ export function EditAppointmentDialog({
             {/* Appointment Actions */}
             {(canConfirm || canComplete || (canCancel && onCancel)) && (
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Appointment Status</Label>
+                <Label className="text-muted-foreground">{t("appointmentStatus")}</Label>
                 <div className="flex gap-2">
                   {canConfirm && (
                     <Button 
@@ -228,7 +235,7 @@ export function EditAppointmentDialog({
                       ) : (
                         <CheckCircle className="h-4 w-4 mr-2" />
                       )}
-                      {confirming ? "Confirming..." : "Confirm"}
+                      {confirming ? t("confirming") : t("confirm")}
                     </Button>
                   )}
                   {canComplete && (
@@ -243,7 +250,7 @@ export function EditAppointmentDialog({
                       ) : (
                         <CheckCheck className="h-4 w-4 mr-2" />
                       )}
-                      {completing ? "Completing..." : "Complete"}
+                      {completing ? t("completing") : t("complete")}
                     </Button>
                   )}
                   {canCancel && onCancel && (
@@ -258,7 +265,7 @@ export function EditAppointmentDialog({
                       ) : (
                         <XCircle className="h-4 w-4 mr-2" />
                       )}
-                      {cancelling ? "Cancelling..." : "Cancel"}
+                      {cancelling ? t("cancelling") : t("cancel")}
                     </Button>
                   )}
                 </div>
@@ -268,9 +275,9 @@ export function EditAppointmentDialog({
             {/* Notification Toggle */}
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
-                <p className="font-medium text-sm">Notify Client</p>
+                <p className="font-medium text-sm">{t("notifyClient")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Send notification about changes
+                  {t("sendNotificationAboutChanges")}
                 </p>
               </div>
               <Button
@@ -278,7 +285,7 @@ export function EditAppointmentDialog({
                 size="sm"
                 onClick={() => setSendNotification(!sendNotification)}
               >
-                {sendNotification ? "On" : "Off"}
+                {sendNotification ? t("on") : t("off")}
               </Button>
             </div>
           </div>
@@ -292,7 +299,7 @@ export function EditAppointmentDialog({
               {saving ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? t("saving") : t("saveChanges")}
             </Button>
           )}
         </DialogFooter>
@@ -302,18 +309,18 @@ export function EditAppointmentDialog({
       <AlertDialog open={showCancelAlert} onOpenChange={setShowCancelAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+            <AlertDialogTitle>{t("cancelAlert.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel this appointment? This action cannot be undone{sendNotification ? " and the client will be notified" : ""}.
+              {sendNotification ? t("cancelAlert.descriptionWithNotification") : t("cancelAlert.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>No, keep it</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancelAlert.keep")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelAppointment}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Yes, cancel appointment
+              {t("cancelAlert.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

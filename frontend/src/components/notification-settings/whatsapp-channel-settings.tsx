@@ -67,22 +67,22 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
 
   // Required Meta WhatsApp templates
   const requiredTemplates = [
-    { name: "appointment_created", description: "Sent when a new appointment is booked" },
-    { name: "appointment_reminder", description: "Sent before appointment as reminder" },
-    { name: "appointment_canceled", description: "Sent when appointment is canceled" },
-    { name: "appointment_rescheduled", description: "Sent when appointment is rescheduled" },
+    { name: "appointment_created", descriptionKey: "appointmentCreated" },
+    { name: "appointment_reminder", descriptionKey: "appointmentReminder" },
+    { name: "appointment_canceled", descriptionKey: "appointmentCanceled" },
+    { name: "appointment_rescheduled", descriptionKey: "appointmentRescheduled" },
   ];
 
   // Available template variables (order matters - Meta uses {{1}}, {{2}}, etc.)
   const templateVariables = [
-    { order: 1, variable: "{{clientName}}", description: "Client's name" },
-    { order: 2, variable: "{{serviceName}}", description: "Service/appointment type" },
-    { order: 3, variable: "{{appointmentDate}}", description: "Date (e.g., 15 Şubat 2026)" },
-    { order: 4, variable: "{{appointmentTime}}", description: "Time (e.g., 14:30)" },
-    { order: 5, variable: "{{providerName}}", description: "Provider/staff name" },
-    { order: 6, variable: "{{organizationName}}", description: "Business name" },
-    { order: 7, variable: "{{appointmentLink}}", description: "Link to view appointment" },
-    { order: 8, variable: "{{confirmationLink}}", description: "Link to confirm appointment" },
+    { order: 1, variable: "{{clientName}}", descriptionKey: "clientName" },
+    { order: 2, variable: "{{serviceName}}", descriptionKey: "serviceName" },
+    { order: 3, variable: "{{appointmentDate}}", descriptionKey: "appointmentDate" },
+    { order: 4, variable: "{{appointmentTime}}", descriptionKey: "appointmentTime" },
+    { order: 5, variable: "{{providerName}}", descriptionKey: "providerName" },
+    { order: 6, variable: "{{organizationName}}", descriptionKey: "organizationName" },
+    { order: 7, variable: "{{appointmentLink}}", descriptionKey: "appointmentLink" },
+    { order: 8, variable: "{{confirmationLink}}", descriptionKey: "confirmationLink" },
   ];
 
   // Form state for WhatsApp connection
@@ -126,10 +126,10 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
         parameters: settings.parameters,
       });
       setSettings(res.data);
-      toast({ title: enabled ? "WhatsApp notifications enabled" : "WhatsApp notifications disabled" });
+      toast({ title: enabled ? t("notifications.whatsapp.enabled") : t("notifications.whatsapp.disabled") });
     } catch (error) {
       toast({
-        title: "Failed to update settings",
+        title: t("notifications.whatsapp.updateFailed"),
         variant: "destructive",
       });
     } finally {
@@ -142,8 +142,8 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
 
     if (!connectForm.wabaId || !connectForm.phoneNumberId || !connectForm.accessToken) {
       toast({
-        title: "Missing required fields",
-        description: "Please fill in all required fields",
+        title: t("notifications.whatsapp.connectDialog.missingFields"),
+        description: t("notifications.whatsapp.connectDialog.fillAllFields"),
         variant: "destructive",
       });
       return;
@@ -160,11 +160,11 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
       setSettings(res.data);
       setConnectDialogOpen(false);
       setConnectForm({ wabaId: "", phoneNumberId: "", accessToken: "", displayPhoneNumber: "" });
-      toast({ title: "WhatsApp Business connected successfully" });
+      toast({ title: t("notifications.whatsapp.connectedSuccess") });
     } catch (error) {
       toast({
-        title: "Failed to connect WhatsApp",
-        description: "Please check your credentials and try again",
+        title: t("notifications.whatsapp.connectFailed"),
+        description: t("notifications.whatsapp.checkCredentials"),
         variant: "destructive",
       });
     } finally {
@@ -179,10 +179,10 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
     try {
       const res = await notificationSettingsApi.disconnectWhatsApp(currentOrganization.id);
       setSettings(res.data);
-      toast({ title: "WhatsApp Business disconnected" });
+      toast({ title: t("notifications.whatsapp.disconnected") });
     } catch (error) {
       toast({
-        title: "Failed to disconnect WhatsApp",
+        title: t("notifications.whatsapp.disconnectFailed"),
         variant: "destructive",
       });
     } finally {
@@ -200,9 +200,9 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-green-600" />
-            <Label>WhatsApp Notifications</Label>
+            <Label>{t("notifications.whatsapp.title")}</Label>
           </div>
-          <p className="text-xs text-muted-foreground">Loading...</p>
+          <p className="text-xs text-muted-foreground">{t("notifications.whatsapp.loading")}</p>
         </div>
         <Loader2 className="h-4 w-4 animate-spin" />
       </div>
@@ -220,24 +220,24 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-green-600" />
             <Label htmlFor="whatsappEnabled">
-              {t("notifications.whatsapp.title") || "WhatsApp Notifications"}
+              {t("notifications.whatsapp.title")}
             </Label>
             {settings.isConnected ? (
               <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Connected
+                {t("notifications.whatsapp.connected")}
               </Badge>
             ) : (
               <Badge variant="outline" className="text-muted-foreground text-xs">
                 <XCircle className="h-3 w-3 mr-1" />
-                Not Connected
+                {t("notifications.whatsapp.notConnected")}
               </Badge>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
             {settings.isConnected && settings.displayPhoneNumber
-              ? `Send notifications via WhatsApp (${settings.displayPhoneNumber})`
-              : t("notifications.whatsapp.description") || "Send booking confirmations and reminders via WhatsApp"}
+              ? t("notifications.whatsapp.sendNotificationsVia", { phone: settings.displayPhoneNumber })
+              : t("notifications.whatsapp.description")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -255,16 +255,16 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="View required templates"
+                    title={t("notifications.whatsapp.viewTemplates")}
                   >
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>WhatsApp Message Templates Setup</DialogTitle>
+                    <DialogTitle>{t("notifications.whatsapp.templatesSetup.title")}</DialogTitle>
                     <DialogDescription>
-                      Create these templates in your{" "}
+                      {t("notifications.whatsapp.templatesSetup.description")}{" "}
                       <a
                         href="https://business.facebook.com/wa/manage/message-templates"
                         target="_blank"
@@ -272,15 +272,14 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                         className="underline text-primary"
                       >
                         Meta Business Manager
-                      </a>{" "}
-                      with exactly 8 body parameters.
+                      </a>
                     </DialogDescription>
                   </DialogHeader>
 
                   <div className="space-y-6 py-4">
                     {/* Required Templates */}
                     <div>
-                      <h4 className="font-semibold text-sm mb-3">Required Template Names</h4>
+                      <h4 className="font-semibold text-sm mb-3">{t("notifications.whatsapp.templatesSetup.requiredTemplates")}</h4>
                       <div className="space-y-2">
                         {requiredTemplates.map((template) => (
                           <div
@@ -292,7 +291,7 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                                 {template.name}
                               </code>
                               <p className="text-xs text-muted-foreground mt-1">
-                                {template.description}
+                                {t(`notifications.whatsapp.templates.${template.descriptionKey}`)}
                               </p>
                             </div>
                             <Button
@@ -300,7 +299,7 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                               size="sm"
                               onClick={() => {
                                 navigator.clipboard.writeText(template.name);
-                                toast({ title: "Copied to clipboard" });
+                                toast({ title: t("notifications.whatsapp.templatesSetup.copiedToClipboard") });
                               }}
                             >
                               <Copy className="h-4 w-4" />
@@ -312,17 +311,17 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
 
                     {/* Template Variables */}
                     <div>
-                      <h4 className="font-semibold text-sm mb-3">Available Variables (8 Parameters)</h4>
+                      <h4 className="font-semibold text-sm mb-3">{t("notifications.whatsapp.templatesSetup.availableVariables")}</h4>
                       <p className="text-xs text-muted-foreground mb-3">
-                        These variables are sent in order. In Meta templates, use {`{{1}}`}, {`{{2}}`}, etc.
+                        {t("notifications.whatsapp.templatesSetup.variablesDescription")}
                       </p>
                       <div className="border rounded-lg overflow-hidden">
                         <table className="w-full text-sm">
                           <thead className="bg-muted">
                             <tr>
-                              <th className="px-3 py-2 text-left font-medium">#</th>
-                              <th className="px-3 py-2 text-left font-medium">Variable</th>
-                              <th className="px-3 py-2 text-left font-medium">Description</th>
+                              <th className="px-3 py-2 text-left font-medium">{t("notifications.whatsapp.templatesSetup.orderColumn")}</th>
+                              <th className="px-3 py-2 text-left font-medium">{t("notifications.whatsapp.templatesSetup.variableColumn")}</th>
+                              <th className="px-3 py-2 text-left font-medium">{t("notifications.whatsapp.templatesSetup.descriptionColumn")}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -337,7 +336,7 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                                     {v.variable}
                                   </code>
                                 </td>
-                                <td className="px-3 py-2 text-muted-foreground">{v.description}</td>
+                                <td className="px-3 py-2 text-muted-foreground">{t(`notifications.whatsapp.variables.${v.descriptionKey}`)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -347,12 +346,11 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
 
                     {/* Example Templates */}
                     <div>
-                      <h4 className="font-semibold text-sm mb-3">Example Template Bodies</h4>
+                      <h4 className="font-semibold text-sm mb-3">{t("notifications.whatsapp.templatesSetup.exampleTemplates")}</h4>
                       <p className="text-xs text-muted-foreground mb-3">
-                        Copy these templates to Meta Business Manager. Each template must not start or end with a variable.
+                        {t("notifications.whatsapp.templatesSetup.exampleDescription")}
                       </p>
                       <div className="space-y-4">
-                        {/* appointment_created */}
                         <div className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
                             <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_created</code>
@@ -361,7 +359,7 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                               size="sm"
                               onClick={() => {
                                 navigator.clipboard.writeText(`Merhaba {{clientName}}! {{serviceName}} randevunuz {{appointmentDate}} tarihinde saat {{appointmentTime}} için onaylandı.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\nOnay: {{confirmationLink}}\n\nGörüşmek üzere!`);
-                                toast({ title: "Copied to clipboard" });
+                                toast({ title: t("notifications.whatsapp.templatesSetup.copiedToClipboard") });
                               }}
                             >
                               <Copy className="h-4 w-4" />
@@ -378,7 +376,6 @@ Onay: {{confirmationLink}}
 Görüşmek üzere!`}</pre>
                         </div>
 
-                        {/* appointment_reminder */}
                         <div className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
                             <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_reminder</code>
@@ -387,7 +384,7 @@ Görüşmek üzere!`}</pre>
                               size="sm"
                               onClick={() => {
                                 navigator.clipboard.writeText(`Hatırlatma: Merhaba {{clientName}}! {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\n\nSizi bekliyoruz!`);
-                                toast({ title: "Copied to clipboard" });
+                                toast({ title: t("notifications.whatsapp.templatesSetup.copiedToClipboard") });
                               }}
                             >
                               <Copy className="h-4 w-4" />
@@ -403,7 +400,6 @@ Detaylar: {{appointmentLink}}
 Sizi bekliyoruz!`}</pre>
                         </div>
 
-                        {/* appointment_canceled */}
                         <div className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
                             <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_canceled</code>
@@ -412,7 +408,7 @@ Sizi bekliyoruz!`}</pre>
                               size="sm"
                               onClick={() => {
                                 navigator.clipboard.writeText(`Randevu İptali: Merhaba {{clientName}}, {{appointmentDate}} tarihinde saat {{appointmentTime}} için planlanmış {{serviceName}} randevunuz iptal edilmiştir.\n\nİşletme: {{organizationName}}\n\nYeni randevu için: {{appointmentLink}}\n\nAnlayışınız için teşekkür ederiz.`);
-                                toast({ title: "Copied to clipboard" });
+                                toast({ title: t("notifications.whatsapp.templatesSetup.copiedToClipboard") });
                               }}
                             >
                               <Copy className="h-4 w-4" />
@@ -427,7 +423,6 @@ Yeni randevu için: {{appointmentLink}}
 Anlayışınız için teşekkür ederiz.`}</pre>
                         </div>
 
-                        {/* appointment_rescheduled */}
                         <div className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
                             <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_rescheduled</code>
@@ -436,7 +431,7 @@ Anlayışınız için teşekkür ederiz.`}</pre>
                               size="sm"
                               onClick={() => {
                                 navigator.clipboard.writeText(`Randevu Güncellendi: Merhaba {{clientName}}! {{serviceName}} randevunuz yeni tarihe alınmıştır: {{appointmentDate}}, saat {{appointmentTime}}.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\nOnay: {{confirmationLink}}\n\nGörüşmek üzere!`);
-                                toast({ title: "Copied to clipboard" });
+                                toast({ title: t("notifications.whatsapp.templatesSetup.copiedToClipboard") });
                               }}
                             >
                               <Copy className="h-4 w-4" />
@@ -459,12 +454,12 @@ Görüşmek üzere!`}</pre>
                     <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200">
                       <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                       <div className="text-sm">
-                        <p className="font-medium">Important Notes</p>
+                        <p className="font-medium">{t("notifications.whatsapp.templatesSetup.importantNotes")}</p>
                         <ul className="mt-2 space-y-1 list-disc list-inside">
-                          <li>Template names must match exactly as shown above</li>
-                          <li>Templates must be approved by Meta before use</li>
-                          <li>All 8 parameters will be sent in order, use only what you need</li>
-                          <li>Set template language to match your organization&apos;s language setting</li>
+                          <li>{t("notifications.whatsapp.templatesSetup.noteMatchExactly")}</li>
+                          <li>{t("notifications.whatsapp.templatesSetup.noteApproval")}</li>
+                          <li>{t("notifications.whatsapp.templatesSetup.noteParameters")}</li>
+                          <li>{t("notifications.whatsapp.templatesSetup.noteLanguage")}</li>
                         </ul>
                       </div>
                     </div>
@@ -472,7 +467,7 @@ Görüşmek üzere!`}</pre>
 
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setTemplatesInfoOpen(false)}>
-                      Close
+                      {t("notifications.whatsapp.templatesSetup.close")}
                     </Button>
                     <Button asChild>
                       <a
@@ -480,7 +475,7 @@ Görüşmek üzere!`}</pre>
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Open Meta Business Manager
+                        {t("notifications.whatsapp.templatesSetup.openMetaManager")}
                       </a>
                     </Button>
                   </DialogFooter>
@@ -491,7 +486,7 @@ Görüşmek üzere!`}</pre>
                 size="icon"
                 onClick={handleDisconnectWhatsApp}
                 disabled={connectingWhatsApp}
-                title="Disconnect WhatsApp"
+                title={t("notifications.whatsapp.disconnect")}
               >
                 {connectingWhatsApp ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -505,14 +500,14 @@ Görüşmek üzere!`}</pre>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
                   <Link className="h-4 w-4 mr-2" />
-                  Connect
+                  {t("notifications.whatsapp.connect")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader>
-                  <DialogTitle>Connect WhatsApp Business</DialogTitle>
+                  <DialogTitle>{t("notifications.whatsapp.connectDialog.title")}</DialogTitle>
                   <DialogDescription>
-                    Enter your WhatsApp Business API credentials from Meta Business Manager.
+                    {t("notifications.whatsapp.connectDialog.description")}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -520,7 +515,7 @@ Görüşmek üzere!`}</pre>
                     <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <div>
                       <p>
-                        You can find these values in your{" "}
+                        {t("notifications.whatsapp.connectDialog.findValues")}{" "}
                         <a
                           href="https://business.facebook.com/settings/whatsapp-business-accounts"
                           target="_blank"
@@ -528,62 +523,61 @@ Görüşmek üzere!`}</pre>
                           className="underline font-medium"
                         >
                           Meta Business Settings
-                        </a>{" "}
-                        under WhatsApp Accounts.
+                        </a>
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wabaId">WhatsApp Business Account ID *</Label>
+                    <Label htmlFor="wabaId">{t("notifications.whatsapp.connectDialog.wabaId")} *</Label>
                     <Input
                       id="wabaId"
                       value={connectForm.wabaId}
                       onChange={(e) => setConnectForm({ ...connectForm, wabaId: e.target.value })}
-                      placeholder="e.g., 123456789012345"
+                      placeholder={t("notifications.whatsapp.connectDialog.wabaIdPlaceholder")}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phoneNumberId">Phone Number ID *</Label>
+                    <Label htmlFor="phoneNumberId">{t("notifications.whatsapp.connectDialog.phoneNumberId")} *</Label>
                     <Input
                       id="phoneNumberId"
                       value={connectForm.phoneNumberId}
                       onChange={(e) => setConnectForm({ ...connectForm, phoneNumberId: e.target.value })}
-                      placeholder="e.g., 123456789012345"
+                      placeholder={t("notifications.whatsapp.connectDialog.phoneNumberIdPlaceholder")}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="accessToken">Permanent Access Token *</Label>
+                    <Label htmlFor="accessToken">{t("notifications.whatsapp.connectDialog.accessToken")} *</Label>
                     <Input
                       id="accessToken"
                       type="password"
                       value={connectForm.accessToken}
                       onChange={(e) => setConnectForm({ ...connectForm, accessToken: e.target.value })}
-                      placeholder="Your permanent access token"
+                      placeholder={t("notifications.whatsapp.connectDialog.accessTokenPlaceholder")}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Generate a permanent token in Meta Business Settings → System Users
+                      {t("notifications.whatsapp.connectDialog.accessTokenHint")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="displayPhoneNumber">Display Phone Number</Label>
+                    <Label htmlFor="displayPhoneNumber">{t("notifications.whatsapp.connectDialog.displayPhoneNumber")}</Label>
                     <Input
                       id="displayPhoneNumber"
                       value={connectForm.displayPhoneNumber}
                       onChange={(e) => setConnectForm({ ...connectForm, displayPhoneNumber: e.target.value })}
-                      placeholder="e.g., +1 555 123 4567"
+                      placeholder={t("notifications.whatsapp.connectDialog.displayPhoneNumberPlaceholder")}
                     />
                     <p className="text-xs text-muted-foreground">
-                      The phone number to display in the dashboard (optional)
+                      {t("notifications.whatsapp.connectDialog.displayPhoneNumberHint")}
                     </p>
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setConnectDialogOpen(false)}>
-                    Cancel
+                    {t("notifications.whatsapp.connectDialog.cancel")}
                   </Button>
                   <Button
                     onClick={handleConnectWhatsApp}
@@ -599,7 +593,7 @@ Görüşmek üzere!`}</pre>
                     ) : (
                       <Link className="h-4 w-4 mr-2" />
                     )}
-                    Connect
+                    {t("notifications.whatsapp.connect")}
                   </Button>
                 </DialogFooter>
               </DialogContent>

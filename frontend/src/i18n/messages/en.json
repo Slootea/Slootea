@@ -44,7 +44,15 @@
     "minutes": "minutes",
     "hours": "hours",
     "days": "days",
-    "noDescription": "No description"
+    "noDescription": "No description",
+    "service": "Service",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No Show"
+    }
   },
   "landing": {
     "badge": "Now available for free public beta",
@@ -225,10 +233,26 @@
   "appointmentsPage": {
     "title": "Appointments",
     "description": "Manage and track all your appointments",
+    "allAppointments": "All Appointments",
+    "allAppointmentsDescription": "Complete history and management of all appointments",
+    "addAppointment": "Add Appointment",
+    "refresh": "Refresh",
     "nextAppointment": "Next Appointment",
     "happeningNow": "Happening Now",
     "startingSoon": "Starting Soon",
     "inProgress": "In progress",
+    "upcomingConfirmed": {
+      "title": "Confirmed & Coming Up",
+      "description": "{count} confirmed appointment{count, plural, one {} other {s}} in the next 24 hours",
+      "ready": "Ready",
+      "moreAppointments": "+{count} more confirmed appointments",
+      "now": "NOW",
+      "soon": "SOON",
+      "happeningNow": "Happening now",
+      "inMinutes": "In {minutes} minutes",
+      "inHours": "In {hours} hour{hours, plural, one {} other {s}}",
+      "notes": "Notes"
+    },
     "tabs": {
       "all": "All",
       "upcoming": "Upcoming",
@@ -239,14 +263,18 @@
     },
     "filters": {
       "searchPlaceholder": "Search by client name or email...",
-      "allServices": "All Services"
+      "allServices": "All Services",
+      "allMembers": "All Members",
+      "sortNewest": "Newest first",
+      "sortOldest": "Oldest first"
     },
     "table": {
       "client": "Client",
       "service": "Service",
       "dateTime": "Date & Time",
       "status": "Status",
-      "actions": "Actions"
+      "actions": "Actions",
+      "openMenu": "Open menu"
     },
     "actions": {
       "confirm": "Confirm",
@@ -254,18 +282,39 @@
       "markCompleted": "Mark Completed",
       "markNoShow": "Mark No Show",
       "cancelAppointment": "Cancel Appointment",
+      "cancel": "Cancel",
       "noActionsAvailable": "No actions available"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No Show"
     },
     "confirmCancel": "Are you sure you want to cancel this appointment?",
     "messages": {
       "statusUpdated": "Status updated successfully",
       "statusUpdateFailed": "Failed to update status",
       "cancelled": "Appointment cancelled",
-      "cancelFailed": "Failed to cancel appointment"
+      "cancelFailed": "Failed to cancel appointment",
+      "loadFailed": "Failed to load appointments",
+      "created": "Appointment created",
+      "createdDescription": "The appointment has been successfully created",
+      "createFailed": "Failed to create appointment"
     },
     "empty": {
       "title": "No appointments found",
       "description": "Try adjusting your filters or search criteria to find what you're looking for."
+    },
+    "pagination": {
+      "showing": "Showing {start} to {end} of {total} results",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "dateLabels": {
+      "today": "Today",
+      "tomorrow": "Tomorrow"
     }
   },
   "clientsPage": {
@@ -293,7 +342,8 @@
     "actions": {
       "viewDetails": "View Details",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "openMenu": "Open menu"
     },
     "detail": {
       "clientSince": "Client since",
@@ -338,7 +388,62 @@
       "title": "No clients yet",
       "description": "Clients will be automatically added when they book their first appointment, or you can add them manually.",
       "addFirst": "Add Your First Client"
-    }
+    },
+    "refresh": "Refresh",
+    "noOrganization": "Please select an organization to view and manage clients.",
+    "sortAscending": "Sort Ascending",
+    "sortDescending": "Sort Descending",
+    "appointments": "appointments",
+    "showingClients": "Showing {start} to {end} of {total} clients",
+    "previous": "Previous",
+    "next": "Next",
+    "penalty": {
+      "title": "Penalty Status",
+      "addPenalty": "Add Penalty",
+      "removePenalty": "Remove",
+      "banned": "Banned",
+      "suspended": "Suspended",
+      "permanent": "Permanent",
+      "until": "Until",
+      "reason": "Reason",
+      "issued": "Issued",
+      "noActivePenalty": "No active penalties - Client can book appointments",
+      "dialogTitle": "Add Penalty",
+      "dialogDescription": "Ban or suspend {name} from booking appointments",
+      "penaltyType": "Penalty Type",
+      "banPermanent": "Ban (Permanent)",
+      "suspendTemporary": "Suspend (Temporary)",
+      "banHint": "Client will be permanently banned until manually removed",
+      "suspendHint": "Client will be suspended until the specified date",
+      "suspendUntil": "Suspend Until",
+      "reasonOptional": "Reason (Optional)",
+      "reasonPlaceholder": "e.g., Multiple no-shows, Inappropriate behavior...",
+      "banClient": "Ban Client",
+      "suspendClient": "Suspend Client",
+      "applying": "Applying...",
+      "clientBanned": "Client has been banned",
+      "clientSuspended": "Client has been suspended",
+      "removeTitle": "Remove Penalty",
+      "removeDescription": "Remove the {type} from {name}",
+      "removalReasonOptional": "Removal Reason (Optional)",
+      "removalReasonPlaceholder": "e.g., Warning given, Issue resolved...",
+      "removing": "Removing...",
+      "removed": "Penalty has been removed",
+      "createError": "Failed to create penalty",
+      "removeError": "Failed to remove penalty",
+      "suspensionRequiresDate": "Suspension requires an end date"
+    },
+    "saving": "Saving...",
+    "deleting": "Deleting...",
+    "cancel": "Cancel",
+    "error": "Error",
+    "success": "Success",
+    "loadError": "Failed to load clients",
+    "loadHistoryError": "Failed to load appointment history",
+    "organizationRequired": "Organization context required",
+    "clientNotFound": "Client not found",
+    "clientNotFoundDesc": "The requested client could not be found",
+    "validationError": "Validation Error"
   },
   "appointments": {
     "title": "Appointments",
@@ -672,6 +777,12 @@
     "week": "Week",
     "day": "Day",
     "today": "Today",
+    "addAppointment": "Add Appointment",
+    "allMembers": "All Members",
+    "header": {
+      "addAppointment": "Add Appointment",
+      "allMembers": "All Members"
+    },
     "legend": {
       "confirmed": "Confirmed",
       "pending": "Pending",
@@ -689,8 +800,27 @@
       "newTime": "New Time",
       "newAppointmentTime": "New appointment time:",
       "notifyClient": "Notify Client",
-      "notifyClientDesc": "Send an email/SMS notification about the time change",
-      "saveChanges": "Save Changes"
+      "notifyClientDesc": "Send notification about changes",
+      "sendNotificationAboutChanges": "Send notification about changes",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "viewClientProfile": "View Client Profile",
+      "appointmentStatus": "Appointment Status",
+      "confirm": "Confirm",
+      "confirming": "Confirming...",
+      "complete": "Complete",
+      "completing": "Completing...",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling...",
+      "on": "On",
+      "off": "Off",
+      "cancelAlert": {
+        "title": "Cancel Appointment",
+        "description": "Are you sure you want to cancel this appointment? This action cannot be undone",
+        "descriptionWithNotification": "Are you sure you want to cancel this appointment? This action cannot be undone and the client will be notified.",
+        "keep": "No, keep it",
+        "confirm": "Yes, cancel appointment"
+      }
     },
     "swapDialog": {
       "swapTitle": "Swap Appointment Times",
@@ -699,19 +829,85 @@
       "moveDescription": "Confirm the new appointment time.",
       "currentTime": "Current Time",
       "newTime": "New Time",
+      "notifyClient": "Notify Client",
       "notifyClients": "Notify Clients",
       "notifyClientDesc": "Send email/SMS notification about the time change",
       "swapTimes": "Swap Times",
-      "moveAppointment": "Move Appointment"
+      "moveAppointment": "Move Appointment",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "createDialog": {
+      "title": "Create Appointment",
+      "descriptionWithDate": "Schedule a new appointment for {date}",
+      "descriptionNoDate": "Schedule a new appointment by selecting a date and time",
+      "descriptionFromButton": "Schedule a new appointment. Select a service to see the next available time.",
+      "service": "Service",
+      "selectService": "Select a service",
+      "noServicesAvailable": "No services available",
+      "duration": "Duration",
+      "assignToProvider": "Assign to Provider",
+      "loadingProviders": "Loading providers...",
+      "noProvidersAssigned": "No providers assigned to this service",
+      "selectProvider": "Select provider",
+      "date": "Date",
+      "time": "Time",
+      "timeSlotUnavailable": "Time Slot Unavailable",
+      "note": "Note",
+      "client": "Client",
+      "searchExisting": "Search Existing",
+      "newClient": "New Client",
+      "searchForClient": "Search for a client...",
+      "searchByNamePhoneEmail": "Search by name, phone, or email...",
+      "noClientsFound": "No clients found.",
+      "createNewClient": "Create new client",
+      "completedAppointments": "{count} completed",
+      "name": "Name",
+      "clientFullName": "Client's full name",
+      "email": "Email",
+      "emailOptional": "client@email.com (optional)",
+      "phone": "Phone",
+      "phonePlaceholder": "+1 234 567 8900",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "Add any notes about this appointment...",
+      "preview": "Appointment Preview",
+      "previewService": "Service",
+      "previewClient": "Client",
+      "previewDate": "Date",
+      "previewTime": "Time",
+      "previewProvider": "Provider",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "createAppointment": "Create Appointment",
+      "nextAvailable": "Next available:",
+      "useThisSlot": "Use this slot",
+      "banned": "Banned",
+      "suspended": "Suspended"
     },
     "messages": {
+      "error": "Error",
+      "failedToLoadCalendar": "Failed to load calendar data",
       "appointmentsSwapped": "Appointments swapped",
       "bothNotified": "Both clients have been notified about the time changes",
       "swappedSuccess": "Appointment times swapped successfully",
       "appointmentMoved": "Appointment moved",
       "clientNotified": "The client has been notified about the time change",
       "movedSuccess": "Appointment time changed successfully",
+      "failedToUpdateAppointments": "Failed to update appointment(s)",
       "appointmentUpdated": "Appointment updated",
+      "failedToUpdateAppointment": "Failed to update appointment",
+      "appointmentCancelled": "Appointment cancelled",
+      "appointmentCancelledDesc": "The appointment has been cancelled and the client has been notified",
+      "failedToCancelAppointment": "Failed to cancel appointment",
+      "appointmentConfirmed": "Appointment confirmed",
+      "appointmentConfirmedDesc": "The appointment has been confirmed successfully",
+      "failedToConfirmAppointment": "Failed to confirm appointment",
+      "appointmentCompleted": "Appointment completed",
+      "appointmentCompletedDesc": "The appointment has been marked as completed",
+      "failedToCompleteAppointment": "Failed to complete appointment",
+      "appointmentCreated": "Appointment created",
+      "appointmentCreatedDesc": "The appointment has been successfully created",
+      "failedToCreateAppointment": "Failed to create appointment",
       "cannotEdit": "Cannot edit",
       "cannotModify": "This appointment cannot be modified"
     }
@@ -799,7 +995,76 @@
       "sendSmsNotificationsHint": "Send booking confirmations and reminders via SMS",
       "whatsapp": {
         "title": "WhatsApp Notifications",
-        "description": "Configure WhatsApp Business API notifications for your appointments"
+        "description": "Configure WhatsApp Business API notifications for your appointments",
+        "loading": "Loading...",
+        "connected": "Connected",
+        "notConnected": "Not Connected",
+        "sendNotificationsVia": "Send notifications via WhatsApp ({phone})",
+        "enabled": "WhatsApp notifications enabled",
+        "disabled": "WhatsApp notifications disabled",
+        "updateFailed": "Failed to update settings",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connectedSuccess": "WhatsApp Business connected successfully",
+        "disconnected": "WhatsApp Business disconnected",
+        "connectFailed": "Failed to connect WhatsApp",
+        "disconnectFailed": "Failed to disconnect WhatsApp",
+        "checkCredentials": "Please check your credentials and try again",
+        "viewTemplates": "View required templates",
+        "templatesSetup": {
+          "title": "WhatsApp Message Templates Setup",
+          "description": "Create these templates in your Meta Business Manager with exactly 8 body parameters.",
+          "requiredTemplates": "Required Template Names",
+          "availableVariables": "Available Variables (8 Parameters)",
+          "variablesDescription": "These variables are sent in order. In Meta templates, use '{{1}}', '{{2}}', etc.",
+          "exampleTemplates": "Example Template Bodies",
+          "exampleDescription": "Copy these templates to Meta Business Manager. Each template must not start or end with a variable.",
+          "importantNotes": "Important Notes",
+          "noteMatchExactly": "Template names must match exactly as shown above",
+          "noteApproval": "Templates must be approved by Meta before use",
+          "noteParameters": "All 8 parameters will be sent in order, use only what you need",
+          "noteLanguage": "Set template language to match your organization's language setting",
+          "close": "Close",
+          "openMetaManager": "Open Meta Business Manager",
+          "copiedToClipboard": "Copied to clipboard",
+          "orderColumn": "#",
+          "variableColumn": "Variable",
+          "descriptionColumn": "Description"
+        },
+        "templates": {
+          "appointmentCreated": "Sent when a new appointment is booked",
+          "appointmentReminder": "Sent before appointment as reminder",
+          "appointmentCanceled": "Sent when appointment is canceled",
+          "appointmentRescheduled": "Sent when appointment is rescheduled"
+        },
+        "variables": {
+          "clientName": "Client's name",
+          "serviceName": "Service/appointment type",
+          "appointmentDate": "Date (e.g., February 15, 2026)",
+          "appointmentTime": "Time (e.g., 14:30)",
+          "providerName": "Provider/staff name",
+          "organizationName": "Business name",
+          "appointmentLink": "Link to view appointment",
+          "confirmationLink": "Link to confirm appointment"
+        },
+        "connectDialog": {
+          "title": "Connect WhatsApp Business",
+          "description": "Enter your WhatsApp Business API credentials from Meta Business Manager.",
+          "findValues": "You can find these values in your Meta Business Settings under WhatsApp Accounts.",
+          "wabaId": "WhatsApp Business Account ID",
+          "wabaIdPlaceholder": "e.g., 123456789012345",
+          "phoneNumberId": "Phone Number ID",
+          "phoneNumberIdPlaceholder": "e.g., 123456789012345",
+          "accessToken": "Permanent Access Token",
+          "accessTokenPlaceholder": "Your permanent access token",
+          "accessTokenHint": "Generate a permanent token in Meta Business Settings → System Users",
+          "displayPhoneNumber": "Display Phone Number",
+          "displayPhoneNumberPlaceholder": "e.g., +1 555 123 4567",
+          "displayPhoneNumberHint": "The phone number to display in the dashboard (optional)",
+          "cancel": "Cancel",
+          "missingFields": "Missing required fields",
+          "fillAllFields": "Please fill in all required fields"
+        }
       }
     },
     "messageTemplates": {

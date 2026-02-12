@@ -1,6 +1,8 @@
 "use client";
 
-import { format, parseISO, isToday, isSameDay, differenceInMinutes } from "date-fns";
+import { format, parseISO, isToday, isSameDay, differenceInMinutes, type Locale } from "date-fns";
+import { enUS, tr } from "date-fns/locale";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Appointment, Availability, BlockedTime } from "@/lib/types";
 import {
   CalendarEvent,
@@ -47,6 +49,8 @@ export function DayColumn({
   dragMovedRef,
   justFinishedDragRef,
 }: DayColumnProps) {
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
   const isDayToday = isToday(day);
   const dayKey = day.toISOString();
 
@@ -95,7 +99,7 @@ export function DayColumn({
       } ${dragState.isDragging ? "cursor-grabbing" : ""}`}
     >
       {/* Day Header */}
-      <DayHeader day={day} isDayToday={isDayToday} />
+      <DayHeader day={day} isDayToday={isDayToday} dateLocale={dateLocale} />
 
       {/* Time Grid */}
       <div 
@@ -159,9 +163,10 @@ export function DayColumn({
 interface DayHeaderProps {
   day: Date;
   isDayToday: boolean;
+  dateLocale: Locale;
 }
 
-function DayHeader({ day, isDayToday }: DayHeaderProps) {
+function DayHeader({ day, isDayToday, dateLocale }: DayHeaderProps) {
   return (
     <div
       className={`h-12 border-b px-2 py-1 flex flex-col items-center justify-center sticky top-0 bg-background z-10 ${
@@ -169,7 +174,7 @@ function DayHeader({ day, isDayToday }: DayHeaderProps) {
       }`}
     >
       <span className="text-xs text-muted-foreground uppercase">
-        {format(day, "EEE")}
+        {format(day, "EEE", { locale: dateLocale })}
       </span>
       <span
         className={`text-lg font-semibold ${

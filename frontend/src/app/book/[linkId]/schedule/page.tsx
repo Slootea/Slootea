@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { format, addDays, startOfDay, isSameDay, parseISO, isBefore, isAfter } from "date-fns";
+import { enUS, tr } from "date-fns/locale";
 import { useTranslations } from "next-intl";
+import { useLocale } from "@/components/providers/locale-provider";
 import { publicApi } from "@/lib/api";
 import { PublicBookingLink, AvailableSlot, ServiceOption, Provider } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +36,10 @@ export default function SchedulePage() {
   const { toast } = useToast();
   const t = useTranslations('booking');
   const common = useTranslations('common');
+  
+  // Locale for date formatting
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
 
   const slug = params.linkId as string;
   const serviceId = searchParams.get("service");
@@ -366,6 +372,7 @@ export default function SchedulePage() {
                 onSelect={setSelectedDate}
                 month={currentMonth}
                 onMonthChange={setCurrentMonth}
+                locale={dateLocale}
                 disabled={(date) => {
                   // Disable past dates and dates beyond max booking window
                   if (isBefore(date, today) || isAfter(date, maxDate)) {
@@ -408,7 +415,7 @@ export default function SchedulePage() {
               <CardHeader>
                 <CardTitle className="text-lg">
                   {selectedDate
-                    ? `${t('availableTimes')} - ${format(selectedDate, "MMM d, yyyy")}`
+                    ? `${t('availableTimes')} - ${format(selectedDate, "d MMM yyyy", { locale: dateLocale })}`
                     : t('selectDate')}
                 </CardTitle>
               </CardHeader>
@@ -503,11 +510,11 @@ export default function SchedulePage() {
                       {selectedService.title}
                     </p>
                     <p className="text-muted-foreground">
-                      {format(parseISO(selectedSlot.startTime), "EEEE, MMMM d, yyyy")}
+                      {format(parseISO(selectedSlot.startTime), "EEEE, d MMMM yyyy", { locale: dateLocale })}
                     </p>
                     <p className="text-muted-foreground">
-                      {format(parseISO(selectedSlot.startTime), "h:mm a")} -{" "}
-                      {format(parseISO(selectedSlot.endTime), "h:mm a")}
+                      {format(parseISO(selectedSlot.startTime), "HH:mm", { locale: dateLocale })} -{" "}
+                      {format(parseISO(selectedSlot.endTime), "HH:mm", { locale: dateLocale })}
                     </p>
                   </div>
 

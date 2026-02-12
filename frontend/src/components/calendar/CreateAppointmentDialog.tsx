@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { format, parseISO } from "date-fns";
+import { enUS, tr } from "date-fns/locale";
 import { formatInTimeZone } from "date-fns-tz";
-import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
+import { useLocale } from "@/components/providers/locale-provider";
+import { Button } from "@/components/ui/button";;
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -102,6 +105,10 @@ export function CreateAppointmentDialog({
   preselectedProviderId,
   timezone = 'UTC',
 }: CreateAppointmentDialogProps) {
+  const t = useTranslations("calendarPage.createDialog");
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
+  
   // Form state
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
@@ -411,14 +418,14 @@ export function CreateAppointmentDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Create Appointment
+            {t("title")}
           </DialogTitle>
           <DialogDescription>
             {fromButton 
-              ? "Schedule a new appointment. Select a service to see the next available time."
+              ? t("descriptionFromButton")
               : appointmentDate 
-                ? `Schedule a new appointment for ${format(appointmentDate, "EEEE, MMMM d, yyyy")}`
-                : "Schedule a new appointment by selecting a date and time"
+                ? t("descriptionWithDate", { date: format(appointmentDate, "EEEE, MMMM d, yyyy", { locale: dateLocale }) })
+                : t("descriptionNoDate")
             }
           </DialogDescription>
         </DialogHeader>
@@ -426,15 +433,15 @@ export function CreateAppointmentDialog({
         <div className="space-y-6 py-4">
           {/* Service Selection */}
           <div className="space-y-2">
-            <Label>Service *</Label>
+            <Label>{t("service")} *</Label>
             <Select value={selectedService} onValueChange={setSelectedService}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a service" />
+                <SelectValue placeholder={t("selectService")} />
               </SelectTrigger>
               <SelectContent>
                 {serviceOptions.length === 0 ? (
                   <div className="p-2 text-sm text-muted-foreground text-center">
-                    No services available
+                    {t("noServicesAvailable")}
                   </div>
                 ) : (
                   serviceOptions.map((service) => (
@@ -452,7 +459,7 @@ export function CreateAppointmentDialog({
             </Select>
             {selectedServiceOption && (
               <p className="text-xs text-muted-foreground">
-                Duration: {selectedServiceOption.duration} minutes
+                {t("duration")}: {selectedServiceOption.duration} minutes
                 {selectedServiceOption.description && (
                   <> • {selectedServiceOption.description}</>
                 )}
@@ -465,21 +472,21 @@ export function CreateAppointmentDialog({
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Assign to Provider
+                {t("assignToProvider")}
               </Label>
               {providersLoading ? (
                 <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading providers...
+                  {t("loadingProviders")}
                 </div>
               ) : serviceProviders.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No providers assigned to this service
+                  {t("noProvidersAssigned")}
                 </p>
               ) : (
                 <Select value={selectedProvider} onValueChange={setSelectedProvider}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select provider" />
+                    <SelectValue placeholder={t("selectProvider")} />
                   </SelectTrigger>
                   <SelectContent>
                     {serviceProviders.map((provider, index) => (
@@ -513,7 +520,7 @@ export function CreateAppointmentDialog({
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Date
+                {t("date")}
               </Label>
               <Input
                 type="date"
@@ -533,7 +540,7 @@ export function CreateAppointmentDialog({
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Time
+                {t("time")}
                 {checkingAvailability && (
                   <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                 )}
@@ -550,17 +557,17 @@ export function CreateAppointmentDialog({
           {availabilityCheck && !availabilityCheck.available && !checkingAvailability && (
             <Alert variant={isMinAdvanceBookingConflict ? "default" : "destructive"}>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{isMinAdvanceBookingConflict ? "Note" : "Time Slot Unavailable"}</AlertTitle>
+              <AlertTitle>{isMinAdvanceBookingConflict ? t("note") : t("timeSlotUnavailable")}</AlertTitle>
               <AlertDescription className="space-y-2">
                 <p>
-                  {availabilityCheck.conflict?.reason || "This time slot is not available."}
+                  {availabilityCheck.conflict?.reason || t("timeSlotUnavailable")}
                   {isMinAdvanceBookingConflict && " You can still create this appointment manually."}
                 </p>
                 {availabilityCheck.nextAvailable && (
                   <div className="flex items-center gap-2 mt-2">
                     <CalendarClock className="h-4 w-4" />
                     <span className="text-sm">
-                      Next available: {formatInTimeZone(parseISO(availabilityCheck.nextAvailable.startTime), timezone, "MMM d 'at' h:mm a")}
+                      {t("nextAvailable")} {formatInTimeZone(parseISO(availabilityCheck.nextAvailable.startTime), timezone, "MMM d 'at' h:mm a")}
                     </span>
                     <Button
                       type="button"
@@ -570,7 +577,7 @@ export function CreateAppointmentDialog({
                       onClick={useNextAvailable}
                     >
                       <Sparkles className="h-3 w-3 mr-1" />
-                      Use this slot
+                      {t("useThisSlot")}
                     </Button>
                   </div>
                 )}
@@ -582,18 +589,18 @@ export function CreateAppointmentDialog({
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              Client *
+              {t("client")} *
             </Label>
 
             <Tabs value={clientTab} onValueChange={(v) => setClientTab(v as "existing" | "new")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="existing" className="gap-2">
                   <Search className="h-4 w-4" />
-                  Search Existing
+                  {t("searchExisting")}
                 </TabsTrigger>
                 <TabsTrigger value="new" className="gap-2">
                   <UserPlus className="h-4 w-4" />
-                  New Client
+                  {t("newClient")}
                 </TabsTrigger>
               </TabsList>
 
@@ -615,7 +622,7 @@ export function CreateAppointmentDialog({
                           </span>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Search for a client...</span>
+                        <span className="text-muted-foreground">{t("searchForClient")}</span>
                       )}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -623,7 +630,7 @@ export function CreateAppointmentDialog({
                   <PopoverContent className="w-[400px] p-0" align="start">
                     <Command shouldFilter={false}>
                       <CommandInput
-                        placeholder="Search by name, phone, or email..."
+                        placeholder={t("searchByNamePhoneEmail")}
                         value={clientSearchQuery}
                         onValueChange={setClientSearchQuery}
                       />
@@ -634,7 +641,7 @@ export function CreateAppointmentDialog({
                           </div>
                         ) : clients.length === 0 ? (
                           <CommandEmpty>
-                            No clients found.
+                            {t("noClientsFound")}
                             <Button
                               variant="link"
                               className="block mx-auto mt-2"
@@ -643,7 +650,7 @@ export function CreateAppointmentDialog({
                                 setClientPopoverOpen(false);
                               }}
                             >
-                              Create new client
+                              {t("createNewClient")}
                             </Button>
                           </CommandEmpty>
                         ) : (
@@ -672,8 +679,8 @@ export function CreateAppointmentDialog({
                                     {client.activePenalty && (
                                       <Badge variant="destructive" className="text-xs">
                                         {client.activePenalty.type === "ban"
-                                          ? "Banned"
-                                          : "Suspended"}
+                                          ? t("banned")
+                                          : t("suspended")}
                                       </Badge>
                                     )}
                                   </div>
@@ -704,7 +711,7 @@ export function CreateAppointmentDialog({
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{selectedClient.name}</span>
                       <Badge variant="outline">
-                        {selectedClient.completedAppointments} completed
+                        {t("completedAppointments", { count: selectedClient.completedAppointments })}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -725,30 +732,30 @@ export function CreateAppointmentDialog({
 
               <TabsContent value="new" className="space-y-3 mt-3">
                 <div className="space-y-2">
-                  <Label htmlFor="client-name">Name *</Label>
+                  <Label htmlFor="client-name">{t("name")} *</Label>
                   <Input
                     id="client-name"
-                    placeholder="Client's full name"
+                    placeholder={t("clientFullName")}
                     value={newClientName}
                     onChange={(e) => setNewClientName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="client-email">Email</Label>
+                  <Label htmlFor="client-email">{t("email")}</Label>
                   <Input
                     id="client-email"
                     type="email"
-                    placeholder="client@email.com (optional)"
+                    placeholder={t("emailOptional")}
                     value={newClientEmail}
                     onChange={(e) => setNewClientEmail(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="client-phone">Phone *</Label>
+                  <Label htmlFor="client-phone">{t("phone")} *</Label>
                   <Input
                     id="client-phone"
                     type="tel"
-                    placeholder="+1 234 567 8900"
+                    placeholder={t("phonePlaceholder")}
                     value={newClientPhone}
                     onChange={(e) => setNewClientPhone(e.target.value)}
                   />
@@ -759,10 +766,10 @@ export function CreateAppointmentDialog({
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">{t("notes")}</Label>
             <Textarea
               id="notes"
-              placeholder="Add any notes about this appointment..."
+              placeholder={t("notesPlaceholder")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -772,22 +779,22 @@ export function CreateAppointmentDialog({
           {/* Preview */}
           {isValid && selectedServiceOption && (
             <div className="p-4 bg-primary/10 rounded-lg space-y-2">
-              <p className="text-sm font-medium">Appointment Preview</p>
+              <p className="text-sm font-medium">{t("preview")}</p>
               <div className="text-sm space-y-1">
                 <p>
-                  <span className="text-muted-foreground">Service:</span>{" "}
+                  <span className="text-muted-foreground">{t("previewService")}:</span>{" "}
                   {selectedServiceOption.title}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Client:</span>{" "}
+                  <span className="text-muted-foreground">{t("previewClient")}:</span>{" "}
                   {clientTab === "existing" ? selectedClient?.name : newClientName}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Date:</span>{" "}
-                  {appointmentDate && format(appointmentDate, "EEEE, MMMM d, yyyy")}
+                  <span className="text-muted-foreground">{t("previewDate")}:</span>{" "}
+                  {appointmentDate && format(appointmentDate, "EEEE, MMMM d, yyyy", { locale: dateLocale })}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Time:</span>{" "}
+                  <span className="text-muted-foreground">{t("previewTime")}:</span>{" "}
                   {appointmentDate && appointmentTime &&
                     format(
                       new Date(
@@ -803,7 +810,7 @@ export function CreateAppointmentDialog({
                 </p>
                 {isAdmin && selectedProvider && (
                   <p>
-                    <span className="text-muted-foreground">Provider:</span>{" "}
+                    <span className="text-muted-foreground">{t("previewProvider")}:</span>{" "}
                     {serviceProviders.find((p) => p.clerkId === selectedProvider)?.firstName ||
                       "Selected Provider"}
                   </p>
@@ -815,18 +822,18 @@ export function CreateAppointmentDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={handleSave} disabled={saving || !isValid}>
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Creating...
+                {t("creating")}
               </>
             ) : (
               <>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Appointment
+                {t("createAppointment")}
               </>
             )}
           </Button>

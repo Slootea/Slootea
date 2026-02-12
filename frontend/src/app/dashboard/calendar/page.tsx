@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { useTranslations } from "next-intl";
 import {
   appointmentsApi,
   serviceOptionsApi,
@@ -58,6 +59,7 @@ export default function CalendarPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const { toast } = useToast();
+  const t = useTranslations("calendarPage.messages");
   const { currentOrganization, isAdmin, members } = useOrganizationContext();
 
   // State
@@ -194,14 +196,14 @@ export default function CalendarPage() {
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({
-        title: "Error",
-        description: "Failed to load calendar data",
+        title: t("error"),
+        description: t("failedToLoadCalendar"),
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }, [getToken, weekStart, weekEnd, currentDate, viewMode, toast, currentOrganization, isAdmin, selectedMember]);
+  }, [getToken, weekStart, weekEnd, currentDate, viewMode, toast, currentOrganization, isAdmin, selectedMember, t]);
 
   useEffect(() => {
     fetchData();
@@ -596,10 +598,10 @@ export default function CalendarPage() {
         ]);
 
         toast({
-          title: "Appointments swapped",
+          title: t("appointmentsSwapped"),
           description: sendNotification
-            ? "Both clients have been notified about the time changes"
-            : "Appointment times swapped successfully",
+            ? t("bothNotified")
+            : t("swappedSuccess"),
         });
       } else {
         await appointmentsApi.update(pendingChange.appointment.id, {
@@ -608,10 +610,10 @@ export default function CalendarPage() {
         });
 
         toast({
-          title: "Appointment moved",
+          title: t("appointmentMoved"),
           description: sendNotification
-            ? "The client has been notified about the time change"
-            : "Appointment time changed successfully",
+            ? t("clientNotified")
+            : t("movedSuccess"),
         });
       }
 
@@ -620,8 +622,8 @@ export default function CalendarPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update appointment(s)",
+        title: t("error"),
+        description: t("failedToUpdateAppointments"),
         variant: "destructive",
       });
     } finally {
@@ -636,8 +638,8 @@ export default function CalendarPage() {
       appointment.status === AppointmentStatus.COMPLETED
     ) {
       toast({
-        title: "Cannot edit",
-        description: "This appointment cannot be modified",
+        title: t("cannotEdit"),
+        description: t("cannotModify"),
         variant: "destructive",
       });
       return;
@@ -666,10 +668,10 @@ export default function CalendarPage() {
       });
 
       toast({
-        title: "Appointment updated",
+        title: t("appointmentUpdated"),
         description: sendNotification
-          ? "The client has been notified about the time change"
-          : "Appointment time changed successfully",
+          ? t("clientNotified")
+          : t("movedSuccess"),
       });
 
       setEditDialogOpen(false);
@@ -677,8 +679,8 @@ export default function CalendarPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update appointment",
+        title: t("error"),
+        description: t("failedToUpdateAppointment"),
         variant: "destructive",
       });
     } finally {
@@ -693,8 +695,8 @@ export default function CalendarPage() {
       await appointmentsApi.cancel(id);
 
       toast({
-        title: "Appointment cancelled",
-        description: "The appointment has been cancelled and the client has been notified",
+        title: t("appointmentCancelled"),
+        description: t("appointmentCancelledDesc"),
       });
 
       setEditDialogOpen(false);
@@ -702,8 +704,8 @@ export default function CalendarPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to cancel appointment",
+        title: t("error"),
+        description: t("failedToCancelAppointment"),
         variant: "destructive",
       });
     } finally {
@@ -718,8 +720,8 @@ export default function CalendarPage() {
       await appointmentsApi.confirm(id);
 
       toast({
-        title: "Appointment confirmed",
-        description: "The appointment has been confirmed successfully",
+        title: t("appointmentConfirmed"),
+        description: t("appointmentConfirmedDesc"),
       });
 
       setEditDialogOpen(false);
@@ -727,8 +729,8 @@ export default function CalendarPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to confirm appointment",
+        title: t("error"),
+        description: t("failedToConfirmAppointment"),
         variant: "destructive",
       });
     } finally {
@@ -743,8 +745,8 @@ export default function CalendarPage() {
       await appointmentsApi.complete(id);
 
       toast({
-        title: "Appointment completed",
-        description: "The appointment has been marked as completed",
+        title: t("appointmentCompleted"),
+        description: t("appointmentCompletedDesc"),
       });
 
       setEditDialogOpen(false);
@@ -752,8 +754,8 @@ export default function CalendarPage() {
       fetchData();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to complete appointment",
+        title: t("error"),
+        description: t("failedToCompleteAppointment"),
         variant: "destructive",
       });
     } finally {
@@ -801,8 +803,8 @@ export default function CalendarPage() {
       await appointmentsApi.create(data);
       
       toast({
-        title: "Appointment created",
-        description: "The appointment has been successfully created",
+        title: t("appointmentCreated"),
+        description: t("appointmentCreatedDesc"),
       });
 
       setCreateDialogOpen(false);
@@ -810,8 +812,8 @@ export default function CalendarPage() {
     } catch (error) {
       console.error("Failed to create appointment:", error);
       toast({
-        title: "Error",
-        description: "Failed to create appointment",
+        title: t("error"),
+        description: t("failedToCreateAppointment"),
         variant: "destructive",
       });
     } finally {

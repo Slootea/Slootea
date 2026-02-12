@@ -1,7 +1,10 @@
 "use client";
 
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { enUS, tr } from "date-fns/locale";
+import { useTranslations } from "next-intl";
+import { useLocale } from "@/components/providers/locale-provider";
+import { Button } from "@/components/ui/button";;
 import { CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,6 +61,10 @@ export function CalendarHeader({
   members,
   onAddAppointment,
 }: CalendarHeaderProps) {
+  const t = useTranslations("calendarPage");
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
+
   return (
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -65,8 +72,8 @@ export function CalendarHeader({
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
             {viewMode === "week"
-              ? `${format(weekStart, "MMM d")} - ${format(weekEnd, "MMM d, yyyy")}`
-              : format(currentDate, "EEEE, MMMM d, yyyy")}
+              ? `${format(weekStart, "MMM d", { locale: dateLocale })} - ${format(weekEnd, "MMM d, yyyy", { locale: dateLocale })}`
+              : format(currentDate, "EEEE, MMMM d, yyyy", { locale: dateLocale })}
           </CardTitle>
         </div>
 
@@ -75,7 +82,7 @@ export function CalendarHeader({
           {onAddAppointment && (
             <Button onClick={onAddAppointment} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add Appointment
+              {t("addAppointment")}
             </Button>
           )}
 
@@ -83,13 +90,13 @@ export function CalendarHeader({
           {showMemberFilter && members.length > 0 && (
             <Select value={selectedMember} onValueChange={setSelectedMember}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All Members" />
+                <SelectValue placeholder={t("allMembers")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    All Members
+                    {t("allMembers")}
                   </div>
                 </SelectItem>
                 {members.map((member) => (
@@ -119,11 +126,11 @@ export function CalendarHeader({
             <TabsList>
               <TabsTrigger value="week" className="px-3">
                 <CalendarIcon className="h-4 w-4 mr-1" />
-                Week
+                {t("week")}
               </TabsTrigger>
               <TabsTrigger value="day" className="px-3">
                 <Clock className="h-4 w-4 mr-1" />
-                Day
+                {t("day")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -131,7 +138,7 @@ export function CalendarHeader({
           {/* Navigation */}
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
+              {t("today")}
             </Button>
             <Button variant="outline" size="icon" onClick={goToPrevious}>
               <ChevronLeft className="h-4 w-4" />
@@ -150,35 +157,37 @@ export function CalendarHeader({
 }
 
 function CalendarLegend() {
+  const t = useTranslations("calendarPage.legend");
+
   return (
     <div className="flex flex-wrap gap-4 mt-4 text-sm">
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded bg-green-500" />
-        <span className="text-muted-foreground">Confirmed</span>
+        <span className="text-muted-foreground">{t("confirmed")}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded bg-yellow-500" />
-        <span className="text-muted-foreground">Pending</span>
+        <span className="text-muted-foreground">{t("pending")}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded bg-blue-500" />
-        <span className="text-muted-foreground">Completed</span>
+        <span className="text-muted-foreground">{t("completed")}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded bg-red-500" />
-        <span className="text-muted-foreground">Cancelled</span>
+        <span className="text-muted-foreground">{t("cancelled")}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded bg-green-200 dark:bg-green-900" />
-        <span className="text-muted-foreground">Available</span>
+        <span className="text-muted-foreground">{t("available")}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded bg-red-200 dark:bg-red-900" />
-        <span className="text-muted-foreground">Blocked</span>
+        <span className="text-muted-foreground">{t("blocked")}</span>
       </div>
       <div className="flex items-center gap-2 ml-auto">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
-        <span className="text-muted-foreground">Drag to reschedule</span>
+        <span className="text-muted-foreground">{t("dragToReschedule")}</span>
       </div>
     </div>
   );

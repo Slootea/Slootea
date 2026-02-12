@@ -44,7 +44,15 @@
     "minutes": "dakika",
     "hours": "saat",
     "days": "gün",
-    "noDescription": "Açıklama yok"
+    "noDescription": "Açıklama yok",
+    "service": "Hizmet",
+    "status": {
+      "pending": "Beklemede",
+      "confirmed": "Onaylandı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal Edildi",
+      "noShow": "Gelmedi"
+    }
   },
   "landing": {
     "badge": "Ücretsiz beta sürümü artık kullanımda",
@@ -225,10 +233,26 @@
   "appointmentsPage": {
     "title": "Randevular",
     "description": "Tüm randevularınızı yönetin ve takip edin",
+    "allAppointments": "Tüm Randevular",
+    "allAppointmentsDescription": "Tüm randevuların geçmişi ve yönetimi",
+    "addAppointment": "Randevu Ekle",
+    "refresh": "Yenile",
     "nextAppointment": "Sonraki Randevu",
     "happeningNow": "Şu An Gerçekleşiyor",
     "startingSoon": "Yakında Başlıyor",
     "inProgress": "Devam ediyor",
+    "upcomingConfirmed": {
+      "title": "Onaylı ve Yaklaşan",
+      "description": "Önümüzdeki 24 saat içinde {count} onaylı randevu",
+      "ready": "Hazır",
+      "moreAppointments": "+{count} onaylı randevu daha",
+      "now": "ŞİMDİ",
+      "soon": "YAKINDA",
+      "happeningNow": "Şu an gerçekleşiyor",
+      "inMinutes": "{minutes} dakika içinde",
+      "inHours": "{hours} saat içinde",
+      "notes": "Notlar"
+    },
     "tabs": {
       "all": "Tümü",
       "upcoming": "Yaklaşan",
@@ -239,14 +263,18 @@
     },
     "filters": {
       "searchPlaceholder": "Müşteri adı veya e-posta ile ara...",
-      "allServices": "Tüm Hizmetler"
+      "allServices": "Tüm Hizmetler",
+      "allMembers": "Tüm Üyeler",
+      "sortNewest": "En yeni önce",
+      "sortOldest": "En eski önce"
     },
     "table": {
       "client": "Müşteri",
       "service": "Hizmet",
       "dateTime": "Tarih ve Saat",
       "status": "Durum",
-      "actions": "İşlemler"
+      "actions": "İşlemler",
+      "openMenu": "Menüyü aç"
     },
     "actions": {
       "confirm": "Onayla",
@@ -254,18 +282,39 @@
       "markCompleted": "Tamamlandı Olarak İşaretle",
       "markNoShow": "Gelmedi Olarak İşaretle",
       "cancelAppointment": "Randevuyu İptal Et",
+      "cancel": "İptal",
       "noActionsAvailable": "Kullanılabilir işlem yok"
+    },
+    "status": {
+      "pending": "Beklemede",
+      "confirmed": "Onaylandı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal Edildi",
+      "noShow": "Gelmedi"
     },
     "confirmCancel": "Bu randevuyu iptal etmek istediğinizden emin misiniz?",
     "messages": {
       "statusUpdated": "Durum başarıyla güncellendi",
       "statusUpdateFailed": "Durum güncellenemedi",
       "cancelled": "Randevu iptal edildi",
-      "cancelFailed": "Randevu iptal edilemedi"
+      "cancelFailed": "Randevu iptal edilemedi",
+      "loadFailed": "Randevular yüklenemedi",
+      "created": "Randevu oluşturuldu",
+      "createdDescription": "Randevu başarıyla oluşturuldu",
+      "createFailed": "Randevu oluşturulamadı"
     },
     "empty": {
       "title": "Randevu bulunamadı",
       "description": "Aradığınızı bulmak için filtrelerinizi veya arama kriterlerinizi ayarlamayı deneyin."
+    },
+    "pagination": {
+      "showing": "{start} - {end} arası gösteriliyor, toplam {total} sonuç",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "dateLabels": {
+      "today": "Bugün",
+      "tomorrow": "Yarın"
     }
   },
   "clientsPage": {
@@ -293,7 +342,8 @@
     "actions": {
       "viewDetails": "Detayları Gör",
       "edit": "Düzenle",
-      "delete": "Sil"
+      "delete": "Sil",
+      "openMenu": "Menüyü aç"
     },
     "detail": {
       "clientSince": "Müşteri olduğundan beri",
@@ -338,7 +388,62 @@
       "title": "Henüz müşteri yok",
       "description": "Müşteriler ilk randevularını aldıklarında otomatik olarak eklenecek veya manuel olarak ekleyebilirsiniz.",
       "addFirst": "İlk Müşterinizi Ekleyin"
-    }
+    },
+    "refresh": "Yenile",
+    "noOrganization": "Müşterileri görüntülemek ve yönetmek için lütfen bir kuruluş seçin.",
+    "sortAscending": "Artan Sıralama",
+    "sortDescending": "Azalan Sıralama",
+    "appointments": "randevu",
+    "showingClients": "{start} - {end} arası gösteriliyor, toplam {total} müşteri",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "penalty": {
+      "title": "Ceza Durumu",
+      "addPenalty": "Ceza Ekle",
+      "removePenalty": "Kaldır",
+      "banned": "Yasaklı",
+      "suspended": "Askıya Alındı",
+      "permanent": "Kalıcı",
+      "until": "Bitiş",
+      "reason": "Sebep",
+      "issued": "Verildi",
+      "noActivePenalty": "Aktif ceza yok - Müşteri randevu alabilir",
+      "dialogTitle": "Ceza Ekle",
+      "dialogDescription": "{name} adlı müşterinin randevu almasını yasakla veya askıya al",
+      "penaltyType": "Ceza Türü",
+      "banPermanent": "Yasak (Kalıcı)",
+      "suspendTemporary": "Askıya Al (Geçici)",
+      "banHint": "Müşteri manuel olarak kaldırılana kadar kalıcı olarak yasaklanacak",
+      "suspendHint": "Müşteri belirtilen tarihe kadar askıya alınacak",
+      "suspendUntil": "Askıya Alma Bitiş Tarihi",
+      "reasonOptional": "Sebep (İsteğe Bağlı)",
+      "reasonPlaceholder": "örn: Çoklu gelmeme, Uygunsuz davranış...",
+      "banClient": "Müşteriyi Yasakla",
+      "suspendClient": "Müşteriyi Askıya Al",
+      "applying": "Uygulanıyor...",
+      "clientBanned": "Müşteri yasaklandı",
+      "clientSuspended": "Müşteri askıya alındı",
+      "removeTitle": "Cezayı Kaldır",
+      "removeDescription": "{name} adlı müşteriden {type} cezasını kaldır",
+      "removalReasonOptional": "Kaldırma Sebebi (İsteğe Bağlı)",
+      "removalReasonPlaceholder": "örn: Uyarı verildi, Sorun çözüldü...",
+      "removing": "Kaldırılıyor...",
+      "removed": "Ceza kaldırıldı",
+      "createError": "Ceza oluşturulamadı",
+      "removeError": "Ceza kaldırılamadı",
+      "suspensionRequiresDate": "Askıya alma bitiş tarihi gerektirir"
+    },
+    "saving": "Kaydediliyor...",
+    "deleting": "Siliniyor...",
+    "cancel": "İptal",
+    "error": "Hata",
+    "success": "Başarılı",
+    "loadError": "Müşteriler yüklenemedi",
+    "loadHistoryError": "Randevu geçmişi yüklenemedi",
+    "organizationRequired": "Kuruluş bağlamı gerekli",
+    "clientNotFound": "Müşteri bulunamadı",
+    "clientNotFoundDesc": "İstenen müşteri bulunamadı",
+    "validationError": "Doğrulama Hatası"
   },
   "appointments": {
     "title": "Randevular",
@@ -672,6 +777,12 @@
     "week": "Hafta",
     "day": "Gün",
     "today": "Bugün",
+    "addAppointment": "Randevu Ekle",
+    "allMembers": "Tüm Üyeler",
+    "header": {
+      "addAppointment": "Randevu Ekle",
+      "allMembers": "Tüm Üyeler"
+    },
     "legend": {
       "confirmed": "Onaylandı",
       "pending": "Beklemede",
@@ -689,8 +800,27 @@
       "newTime": "Yeni Saat",
       "newAppointmentTime": "Yeni randevu saati:",
       "notifyClient": "Müşteriyi Bilgilendir",
-      "notifyClientDesc": "Saat değişikliği hakkında e-posta/SMS bildirimi gönder",
-      "saveChanges": "Değişiklikleri Kaydet"
+      "notifyClientDesc": "Değişiklikler hakkında bildirim gönder",
+      "sendNotificationAboutChanges": "Değişiklikler hakkında bildirim gönder",
+      "saveChanges": "Değişiklikleri Kaydet",
+      "saving": "Kaydediliyor...",
+      "viewClientProfile": "Müşteri Profilini Görüntüle",
+      "appointmentStatus": "Randevu Durumu",
+      "confirm": "Onayla",
+      "confirming": "Onaylanıyor...",
+      "complete": "Tamamla",
+      "completing": "Tamamlanıyor...",
+      "cancel": "İptal",
+      "cancelling": "İptal ediliyor...",
+      "on": "Açık",
+      "off": "Kapalı",
+      "cancelAlert": {
+        "title": "Randevuyu İptal Et",
+        "description": "Bu randevuyu iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz",
+        "descriptionWithNotification": "Bu randevuyu iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve müşteri bilgilendirilecek.",
+        "keep": "Hayır, kalsın",
+        "confirm": "Evet, randevuyu iptal et"
+      }
     },
     "swapDialog": {
       "swapTitle": "Randevu Saatlerini Değiştir",
@@ -699,19 +829,85 @@
       "moveDescription": "Yeni randevu saatini onaylayın.",
       "currentTime": "Mevcut Saat",
       "newTime": "Yeni Saat",
+      "notifyClient": "Müşteriyi Bilgilendir",
       "notifyClients": "Müşterileri Bilgilendir",
       "notifyClientDesc": "Saat değişikliği hakkında e-posta/SMS bildirimi gönder",
       "swapTimes": "Saatleri Değiştir",
-      "moveAppointment": "Randevuyu Taşı"
+      "moveAppointment": "Randevuyu Taşı",
+      "saving": "Kaydediliyor...",
+      "cancel": "İptal"
+    },
+    "createDialog": {
+      "title": "Randevu Oluştur",
+      "descriptionWithDate": "{date} için yeni bir randevu planlayın",
+      "descriptionNoDate": "Tarih ve saat seçerek yeni bir randevu planlayın",
+      "descriptionFromButton": "Yeni bir randevu planlayın. Bir sonraki uygun zamanı görmek için hizmet seçin.",
+      "service": "Hizmet",
+      "selectService": "Bir hizmet seçin",
+      "noServicesAvailable": "Kullanılabilir hizmet yok",
+      "duration": "Süre",
+      "assignToProvider": "Sağlayıcıya Ata",
+      "loadingProviders": "Sağlayıcılar yükleniyor...",
+      "noProvidersAssigned": "Bu hizmete atanmış sağlayıcı yok",
+      "selectProvider": "Sağlayıcı seçin",
+      "date": "Tarih",
+      "time": "Saat",
+      "timeSlotUnavailable": "Zaman Dilimi Müsait Değil",
+      "note": "Not",
+      "client": "Müşteri",
+      "searchExisting": "Mevcut Ara",
+      "newClient": "Yeni Müşteri",
+      "searchForClient": "Müşteri ara...",
+      "searchByNamePhoneEmail": "İsim, telefon veya e-posta ile ara...",
+      "noClientsFound": "Müşteri bulunamadı.",
+      "createNewClient": "Yeni müşteri oluştur",
+      "completedAppointments": "{count} tamamlandı",
+      "name": "Ad",
+      "clientFullName": "Müşterinin tam adı",
+      "email": "E-posta",
+      "emailOptional": "musteri@email.com (isteğe bağlı)",
+      "phone": "Telefon",
+      "phonePlaceholder": "+90 555 123 4567",
+      "notes": "Notlar (isteğe bağlı)",
+      "notesPlaceholder": "Bu randevu hakkında notlar ekleyin...",
+      "preview": "Randevu Önizleme",
+      "previewService": "Hizmet",
+      "previewClient": "Müşteri",
+      "previewDate": "Tarih",
+      "previewTime": "Saat",
+      "previewProvider": "Sağlayıcı",
+      "cancel": "İptal",
+      "creating": "Oluşturuluyor...",
+      "createAppointment": "Randevu Oluştur",
+      "nextAvailable": "Sonraki müsait:",
+      "useThisSlot": "Bu slotu kullan",
+      "banned": "Yasaklı",
+      "suspended": "Askıya alındı"
     },
     "messages": {
+      "error": "Hata",
+      "failedToLoadCalendar": "Takvim verileri yüklenemedi",
       "appointmentsSwapped": "Randevular değiştirildi",
       "bothNotified": "Her iki müşteri de saat değişiklikleri hakkında bilgilendirildi",
       "swappedSuccess": "Randevu saatleri başarıyla değiştirildi",
       "appointmentMoved": "Randevu taşındı",
       "clientNotified": "Müşteri saat değişikliği hakkında bilgilendirildi",
       "movedSuccess": "Randevu saati başarıyla değiştirildi",
+      "failedToUpdateAppointments": "Randevu(lar) güncellenemedi",
       "appointmentUpdated": "Randevu güncellendi",
+      "failedToUpdateAppointment": "Randevu güncellenemedi",
+      "appointmentCancelled": "Randevu iptal edildi",
+      "appointmentCancelledDesc": "Randevu iptal edildi ve müşteri bilgilendirildi",
+      "failedToCancelAppointment": "Randevu iptal edilemedi",
+      "appointmentConfirmed": "Randevu onaylandı",
+      "appointmentConfirmedDesc": "Randevu başarıyla onaylandı",
+      "failedToConfirmAppointment": "Randevu onaylanamadı",
+      "appointmentCompleted": "Randevu tamamlandı",
+      "appointmentCompletedDesc": "Randevu tamamlandı olarak işaretlendi",
+      "failedToCompleteAppointment": "Randevu tamamlanamadı",
+      "appointmentCreated": "Randevu oluşturuldu",
+      "appointmentCreatedDesc": "Randevu başarıyla oluşturuldu",
+      "failedToCreateAppointment": "Randevu oluşturulamadı",
       "cannotEdit": "Düzenlenemez",
       "cannotModify": "Bu randevu değiştirilemez"
     }
@@ -799,7 +995,76 @@
       "sendSmsNotificationsHint": "Rezervasyon onaylarını ve hatırlatmaları SMS ile gönder",
       "whatsapp": {
         "title": "WhatsApp Bildirimleri",
-        "description": "Randevularınız için WhatsApp Business API bildirimlerini yapılandırın"
+        "description": "Randevularınız için WhatsApp Business API bildirimlerini yapılandırın",
+        "loading": "Yükleniyor...",
+        "connected": "Bağlı",
+        "notConnected": "Bağlı Değil",
+        "sendNotificationsVia": "WhatsApp ile bildirim gönder ({phone})",
+        "enabled": "WhatsApp bildirimleri etkinleştirildi",
+        "disabled": "WhatsApp bildirimleri devre dışı bırakıldı",
+        "updateFailed": "Ayarlar güncellenemedi",
+        "connect": "Bağlan",
+        "disconnect": "Bağlantıyı Kes",
+        "connectedSuccess": "WhatsApp Business başarıyla bağlandı",
+        "disconnected": "WhatsApp Business bağlantısı kesildi",
+        "connectFailed": "WhatsApp bağlanamadı",
+        "disconnectFailed": "WhatsApp bağlantısı kesilemedi",
+        "checkCredentials": "Lütfen kimlik bilgilerinizi kontrol edip tekrar deneyin",
+        "viewTemplates": "Gerekli şablonları görüntüle",
+        "templatesSetup": {
+          "title": "WhatsApp Mesaj Şablonları Kurulumu",
+          "description": "Bu şablonları Meta Business Manager'da tam olarak 8 gövde parametresiyle oluşturun.",
+          "requiredTemplates": "Gerekli Şablon Adları",
+          "availableVariables": "Kullanılabilir Değişkenler (8 Parametre)",
+          "variablesDescription": "Bu değişkenler sırayla gönderilir. Meta şablonlarında '{{1}}', '{{2}}' vb. kullanın.",
+          "exampleTemplates": "Örnek Şablon İçerikleri",
+          "exampleDescription": "Bu şablonları Meta Business Manager'a kopyalayın. Her şablon bir değişkenle başlamamalı veya bitmemelidir.",
+          "importantNotes": "Önemli Notlar",
+          "noteMatchExactly": "Şablon adları yukarıda gösterildiği gibi tam olarak eşleşmelidir",
+          "noteApproval": "Şablonlar kullanılmadan önce Meta tarafından onaylanmalıdır",
+          "noteParameters": "Tüm 8 parametre sırayla gönderilir, yalnızca ihtiyacınız olanları kullanın",
+          "noteLanguage": "Şablon dilini kuruluşunuzun dil ayarıyla eşleşecek şekilde ayarlayın",
+          "close": "Kapat",
+          "openMetaManager": "Meta Business Manager'ı Aç",
+          "copiedToClipboard": "Panoya kopyalandı",
+          "orderColumn": "#",
+          "variableColumn": "Değişken",
+          "descriptionColumn": "Açıklama"
+        },
+        "templates": {
+          "appointmentCreated": "Yeni bir randevu alındığında gönderilir",
+          "appointmentReminder": "Randevu öncesi hatırlatma olarak gönderilir",
+          "appointmentCanceled": "Randevu iptal edildiğinde gönderilir",
+          "appointmentRescheduled": "Randevu yeniden planlandığında gönderilir"
+        },
+        "variables": {
+          "clientName": "Müşteri adı",
+          "serviceName": "Hizmet/randevu türü",
+          "appointmentDate": "Tarih (örn: 15 Şubat 2026)",
+          "appointmentTime": "Saat (örn: 14:30)",
+          "providerName": "Sağlayıcı/personel adı",
+          "organizationName": "İşletme adı",
+          "appointmentLink": "Randevuyu görüntüleme linki",
+          "confirmationLink": "Randevuyu onaylama linki"
+        },
+        "connectDialog": {
+          "title": "WhatsApp Business Bağla",
+          "description": "Meta Business Manager'dan WhatsApp Business API kimlik bilgilerinizi girin.",
+          "findValues": "Bu değerleri Meta Business Ayarları altında WhatsApp Hesapları bölümünde bulabilirsiniz.",
+          "wabaId": "WhatsApp Business Hesap ID",
+          "wabaIdPlaceholder": "örn: 123456789012345",
+          "phoneNumberId": "Telefon Numarası ID",
+          "phoneNumberIdPlaceholder": "örn: 123456789012345",
+          "accessToken": "Kalıcı Erişim Anahtarı",
+          "accessTokenPlaceholder": "Kalıcı erişim anahtarınız",
+          "accessTokenHint": "Meta Business Ayarları → Sistem Kullanıcıları'nda kalıcı bir anahtar oluşturun",
+          "displayPhoneNumber": "Görüntülenecek Telefon Numarası",
+          "displayPhoneNumberPlaceholder": "örn: +90 555 123 4567",
+          "displayPhoneNumberHint": "Panoda görüntülenecek telefon numarası (isteğe bağlı)",
+          "cancel": "İptal",
+          "missingFields": "Gerekli alanlar eksik",
+          "fillAllFields": "Lütfen tüm gerekli alanları doldurun"
+        }
       }
     },
     "messageTemplates": {

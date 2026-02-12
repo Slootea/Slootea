@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format, parseISO, addMonths, startOfMonth } from "date-fns";
+import { enUS, tr } from "date-fns/locale";
 import { useTranslations } from "next-intl";
+import { useLocale } from "@/components/providers/locale-provider";
 import { publicApi } from "@/lib/api";
 import { PublicAppointmentDetails, AppointmentStatus, TimeSlot } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -55,6 +57,10 @@ export default function AppointmentManagementPage() {
   const t = useTranslations('appointment');
   const common = useTranslations('common');
   const token = params.token as string;
+
+  // Locale for date formatting
+  const { locale } = useLocale();
+  const dateLocale = locale === "tr" ? tr : enUS;
 
   const [appointment, setAppointment] = useState<PublicAppointmentDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -477,6 +483,7 @@ export default function AppointmentManagementPage() {
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 disabled={(date) => !isDateAvailable(date)}
+                locale={dateLocale}
                 className="rounded-md border mx-auto"
               />
             )}

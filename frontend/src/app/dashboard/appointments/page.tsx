@@ -298,8 +298,8 @@ export default function AppointmentsPage() {
       await appointmentsApi.create(data);
       
       toast({
-        title: "Appointment created",
-        description: "The appointment has been successfully created",
+        title: t('messages.created'),
+        description: t('messages.createdDescription'),
       });
 
       setCreateDialogOpen(false);
@@ -308,7 +308,7 @@ export default function AppointmentsPage() {
       console.error("Failed to create appointment:", error);
       toast({
         title: tCommon("error"),
-        description: "Failed to create appointment",
+        description: t('messages.createFailed'),
         variant: "destructive",
       });
     } finally {
@@ -365,6 +365,7 @@ export default function AppointmentsPage() {
           appointments={upcomingConfirmedAppointments}
           onStatusChange={handleStatusChange}
           onCancel={handleCancel}
+          t={t}
         />
       )}
 
@@ -375,10 +376,10 @@ export default function AppointmentsPage() {
             <div>
               <CardTitle className="text-xl font-semibold flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-primary" />
-                All Appointments
+                {t('allAppointments')}
               </CardTitle>
               <CardDescription className="mt-1">
-                Complete history and management of all appointments
+                {t('allAppointmentsDescription')}
               </CardDescription>
             </div>
             <div className="flex gap-2 self-start sm:self-auto">
@@ -391,7 +392,7 @@ export default function AppointmentsPage() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Appointment
+                {t('addAppointment')}
               </Button>
               <Button
                 variant="outline"
@@ -402,7 +403,7 @@ export default function AppointmentsPage() {
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
                 />
-                Refresh
+                {t('refresh')}
               </Button>
             </div>
           </div>
@@ -413,28 +414,28 @@ export default function AppointmentsPage() {
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="mb-4 flex-wrap h-auto gap-1">
               <TabsTrigger value="all" className="text-xs sm:text-sm">
-                All
+                {t('tabs.all')}
               </TabsTrigger>
               <TabsTrigger value="upcoming" className="text-xs sm:text-sm">
-                Upcoming
+                {t('tabs.upcoming')}
               </TabsTrigger>
               <TabsTrigger
                 value={AppointmentStatus.CONFIRMED}
                 className="text-xs sm:text-sm"
               >
-                Confirmed
+                {t('tabs.confirmed')}
               </TabsTrigger>
               <TabsTrigger
                 value={AppointmentStatus.COMPLETED}
                 className="text-xs sm:text-sm"
               >
-                Completed
+                {t('tabs.completed')}
               </TabsTrigger>
               <TabsTrigger
                 value={AppointmentStatus.CANCELLED}
                 className="text-xs sm:text-sm"
               >
-                Cancelled
+                {t('tabs.cancelled')}
               </TabsTrigger>
             </TabsList>
 
@@ -443,7 +444,7 @@ export default function AppointmentsPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by client name or email..."
+                  placeholder={t('filters.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -455,13 +456,13 @@ export default function AppointmentsPage() {
                 <Select value={selectedMember} onValueChange={setSelectedMember}>
                   <SelectTrigger className="w-full sm:w-[200px]">
                     <Users className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="All Members" />
+                    <SelectValue placeholder={t('filters.allMembers')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
-                        All Members
+                        {t('filters.allMembers')}
                       </div>
                     </SelectItem>
                     {members.map((member) => (
@@ -498,10 +499,10 @@ export default function AppointmentsPage() {
                 }
               >
                 <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="All Services" />
+                  <SelectValue placeholder={t('filters.allServices')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
+                  <SelectItem value="all">{t('filters.allServices')}</SelectItem>
                   {serviceOptions.map((service) => (
                     <SelectItem key={service.id} value={service.id}>
                       {service.title}
@@ -514,7 +515,7 @@ export default function AppointmentsPage() {
                 variant="outline"
                 size="icon"
                 onClick={toggleSortOrder}
-                title={`Sort ${filters.sortOrder === "ASC" ? "Oldest first" : "Newest first"}`}
+                title={filters.sortOrder === "ASC" ? t('filters.sortOldest') : t('filters.sortNewest')}
               >
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
@@ -522,7 +523,7 @@ export default function AppointmentsPage() {
 
             <TabsContent value={activeTab} className="mt-0">
               {appointments.length === 0 ? (
-                <EmptyState />
+                <EmptyState t={t} />
               ) : (
                 <>
                   {/* Desktop Table View */}
@@ -530,11 +531,11 @@ export default function AppointmentsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[200px]">Client</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Date & Time</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead className="w-[200px]">{t('table.client')}</TableHead>
+                          <TableHead>{t('table.service')}</TableHead>
+                          <TableHead>{t('table.dateTime')}</TableHead>
+                          <TableHead>{t('table.status')}</TableHead>
+                          <TableHead className="text-right">{t('table.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -544,6 +545,7 @@ export default function AppointmentsPage() {
                             appointment={appointment}
                             onStatusChange={handleStatusChange}
                             onCancel={handleCancel}
+                            t={t}
                           />
                         ))}
                       </TableBody>
@@ -558,6 +560,7 @@ export default function AppointmentsPage() {
                         appointment={appointment}
                         onStatusChange={handleStatusChange}
                         onCancel={handleCancel}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -566,6 +569,7 @@ export default function AppointmentsPage() {
                   <Pagination
                     pagination={pagination}
                     onPageChange={handlePageChange}
+                    t={t}
                   />
                 </>
               )}
@@ -598,10 +602,12 @@ function UpcomingConfirmedSection({
   appointments,
   onStatusChange,
   onCancel,
+  t,
 }: {
   appointments: Appointment[];
   onStatusChange: (id: string, status: AppointmentStatus) => void;
   onCancel: (id: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   return (
     <Card className="border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 shadow-lg overflow-hidden">
@@ -613,16 +619,16 @@ function UpcomingConfirmedSection({
             </div>
             <div>
               <CardTitle className="text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                Confirmed & Coming Up
+                {t('upcomingConfirmed.title')}
               </CardTitle>
               <CardDescription className="text-emerald-700/70 dark:text-emerald-300/70">
-                {appointments.length} confirmed appointment{appointments.length !== 1 ? 's' : ''} in the next 24 hours
+                {t('upcomingConfirmed.description', { count: appointments.length })}
               </CardDescription>
             </div>
           </div>
           <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            Ready
+            {t('upcomingConfirmed.ready')}
           </Badge>
         </div>
       </CardHeader>
@@ -635,11 +641,12 @@ function UpcomingConfirmedSection({
               onStatusChange={onStatusChange}
               onCancel={onCancel}
               isFirst={index === 0}
+              t={t}
             />
           ))}
           {appointments.length > 5 && (
             <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center py-2">
-              +{appointments.length - 5} more confirmed appointments
+              {t('upcomingConfirmed.moreAppointments', { count: appointments.length - 5 })}
             </p>
           )}
         </div>
@@ -654,11 +661,13 @@ function UpcomingAppointmentCard({
   onStatusChange,
   onCancel,
   isFirst,
+  t,
 }: {
   appointment: Appointment;
   onStatusChange: (id: string, status: AppointmentStatus) => void;
   onCancel: (id: string) => void;
   isFirst: boolean;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const startTime = parseISO(appointment.startTime);
   const endTime = parseISO(appointment.endTime);
@@ -668,9 +677,9 @@ function UpcomingAppointmentCard({
   const isNow = minutesUntil <= 0 && minutesUntil > -(appointment.serviceOption?.duration || 60);
 
   const getTimeLabel = () => {
-    if (isNow) return "Happening now";
-    if (minutesUntil < 60) return `In ${minutesUntil} minutes`;
-    if (hoursUntil < 24) return `In ${hoursUntil} hour${hoursUntil !== 1 ? 's' : ''}`;
+    if (isNow) return t('upcomingConfirmed.happeningNow');
+    if (minutesUntil < 60) return t('upcomingConfirmed.inMinutes', { minutes: minutesUntil });
+    if (hoursUntil < 24) return t('upcomingConfirmed.inHours', { hours: hoursUntil });
     return formatDistanceToNow(startTime, { addSuffix: true });
   };
 
@@ -690,7 +699,7 @@ function UpcomingAppointmentCard({
             ? "bg-green-500 text-white"
             : "bg-amber-500 text-white"
         }`}>
-          {isNow ? "NOW" : "SOON"}
+          {isNow ? t('upcomingConfirmed.now') : t('upcomingConfirmed.soon')}
         </div>
       )}
       
@@ -731,9 +740,9 @@ function UpcomingAppointmentCard({
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
                 {isToday(startTime)
-                  ? "Today"
+                  ? t('dateLabels.today')
                   : isTomorrow(startTime)
-                  ? "Tomorrow"
+                  ? t('dateLabels.tomorrow')
                   : format(startTime, "MMM d")}
               </span>
               <span className="flex items-center gap-1">
@@ -742,7 +751,7 @@ function UpcomingAppointmentCard({
               </span>
               <span className="hidden sm:flex items-center gap-1">
                 <Timer className="h-3.5 w-3.5" />
-                {appointment.serviceOption?.title || "Service"}
+                {appointment.serviceOption?.title || t('table.service')}
               </span>
             </div>
           </div>
@@ -756,7 +765,7 @@ function UpcomingAppointmentCard({
             onClick={() => onStatusChange(appointment.id, AppointmentStatus.COMPLETED)}
           >
             <CheckCircle2 className="h-4 w-4 mr-1" />
-            Complete
+            {t('actions.complete')}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -769,7 +778,7 @@ function UpcomingAppointmentCard({
                 onClick={() => onStatusChange(appointment.id, AppointmentStatus.NO_SHOW)}
               >
                 <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
-                Mark No Show
+                {t('actions.markNoShow')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -777,7 +786,7 @@ function UpcomingAppointmentCard({
                 className="text-red-600 focus:text-red-600"
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Cancel
+                {t('actions.cancel')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -787,7 +796,7 @@ function UpcomingAppointmentCard({
       {appointment.notes && (
         <div className="mt-3 pt-3 border-t border-emerald-100 dark:border-emerald-800/30">
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium">Notes:</span> {appointment.notes}
+            <span className="font-medium">{t('upcomingConfirmed.notes')}:</span> {appointment.notes}
           </p>
         </div>
       )}
@@ -800,10 +809,12 @@ function AppointmentRow({
   appointment,
   onStatusChange,
   onCancel,
+  t,
 }: {
   appointment: Appointment;
   onStatusChange: (id: string, status: AppointmentStatus) => void;
   onCancel: (id: string) => void;
+  t: (key: string) => string;
 }) {
   const startTime = parseISO(appointment.startTime);
   const endTime = parseISO(appointment.endTime);
@@ -832,9 +843,9 @@ function AppointmentRow({
         <div className="flex flex-col">
           <span className="font-medium">
             {isToday(startTime)
-              ? "Today"
+              ? t('dateLabels.today')
               : isTomorrow(startTime)
-              ? "Tomorrow"
+              ? t('dateLabels.tomorrow')
               : format(startTime, "MMM d, yyyy")}
           </span>
           <span className="text-sm text-muted-foreground">
@@ -843,18 +854,18 @@ function AppointmentRow({
         </div>
       </TableCell>
       <TableCell>
-        <StatusBadge status={appointment.status} />
+        <StatusBadge status={appointment.status} t={t} />
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t('table.openMenu')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {canModify && (
               <>
@@ -865,7 +876,7 @@ function AppointmentRow({
                     }
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
-                    Confirm
+                    {t('actions.confirm')}
                   </DropdownMenuItem>
                 )}
                 {appointment.status === AppointmentStatus.CONFIRMED && (
@@ -879,7 +890,7 @@ function AppointmentRow({
                       }
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
-                      Mark Completed
+                      {t('actions.markCompleted')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() =>
@@ -887,7 +898,7 @@ function AppointmentRow({
                       }
                     >
                       <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
-                      Mark No Show
+                      {t('actions.markNoShow')}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -897,13 +908,13 @@ function AppointmentRow({
                   className="text-red-600 focus:text-red-600"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
-                  Cancel Appointment
+                  {t('actions.cancelAppointment')}
                 </DropdownMenuItem>
               </>
             )}
             {!canModify && (
               <DropdownMenuItem disabled>
-                No actions available
+                {t('actions.noActionsAvailable')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -918,10 +929,12 @@ function AppointmentMobileCard({
   appointment,
   onStatusChange,
   onCancel,
+  t,
 }: {
   appointment: Appointment;
   onStatusChange: (id: string, status: AppointmentStatus) => void;
   onCancel: (id: string) => void;
+  t: (key: string) => string;
 }) {
   const startTime = parseISO(appointment.startTime);
   const endTime = parseISO(appointment.endTime);
@@ -941,20 +954,20 @@ function AppointmentMobileCard({
               {appointment.clientEmail}
             </p>
           </div>
-          <StatusBadge status={appointment.status} />
+          <StatusBadge status={appointment.status} t={t} />
         </div>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Timer className="h-4 w-4" />
-            {appointment.serviceOption?.title || "Service"}
+            {appointment.serviceOption?.title || t('table.service')}
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
             {isToday(startTime)
-              ? "Today"
+              ? t('dateLabels.today')
               : isTomorrow(startTime)
-              ? "Tomorrow"
+              ? t('dateLabels.tomorrow')
               : format(startTime, "MMM d, yyyy")}
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -979,7 +992,7 @@ function AppointmentMobileCard({
                   onStatusChange(appointment.id, AppointmentStatus.CONFIRMED)
                 }
               >
-                Confirm
+                {t('actions.confirm')}
               </Button>
             )}
             {appointment.status === AppointmentStatus.CONFIRMED && (
@@ -990,7 +1003,7 @@ function AppointmentMobileCard({
                   onStatusChange(appointment.id, AppointmentStatus.COMPLETED)
                 }
               >
-                Complete
+                {t('actions.complete')}
               </Button>
             )}
             <Button
@@ -999,7 +1012,7 @@ function AppointmentMobileCard({
               className="text-red-600"
               onClick={() => onCancel(appointment.id)}
             >
-              Cancel
+              {t('actions.cancel')}
             </Button>
           </div>
         )}
@@ -1012,48 +1025,50 @@ function AppointmentMobileCard({
 function StatusBadge({
   status,
   size = "default",
+  t,
 }: {
   status: AppointmentStatus;
   size?: "default" | "lg";
+  t: (key: string) => string;
 }) {
   const config: Record<
     AppointmentStatus,
-    { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }
+    { labelKey: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }
   > = {
     [AppointmentStatus.PENDING_CONFIRMATION]: {
-      label: "Pending",
+      labelKey: "status.pending",
       variant: "outline",
       icon: <AlertCircle className="h-3 w-3" />,
     },
     [AppointmentStatus.CONFIRMED]: {
-      label: "Confirmed",
+      labelKey: "status.confirmed",
       variant: "default",
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     [AppointmentStatus.CANCELLED]: {
-      label: "Cancelled",
+      labelKey: "status.cancelled",
       variant: "destructive",
       icon: <XCircle className="h-3 w-3" />,
     },
     [AppointmentStatus.COMPLETED]: {
-      label: "Completed",
+      labelKey: "status.completed",
       variant: "secondary",
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     [AppointmentStatus.NO_SHOW]: {
-      label: "No Show",
+      labelKey: "status.noShow",
       variant: "outline",
       icon: <AlertCircle className="h-3 w-3" />,
     },
   };
 
-  const { label, variant, icon } = config[status];
+  const { labelKey, variant, icon } = config[status];
 
   return (
     <Badge variant={variant} className={size === "lg" ? "text-sm px-3 py-1" : ""}>
       <span className="flex items-center gap-1">
         {icon}
-        {label}
+        {t(labelKey)}
       </span>
     </Badge>
   );
@@ -1063,6 +1078,7 @@ function StatusBadge({
 function Pagination({
   pagination,
   onPageChange,
+  t,
 }: {
   pagination: {
     total: number;
@@ -1073,6 +1089,7 @@ function Pagination({
     hasPreviousPage: boolean;
   };
   onPageChange: (page: number) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const startItem = (pagination.page - 1) * pagination.limit + 1;
   const endItem = Math.min(pagination.page * pagination.limit, pagination.total);
@@ -1082,9 +1099,7 @@ function Pagination({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t">
       <p className="text-sm text-muted-foreground">
-        Showing <span className="font-medium">{startItem}</span> to{" "}
-        <span className="font-medium">{endItem}</span> of{" "}
-        <span className="font-medium">{pagination.total}</span> results
+        {t('pagination.showing', { start: startItem, end: endItem, total: pagination.total })}
       </p>
 
       <div className="flex items-center gap-2">
@@ -1095,7 +1110,7 @@ function Pagination({
           disabled={!pagination.hasPreviousPage}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
+          {t('pagination.previous')}
         </Button>
 
         <div className="flex items-center gap-1">
@@ -1131,7 +1146,7 @@ function Pagination({
           onClick={() => onPageChange(pagination.page + 1)}
           disabled={!pagination.hasNextPage}
         >
-          Next
+          {t('pagination.next')}
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
@@ -1140,16 +1155,15 @@ function Pagination({
 }
 
 // Empty State Component
-function EmptyState() {
+function EmptyState({ t }: { t: (key: string) => string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="rounded-full bg-muted p-4 mb-4">
         <Calendar className="h-8 w-8 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold mb-1">No appointments found</h3>
+      <h3 className="text-lg font-semibold mb-1">{t('empty.title')}</h3>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Try adjusting your filters or search criteria to find what you&apos;re looking
-        for.
+        {t('empty.description')}
       </p>
     </div>
   );

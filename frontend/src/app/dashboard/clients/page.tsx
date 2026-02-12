@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { clientsApi, appointmentsApi, clientPenaltiesApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import {
   Client,
@@ -108,6 +109,8 @@ export default function ClientsPage() {
   const { currentOrganization } = useOrganizationContext();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('clientsPage');
+  const common = useTranslations('common');
   const highlightClientId = searchParams.get('highlight');
   const highlightHandledRef = useRef<string | null>(null);
 
@@ -225,8 +228,8 @@ export default function ClientsPage() {
       } catch (error) {
         console.error("Failed to fetch data", error);
         toast({
-          title: "Error",
-          description: "Failed to load clients",
+          title: t('error'),
+          description: t('loadError'),
           variant: "destructive",
         });
       } finally {
@@ -270,8 +273,8 @@ export default function ClientsPage() {
         } catch (error) {
           console.error('Failed to fetch highlighted client:', error);
           toast({
-            title: 'Client not found',
-            description: 'The requested client could not be found',
+            title: t('clientNotFound'),
+            description: t('clientNotFoundDesc'),
             variant: 'destructive',
           });
           router.replace('/dashboard/clients', { scroll: false });
@@ -299,8 +302,8 @@ export default function ClientsPage() {
     } catch (error) {
       console.error("Failed to fetch appointments", error);
       toast({
-        title: "Error",
-        description: "Failed to load appointment history",
+        title: t('error'),
+        description: t('loadHistoryError'),
         variant: "destructive",
       });
     } finally {
@@ -333,8 +336,8 @@ export default function ClientsPage() {
     
     if (penaltyFormData.type === 'suspension' && !penaltyFormData.expiresAt) {
       toast({
-        title: "Error",
-        description: "Suspension requires an end date",
+        title: t('error'),
+        description: t('penalty.suspensionRequiresDate'),
         variant: "destructive",
       });
       return;
@@ -354,8 +357,8 @@ export default function ClientsPage() {
       });
       
       toast({
-        title: "Success",
-        description: penaltyFormData.type === 'ban' ? "Client has been banned" : "Client has been suspended",
+        title: t('success'),
+        description: penaltyFormData.type === 'ban' ? t('penalty.clientBanned') : t('penalty.clientSuspended'),
       });
       
       setPenaltyDialogOpen(false);
@@ -365,8 +368,8 @@ export default function ClientsPage() {
       await fetchData(true);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create penalty",
+        title: t('error'),
+        description: error.response?.data?.message || t('penalty.createError'),
         variant: "destructive",
       });
     } finally {
@@ -387,8 +390,8 @@ export default function ClientsPage() {
       await clientPenaltiesApi.remove(clientPenalty.id, { removalReason: removalReason || undefined });
       
       toast({
-        title: "Success",
-        description: "Penalty has been removed",
+        title: t('success'),
+        description: t('penalty.removed'),
       });
       
       setRemovePenaltyDialogOpen(false);
@@ -398,8 +401,8 @@ export default function ClientsPage() {
       await fetchData(true);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to remove penalty",
+        title: t('error'),
+        description: error.response?.data?.message || t('penalty.removeError'),
         variant: "destructive",
       });
     } finally {
@@ -442,8 +445,8 @@ export default function ClientsPage() {
   const handleSaveClient = async () => {
     if (!formData.name.trim() || !formData.phone.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Name and phone number are required",
+        title: t('validationError'),
+        description: t('form.nameRequired'),
         variant: "destructive",
       });
       return;
@@ -451,8 +454,8 @@ export default function ClientsPage() {
 
     if (!currentOrganization) {
       toast({
-        title: "Error",
-        description: "Organization context required",
+        title: t('error'),
+        description: t('organizationRequired'),
         variant: "destructive",
       });
       return;
@@ -470,7 +473,7 @@ export default function ClientsPage() {
           email: formData.email || undefined,
           notes: formData.notes || undefined,
         });
-        toast({ title: "Client updated successfully" });
+        toast({ title: t('messages.updated') });
       } else {
         await clientsApi.create({
           name: formData.name,
@@ -478,7 +481,7 @@ export default function ClientsPage() {
           phone: formData.phone,
           notes: formData.notes || undefined,
         });
-        toast({ title: "Client created successfully" });
+        toast({ title: t('messages.created') });
       }
 
       setEditDialogOpen(false);
@@ -495,9 +498,9 @@ export default function ClientsPage() {
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('error'),
         description:
-          error.response?.data?.message || "Failed to save client",
+          error.response?.data?.message || t('loadError'),
         variant: "destructive",
       });
     } finally {
@@ -519,7 +522,7 @@ export default function ClientsPage() {
       setAuthToken(token);
       setOrganizationContext(currentOrganization.id);
       await clientsApi.delete(clientToDelete.id);
-      toast({ title: "Client deleted successfully" });
+      toast({ title: t('messages.deleted') });
       setDeleteDialogOpen(false);
       setClientToDelete(null);
 
@@ -532,8 +535,8 @@ export default function ClientsPage() {
       fetchData(true);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete client",
+        title: t('error'),
+        description: t('loadError'),
         variant: "destructive",
       });
     } finally {
@@ -570,16 +573,16 @@ export default function ClientsPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Clients</CardTitle>
+            <CardTitle className="text-xl font-semibold">{t('title')}</CardTitle>
             <CardDescription>
-              Manage your client database and view their appointment history
+              {t('description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Alert>
               <Building2 className="h-4 w-4" />
               <AlertDescription>
-                Please select an organization to view and manage clients.
+                {t('noOrganization')}
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -591,16 +594,16 @@ export default function ClientsPage() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      {stats && <StatsCards stats={stats} />}
+      {stats && <StatsCards stats={stats} t={t} />}
 
       {/* Main Content */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-xl font-semibold">Clients</CardTitle>
+              <CardTitle className="text-xl font-semibold">{t('title')}</CardTitle>
               <CardDescription>
-                Manage your organization&apos;s client database and view their appointment history
+                {t('description')}
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -613,11 +616,11 @@ export default function ClientsPage() {
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
                 />
-                Refresh
+                {t('refresh')}
               </Button>
               <Button size="sm" onClick={handleCreateClient}>
                 <UserPlus className="h-4 w-4 mr-2" />
-                Add Client
+                {t('addClient')}
               </Button>
             </div>
           </div>
@@ -629,7 +632,7 @@ export default function ClientsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, email, or phone..."
+                placeholder={t('filters.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -640,14 +643,14 @@ export default function ClientsPage() {
               variant="outline"
               size="icon"
               onClick={toggleSortOrder}
-              title={`Sort ${filters.sortOrder === "ASC" ? "Ascending" : "Descending"}`}
+              title={filters.sortOrder === "ASC" ? t('sortAscending') : t('sortDescending')}
             >
               <ArrowUpDown className="h-4 w-4" />
             </Button>
           </div>
 
           {clients.length === 0 ? (
-            <EmptyState onCreateClick={handleCreateClient} />
+            <EmptyState onCreateClick={handleCreateClient} t={t} />
           ) : (
             <>
               {/* Desktop Table View */}
@@ -660,19 +663,19 @@ export default function ClientsPage() {
                         onClick={() => handleSortChange("name")}
                       >
                         <div className="flex items-center gap-1">
-                          Client
+                          {t('table.client')}
                           {filters.sortBy === "name" && (
                             <ArrowUpDown className="h-3 w-3" />
                           )}
                         </div>
                       </TableHead>
-                      <TableHead>Contact</TableHead>
+                      <TableHead>{t('table.contact')}</TableHead>
                       <TableHead
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleSortChange("totalAppointments")}
                       >
                         <div className="flex items-center gap-1">
-                          Appointments
+                          {t('table.appointments')}
                           {filters.sortBy === "totalAppointments" && (
                             <ArrowUpDown className="h-3 w-3" />
                           )}
@@ -683,13 +686,13 @@ export default function ClientsPage() {
                         onClick={() => handleSortChange("lastAppointmentAt")}
                       >
                         <div className="flex items-center gap-1">
-                          Last Visit
+                          {t('table.lastVisit')}
                           {filters.sortBy === "lastAppointmentAt" && (
                             <ArrowUpDown className="h-3 w-3" />
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-right">{t('table.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -700,6 +703,7 @@ export default function ClientsPage() {
                         onView={handleViewDetails}
                         onEdit={handleEditClient}
                         onDelete={handleDeleteClick}
+                        t={t}
                       />
                     ))}
                   </TableBody>
@@ -715,12 +719,13 @@ export default function ClientsPage() {
                     onView={handleViewDetails}
                     onEdit={handleEditClient}
                     onDelete={handleDeleteClick}
+                    t={t}
                   />
                 ))}
               </div>
 
               {/* Pagination */}
-              <Pagination pagination={pagination} onPageChange={handlePageChange} />
+              <PaginationComponent pagination={pagination} onPageChange={handlePageChange} t={t} />
             </>
           )}
         </CardContent>
@@ -742,7 +747,7 @@ export default function ClientsPage() {
                         {selectedClient.name}
                       </SheetTitle>
                       <SheetDescription className="text-left">
-                        Client since{" "}
+                        {t('detail.clientSince')}{" "}
                         {format(parseISO(selectedClient.createdAt), "MMM d, yyyy")}
                       </SheetDescription>
                     </div>
@@ -755,7 +760,7 @@ export default function ClientsPage() {
                   {/* Contact Info */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-muted-foreground">
-                      Contact Information
+                      {t('detail.contactInfo')}
                     </h4>
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 text-sm">
@@ -776,32 +781,32 @@ export default function ClientsPage() {
                   {/* Stats */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-muted-foreground">
-                      Appointment Statistics
+                      {t('detail.appointmentStats')}
                     </h4>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-lg border p-3">
                         <p className="text-2xl font-bold">
                           {selectedClient.totalAppointments}
                         </p>
-                        <p className="text-xs text-muted-foreground">Total</p>
+                        <p className="text-xs text-muted-foreground">{t('detail.total')}</p>
                       </div>
                       <div className="rounded-lg border p-3">
                         <p className="text-2xl font-bold text-green-600">
                           {selectedClient.completedAppointments}
                         </p>
-                        <p className="text-xs text-muted-foreground">Completed</p>
+                        <p className="text-xs text-muted-foreground">{t('detail.completed')}</p>
                       </div>
                       <div className="rounded-lg border p-3">
                         <p className="text-2xl font-bold text-red-600">
                           {selectedClient.cancelledAppointments}
                         </p>
-                        <p className="text-xs text-muted-foreground">Cancelled</p>
+                        <p className="text-xs text-muted-foreground">{t('detail.cancelled')}</p>
                       </div>
                       <div className="rounded-lg border p-3">
                         <p className="text-2xl font-bold text-yellow-600">
                           {selectedClient.noShowAppointments}
                         </p>
-                        <p className="text-xs text-muted-foreground">No Shows</p>
+                        <p className="text-xs text-muted-foreground">{t('detail.noShows')}</p>
                       </div>
                     </div>
                   </div>
@@ -813,7 +818,7 @@ export default function ClientsPage() {
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4" />
-                        Penalty Status
+                        {t('penalty.title')}
                       </h4>
                       {!clientPenalty && (
                         <Button
@@ -825,7 +830,7 @@ export default function ClientsPage() {
                           }}
                         >
                           <Ban className="h-3 w-3 mr-1" />
-                          Add Penalty
+                          {t('penalty.addPenalty')}
                         </Button>
                       )}
                     </div>
@@ -847,15 +852,15 @@ export default function ClientsPage() {
                             )}
                             <div>
                               <p className="font-medium">
-                                {clientPenalty.type === PenaltyType.BAN ? 'Banned' : 'Suspended'}
+                                {clientPenalty.type === PenaltyType.BAN ? t('penalty.banned') : t('penalty.suspended')}
                               </p>
                               {clientPenalty.expiresAt && (
                                 <p className="text-xs text-muted-foreground">
-                                  Until: {format(parseISO(clientPenalty.expiresAt), "MMM d, yyyy 'at' h:mm a")}
+                                  {t('penalty.until')}: {format(parseISO(clientPenalty.expiresAt), "MMM d, yyyy 'at' h:mm a")}
                                 </p>
                               )}
                               {clientPenalty.type === PenaltyType.BAN && (
-                                <p className="text-xs text-muted-foreground">Permanent</p>
+                                <p className="text-xs text-muted-foreground">{t('penalty.permanent')}</p>
                               )}
                             </div>
                           </div>
@@ -868,23 +873,23 @@ export default function ClientsPage() {
                             }}
                           >
                             <ShieldOff className="h-3 w-3 mr-1" />
-                            Remove
+                            {t('penalty.removePenalty')}
                           </Button>
                         </div>
                         {clientPenalty.reason && (
                           <p className="text-sm mt-2 text-muted-foreground">
-                            <span className="font-medium">Reason:</span> {clientPenalty.reason}
+                            <span className="font-medium">{t('penalty.reason')}:</span> {clientPenalty.reason}
                           </p>
                         )}
                         <p className="text-xs mt-2 text-muted-foreground">
-                          Issued: {format(parseISO(clientPenalty.createdAt), "MMM d, yyyy")}
+                          {t('penalty.issued')}: {format(parseISO(clientPenalty.createdAt), "MMM d, yyyy")}
                         </p>
                       </div>
                     ) : (
                       <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 p-3">
                         <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
                           <CheckCircle2 className="h-4 w-4" />
-                          <span className="text-sm">No active penalties - Client can book appointments</span>
+                          <span className="text-sm">{t('penalty.noActivePenalty')}</span>
                         </div>
                       </div>
                     )}
@@ -896,7 +901,7 @@ export default function ClientsPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        Notes
+                        {t('detail.notes')}
                       </h4>
                       <Button
                         variant="ghost"
@@ -904,7 +909,7 @@ export default function ClientsPage() {
                         onClick={() => handleEditClient(selectedClient)}
                       >
                         <Edit className="h-3 w-3 mr-1" />
-                        Edit
+                        {t('actions.edit')}
                       </Button>
                     </div>
                     {selectedClient.notes ? (
@@ -915,7 +920,7 @@ export default function ClientsPage() {
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground italic">
-                        No notes added yet
+                        {t('detail.noNotes')}
                       </p>
                     )}
                   </div>
@@ -926,7 +931,7 @@ export default function ClientsPage() {
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <History className="h-4 w-4" />
-                      Appointment History
+                      {t('detail.appointmentHistory')}
                     </h4>
                     {appointmentsLoading ? (
                       <div className="space-y-2">
@@ -936,12 +941,12 @@ export default function ClientsPage() {
                       </div>
                     ) : clientAppointments.length === 0 ? (
                       <p className="text-sm text-muted-foreground italic">
-                        No appointment history
+                        {t('detail.noHistory')}
                       </p>
                     ) : (
                       <div className="space-y-2">
                         {clientAppointments.map((apt) => (
-                          <AppointmentHistoryItem key={apt.id} appointment={apt} />
+                          <AppointmentHistoryItem key={apt.id} appointment={apt} tCommon={common} />
                         ))}
                       </div>
                     )}
@@ -956,7 +961,7 @@ export default function ClientsPage() {
                   onClick={() => handleEditClient(selectedClient)}
                 >
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                  {t('actions.edit')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -964,7 +969,7 @@ export default function ClientsPage() {
                   onClick={() => handleDeleteClick(selectedClient)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  {t('actions.delete')}
                 </Button>
               </div>
             </>
@@ -977,49 +982,48 @@ export default function ClientsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingClient ? "Edit Client" : "Add New Client"}
+              {editingClient ? t('form.editTitle') : t('form.addTitle')}
             </DialogTitle>
             <DialogDescription>
               {editingClient
-                ? "Update client information and notes"
-                : "Add a new client to your database"}
+                ? t('form.editDescription')
+                : t('form.addDescription')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t('form.name')} *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder="John Doe"
+                placeholder={t('form.namePlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number *</Label>
+              <Label htmlFor="phone">{t('form.phone')} *</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, phone: e.target.value }))
                 }
-                placeholder="+1 234 567 8900"
+                placeholder={t('form.phonePlaceholder')}
                 disabled={!!editingClient}
               />
               {editingClient && (
                 <p className="text-xs text-muted-foreground">
-                  Phone number cannot be changed as it&apos;s used for client
-                  identification
+                  {t('form.phoneCannotChange')}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('form.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -1027,19 +1031,19 @@ export default function ClientsPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, email: e.target.value }))
                 }
-                placeholder="john@example.com"
+                placeholder={t('form.emailPlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t('form.notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, notes: e.target.value }))
                 }
-                placeholder="Add any notes about this client..."
+                placeholder={t('form.notesPlaceholder')}
                 rows={4}
               />
             </div>
@@ -1047,10 +1051,10 @@ export default function ClientsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleSaveClient} disabled={saving}>
-              {saving ? "Saving..." : editingClient ? "Save Changes" : "Add Client"}
+              {saving ? t('saving') : editingClient ? t('form.saveChanges') : t('addClient')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1060,11 +1064,9 @@ export default function ClientsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Client</DialogTitle>
+            <DialogTitle>{t('delete.title')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">{clientToDelete?.name}</span>? This
-              action cannot be undone and will remove all client data.
+              {t('delete.description', { name: clientToDelete?.name })}
             </DialogDescription>
           </DialogHeader>
 
@@ -1073,14 +1075,14 @@ export default function ClientsPage() {
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteConfirm}
               disabled={deleting}
             >
-              {deleting ? "Deleting..." : "Delete Client"}
+              {deleting ? t('deleting') : t('delete.title')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1090,15 +1092,15 @@ export default function ClientsPage() {
       <Dialog open={penaltyDialogOpen} onOpenChange={setPenaltyDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Penalty</DialogTitle>
+            <DialogTitle>{t('penalty.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              Ban or suspend {selectedClient?.name} from booking appointments
+              {t('penalty.dialogDescription', { name: selectedClient?.name })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Penalty Type</Label>
+              <Label>{t('penalty.penaltyType')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant={penaltyFormData.type === 'ban' ? 'default' : 'outline'}
@@ -1106,7 +1108,7 @@ export default function ClientsPage() {
                   className="justify-start"
                 >
                   <Ban className="h-4 w-4 mr-2" />
-                  Ban (Permanent)
+                  {t('penalty.banPermanent')}
                 </Button>
                 <Button
                   variant={penaltyFormData.type === 'suspension' ? 'default' : 'outline'}
@@ -1114,19 +1116,19 @@ export default function ClientsPage() {
                   className="justify-start"
                 >
                   <CalendarOff className="h-4 w-4 mr-2" />
-                  Suspend (Temporary)
+                  {t('penalty.suspendTemporary')}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
                 {penaltyFormData.type === 'ban' 
-                  ? 'Client will be permanently banned until manually removed' 
-                  : 'Client will be suspended until the specified date'}
+                  ? t('penalty.banHint')
+                  : t('penalty.suspendHint')}
               </p>
             </div>
 
             {penaltyFormData.type === 'suspension' && (
               <div className="space-y-2">
-                <Label htmlFor="expiresAt">Suspend Until *</Label>
+                <Label htmlFor="expiresAt">{t('penalty.suspendUntil')} *</Label>
                 <Input
                   id="expiresAt"
                   type="datetime-local"
@@ -1138,12 +1140,12 @@ export default function ClientsPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="penaltyReason">Reason (Optional)</Label>
+              <Label htmlFor="penaltyReason">{t('penalty.reasonOptional')}</Label>
               <Textarea
                 id="penaltyReason"
                 value={penaltyFormData.reason}
                 onChange={(e) => setPenaltyFormData(prev => ({ ...prev, reason: e.target.value }))}
-                placeholder="e.g., Multiple no-shows, Inappropriate behavior..."
+                placeholder={t('penalty.reasonPlaceholder')}
                 rows={2}
               />
             </div>
@@ -1151,14 +1153,14 @@ export default function ClientsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPenaltyDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button 
               variant="destructive"
               onClick={handleCreatePenalty} 
               disabled={savingPenalty || (penaltyFormData.type === 'suspension' && !penaltyFormData.expiresAt)}
             >
-              {savingPenalty ? "Applying..." : penaltyFormData.type === 'ban' ? "Ban Client" : "Suspend Client"}
+              {savingPenalty ? t('penalty.applying') : penaltyFormData.type === 'ban' ? t('penalty.banClient') : t('penalty.suspendClient')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1168,20 +1170,23 @@ export default function ClientsPage() {
       <Dialog open={removePenaltyDialogOpen} onOpenChange={setRemovePenaltyDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove Penalty</DialogTitle>
+            <DialogTitle>{t('penalty.removeTitle')}</DialogTitle>
             <DialogDescription>
-              Remove the {clientPenalty?.type === PenaltyType.BAN ? 'ban' : 'suspension'} from {selectedClient?.name}
+              {t('penalty.removeDescription', { 
+                type: clientPenalty?.type === PenaltyType.BAN ? t('penalty.banned').toLowerCase() : t('penalty.suspended').toLowerCase(),
+                name: selectedClient?.name 
+              })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="removalReason">Removal Reason (Optional)</Label>
+              <Label htmlFor="removalReason">{t('penalty.removalReasonOptional')}</Label>
               <Textarea
                 id="removalReason"
                 value={removalReason}
                 onChange={(e) => setRemovalReason(e.target.value)}
-                placeholder="e.g., Warning given, Issue resolved..."
+                placeholder={t('penalty.removalReasonPlaceholder')}
                 rows={2}
               />
             </div>
@@ -1189,13 +1194,13 @@ export default function ClientsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setRemovePenaltyDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button 
               onClick={handleRemovePenalty} 
               disabled={removingPenalty}
             >
-              {removingPenalty ? "Removing..." : "Remove Penalty"}
+              {removingPenalty ? t('penalty.removing') : t('penalty.removePenalty')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1205,7 +1210,7 @@ export default function ClientsPage() {
 }
 
 // Stats Cards Component
-function StatsCards({ stats }: { stats: ClientStats }) {
+function StatsCards({ stats, t }: { stats: ClientStats; t: (key: string) => string }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <Card>
@@ -1213,7 +1218,7 @@ function StatsCards({ stats }: { stats: ClientStats }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Total Clients
+                {t('stats.totalClients')}
               </p>
               <p className="text-2xl font-bold">{stats.totalClients}</p>
             </div>
@@ -1229,7 +1234,7 @@ function StatsCards({ stats }: { stats: ClientStats }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                New This Month
+                {t('stats.newThisMonth')}
               </p>
               <p className="text-2xl font-bold">{stats.newClientsThisMonth}</p>
             </div>
@@ -1245,7 +1250,7 @@ function StatsCards({ stats }: { stats: ClientStats }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Repeat Clients
+                {t('stats.repeatClients')}
               </p>
               <p className="text-2xl font-bold">{stats.repeatClients}</p>
             </div>
@@ -1265,11 +1270,13 @@ function ClientRow({
   onView,
   onEdit,
   onDelete,
+  t,
 }: {
   client: Client;
   onView: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
+  t: (key: string) => string;
 }) {
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => onView(client)}>
@@ -1299,14 +1306,14 @@ function ClientRow({
                   variant="destructive" 
                   className="text-xs h-5 px-1.5"
                 >
-                  {client.activePenalty.type === 'ban' ? 'Banned' : 'Suspended'}
+                  {client.activePenalty.type === 'ban' ? t('penalty.banned') : t('penalty.suspended')}
                 </Badge>
               )}
             </div>
             {client.notes && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <StickyNote className="h-3 w-3" />
-                Has notes
+                {t('table.hasNotes')}
               </p>
             )}
           </div>
@@ -1331,7 +1338,7 @@ function ClientRow({
           <Badge variant="secondary">{client.totalAppointments}</Badge>
           {client.completedAppointments > 0 && (
             <span className="text-xs text-green-600">
-              {client.completedAppointments} completed
+              {client.completedAppointments} {t('table.completed')}
             </span>
           )}
         </div>
@@ -1344,7 +1351,7 @@ function ClientRow({
             })}
           </span>
         ) : (
-          <span className="text-sm text-muted-foreground italic">Never</span>
+          <span className="text-sm text-muted-foreground italic">{t('table.never')}</span>
         )}
       </TableCell>
       <TableCell className="text-right">
@@ -1352,19 +1359,19 @@ function ClientRow({
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button variant="ghost" size="icon">
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t('actions.openMenu')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onView(client)}>
               <Eye className="h-4 w-4 mr-2" />
-              View Details
+              {t('actions.viewDetails')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(client)}>
               <Edit className="h-4 w-4 mr-2" />
-              Edit
+              {t('actions.edit')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -1372,7 +1379,7 @@ function ClientRow({
               className="text-red-600 focus:text-red-600"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              {t('actions.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1387,11 +1394,13 @@ function ClientMobileCard({
   onView,
   onEdit,
   onDelete,
+  t,
 }: {
   client: Client;
   onView: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
+  t: (key: string) => string;
 }) {
   return (
     <Card className="cursor-pointer" onClick={() => onView(client)}>
@@ -1422,7 +1431,7 @@ function ClientMobileCard({
                     variant="destructive" 
                     className="text-xs h-5 px-1.5"
                   >
-                    {client.activePenalty.type === 'ban' ? 'Banned' : 'Suspended'}
+                    {client.activePenalty.type === 'ban' ? t('penalty.banned') : t('penalty.suspended')}
                   </Badge>
                 )}
               </div>
@@ -1438,14 +1447,14 @@ function ClientMobileCard({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(client)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Edit
+                {t('actions.edit')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(client)}
                 className="text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                {t('actions.delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1455,12 +1464,12 @@ function ClientMobileCard({
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-              {client.totalAppointments} appointments
+              {client.totalAppointments} {t('appointments')}
             </span>
             {client.notes && (
               <span className="flex items-center gap-1 text-muted-foreground">
                 <StickyNote className="h-3.5 w-3.5" />
-                Notes
+                {t('detail.notes')}
               </span>
             )}
           </div>
@@ -1478,43 +1487,48 @@ function ClientMobileCard({
 }
 
 // Appointment History Item
-function AppointmentHistoryItem({ appointment }: { appointment: Appointment }) {
+function AppointmentHistoryItem({ appointment, tCommon }: { appointment: Appointment; tCommon: (key: string) => string }) {
   const startTime = parseISO(appointment.startTime);
 
   const statusConfig: Record<
     AppointmentStatus,
-    { icon: React.ReactNode; color: string }
+    { icon: React.ReactNode; color: string; labelKey: string }
   > = {
     [AppointmentStatus.PENDING_CONFIRMATION]: {
       icon: <AlertCircle className="h-3 w-3" />,
       color: "text-yellow-600",
+      labelKey: "pending",
     },
     [AppointmentStatus.CONFIRMED]: {
       icon: <CheckCircle2 className="h-3 w-3" />,
       color: "text-blue-600",
+      labelKey: "confirmed",
     },
     [AppointmentStatus.COMPLETED]: {
       icon: <CheckCircle2 className="h-3 w-3" />,
       color: "text-green-600",
+      labelKey: "completed",
     },
     [AppointmentStatus.CANCELLED]: {
       icon: <XCircle className="h-3 w-3" />,
       color: "text-red-600",
+      labelKey: "cancelled",
     },
     [AppointmentStatus.NO_SHOW]: {
       icon: <AlertCircle className="h-3 w-3" />,
       color: "text-orange-600",
+      labelKey: "noShow",
     },
   };
 
-  const { icon, color } = statusConfig[appointment.status];
+  const { icon, color, labelKey } = statusConfig[appointment.status];
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
       <div className={`${color}`}>{icon}</div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">
-          {appointment.serviceOption?.title || "Service"}
+          {appointment.serviceOption?.title || tCommon('service')}
         </p>
         <p className="text-xs text-muted-foreground">
           {format(startTime, "MMM d, yyyy 'at' h:mm a")}
@@ -1530,16 +1544,17 @@ function AppointmentHistoryItem({ appointment }: { appointment: Appointment }) {
         }
         className="text-xs"
       >
-        {appointment.status.replace("_", " ")}
+        {tCommon(`status.${labelKey}`)}
       </Badge>
     </div>
   );
 }
 
 // Pagination Component
-function Pagination({
+function PaginationComponent({
   pagination,
   onPageChange,
+  t,
 }: {
   pagination: {
     total: number;
@@ -1550,6 +1565,7 @@ function Pagination({
     hasPreviousPage: boolean;
   };
   onPageChange: (page: number) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const startItem = (pagination.page - 1) * pagination.limit + 1;
   const endItem = Math.min(pagination.page * pagination.limit, pagination.total);
@@ -1559,9 +1575,7 @@ function Pagination({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t">
       <p className="text-sm text-muted-foreground">
-        Showing <span className="font-medium">{startItem}</span> to{" "}
-        <span className="font-medium">{endItem}</span> of{" "}
-        <span className="font-medium">{pagination.total}</span> clients
+        {t('showingClients', { start: startItem, end: endItem, total: pagination.total })}
       </p>
 
       <div className="flex items-center gap-2">
@@ -1572,7 +1586,7 @@ function Pagination({
           disabled={!pagination.hasPreviousPage}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
+          {t('previous')}
         </Button>
 
         <div className="flex items-center gap-1">
@@ -1608,7 +1622,7 @@ function Pagination({
           onClick={() => onPageChange(pagination.page + 1)}
           disabled={!pagination.hasNextPage}
         >
-          Next
+          {t('next')}
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
@@ -1617,20 +1631,19 @@ function Pagination({
 }
 
 // Empty State Component
-function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
+function EmptyState({ onCreateClick, t }: { onCreateClick: () => void; t: (key: string) => string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="rounded-full bg-muted p-4 mb-4">
         <Users className="h-8 w-8 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold mb-1">No clients yet</h3>
+      <h3 className="text-lg font-semibold mb-1">{t('empty.title')}</h3>
       <p className="text-sm text-muted-foreground max-w-sm mb-4">
-        Clients will be automatically added when they book their first
-        appointment, or you can add them manually.
+        {t('empty.description')}
       </p>
       <Button onClick={onCreateClick}>
         <UserPlus className="h-4 w-4 mr-2" />
-        Add Your First Client
+        {t('empty.addFirst')}
       </Button>
     </div>
   );
