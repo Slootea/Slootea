@@ -36,6 +36,9 @@ import {
   AlertCircle,
   Loader2,
   Settings,
+  Info,
+  Copy,
+  FileText,
 } from "lucide-react";
 
 interface ConnectFormData {
@@ -60,6 +63,28 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
   const [saving, setSaving] = useState(false);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [connectingWhatsApp, setConnectingWhatsApp] = useState(false);
+  const [templatesInfoOpen, setTemplatesInfoOpen] = useState(false);
+
+  // Required Meta WhatsApp templates
+  const requiredTemplates = [
+    { name: "appointment_created", description: "Sent when a new appointment is booked" },
+    { name: "appointment_reminder_24h", description: "Sent 24 hours before appointment" },
+    { name: "appointment_reminder_1h", description: "Sent 1 hour before appointment" },
+    { name: "appointment_canceled", description: "Sent when appointment is canceled" },
+    { name: "appointment_rescheduled", description: "Sent when appointment is rescheduled" },
+  ];
+
+  // Available template variables (order matters - Meta uses {{1}}, {{2}}, etc.)
+  const templateVariables = [
+    { order: 1, variable: "{{clientName}}", description: "Client's name" },
+    { order: 2, variable: "{{serviceName}}", description: "Service/appointment type" },
+    { order: 3, variable: "{{appointmentDate}}", description: "Date (e.g., 15 Şubat 2026)" },
+    { order: 4, variable: "{{appointmentTime}}", description: "Time (e.g., 14:30)" },
+    { order: 5, variable: "{{providerName}}", description: "Provider/staff name" },
+    { order: 6, variable: "{{organizationName}}", description: "Business name" },
+    { order: 7, variable: "{{appointmentLink}}", description: "Link to view appointment" },
+    { order: 8, variable: "{{confirmationLink}}", description: "Link to confirm appointment" },
+  ];
 
   // Form state for WhatsApp connection
   const [connectForm, setConnectForm] = useState<ConnectFormData>({
@@ -225,6 +250,268 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
                 onCheckedChange={handleToggleEnabled}
                 disabled={saving}
               />
+              {/* Templates Info Dialog */}
+              <Dialog open={templatesInfoOpen} onOpenChange={setTemplatesInfoOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="View required templates"
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>WhatsApp Message Templates Setup</DialogTitle>
+                    <DialogDescription>
+                      Create these templates in your{" "}
+                      <a
+                        href="https://business.facebook.com/wa/manage/message-templates"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline text-primary"
+                      >
+                        Meta Business Manager
+                      </a>{" "}
+                      with exactly 8 body parameters.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-6 py-4">
+                    {/* Required Templates */}
+                    <div>
+                      <h4 className="font-semibold text-sm mb-3">Required Template Names</h4>
+                      <div className="space-y-2">
+                        {requiredTemplates.map((template) => (
+                          <div
+                            key={template.name}
+                            className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                          >
+                            <div>
+                              <code className="text-sm font-mono bg-background px-2 py-1 rounded">
+                                {template.name}
+                              </code>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {template.description}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(template.name);
+                                toast({ title: "Copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Template Variables */}
+                    <div>
+                      <h4 className="font-semibold text-sm mb-3">Available Variables (8 Parameters)</h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        These variables are sent in order. In Meta templates, use {`{{1}}`}, {`{{2}}`}, etc.
+                      </p>
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="px-3 py-2 text-left font-medium">#</th>
+                              <th className="px-3 py-2 text-left font-medium">Variable</th>
+                              <th className="px-3 py-2 text-left font-medium">Description</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {templateVariables.map((v, index) => (
+                              <tr
+                                key={v.variable}
+                                className={index % 2 === 0 ? "bg-background" : "bg-muted/30"}
+                              >
+                                <td className="px-3 py-2 text-muted-foreground">{v.order}</td>
+                                <td className="px-3 py-2">
+                                  <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">
+                                    {v.variable}
+                                  </code>
+                                </td>
+                                <td className="px-3 py-2 text-muted-foreground">{v.description}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Example Templates */}
+                    <div>
+                      <h4 className="font-semibold text-sm mb-3">Example Template Bodies</h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Copy these templates to Meta Business Manager. Each template must not start or end with a variable.
+                      </p>
+                      <div className="space-y-4">
+                        {/* appointment_created */}
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_created</code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`Merhaba {{clientName}}! {{serviceName}} randevunuz {{appointmentDate}} tarihinde saat {{appointmentTime}} için onaylandı.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\nOnay: {{confirmationLink}}\n\nGörüşmek üzere!`);
+                                toast({ title: "Copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Merhaba {{clientName}}! {{serviceName}} randevunuz {{appointmentDate}} tarihinde saat {{appointmentTime}} için onaylandı.
+
+Hizmet Sağlayıcı: {{providerName}}
+İşletme: {{organizationName}}
+
+Detaylar: {{appointmentLink}}
+Onay: {{confirmationLink}}
+
+Görüşmek üzere!`}</pre>
+                        </div>
+
+                        {/* appointment_reminder_24h */}
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_reminder_24h</code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`Hatırlatma: Merhaba {{clientName}}! Yarın {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\n\nSizi bekliyoruz!`);
+                                toast({ title: "Copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Hatırlatma: Merhaba {{clientName}}! Yarın {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.
+
+Hizmet Sağlayıcı: {{providerName}}
+İşletme: {{organizationName}}
+
+Detaylar: {{appointmentLink}}
+
+Sizi bekliyoruz!`}</pre>
+                        </div>
+
+                        {/* appointment_reminder_1h */}
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_reminder_1h</code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`Son Hatırlatma: Merhaba {{clientName}}! {{serviceName}} randevunuz 1 saat içinde, saat {{appointmentTime}} için başlayacak.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\n\nBirazdan görüşürüz!`);
+                                toast({ title: "Copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Son Hatırlatma: Merhaba {{clientName}}! {{serviceName}} randevunuz 1 saat içinde, saat {{appointmentTime}} için başlayacak.
+
+Hizmet Sağlayıcı: {{providerName}}
+İşletme: {{organizationName}}
+
+Detaylar: {{appointmentLink}}
+
+Birazdan görüşürüz!`}</pre>
+                        </div>
+
+                        {/* appointment_canceled */}
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_canceled</code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`Randevu İptali: Merhaba {{clientName}}, {{appointmentDate}} tarihinde saat {{appointmentTime}} için planlanmış {{serviceName}} randevunuz iptal edilmiştir.\n\nİşletme: {{organizationName}}\n\nYeni randevu için: {{appointmentLink}}\n\nAnlayışınız için teşekkür ederiz.`);
+                                toast({ title: "Copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Randevu İptali: Merhaba {{clientName}}, {{appointmentDate}} tarihinde saat {{appointmentTime}} için planlanmış {{serviceName}} randevunuz iptal edilmiştir.
+
+İşletme: {{organizationName}}
+
+Yeni randevu için: {{appointmentLink}}
+
+Anlayışınız için teşekkür ederiz.`}</pre>
+                        </div>
+
+                        {/* appointment_rescheduled */}
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_rescheduled</code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`Randevu Güncellendi: Merhaba {{clientName}}! {{serviceName}} randevunuz yeni tarihe alınmıştır: {{appointmentDate}}, saat {{appointmentTime}}.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\nOnay: {{confirmationLink}}\n\nGörüşmek üzere!`);
+                                toast({ title: "Copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Randevu Güncellendi: Merhaba {{clientName}}! {{serviceName}} randevunuz yeni tarihe alınmıştır: {{appointmentDate}}, saat {{appointmentTime}}.
+
+Hizmet Sağlayıcı: {{providerName}}
+İşletme: {{organizationName}}
+
+Detaylar: {{appointmentLink}}
+Onay: {{confirmationLink}}
+
+Görüşmek üzere!`}</pre>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200">
+                      <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium">Important Notes</p>
+                        <ul className="mt-2 space-y-1 list-disc list-inside">
+                          <li>Template names must match exactly as shown above</li>
+                          <li>Templates must be approved by Meta before use</li>
+                          <li>All 8 parameters will be sent in order, use only what you need</li>
+                          <li>Set template language to match your organization&apos;s language setting</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setTemplatesInfoOpen(false)}>
+                      Close
+                    </Button>
+                    <Button asChild>
+                      <a
+                        href="https://business.facebook.com/wa/manage/message-templates"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open Meta Business Manager
+                      </a>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <Button
                 variant="ghost"
                 size="icon"

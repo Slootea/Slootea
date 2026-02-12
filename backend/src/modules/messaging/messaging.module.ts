@@ -13,9 +13,6 @@ import {
   OrganizationNotificationParameters,
 } from '../notification-settings/entities/organization-notification-parameters.entity';
 import {
-  OrganizationWhatsAppTemplate,
-} from '../notification-settings/entities/organization-whatsapp-template.entity';
-import {
   OrganizationSmsSettings,
 } from '../notification-settings/entities/organization-sms-settings.entity';
 import {
@@ -32,7 +29,6 @@ import { MessageTemplateService } from '../notification-settings/message-templat
     TypeOrmModule.forFeature([
       OrganizationWhatsAppSettings,
       OrganizationNotificationParameters,
-      OrganizationWhatsAppTemplate,
       OrganizationSmsSettings,
       OrganizationEmailSettings,
       OrganizationMessageTemplate,

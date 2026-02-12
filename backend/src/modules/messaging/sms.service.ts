@@ -358,13 +358,20 @@ export class SmsService {
 
       const credentials = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 
+      this.logger.debug('Twilio SMS request', {
+        url,
+        to: formattedPhone,
+        messagingServiceSid,
+        bodyLength: body.length,
+      });
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${credentials}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: params,
+        body: params.toString(),
       });
 
       const responseData = await response.json();

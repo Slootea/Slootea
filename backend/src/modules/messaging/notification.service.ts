@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WhatsAppService, AppointmentNotificationData as WhatsAppNotificationData } from './whatsapp.service';
+import { WhatsAppService, AppointmentNotificationData as WhatsAppNotificationData, WhatsAppEventType } from './whatsapp.service';
 import { SmsService, SmsNotificationData } from './sms.service';
 import { EmailService, EmailNotificationData } from './email.service';
-import { WhatsAppEventType } from '../notification-settings/entities/organization-whatsapp-template.entity';
 
 /**
  * Notification event types (unified across all channels)

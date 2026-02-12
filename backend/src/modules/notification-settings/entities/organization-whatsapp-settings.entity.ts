@@ -42,6 +42,9 @@ export class OrganizationWhatsAppSettings {
   @Column({ type: 'varchar', length: 20, nullable: true, comment: 'Connected phone number (display only)' })
   displayPhoneNumber: string | null;
 
+  @Column({ type: 'varchar', length: 10, default: 'tr', comment: 'Language code for WhatsApp templates (e.g., tr, en, en_US)' })
+  templateLanguage: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
