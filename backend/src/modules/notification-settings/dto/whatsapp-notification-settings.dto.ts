@@ -12,15 +12,10 @@ export class NotificationParametersDto {
   @IsOptional()
   appointmentCreated?: boolean;
 
-  @ApiProperty({ description: 'Send reminder 24 hours before appointment' })
+  @ApiProperty({ description: 'Send appointment reminder notifications' })
   @IsBoolean()
   @IsOptional()
-  reminder24h?: boolean;
-
-  @ApiProperty({ description: 'Send reminder 1 hour before appointment' })
-  @IsBoolean()
-  @IsOptional()
-  reminder1h?: boolean;
+  appointmentReminder?: boolean;
 
   @ApiProperty({ description: 'Send notification when appointment is canceled' })
   @IsBoolean()
@@ -81,7 +76,7 @@ export class AssignWhatsAppTemplateDto {
   @ApiProperty({ 
     description: 'Event type for this template',
     enum: WhatsAppEventType,
-    example: WhatsAppEventType.REMINDER_24H,
+    example: WhatsAppEventType.APPOINTMENT_REMINDER,
   })
   @IsEnum(WhatsAppEventType)
   eventType: WhatsAppEventType;
@@ -131,8 +126,7 @@ export class WhatsAppNotificationSettingsResponseDto {
   @ApiProperty({ description: 'Notification parameters' })
   parameters: {
     appointmentCreated: boolean;
-    reminder24h: boolean;
-    reminder1h: boolean;
+    appointmentReminder: boolean;
     appointmentCanceled: boolean;
     appointmentRescheduled: boolean;
   };

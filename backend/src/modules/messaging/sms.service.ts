@@ -17,8 +17,7 @@ import { MessageTemplateType } from '../notification-settings/entities/organizat
  */
 export enum SmsEventType {
   APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
-  REMINDER_24H = 'REMINDER_24H',
-  REMINDER_1H = 'REMINDER_1H',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
   APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
@@ -174,10 +173,8 @@ export class SmsService {
     switch (eventType) {
       case SmsEventType.APPOINTMENT_CREATED:
         return params.appointmentCreated;
-      case SmsEventType.REMINDER_24H:
-        return params.reminder24h;
-      case SmsEventType.REMINDER_1H:
-        return params.reminder1h;
+      case SmsEventType.APPOINTMENT_REMINDER:
+        return params.appointmentReminder;
       case SmsEventType.APPOINTMENT_CANCELED:
         return params.appointmentCanceled;
       case SmsEventType.APPOINTMENT_RESCHEDULED:
@@ -194,8 +191,7 @@ export class SmsService {
     switch (eventType) {
       case SmsEventType.APPOINTMENT_CREATED:
         return MessageTemplateType.APPOINTMENT_BOOKED;
-      case SmsEventType.REMINDER_24H:
-      case SmsEventType.REMINDER_1H:
+      case SmsEventType.APPOINTMENT_REMINDER:
         return MessageTemplateType.APPOINTMENT_REMINDER;
       case SmsEventType.APPOINTMENT_CANCELED:
         return MessageTemplateType.APPOINTMENT_CANCELED;
@@ -272,11 +268,8 @@ export class SmsService {
         msg += ` - ${orgName}`;
         return msg;
 
-      case SmsEventType.REMINDER_24H:
-        return `Hi ${data.clientName}, reminder: your ${data.serviceName} appointment is tomorrow (${formattedDate}).${data.providerName ? ` Provider: ${data.providerName}.` : ''} - ${orgName}`;
-
-      case SmsEventType.REMINDER_1H:
-        return `Hi ${data.clientName}, your ${data.serviceName} appointment starts in 1 hour (${formattedDate}).${data.providerName ? ` Provider: ${data.providerName}.` : ''} See you soon! - ${orgName}`;
+      case SmsEventType.APPOINTMENT_REMINDER:
+        return `Hi ${data.clientName}, reminder: your ${data.serviceName} appointment is on ${formattedDate}.${data.providerName ? ` Provider: ${data.providerName}.` : ''} See you soon! - ${orgName}`;
 
       case SmsEventType.APPOINTMENT_CANCELED:
         return `Hi ${data.clientName}, your ${data.serviceName} appointment on ${formattedDate} has been cancelled.${data.cancellationReason ? ` Reason: ${data.cancellationReason}` : ''} Please rebook if needed. - ${orgName}`;
@@ -448,17 +441,10 @@ export class SmsService {
   }
 
   /**
-   * Send 24-hour reminder notification
+   * Send appointment reminder notification
    */
-  async sendReminder24hNotification(data: SmsNotificationData): Promise<SmsSendResult> {
-    return this.sendAppointmentNotification(SmsEventType.REMINDER_24H, data);
-  }
-
-  /**
-   * Send 1-hour reminder notification
-   */
-  async sendReminder1hNotification(data: SmsNotificationData): Promise<SmsSendResult> {
-    return this.sendAppointmentNotification(SmsEventType.REMINDER_1H, data);
+  async sendAppointmentReminderNotification(data: SmsNotificationData): Promise<SmsSendResult> {
+    return this.sendAppointmentNotification(SmsEventType.APPOINTMENT_REMINDER, data);
   }
 
   /**

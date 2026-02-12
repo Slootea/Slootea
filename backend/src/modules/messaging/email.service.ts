@@ -20,8 +20,7 @@ import { MessageTemplateType } from '../notification-settings/entities/organizat
 export enum EmailEventType {
   APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
   APPOINTMENT_UPDATED = 'APPOINTMENT_UPDATED',
-  REMINDER_24H = 'REMINDER_24H',
-  REMINDER_1H = 'REMINDER_1H',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
   APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
@@ -142,10 +141,8 @@ export class EmailService {
     switch (eventType) {
       case EmailEventType.APPOINTMENT_CREATED:
         return params.appointmentCreated;
-      case EmailEventType.REMINDER_24H:
-        return params.reminder24h;
-      case EmailEventType.REMINDER_1H:
-        return params.reminder1h;
+      case EmailEventType.APPOINTMENT_REMINDER:
+        return params.appointmentReminder;
       case EmailEventType.APPOINTMENT_CANCELED:
         return params.appointmentCanceled;
       case EmailEventType.APPOINTMENT_RESCHEDULED:
@@ -330,8 +327,7 @@ export class EmailService {
       case EmailEventType.APPOINTMENT_UPDATED:
       case EmailEventType.APPOINTMENT_RESCHEDULED:
         return MessageTemplateType.APPOINTMENT_UPDATED;
-      case EmailEventType.REMINDER_24H:
-      case EmailEventType.REMINDER_1H:
+      case EmailEventType.APPOINTMENT_REMINDER:
         return MessageTemplateType.APPOINTMENT_REMINDER;
       case EmailEventType.APPOINTMENT_CANCELED:
         return MessageTemplateType.APPOINTMENT_CANCELED;
@@ -405,17 +401,10 @@ export class EmailService {
   }
 
   /**
-   * Send 24-hour reminder notification
+   * Send appointment reminder notification
    */
-  async sendReminder24hNotification(data: EmailNotificationData): Promise<EmailSendResult> {
-    return this.sendAppointmentNotification(EmailEventType.REMINDER_24H, data);
-  }
-
-  /**
-   * Send 1-hour reminder notification
-   */
-  async sendReminder1hNotification(data: EmailNotificationData): Promise<EmailSendResult> {
-    return this.sendAppointmentNotification(EmailEventType.REMINDER_1H, data);
+  async sendAppointmentReminderNotification(data: EmailNotificationData): Promise<EmailSendResult> {
+    return this.sendAppointmentNotification(EmailEventType.APPOINTMENT_REMINDER, data);
   }
 
   /**

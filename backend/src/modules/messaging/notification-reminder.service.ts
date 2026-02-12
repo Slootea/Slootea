@@ -41,7 +41,7 @@ export class NotificationReminderService {
     const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
     const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
-    await this.sendReminders(windowStart, windowEnd, NotificationEventType.REMINDER_24H, '24h');
+    await this.sendReminders(windowStart, windowEnd, NotificationEventType.APPOINTMENT_REMINDER, '24h');
   }
 
   /**
@@ -57,7 +57,7 @@ export class NotificationReminderService {
     const windowStart = new Date(now.getTime() + 55 * 60 * 1000);
     const windowEnd = new Date(now.getTime() + 65 * 60 * 1000);
 
-    await this.sendReminders(windowStart, windowEnd, NotificationEventType.REMINDER_1H, '1h');
+    await this.sendReminders(windowStart, windowEnd, NotificationEventType.APPOINTMENT_REMINDER, '1h');
   }
 
   /**
@@ -111,7 +111,7 @@ export class NotificationReminderService {
 
         // For 24h reminders, check if we haven't already sent one
         // We use a simple heuristic: if reminderSentAt is recent (within last 23 hours), skip
-        if (eventType === NotificationEventType.REMINDER_24H && appointment.reminderSentAt) {
+        if (reminderType === '24h' && appointment.reminderSentAt) {
           const hoursSinceReminder = (Date.now() - appointment.reminderSentAt.getTime()) / (60 * 60 * 1000);
           if (hoursSinceReminder < 23) {
             this.logger.debug(`24h reminder already sent for appointment ${appointment.id}`);
@@ -121,7 +121,7 @@ export class NotificationReminderService {
 
         // For 1h reminders, we should have sent 24h reminder first
         // If reminderSentAt is null or too old (more than 26 hours), still send 1h reminder
-        if (eventType === NotificationEventType.REMINDER_1H) {
+        if (reminderType === '1h') {
           if (!appointment.reminderSentAt) {
             // No 24h reminder was sent - still send 1h reminder but log it
             this.logger.debug(`No 24h reminder was sent for appointment ${appointment.id}, sending 1h reminder anyway`);
@@ -187,11 +187,11 @@ export class NotificationReminderService {
     if (type === '24h') {
       windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
       windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
-      eventType = NotificationEventType.REMINDER_24H;
+      eventType = NotificationEventType.APPOINTMENT_REMINDER;
     } else {
       windowStart = new Date(now.getTime() + 55 * 60 * 1000);
       windowEnd = new Date(now.getTime() + 65 * 60 * 1000);
-      eventType = NotificationEventType.REMINDER_1H;
+      eventType = NotificationEventType.APPOINTMENT_REMINDER;
     }
 
     await this.sendReminders(windowStart, windowEnd, eventType, type);

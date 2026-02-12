@@ -856,6 +856,34 @@
           "emailSubject": "{{organizationName}} - Randevu İptal Edildi",
           "messageContent": "Merhaba {{clientName}},\n\nRandevunuz iptal edilmiştir.\n\n📅 Eski Tarih: {{appointmentDate}}\n⏰ Eski Saat: {{appointmentTime}}\n📋 Hizmet: {{serviceName}}\n\nYeniden randevu almak isterseniz lütfen yeni bir randevu oluşturun.\n\nSaygılarımızla,\n{{organizationName}}"
         }
+      },
+      "whatsApp": {
+        "title": "WhatsApp Business Şablonu",
+        "notConnected": "WhatsApp Business bağlı değil",
+        "connectHint": "Şablonları oluşturmak ve yönetmek için bildirim ayarlarından WhatsApp Business'ı bağlayın.",
+        "sync": "WhatsApp Senkronize Et",
+        "syncSuccess": "WhatsApp şablonları senkronize edildi",
+        "syncFailed": "Şablonlar senkronize edilemedi",
+        "create": "WhatsApp'ta Oluştur",
+        "recreate": "Şablonu Yeniden Oluştur",
+        "link": "Mevcut Olanı Bağla",
+        "createSuccess": "WhatsApp şablonu oluşturuldu",
+        "createFailed": "Şablon oluşturulamadı",
+        "pendingApproval": "Şablon Meta onayına gönderildi",
+        "linkSuccess": "Şablon başarıyla bağlandı",
+        "linkFailed": "Şablon bağlanamadı",
+        "createDialogTitle": "WhatsApp Business Şablonu Oluştur",
+        "createDialogDescription": "Bu, WhatsApp Business hesabınızda yeni bir şablon oluşturacak ve Meta onayına gönderecektir. Onaylandıktan sonra bildirim göndermek için kullanılabilir.",
+        "language": "Şablon Dili",
+        "approvalNote": "Not: WhatsApp şablonları genellikle 24-48 saat süren Meta onayı gerektirir. Şablon, mevcut mesaj içeriğiniz kullanılarak gönderilecektir.",
+        "creating": "Oluşturuluyor...",
+        "createAndSubmit": "Oluştur ve Onaya Gönder",
+        "linkDialogTitle": "Mevcut WhatsApp Şablonunu Bağla",
+        "linkDialogDescription": "Bu bildirim türü için kullanmak üzere WhatsApp Business hesabınızdan mevcut onaylı bir şablon seçin.",
+        "selectTemplate": "Şablon Seç",
+        "selectTemplatePlaceholder": "Bir şablon seçin...",
+        "noApprovedTemplates": "Onaylı şablon bulunamadı. Bunun yerine yeni bir şablon oluşturun.",
+        "linkTemplate": "Şablonu Bağla"
       }
     },
     "timezone": {

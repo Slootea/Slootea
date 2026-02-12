@@ -443,49 +443,14 @@ export default function OrganizationSettingsPage() {
           <CardDescription>{t('notifications.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="sendEmailReminders">
-                {t('notifications.sendEmailNotifications')}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {t('notifications.sendEmailNotificationsHint')}
-              </p>
-            </div>
-            <Switch
-              id="sendEmailReminders"
-              checked={settings.sendEmailReminders}
-              onCheckedChange={(checked) =>
-                setSettings({ ...settings, sendEmailReminders: checked })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="sendSmsReminders">
-                {t('notifications.sendSmsNotifications')}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {t('notifications.sendSmsNotificationsHint')}
-              </p>
-            </div>
-            <Switch
-              id="sendSmsReminders"
-              checked={settings.sendSmsReminders}
-              onCheckedChange={(checked) =>
-                setSettings({ ...settings, sendSmsReminders: checked })
-              }
-            />
-          </div>
-
+          {/* Email and SMS toggles hidden - only WhatsApp enabled for now */}
           {/* WhatsApp */}
           <WhatsAppChannelSettings />
         </CardContent>
       </Card>
 
-      {/* Message Templates */}
-      <MessageTemplatesCard />
+      {/* Message Templates - hidden for now */}
+      {/* <MessageTemplatesCard /> */}
 
       {/* Timezone Settings */}
       <Card>

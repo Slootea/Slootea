@@ -54,8 +54,7 @@ export class SmsNotificationSettingsResponseDto {
   @ApiProperty({ description: 'Notification parameters' })
   parameters: {
     appointmentCreated: boolean;
-    reminder24h: boolean;
-    reminder1h: boolean;
+    appointmentReminder: boolean;
     appointmentCanceled: boolean;
     appointmentRescheduled: boolean;
   };

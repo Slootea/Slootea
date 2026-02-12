@@ -856,6 +856,34 @@
           "emailSubject": "{{organizationName}} - Appointment Canceled",
           "messageContent": "Hi {{clientName}},\n\nYour appointment has been canceled.\n\n📅 Original Date: {{appointmentDate}}\n⏰ Original Time: {{appointmentTime}}\n📋 Service: {{serviceName}}\n\nIf you would like to reschedule, please book a new appointment.\n\nBest regards,\n{{organizationName}}"
         }
+      },
+      "whatsApp": {
+        "title": "WhatsApp Business Template",
+        "notConnected": "WhatsApp Business not connected",
+        "connectHint": "Connect WhatsApp Business in notification settings to create and manage templates.",
+        "sync": "Sync WhatsApp",
+        "syncSuccess": "WhatsApp templates synced",
+        "syncFailed": "Failed to sync templates",
+        "create": "Create in WhatsApp",
+        "recreate": "Recreate Template",
+        "link": "Link Existing",
+        "createSuccess": "WhatsApp template created",
+        "createFailed": "Failed to create template",
+        "pendingApproval": "Template submitted for Meta approval",
+        "linkSuccess": "Template linked successfully",
+        "linkFailed": "Failed to link template",
+        "createDialogTitle": "Create WhatsApp Business Template",
+        "createDialogDescription": "This will create a new template in your WhatsApp Business account and submit it for Meta approval. Once approved, it can be used to send notifications.",
+        "language": "Template Language",
+        "approvalNote": "Note: WhatsApp templates require Meta approval which typically takes 24-48 hours. The template will be submitted using your current message content.",
+        "creating": "Creating...",
+        "createAndSubmit": "Create & Submit for Approval",
+        "linkDialogTitle": "Link Existing WhatsApp Template",
+        "linkDialogDescription": "Select an existing approved template from your WhatsApp Business account to use for this notification type.",
+        "selectTemplate": "Select Template",
+        "selectTemplatePlaceholder": "Choose a template...",
+        "noApprovedTemplates": "No approved templates found. Create a new template instead.",
+        "linkTemplate": "Link Template"
       }
     },
     "timezone": {

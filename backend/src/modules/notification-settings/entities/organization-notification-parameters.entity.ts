@@ -24,11 +24,8 @@ export class OrganizationNotificationParameters {
   @Column({ default: true, comment: 'Send notification when appointment is created' })
   appointmentCreated: boolean;
 
-  @Column({ default: true, comment: 'Send reminder 24 hours before appointment' })
-  reminder24h: boolean;
-
-  @Column({ default: true, comment: 'Send reminder 1 hour before appointment' })
-  reminder1h: boolean;
+  @Column({ default: true, comment: 'Send reminder before appointment' })
+  appointmentReminder: boolean;
 
   @Column({ default: true, comment: 'Send notification when appointment is canceled' })
   appointmentCanceled: boolean;

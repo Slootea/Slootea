@@ -338,8 +338,7 @@ export const notificationSettingsApi = {
     enabled: boolean;
     parameters: {
       appointmentCreated?: boolean;
-      reminder24h?: boolean;
-      reminder1h?: boolean;
+      appointmentReminder?: boolean;
       appointmentCanceled?: boolean;
     };
   }) => api.put(`/organizations/${orgId}/notification-settings/whatsapp`, data),
@@ -368,6 +367,70 @@ export const notificationSettingsApi = {
   // Delete template assignment
   deleteTemplate: (orgId: string, templateId: string) =>
     api.delete(`/organizations/${orgId}/notification-settings/whatsapp/templates/${templateId}`),
+  
+  // ==================== WhatsApp Business Templates (Meta Graph API) ====================
+  
+  // List all WhatsApp Business templates from Meta
+  listBusinessTemplates: (orgId: string) =>
+    api.get(`/organizations/${orgId}/notification-settings/whatsapp/business-templates`),
+  
+  // Create a new WhatsApp Business template in Meta
+  createBusinessTemplate: (orgId: string, data: {
+    name: string;
+    language: string;
+    category: 'UTILITY' | 'MARKETING' | 'AUTHENTICATION';
+    components: Array<{
+      type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
+      format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+      text?: string;
+      example?: {
+        header_text?: string[];
+        body_text?: string[][];
+      };
+      buttons?: Array<{
+        type: 'PHONE_NUMBER' | 'URL' | 'QUICK_REPLY';
+        text: string;
+        phone_number?: string;
+        url?: string;
+      }>;
+    }>;
+  }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/business-templates`, data),
+  
+  // Create a WhatsApp Business template from local message content
+  createBusinessTemplateFromMessage: (orgId: string, data: {
+    eventType: string;
+    messageContent: string;
+    language: string;
+    templateName?: string;
+  }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/from-message`, data),
+  
+  // Update a WhatsApp Business template in Meta
+  updateBusinessTemplate: (orgId: string, templateId: string, data: {
+    components: Array<{
+      type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
+      format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+      text?: string;
+      example?: {
+        header_text?: string[];
+        body_text?: string[][];
+      };
+    }>;
+  }) => api.put(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/${templateId}`, data),
+  
+  // Delete a WhatsApp Business template from Meta
+  deleteBusinessTemplate: (orgId: string, templateName: string) =>
+    api.delete(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/${templateName}`),
+  
+  // Sync templates from Meta to local database
+  syncBusinessTemplates: (orgId: string) =>
+    api.post(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/sync`),
+  
+  // Link an existing Meta template to a local event type
+  linkTemplateToEvent: (orgId: string, data: {
+    eventType: string;
+    templateName: string;
+    languageCode: string;
+  }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/link`, data),
 };
 
 // Message Templates API

@@ -116,10 +116,10 @@ export class OrganizationSettings {
   cancellationPolicy: string;
 
   // Notification Settings
-  @Column({ default: true })
+  @Column({ default: false })
   sendEmailReminders: boolean;
 
-  @Column({ default: true })
+  @Column({ default: false })
   sendSmsReminders: boolean;
 
   @Column({

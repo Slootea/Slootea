@@ -17,8 +17,7 @@ import * as crypto from 'crypto';
  */
 export enum WhatsAppEventType {
   APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
-  REMINDER_24H = 'REMINDER_24H',
-  REMINDER_1H = 'REMINDER_1H',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
   APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
@@ -208,10 +207,8 @@ export class WhatsAppService {
     switch (eventType) {
       case WhatsAppEventType.APPOINTMENT_CREATED:
         return params.appointmentCreated;
-      case WhatsAppEventType.REMINDER_24H:
-        return params.reminder24h;
-      case WhatsAppEventType.REMINDER_1H:
-        return params.reminder1h;
+      case WhatsAppEventType.APPOINTMENT_REMINDER:
+        return params.appointmentReminder;
       case WhatsAppEventType.APPOINTMENT_CANCELED:
         return params.appointmentCanceled;
       case WhatsAppEventType.APPOINTMENT_RESCHEDULED:
@@ -228,8 +225,7 @@ export class WhatsAppService {
     switch (eventType) {
       case WhatsAppEventType.APPOINTMENT_CREATED:
         return MessageTemplateType.APPOINTMENT_BOOKED;
-      case WhatsAppEventType.REMINDER_24H:
-      case WhatsAppEventType.REMINDER_1H:
+      case WhatsAppEventType.APPOINTMENT_REMINDER:
         return MessageTemplateType.APPOINTMENT_REMINDER;
       case WhatsAppEventType.APPOINTMENT_CANCELED:
         return MessageTemplateType.APPOINTMENT_CANCELED;
@@ -304,10 +300,8 @@ export class WhatsAppService {
     switch (eventType) {
       case WhatsAppEventType.APPOINTMENT_CREATED:
         return `Hi ${data.clientName}, your ${data.serviceName} appointment is confirmed for ${formattedDate}. - ${orgName}`;
-      case WhatsAppEventType.REMINDER_24H:
-        return `Hi ${data.clientName}, reminder: your ${data.serviceName} appointment is tomorrow (${formattedDate}). - ${orgName}`;
-      case WhatsAppEventType.REMINDER_1H:
-        return `Hi ${data.clientName}, your ${data.serviceName} appointment starts in 1 hour. See you soon! - ${orgName}`;
+      case WhatsAppEventType.APPOINTMENT_REMINDER:
+        return `Hi ${data.clientName}, reminder: your ${data.serviceName} appointment is on ${formattedDate}. See you soon! - ${orgName}`;
       case WhatsAppEventType.APPOINTMENT_CANCELED:
         return `Hi ${data.clientName}, your ${data.serviceName} appointment on ${formattedDate} has been cancelled. - ${orgName}`;
       case WhatsAppEventType.APPOINTMENT_RESCHEDULED:
@@ -522,10 +516,8 @@ export class WhatsAppService {
     switch (eventType) {
       case WhatsAppEventType.APPOINTMENT_CREATED:
         return 'appointment_created';
-      case WhatsAppEventType.REMINDER_24H:
-        return 'appointment_reminder_24h';
-      case WhatsAppEventType.REMINDER_1H:
-        return 'appointment_reminder_1h';
+      case WhatsAppEventType.APPOINTMENT_REMINDER:
+        return 'appointment_reminder';
       case WhatsAppEventType.APPOINTMENT_CANCELED:
         return 'appointment_canceled';
       case WhatsAppEventType.APPOINTMENT_RESCHEDULED:
@@ -651,17 +643,10 @@ export class WhatsAppService {
   }
 
   /**
-   * Send 24-hour reminder notification
+   * Send appointment reminder notification
    */
-  async sendReminder24hNotification(data: AppointmentNotificationData): Promise<WhatsAppSendResult> {
-    return this.sendAppointmentNotification(WhatsAppEventType.REMINDER_24H, data);
-  }
-
-  /**
-   * Send 1-hour reminder notification
-   */
-  async sendReminder1hNotification(data: AppointmentNotificationData): Promise<WhatsAppSendResult> {
-    return this.sendAppointmentNotification(WhatsAppEventType.REMINDER_1H, data);
+  async sendAppointmentReminderNotification(data: AppointmentNotificationData): Promise<WhatsAppSendResult> {
+    return this.sendAppointmentNotification(WhatsAppEventType.APPOINTMENT_REMINDER, data);
   }
 
   /**

@@ -8,8 +8,7 @@ import { EmailService, EmailNotificationData } from './email.service';
  */
 export enum NotificationEventType {
   APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
-  REMINDER_24H = 'REMINDER_24H',
-  REMINDER_1H = 'REMINDER_1H',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
   APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
@@ -91,10 +90,8 @@ export class NotificationService {
     switch (eventType) {
       case NotificationEventType.APPOINTMENT_CREATED:
         return WhatsAppEventType.APPOINTMENT_CREATED;
-      case NotificationEventType.REMINDER_24H:
-        return WhatsAppEventType.REMINDER_24H;
-      case NotificationEventType.REMINDER_1H:
-        return WhatsAppEventType.REMINDER_1H;
+      case NotificationEventType.APPOINTMENT_REMINDER:
+        return WhatsAppEventType.APPOINTMENT_REMINDER;
       case NotificationEventType.APPOINTMENT_CANCELED:
         return WhatsAppEventType.APPOINTMENT_CANCELED;
       case NotificationEventType.APPOINTMENT_RESCHEDULED:
@@ -280,10 +277,8 @@ export class NotificationService {
       switch (eventType) {
         case NotificationEventType.APPOINTMENT_CREATED:
           return this.whatsAppService.sendAppointmentCreatedNotification(data);
-        case NotificationEventType.REMINDER_24H:
-          return this.whatsAppService.sendReminder24hNotification(data);
-        case NotificationEventType.REMINDER_1H:
-          return this.whatsAppService.sendReminder1hNotification(data);
+        case NotificationEventType.APPOINTMENT_REMINDER:
+          return this.whatsAppService.sendAppointmentReminderNotification(data);
         case NotificationEventType.APPOINTMENT_CANCELED:
           return this.whatsAppService.sendAppointmentCanceledNotification(data);
         case NotificationEventType.APPOINTMENT_RESCHEDULED:
@@ -311,10 +306,8 @@ export class NotificationService {
       switch (eventType) {
         case NotificationEventType.APPOINTMENT_CREATED:
           return this.smsService.sendAppointmentCreatedNotification(data);
-        case NotificationEventType.REMINDER_24H:
-          return this.smsService.sendReminder24hNotification(data);
-        case NotificationEventType.REMINDER_1H:
-          return this.smsService.sendReminder1hNotification(data);
+        case NotificationEventType.APPOINTMENT_REMINDER:
+          return this.smsService.sendAppointmentReminderNotification(data);
         case NotificationEventType.APPOINTMENT_CANCELED:
           return this.smsService.sendAppointmentCanceledNotification(data);
         case NotificationEventType.APPOINTMENT_RESCHEDULED:
@@ -341,10 +334,8 @@ export class NotificationService {
       switch (eventType) {
         case NotificationEventType.APPOINTMENT_CREATED:
           return this.emailService.sendAppointmentCreatedNotification(data);
-        case NotificationEventType.REMINDER_24H:
-          return this.emailService.sendReminder24hNotification(data);
-        case NotificationEventType.REMINDER_1H:
-          return this.emailService.sendReminder1hNotification(data);
+        case NotificationEventType.APPOINTMENT_REMINDER:
+          return this.emailService.sendAppointmentReminderNotification(data);
         case NotificationEventType.APPOINTMENT_CANCELED:
           return this.emailService.sendAppointmentCanceledNotification(data);
         case NotificationEventType.APPOINTMENT_RESCHEDULED:
@@ -371,17 +362,10 @@ export class NotificationService {
   }
 
   /**
-   * Send 24-hour reminder notification
+   * Send appointment reminder notification
    */
-  async sendReminder24hNotification(data: NotificationData): Promise<NotificationResult> {
-    return this.sendNotification(NotificationEventType.REMINDER_24H, data);
-  }
-
-  /**
-   * Send 1-hour reminder notification
-   */
-  async sendReminder1hNotification(data: NotificationData): Promise<NotificationResult> {
-    return this.sendNotification(NotificationEventType.REMINDER_1H, data);
+  async sendAppointmentReminderNotification(data: NotificationData): Promise<NotificationResult> {
+    return this.sendNotification(NotificationEventType.APPOINTMENT_REMINDER, data);
   }
 
   /**

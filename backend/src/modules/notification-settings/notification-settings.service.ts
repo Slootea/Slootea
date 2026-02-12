@@ -127,8 +127,7 @@ export class NotificationSettingsService {
       params = this.notificationParamsRepository.create({
         organizationId,
         appointmentCreated: true,
-        reminder24h: true,
-        reminder1h: true,
+        appointmentReminder: true,
         appointmentCanceled: true,
         appointmentRescheduled: true,
       });
@@ -174,8 +173,7 @@ export class NotificationSettingsService {
       displayPhoneNumber: whatsappSettings.displayPhoneNumber || undefined,
       parameters: {
         appointmentCreated: notificationParams.appointmentCreated,
-        reminder24h: notificationParams.reminder24h,
-        reminder1h: notificationParams.reminder1h,
+        appointmentReminder: notificationParams.appointmentReminder,
         appointmentCanceled: notificationParams.appointmentCanceled,
         appointmentRescheduled: notificationParams.appointmentRescheduled,
       },
@@ -201,11 +199,8 @@ export class NotificationSettingsService {
       if (dto.parameters.appointmentCreated !== undefined) {
         notificationParams.appointmentCreated = dto.parameters.appointmentCreated;
       }
-      if (dto.parameters.reminder24h !== undefined) {
-        notificationParams.reminder24h = dto.parameters.reminder24h;
-      }
-      if (dto.parameters.reminder1h !== undefined) {
-        notificationParams.reminder1h = dto.parameters.reminder1h;
+      if (dto.parameters.appointmentReminder !== undefined) {
+        notificationParams.appointmentReminder = dto.parameters.appointmentReminder;
       }
       if (dto.parameters.appointmentCanceled !== undefined) {
         notificationParams.appointmentCanceled = dto.parameters.appointmentCanceled;
@@ -413,8 +408,7 @@ export class NotificationSettingsService {
       accountSidMasked: smsSettings.accountSid ? this.maskAccountSid(smsSettings.accountSid) : undefined,
       parameters: {
         appointmentCreated: notificationParams.appointmentCreated,
-        reminder24h: notificationParams.reminder24h,
-        reminder1h: notificationParams.reminder1h,
+        appointmentReminder: notificationParams.appointmentReminder,
         appointmentCanceled: notificationParams.appointmentCanceled,
         appointmentRescheduled: notificationParams.appointmentRescheduled,
       },
@@ -439,11 +433,8 @@ export class NotificationSettingsService {
       if (dto.parameters.appointmentCreated !== undefined) {
         notificationParams.appointmentCreated = dto.parameters.appointmentCreated;
       }
-      if (dto.parameters.reminder24h !== undefined) {
-        notificationParams.reminder24h = dto.parameters.reminder24h;
-      }
-      if (dto.parameters.reminder1h !== undefined) {
-        notificationParams.reminder1h = dto.parameters.reminder1h;
+      if (dto.parameters.appointmentReminder !== undefined) {
+        notificationParams.appointmentReminder = dto.parameters.appointmentReminder;
       }
       if (dto.parameters.appointmentCanceled !== undefined) {
         notificationParams.appointmentCanceled = dto.parameters.appointmentCanceled;

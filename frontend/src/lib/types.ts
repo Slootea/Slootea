@@ -513,9 +513,9 @@ export interface OrganizationOverview extends OrganizationStats {
 // WhatsApp Notification Settings Types
 export enum WhatsAppEventType {
   APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
-  REMINDER_24H = 'REMINDER_24H',
-  REMINDER_1H = 'REMINDER_1H',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
   APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+  APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
 
 export enum WhatsAppTemplateStatus {
@@ -534,8 +534,7 @@ export interface WhatsAppTemplate {
 
 export interface NotificationParameters {
   appointmentCreated: boolean;
-  reminder24h: boolean;
-  reminder1h: boolean;
+  appointmentReminder: boolean;
   appointmentCanceled: boolean;
 }
 
@@ -561,6 +560,71 @@ export interface ConnectWhatsAppPayload {
 }
 
 export interface AssignWhatsAppTemplatePayload {
+  eventType: WhatsAppEventType;
+  templateName: string;
+  languageCode: string;
+}
+
+// WhatsApp Business Template Types (Meta Graph API)
+export enum WhatsAppTemplateCategory {
+  UTILITY = 'UTILITY',
+  MARKETING = 'MARKETING',
+  AUTHENTICATION = 'AUTHENTICATION',
+}
+
+export interface WhatsAppTemplateComponent {
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
+  format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  text?: string;
+  example?: {
+    header_text?: string[];
+    body_text?: string[][];
+  };
+  buttons?: Array<{
+    type: 'PHONE_NUMBER' | 'URL' | 'QUICK_REPLY';
+    text: string;
+    phone_number?: string;
+    url?: string;
+  }>;
+}
+
+export interface WhatsAppBusinessTemplate {
+  id: string;
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  components: WhatsAppTemplateComponent[];
+  rejectedReason?: string;
+  qualityScore?: string;
+  localEventType?: WhatsAppEventType;
+}
+
+export interface WhatsAppBusinessTemplatesListResponse {
+  templates: WhatsAppBusinessTemplate[];
+  isConnected: boolean;
+}
+
+export interface SyncTemplatesResponse {
+  synced: number;
+  templates: WhatsAppBusinessTemplate[];
+}
+
+export interface CreateWhatsAppBusinessTemplatePayload {
+  name: string;
+  language: string;
+  category: WhatsAppTemplateCategory;
+  components: WhatsAppTemplateComponent[];
+}
+
+export interface CreateTemplateFromMessagePayload {
+  eventType: WhatsAppEventType;
+  messageContent: string;
+  language: string;
+  templateName?: string;
+}
+
+export interface LinkTemplateToEventPayload {
   eventType: WhatsAppEventType;
   templateName: string;
   languageCode: string;

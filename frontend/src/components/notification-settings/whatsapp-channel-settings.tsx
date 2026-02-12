@@ -68,8 +68,7 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
   // Required Meta WhatsApp templates
   const requiredTemplates = [
     { name: "appointment_created", description: "Sent when a new appointment is booked" },
-    { name: "appointment_reminder_24h", description: "Sent 24 hours before appointment" },
-    { name: "appointment_reminder_1h", description: "Sent 1 hour before appointment" },
+    { name: "appointment_reminder", description: "Sent before appointment as reminder" },
     { name: "appointment_canceled", description: "Sent when appointment is canceled" },
     { name: "appointment_rescheduled", description: "Sent when appointment is rescheduled" },
   ];
@@ -379,22 +378,22 @@ Onay: {{confirmationLink}}
 Görüşmek üzere!`}</pre>
                         </div>
 
-                        {/* appointment_reminder_24h */}
+                        {/* appointment_reminder */}
                         <div className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
-                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_reminder_24h</code>
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_reminder</code>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                navigator.clipboard.writeText(`Hatırlatma: Merhaba {{clientName}}! Yarın {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\n\nSizi bekliyoruz!`);
+                                navigator.clipboard.writeText(`Hatırlatma: Merhaba {{clientName}}! {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\n\nSizi bekliyoruz!`);
                                 toast({ title: "Copied to clipboard" });
                               }}
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
                           </div>
-                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Hatırlatma: Merhaba {{clientName}}! Yarın {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.
+                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Hatırlatma: Merhaba {{clientName}}! {{appointmentDate}} tarihinde saat {{appointmentTime}} için {{serviceName}} randevunuz bulunmaktadır.
 
 Hizmet Sağlayıcı: {{providerName}}
 İşletme: {{organizationName}}
@@ -402,31 +401,6 @@ Hizmet Sağlayıcı: {{providerName}}
 Detaylar: {{appointmentLink}}
 
 Sizi bekliyoruz!`}</pre>
-                        </div>
-
-                        {/* appointment_reminder_1h */}
-                        <div className="border rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">appointment_reminder_1h</code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(`Son Hatırlatma: Merhaba {{clientName}}! {{serviceName}} randevunuz 1 saat içinde, saat {{appointmentTime}} için başlayacak.\n\nHizmet Sağlayıcı: {{providerName}}\nİşletme: {{organizationName}}\n\nDetaylar: {{appointmentLink}}\n\nBirazdan görüşürüz!`);
-                                toast({ title: "Copied to clipboard" });
-                              }}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <pre className="p-3 rounded bg-muted text-xs whitespace-pre-wrap">{`Son Hatırlatma: Merhaba {{clientName}}! {{serviceName}} randevunuz 1 saat içinde, saat {{appointmentTime}} için başlayacak.
-
-Hizmet Sağlayıcı: {{providerName}}
-İşletme: {{organizationName}}
-
-Detaylar: {{appointmentLink}}
-
-Birazdan görüşürüz!`}</pre>
                         </div>
 
                         {/* appointment_canceled */}
