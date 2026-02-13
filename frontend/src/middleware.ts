@@ -51,9 +51,14 @@ export default clerkMiddleware(async (auth, request) => {
     return response;
   }
 
+  // Protect non-public routes
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
+
+  // Explicitly return NextResponse.next() for public routes
+  // This ensures Clerk properly attaches auth context
+  return NextResponse.next();
 });
 
 export const config = {
