@@ -15,6 +15,9 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
+  
+  // Debug logging - remove after confirming middleware runs
+  console.log("[Clerk Middleware] Running for path:", pathname);
 
   // Handle root path - redirect to detected locale
   if (pathname === "/") {

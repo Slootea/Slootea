@@ -13,6 +13,11 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      '/': ['./src/middleware.ts'],
+    },
+  },
 };
 
 module.exports = withNextIntl(nextConfig);
