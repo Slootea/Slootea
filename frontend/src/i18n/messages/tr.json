@@ -502,9 +502,24 @@
     "importantNote": "Önemli:",
     "confirmationReminder": "Randevunuzdan önce bir onay talebi alabilirsiniz. Lütfen yerinizi korumak için katılımınızı onaylayın.",
     "minutes": "dakika",
+    "getAppointment": "Randevu Al",
     "failedToLoad": "Rezervasyon bilgileri yüklenemedi",
     "failedToLoadSlots": "Uygun saatler yüklenemedi",
-    "loadingAvailability": "Müsaitlik yükleniyor..."
+    "loadingAvailability": "Müsaitlik yükleniyor...",
+    "aiAssistant": {
+      "title": "Hizmet Asistanı",
+      "subtitle": "Ne aradığınızı söyleyin, size doğru hizmeti bulmanıza yardımcı olayım",
+      "welcome": "Merhaba! 👋 Size en uygun hizmeti bulmanıza yardımcı olmak için buradayım. Bugün ne arıyorsunuz?",
+      "inputPlaceholder": "Ne aradığınızı yazın...",
+      "browseAllServices": "Tüm Hizmetlere Göz At",
+      "backToAssistant": "Asistana Dön",
+      "needHelp": "Seçim yapmakta zorlanıyor musunuz? AI Asistanımıza sorun",
+      "recommended": "Önerilen",
+      "bestMatch": "En İyi Eşleşme",
+      "tapToSelect": "Seçmek için tıklayın",
+      "error": "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.",
+      "quickQuestion1": "Hangi hizmetleri sunuyorsunuz?"
+    }
   },
   "clients": {
     "title": "Müşteriler",
@@ -1156,6 +1171,12 @@
       "description": "Organizasyonunuz için saat dilimini ayarlayın. Tüm randevular ve müsaitlik zamanları bu saat dilimine göre hesaplanacaktır.",
       "label": "Organizasyon Saat Dilimi",
       "hint": "Bu saat dilimi, mevcut randevu slotlarını hesaplamak ve zamanları göstermek için kullanılacaktır."
+    },
+    "aiAssistant": {
+      "title": "AI Hizmet Asistanı",
+      "description": "Müşterilerin rezervasyon yaparken doğru hizmeti bulmasına yardımcı olan AI destekli bir asistan etkinleştirin.",
+      "enable": "AI Asistanı Etkinleştir",
+      "enableHint": "Etkinleştirildiğinde, müşteriler önce ihtiyaçlarına göre doğru hizmeti bulmalarına yardımcı olan bir AI asistanıyla etkileşime girecekler. Ayrıca tüm hizmetlere doğrudan göz atabilirler."
     },
     "messages": {
       "saved": "Organizasyon ayarları kaydedildi",

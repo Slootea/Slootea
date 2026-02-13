@@ -106,6 +106,8 @@ export interface OrganizationSettings {
   reminderHoursBefore: number;
   // Timezone
   timezone: string;
+  // AI Assistant
+  aiAssistantEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -303,6 +305,7 @@ export interface PublicBookingSettings {
   showProviderPhotos: boolean;
   minAdvanceBookingHours: number;
   maxAdvanceBookingDays: number;
+  aiAssistantEnabled?: boolean;
 }
 
 export interface PublicBookingLink extends BookingLink {
@@ -704,3 +707,39 @@ export interface UpdateAppointmentByTokenPayload {
 export interface CancelAppointmentByTokenPayload {
   reason?: string;
 }
+
+// AI Assistant Types
+export interface AiChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface AiSuggestedService {
+  id: string;
+  title: string;
+  description: string;
+  duration: number;
+  imageBase64?: string;
+  relevanceScore: number;
+}
+
+export interface AiAssistantChatRequest {
+  message: string;
+  history?: AiChatMessage[];
+  organizationId: string;
+}
+
+export interface AiAssistantChatResponse {
+  message: string;
+  suggestedServices?: AiSuggestedService[];
+  needsMoreInfo: boolean;
+}
+
+export interface AiStreamChunk {
+  type: 'text' | 'services' | 'tool_call' | 'done' | 'error';
+  content?: string;
+  services?: AiSuggestedService[];
+  tool?: string;
+  args?: any;
+}
+

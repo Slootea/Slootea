@@ -73,6 +73,7 @@ export class OrganizationSettingsService {
       minAdvanceBookingHours: settings.minAdvanceBookingHours,
       maxAdvanceBookingDays: settings.maxAdvanceBookingDays,
       timezone: settings.timezone,
+      aiAssistantEnabled: settings.aiAssistantEnabled,
     };
   }
 }

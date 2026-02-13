@@ -210,6 +210,7 @@ export const organizationSettingsApi = {
     sendSmsReminders: boolean;
     reminderHoursBefore: number;
     timezone: string;
+    aiAssistantEnabled: boolean;
   }>) => api.put('/organization-settings', data),
   getPublic: (organizationId: string) => api.get(`/organization-settings/public/${organizationId}`),
 };
@@ -268,6 +269,17 @@ export const publicApi = {
     api.get(`/public/appointment/${token}/available-slots`, { params: { date } }),
   getAvailableDatesForReschedule: (token: string, month: string) =>
     api.get(`/public/appointment/${token}/available-dates`, { params: { month } }),
+  // AI Assistant
+  aiAssistantChat: (data: { message: string; history?: { role: 'user' | 'assistant'; content: string }[]; organizationId: string }) =>
+    api.post('/public/ai-assistant/chat', data),
+  aiAssistantChatStream: (data: { message: string; history?: { role: 'user' | 'assistant'; content: string }[]; organizationId: string }) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    return fetch(`${API_URL}/api/public/ai-assistant/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 // Users API

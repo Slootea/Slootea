@@ -502,9 +502,24 @@
     "importantNote": "Important:",
     "confirmationReminder": "You may receive a confirmation request before your appointment. Please confirm your attendance to keep your slot.",
     "minutes": "minutes",
+    "getAppointment": "Get Appointment",
     "failedToLoad": "Failed to load booking information",
     "failedToLoadSlots": "Failed to load available slots",
-    "loadingAvailability": "Loading availability..."
+    "loadingAvailability": "Loading availability...",
+    "aiAssistant": {
+      "title": "Service Assistant",
+      "subtitle": "Tell me what you need and I'll help you find the right service",
+      "welcome": "Hello! 👋 I'm here to help you find the perfect service. What are you looking for today?",
+      "inputPlaceholder": "Describe what you need...",
+      "browseAllServices": "Browse All Services",
+      "backToAssistant": "Back to Assistant",
+      "needHelp": "Need help choosing? Ask our AI Assistant",
+      "recommended": "Recommended",
+      "bestMatch": "Best Match",
+      "tapToSelect": "Tap to select",
+      "error": "Sorry, something went wrong. Please try again.",
+      "quickQuestion1": "What services do you offer?"
+    }
   },
   "clients": {
     "title": "Clients",
@@ -1156,6 +1171,12 @@
       "description": "Set the timezone for your organization. All appointments and availability times will be based on this timezone.",
       "label": "Organization Timezone",
       "hint": "This timezone will be used for calculating available appointment slots and displaying times."
+    },
+    "aiAssistant": {
+      "title": "AI Service Assistant",
+      "description": "Enable an AI-powered assistant to help clients find the right service when booking.",
+      "enable": "Enable AI Assistant",
+      "enableHint": "When enabled, clients will first interact with an AI assistant that helps them find the right service based on their needs. They can also browse all services directly."
     },
     "messages": {
       "saved": "Organization settings saved",

@@ -137,6 +137,13 @@ export class OrganizationSettings {
   })
   timezone: string;
 
+  // AI Assistant Settings
+  @Column({
+    default: false,
+    comment: 'Enable AI assistant for service selection on booking page',
+  })
+  aiAssistantEnabled: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

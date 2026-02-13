@@ -133,4 +133,10 @@ export class UpdateOrganizationSettingsDto {
   @IsOptional()
   @IsString()
   timezone?: string;
+
+  // AI Assistant Settings
+  @ApiPropertyOptional({ description: 'Enable AI assistant for service selection on booking page' })
+  @IsOptional()
+  @IsBoolean()
+  aiAssistantEnabled?: boolean;
 }

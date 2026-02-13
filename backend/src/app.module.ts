@@ -16,6 +16,7 @@ import { ClientsModule } from './modules/clients/clients.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { NotificationSettingsModule } from './modules/notification-settings/notification-settings.module';
+import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { NotificationSettingsModule } from './modules/notification-settings/noti
     ClientsModule,
     ReportsModule,
     NotificationSettingsModule,
+    AiAssistantModule,
   ],
 })
 export class AppModule {}

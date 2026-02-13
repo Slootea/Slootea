@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2 } from "lucide-react";
+import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2, Bot } from "lucide-react";
 import { WhatsAppChannelSettings, MessageTemplatesCard } from "@/components/notification-settings";
 
 export default function OrganizationSettingsPage() {
@@ -79,6 +79,7 @@ export default function OrganizationSettingsPage() {
         autoCancelUnconfirmed: settings.autoCancelUnconfirmed,
         autoConfirmAppointments: settings.autoConfirmAppointments,
         timezone: settings.timezone,
+        aiAssistantEnabled: settings.aiAssistantEnabled,
       });
       toast({ title: t('messages.saved') });
     } catch (error) {
@@ -451,6 +452,38 @@ export default function OrganizationSettingsPage() {
 
       {/* Message Templates - hidden for now */}
       {/* <MessageTemplatesCard /> */}
+
+      {/* AI Assistant Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            {t('aiAssistant.title') || 'AI Service Assistant'}
+          </CardTitle>
+          <CardDescription>
+            {t('aiAssistant.description') || 'Enable an AI-powered assistant to help clients find the right service when booking.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="aiAssistantEnabled">
+                {t('aiAssistant.enable') || 'Enable AI Assistant'}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('aiAssistant.enableHint') || 'When enabled, clients will first interact with an AI assistant that helps them find the right service based on their needs. They can also browse all services directly.'}
+              </p>
+            </div>
+            <Switch
+              id="aiAssistantEnabled"
+              checked={settings.aiAssistantEnabled || false}
+              onCheckedChange={(checked) =>
+                setSettings({ ...settings, aiAssistantEnabled: checked })
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Timezone Settings */}
       <Card>
