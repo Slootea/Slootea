@@ -26,8 +26,7 @@ export class AiAssistantService {
     
     this.model = new ChatOpenAI({
       openAIApiKey: apiKey,
-      modelName: 'gpt-4o-mini',
-      temperature: 0.7,
+      modelName: 'gpt-5-mini-2025-08-07',
       streaming: true,
     });
   }
