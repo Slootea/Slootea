@@ -733,13 +733,25 @@ export interface AiAssistantChatResponse {
   message: string;
   suggestedServices?: AiSuggestedService[];
   needsMoreInfo: boolean;
+  responseType?: 'service' | 'message';
+  serviceId?: string | null;
 }
 
 export interface AiStreamChunk {
-  type: 'text' | 'services' | 'tool_call' | 'done' | 'error';
+  type: 'text' | 'services' | 'tool_call' | 'done' | 'error' | 'structured_response';
   content?: string;
   services?: AiSuggestedService[];
   tool?: string;
   args?: any;
+  // Structured response fields
+  responseType?: 'service' | 'message';
+  serviceId?: string | null;
+  message?: string;
+  service?: {
+    id: string;
+    title: string;
+    description: string;
+    duration: number;
+  };
 }
 

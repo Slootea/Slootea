@@ -27,6 +27,15 @@ interface AiServiceAssistantProps {
 interface ChatMessage extends AiChatMessage {
   suggestedServices?: AiSuggestedService[];
   isLoading?: boolean;
+  // Structured response fields
+  responseType?: 'service' | 'message';
+  serviceId?: string | null;
+  service?: {
+    id: string;
+    title: string;
+    description: string;
+    duration: number;
+  };
 }
 
 export function AiServiceAssistant({
@@ -93,6 +102,9 @@ export function AiServiceAssistant({
       const decoder = new TextDecoder();
       let assistantContent = '';
       let collectedServices: AiSuggestedService[] = [];
+      let structuredService: ChatMessage['service'] | undefined = undefined;
+      let structuredServiceId: string | null = null;
+      let responseType: 'service' | 'message' | undefined = undefined;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -113,6 +125,41 @@ export function AiServiceAssistant({
                   ...newMessages,
                   { role: 'assistant', content: assistantContent, isLoading: false },
                 ]);
+              } else if (data.type === 'structured_response') {
+                // Handle new structured response format
+                responseType = data.responseType;
+                structuredServiceId = data.serviceId || null;
+                structuredService = data.service;
+                
+                if (data.message) {
+                  assistantContent = data.message;
+                }
+                
+                // If it's a service response, add to collected services for display
+                if (data.responseType === 'service' && data.service) {
+                  collectedServices = [{
+                    id: data.service.id,
+                    title: data.service.title,
+                    description: data.service.description,
+                    duration: data.service.duration,
+                    relevanceScore: 1.0,
+                  }];
+                  setSuggestedServices(collectedServices);
+                }
+                
+                // Update the message with structured response
+                setMessages([
+                  ...newMessages,
+                  { 
+                    role: 'assistant', 
+                    content: assistantContent, 
+                    isLoading: false,
+                    responseType: data.responseType,
+                    serviceId: data.serviceId,
+                    service: data.service,
+                    suggestedServices: collectedServices,
+                  },
+                ]);
               } else if (data.type === 'services' && data.services) {
                 collectedServices = [...collectedServices, ...data.services];
                 setSuggestedServices(collectedServices);
@@ -125,6 +172,9 @@ export function AiServiceAssistant({
                     role: 'assistant', 
                     content: cleanContent, 
                     suggestedServices: collectedServices,
+                    responseType: responseType,
+                    serviceId: structuredServiceId,
+                    service: structuredService,
                     isLoading: false 
                   },
                 ]);
@@ -221,7 +271,65 @@ export function AiServiceAssistant({
                 </div>
 
                 {/* Suggested services - Interactive cards */}
-                {message.suggestedServices && message.suggestedServices.length > 0 && (
+                {/* Show service card when responseType is 'service' and serviceId exists */}
+                {message.responseType === 'service' && message.serviceId && message.service && (
+                  <div className="w-full mt-4">
+                    <div className="grid gap-4">
+                      {(() => {
+                        const fullService = services.find(s => s.id === message.serviceId);
+                        const displayService = fullService || message.service;
+                        return (
+                          <Card 
+                            key={message.serviceId}
+                            className="cursor-pointer hover:shadow-lg transition-shadow border-primary/20"
+                            onClick={() => {
+                              if (fullService) {
+                                onSelectService(fullService);
+                              }
+                            }}
+                          >
+                            <CardContent className="p-0">
+                              {fullService?.imageBase64 ? (
+                                <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+                                  <img
+                                    src={fullService.imageBase64}
+                                    alt={displayService.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+                                  <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <h3 className="font-semibold text-lg mb-1">
+                                  {displayService.title}
+                                </h3>
+                                {displayService.description && (
+                                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                                    {displayService.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center text-sm text-muted-foreground">
+                                    <Clock className="h-4 w-4 mr-1" />
+                                    {displayService.duration} {t('minutes') || 'min'}
+                                  </div>
+                                  <Button size="sm" className="ml-2">
+                                    {t('getAppointment') || 'Get Appointment'}
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+                {/* Fallback: Show suggestedServices if responseType is not set (legacy support) */}
+                {!message.responseType && message.suggestedServices && message.suggestedServices.length > 0 && (
                   <div className="w-full mt-4">
                     <div className="grid gap-4">
                     {message.suggestedServices.map((service) => {

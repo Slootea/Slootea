@@ -58,4 +58,10 @@ export class AiAssistantResponseDto {
 
   @ApiProperty({ description: 'Whether the assistant needs more information' })
   needsMoreInfo: boolean;
+
+  @ApiPropertyOptional({ description: 'Response type', enum: ['service', 'message'] })
+  responseType?: 'service' | 'message';
+
+  @ApiPropertyOptional({ description: 'Service ID if type is service' })
+  serviceId?: string | null;
 }

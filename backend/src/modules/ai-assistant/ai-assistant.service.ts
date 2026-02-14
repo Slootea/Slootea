@@ -114,17 +114,19 @@ Available services:
 ${allServices.map(s => `- ID: ${s.id} | ${s.title}${s.description ? ` - ${s.description}` : ''} (${s.duration} min)`).join('\n')}
 
 Rules:
-1. DO NOT write any text, explanations, or acknowledgments
-2. If you can identify a matching service, respond with ONLY the SERVICES tag - nothing else
-3. If you absolutely need clarification, ask ONE short question (this is the only time you write text)
+1. You MUST respond with a valid JSON object - no other text before or after
+2. If you can identify a matching service, respond with type "service"
+3. If you need clarification, respond with type "message" and ask ONE short question
 4. Respond in the client's language when asking questions
 
-Output format - respond with ONLY this (no other text):
-<SERVICES>[{"id":"actual-service-uuid","relevanceScore":0.9}]</SERVICES>
+Output format - respond with ONLY valid JSON:
+For service matches:
+{"type":"service","service_id":"actual-service-uuid","message":"optional brief confirmation"}
 
-Use exact service IDs from above. Set relevanceScore: 1.0 for perfect matches, 0.8 for good matches, 0.6 for partial matches.
-DO NOT include title or description in the JSON - only id and relevanceScore.
-DO NOT write anything before or after the SERVICES tag unless asking a clarifying question.`;
+For clarifying questions:
+{"type":"message","service_id":null,"message":"Your question here"}
+
+Use exact service IDs from above. ALWAYS respond with valid JSON only - no markdown, no explanations outside the JSON.`;
 
     const messages = [
       new SystemMessage(systemPrompt),
@@ -149,11 +151,8 @@ DO NOT write anything before or after the SERVICES tag unless asking a clarifyin
           const content = typeof chunk.content === 'string' ? chunk.content : '';
           fullContent += content;
           
-          // Send text chunk
-          yield JSON.stringify({
-            type: 'text',
-            content: content,
-          });
+          // Don't yield raw text chunks since the AI response is JSON
+          // We'll parse and yield the structured response at the end
         }
 
         // Check for tool calls
@@ -184,34 +183,85 @@ DO NOT write anything before or after the SERVICES tag unless asking a clarifyin
         }
       }
 
-      // Parse services from the response if present
-      const servicesMatch = fullContent.match(/<SERVICES>(.*?)<\/SERVICES>/s);
-      if (servicesMatch) {
-        try {
-          const suggestedServiceIds = JSON.parse(servicesMatch[1]);
-          // Enrich with full service details from database
-          const enrichedServices = suggestedServiceIds.map((s: any) => {
-            const fullService = allServices.find(svc => svc.id === s.id);
-            if (fullService) {
-              return {
+      // Parse structured JSON response
+      try {
+        // Clean up the content - remove any markdown code blocks if present
+        let cleanContent = fullContent.trim();
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/```\s*$/, '');
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```\s*/, '').replace(/```\s*$/, '');
+        }
+        
+        const structuredResponse = JSON.parse(cleanContent);
+        
+        if (structuredResponse.type === 'service' && structuredResponse.service_id) {
+          // Find the full service from database
+          const fullService = allServices.find(svc => svc.id === structuredResponse.service_id);
+          if (fullService) {
+            // If there's a message, stream it first
+            if (structuredResponse.message) {
+              yield JSON.stringify({
+                type: 'text',
+                content: structuredResponse.message,
+              });
+            }
+            yield JSON.stringify({
+              type: 'structured_response',
+              responseType: 'service',
+              serviceId: fullService.id,
+              message: structuredResponse.message || '',
+              service: {
                 id: fullService.id,
                 title: fullService.title,
                 description: fullService.description || '',
                 duration: fullService.duration,
-                relevanceScore: s.relevanceScore || 0.8,
-              };
-            }
-            return null;
-          }).filter(Boolean);
-          
-          if (enrichedServices.length > 0) {
+              },
+            });
+          } else {
+            // Service not found, treat as message
+            const fallbackMessage = structuredResponse.message || 'I could not find that service. Could you please describe what you need?';
             yield JSON.stringify({
-              type: 'services',
-              services: enrichedServices,
+              type: 'text',
+              content: fallbackMessage,
+            });
+            yield JSON.stringify({
+              type: 'structured_response',
+              responseType: 'message',
+              serviceId: null,
+              message: fallbackMessage,
             });
           }
-        } catch {
-          // Ignore parsing errors
+        } else if (structuredResponse.type === 'message') {
+          // Stream the message text first for display
+          if (structuredResponse.message) {
+            yield JSON.stringify({
+              type: 'text',
+              content: structuredResponse.message,
+            });
+          }
+          yield JSON.stringify({
+            type: 'structured_response',
+            responseType: 'message',
+            serviceId: null,
+            message: structuredResponse.message || '',
+          });
+        }
+      } catch {
+        // If JSON parsing fails, treat the entire content as a message
+        // This handles cases where the AI doesn't follow the format
+        const cleanMessage = fullContent.replace(/<SERVICES>[\s\S]*?<\/SERVICES>/g, '').trim();
+        if (cleanMessage) {
+          yield JSON.stringify({
+            type: 'text',
+            content: cleanMessage,
+          });
+          yield JSON.stringify({
+            type: 'structured_response',
+            responseType: 'message',
+            serviceId: null,
+            message: cleanMessage,
+          });
         }
       }
 
@@ -234,9 +284,13 @@ DO NOT write anything before or after the SERVICES tag unless asking a clarifyin
     message: string;
     suggestedServices: ServiceSuggestionDto[];
     needsMoreInfo: boolean;
+    responseType?: 'service' | 'message';
+    serviceId?: string | null;
   }> {
     let fullMessage = '';
     const suggestedServices: ServiceSuggestionDto[] = [];
+    let responseType: 'service' | 'message' | undefined;
+    let serviceId: string | null = null;
 
     for await (const chunk of this.processChat(chatDto)) {
       const data = JSON.parse(chunk);
@@ -244,6 +298,21 @@ DO NOT write anything before or after the SERVICES tag unless asking a clarifyin
         fullMessage += data.content;
       } else if (data.type === 'services') {
         suggestedServices.push(...data.services);
+      } else if (data.type === 'structured_response') {
+        responseType = data.responseType;
+        serviceId = data.serviceId || null;
+        if (data.message) {
+          fullMessage = data.message;
+        }
+        if (data.service) {
+          suggestedServices.push({
+            id: data.service.id,
+            title: data.service.title,
+            description: data.service.description || '',
+            duration: data.service.duration,
+            relevanceScore: 1.0,
+          });
+        }
       }
     }
 
@@ -253,7 +322,9 @@ DO NOT write anything before or after the SERVICES tag unless asking a clarifyin
     return {
       message: fullMessage,
       suggestedServices,
-      needsMoreInfo: suggestedServices.length === 0,
+      needsMoreInfo: suggestedServices.length === 0 && responseType !== 'service',
+      responseType,
+      serviceId,
     };
   }
 }
