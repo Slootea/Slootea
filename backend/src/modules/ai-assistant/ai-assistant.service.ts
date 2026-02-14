@@ -39,6 +39,11 @@ export class AiAssistantService {
     organizationId: string,
     keywords: string[],
   ): Promise<ServiceOption[]> {
+    // Handle undefined or empty keywords
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+      return this.getAllServices(organizationId);
+    }
+
     // Build search conditions
     const conditions = keywords.flatMap(keyword => [
       { organizationId, isActive: true, title: ILike(`%${keyword}%`) },
@@ -108,23 +113,30 @@ export class AiAssistantService {
     );
 
     // Build messages
-    const systemPrompt = `You are a booking assistant. Your ONLY job is to identify which service the client needs and return it.
+    const systemPrompt = `You are a booking assistant. Your job is to help clients find the right service by asking directed questions based on available options.
 
 Available services:
 ${allServices.map(s => `- ID: ${s.id} | ${s.title}${s.description ? ` - ${s.description}` : ''} (${s.duration} min)`).join('\n')}
 
 Rules:
 1. You MUST respond with a valid JSON object - no other text before or after
-2. If you can identify a matching service, respond with type "service"
-3. If you need clarification, respond with type "message" and ask ONE short question
-4. Respond in the client's language when asking questions
+2. If the client's request clearly matches ONE service, respond with type "service"
+3. If the request is vague, ask a DIRECTED question that references specific services or categories to help narrow down or ask for clarification
+4. Guide the client by mentioning relevant service options in your questions (e.g., "Are you looking for X or Y?" or "We have A, B, and C - which interests you?")
+5. Respond in the client's language
+6. Keep questions short and helpful - maximum 1-2 sentences
 
 Output format - respond with ONLY valid JSON:
-For service matches:
+For service matches (when you're confident about ONE service):
 {"type":"service","service_id":"actual-service-uuid","message":"optional brief confirmation"}
 
-For clarifying questions:
-{"type":"message","service_id":null,"message":"Your question here"}
+For directed questions (to help client choose):
+{"type":"message","service_id":null,"message":"Your question mentioning specific services or categories"}
+
+Examples of good directed questions:
+- "We offer haircuts for men and women. Which are you interested in?"
+- "Are you looking for a massage, facial treatment, or nail service?"
+- "I see you want a haircut. Would you prefer our Express Cut (30 min) or Full Styling (60 min)?"
 
 Use exact service IDs from above. ALWAYS respond with valid JSON only - no markdown, no explanations outside the JSON.`;
 
@@ -159,14 +171,16 @@ Use exact service IDs from above. ALWAYS respond with valid JSON only - no markd
         if (chunk.tool_calls && chunk.tool_calls.length > 0) {
           for (const toolCall of chunk.tool_calls) {
             if (toolCall.name === 'search_services' && toolCall.args) {
+              const keywords = toolCall.args.keywords as string[] || [];
+              
               yield JSON.stringify({
                 type: 'tool_call',
                 tool: 'search_services',
-                args: toolCall.args,
+                args: { keywords },
               });
 
               // Execute the tool directly with the args
-              const services = await this.searchServices(organizationId, toolCall.args.keywords as string[]);
+              const services = await this.searchServices(organizationId, keywords);
               
               yield JSON.stringify({
                 type: 'services',
