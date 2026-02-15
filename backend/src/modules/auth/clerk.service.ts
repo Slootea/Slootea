@@ -130,7 +130,26 @@ async verifyToken(token: string): Promise<ClerkUser> {
   }
 
   /**
-   * Get all members of an organization
+   * Get all organizations from Clerk (for admin portal)
+   */
+  async getAllOrganizations(limit: number = 100, offset: number = 0) {
+    try {
+      const result = await this.clerkClient.organizations.getOrganizationList({
+        limit,
+        offset,
+      });
+      return {
+        data: result.data,
+        totalCount: result.totalCount,
+      };
+    } catch (error) {
+      console.error('Failed to fetch all organizations from Clerk:', error);
+      return { data: [], totalCount: 0 };
+    }
+  }
+
+  /**
+   * Get all members of an organization with full user data
    */
   async getOrganizationMembers(organizationId: string) {
     try {
@@ -141,6 +160,10 @@ async verifyToken(token: string): Promise<ClerkUser> {
         userId: member.publicUserData?.userId || '',
         role: member.role,
         isAdmin: member.role === 'org:admin',
+        firstName: member.publicUserData?.firstName || '',
+        lastName: member.publicUserData?.lastName || '',
+        email: member.publicUserData?.identifier || '',
+        imageUrl: member.publicUserData?.imageUrl || '',
       }));
     } catch (error) {
       console.error('Failed to fetch organization members:', error);

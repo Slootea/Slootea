@@ -1,9 +1,10 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3 } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useUser } from "@clerk/nextjs";
 import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,11 @@ import {
 export function AppSidebar() {
   const pathname = usePathname();
   const t = useTranslations('sidebar');
+  const { user } = useUser();
   const { isAdmin, currentOrganization } = useOrganizationContext();
+  
+  // Check if user is a system admin (has role: 'admin' in public metadata)
+  const isSystemAdmin = (user?.publicMetadata as { role?: string } | undefined)?.role === 'admin';
 
   const mainNavItems = [
     { href: "/dashboard", label: t('dashboard'), icon: LayoutDashboard },
@@ -141,6 +146,28 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* System Admin Portal Link - Only visible to system admins */}
+        {isSystemAdmin && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup>
+              <SidebarGroupLabel>System Admin</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Admin Portal">
+                      <Link href="/admin" className="text-primary">
+                        <Shield />
+                        <span>Admin Portal</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
     </Sidebar>
   );

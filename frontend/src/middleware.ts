@@ -13,6 +13,11 @@ const isPublicRoute = createRouteMatcher([
   "/confirm(.*)",
 ]);
 
+// Define admin routes that require special handling
+const isAdminRoute = createRouteMatcher([
+  "/admin(.*)",
+]);
+
 export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
   
