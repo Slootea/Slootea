@@ -27,11 +27,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { useToast } from "@/components/ui/use-toast";
 import {
   MessageSquare,
@@ -45,7 +40,6 @@ import {
   Info,
   Copy,
   FileText,
-  ChevronDown,
   ExternalLink,
 } from "lucide-react";
 
@@ -73,7 +67,6 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
   const [oauthDialogOpen, setOauthDialogOpen] = useState(false);
   const [connectingWhatsApp, setConnectingWhatsApp] = useState(false);
   const [templatesInfoOpen, setTemplatesInfoOpen] = useState(false);
-  const [manualEntryOpen, setManualEntryOpen] = useState(false);
 
   // Required Meta WhatsApp templates
   const requiredTemplates = [
