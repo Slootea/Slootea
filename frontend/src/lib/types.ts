@@ -545,6 +545,7 @@ export interface WhatsAppNotificationSettings {
   enabled: boolean;
   isConnected: boolean;
   displayPhoneNumber?: string;
+  templateLanguage: string;
   parameters: NotificationParameters;
   templates: WhatsAppTemplate[];
 }
@@ -552,6 +553,7 @@ export interface WhatsAppNotificationSettings {
 export interface UpdateWhatsAppSettingsPayload {
   enabled: boolean;
   parameters: Partial<NotificationParameters>;
+  templateLanguage?: string;
 }
 
 export interface ConnectWhatsAppPayload {

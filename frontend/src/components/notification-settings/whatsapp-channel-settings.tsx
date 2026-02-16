@@ -27,6 +27,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import {
   MessageSquare,
@@ -127,9 +134,32 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
       const res = await notificationSettingsApi.updateWhatsAppSettings(currentOrganization.id, {
         enabled,
         parameters: settings.parameters,
+        templateLanguage: settings.templateLanguage,
       });
       setSettings(res.data);
       toast({ title: enabled ? t("notifications.whatsapp.enabled") : t("notifications.whatsapp.disabled") });
+    } catch (error) {
+      toast({
+        title: t("notifications.whatsapp.updateFailed"),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLanguageChange = async (language: string) => {
+    if (!settings || !currentOrganization) return;
+
+    setSaving(true);
+    try {
+      const res = await notificationSettingsApi.updateWhatsAppSettings(currentOrganization.id, {
+        enabled: settings.enabled,
+        parameters: settings.parameters,
+        templateLanguage: language,
+      });
+      setSettings(res.data);
+      toast({ title: t("notifications.whatsapp.languageUpdated") });
     } catch (error) {
       toast({
         title: t("notifications.whatsapp.updateFailed"),
@@ -623,6 +653,37 @@ Görüşmek üzere!`}</pre>
           )}
         </div>
       </div>
+
+      {/* Language Selector - Only show when connected */}
+      {settings.isConnected && (
+        <div className="flex items-center justify-between pl-6 py-2 border-t">
+          <div className="space-y-0.5">
+            <Label htmlFor="templateLanguage">
+              {t("notifications.whatsapp.language.title")}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {t("notifications.whatsapp.language.description")}
+            </p>
+          </div>
+          <Select
+            value={settings.templateLanguage || "tr"}
+            onValueChange={handleLanguageChange}
+            disabled={saving}
+          >
+            <SelectTrigger id="templateLanguage" className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tr">
+                {t("notifications.whatsapp.language.turkish")}
+              </SelectItem>
+              <SelectItem value="en_US">
+                {t("notifications.whatsapp.language.englishUS")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }

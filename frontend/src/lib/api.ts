@@ -352,7 +352,9 @@ export const notificationSettingsApi = {
       appointmentCreated?: boolean;
       appointmentReminder?: boolean;
       appointmentCanceled?: boolean;
+      appointmentRescheduled?: boolean;
     };
+    templateLanguage?: string;
   }) => api.put(`/organizations/${orgId}/notification-settings/whatsapp`, data),
   
   // Connect WhatsApp Business Account

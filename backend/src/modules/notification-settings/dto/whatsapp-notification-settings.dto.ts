@@ -40,6 +40,11 @@ export class UpdateWhatsAppSettingsDto {
   @ValidateNested()
   @Type(() => NotificationParametersDto)
   parameters: NotificationParametersDto;
+
+  @ApiPropertyOptional({ description: 'Template language code (e.g., tr, en_US)', example: 'tr' })
+  @IsString()
+  @IsOptional()
+  templateLanguage?: string;
 }
 
 /**
@@ -122,6 +127,9 @@ export class WhatsAppNotificationSettingsResponseDto {
 
   @ApiPropertyOptional({ description: 'Connected phone number (if available)' })
   displayPhoneNumber?: string;
+
+  @ApiProperty({ description: 'Template language code', example: 'tr' })
+  templateLanguage: string;
 
   @ApiProperty({ description: 'Notification parameters' })
   parameters: {

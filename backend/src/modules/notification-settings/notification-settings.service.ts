@@ -171,6 +171,7 @@ export class NotificationSettingsService {
       enabled: whatsappSettings.enabled,
       isConnected,
       displayPhoneNumber: whatsappSettings.displayPhoneNumber || undefined,
+      templateLanguage: whatsappSettings.templateLanguage || 'tr',
       parameters: {
         appointmentCreated: notificationParams.appointmentCreated,
         appointmentReminder: notificationParams.appointmentReminder,
@@ -188,9 +189,12 @@ export class NotificationSettingsService {
     organizationId: string,
     dto: UpdateWhatsAppSettingsDto,
   ): Promise<WhatsAppNotificationSettingsResponseDto> {
-    // Update WhatsApp settings (enabled flag)
+    // Update WhatsApp settings (enabled flag and template language)
     let whatsappSettings = await this.getOrCreateWhatsAppSettings(organizationId);
     whatsappSettings.enabled = dto.enabled;
+    if (dto.templateLanguage) {
+      whatsappSettings.templateLanguage = dto.templateLanguage;
+    }
     await this.whatsappSettingsRepository.save(whatsappSettings);
 
     // Update notification parameters

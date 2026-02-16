@@ -246,6 +246,7 @@ export function useMetaOAuth({
           appointmentCreated: true,
           appointmentReminder: true,
           appointmentCanceled: true,
+          appointmentRescheduled: true,
         },
       });
 

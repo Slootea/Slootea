@@ -1018,6 +1018,13 @@
         "enabled": "WhatsApp notifications enabled",
         "disabled": "WhatsApp notifications disabled",
         "updateFailed": "Failed to update settings",
+        "languageUpdated": "Notification language updated",
+        "language": {
+          "title": "Notification Language",
+          "description": "Select language for WhatsApp message templates",
+          "turkish": "Turkish",
+          "englishUS": "English (US)"
+        },
         "connect": "Connect",
         "disconnect": "Disconnect",
         "connectedSuccess": "WhatsApp Business connected successfully",

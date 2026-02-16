@@ -1018,6 +1018,13 @@
         "enabled": "WhatsApp bildirimleri etkinleştirildi",
         "disabled": "WhatsApp bildirimleri devre dışı bırakıldı",
         "updateFailed": "Ayarlar güncellenemedi",
+        "languageUpdated": "Bildirim dili güncellendi",
+        "language": {
+          "title": "Bildirim Dili",
+          "description": "WhatsApp mesaj şablonları için dil seçin",
+          "turkish": "Türkçe",
+          "englishUS": "İngilizce (ABD)"
+        },
         "connect": "Bağlan",
         "disconnect": "Bağlantıyı Kes",
         "connectedSuccess": "WhatsApp Business başarıyla bağlandı",
