@@ -6,6 +6,8 @@ import { NotificationSettingsService } from './notification-settings.service';
 import { WhatsAppBusinessTemplateService } from './whatsapp-business-template.service';
 import { MessageTemplateController, OrganizationMessageTemplateController } from './message-template.controller';
 import { MessageTemplateService } from './message-template.service';
+import { MetaOAuthController } from './meta-oauth.controller';
+import { MetaOAuthService } from './meta-oauth.service';
 import {
   OrganizationWhatsAppSettings,
   OrganizationNotificationParameters,
@@ -29,8 +31,23 @@ import { AuthModule } from '../auth/auth.module';
     ConfigModule,
     AuthModule,
   ],
-  controllers: [NotificationSettingsController, MessageTemplateController, OrganizationMessageTemplateController],
-  providers: [NotificationSettingsService, WhatsAppBusinessTemplateService, MessageTemplateService],
-  exports: [NotificationSettingsService, WhatsAppBusinessTemplateService, MessageTemplateService],
+  controllers: [
+    NotificationSettingsController,
+    MessageTemplateController,
+    OrganizationMessageTemplateController,
+    MetaOAuthController,
+  ],
+  providers: [
+    NotificationSettingsService,
+    WhatsAppBusinessTemplateService,
+    MessageTemplateService,
+    MetaOAuthService,
+  ],
+  exports: [
+    NotificationSettingsService,
+    WhatsAppBusinessTemplateService,
+    MessageTemplateService,
+    MetaOAuthService,
+  ],
 })
 export class NotificationSettingsModule {}

@@ -1079,7 +1079,35 @@
           "cancel": "İptal",
           "missingFields": "Gerekli alanlar eksik",
           "fillAllFields": "Lütfen tüm gerekli alanları doldurun"
-        }
+        },
+        "oauth": {
+          "title": "WhatsApp Business Bağla",
+          "description": "Meta'nın güvenli girişini kullanarak WhatsApp Business hesabınızı bağlayın. Bu, sizin adınıza randevu bildirimleri göndermemizi sağlar.",
+          "selectAssets": "WhatsApp Hesabı Seç",
+          "selectAssetsDescription": "Bildirim göndermek için kullanılacak WhatsApp Business hesabını ve telefon numarasını seçin.",
+          "connectWithMeta": "Meta ile Bağlan",
+          "waitingForPopup": "Meta girişi bekleniyor...",
+          "completeInPopup": "Açılan pencerede girişi tamamlayın",
+          "loadingAssets": "WhatsApp hesaplarınız yükleniyor...",
+          "noAssetsFound": "WhatsApp Business Hesabı Bulunamadı",
+          "noAssetsFoundDescription": "Meta Business Manager'da bir WhatsApp Business hesabınız olduğundan ve bu işletmenin yöneticisi olduğunuzdan emin olun.",
+          "tryAgain": "Tekrar Dene",
+          "permissionsGranted": "İzinler başarıyla verildi",
+          "selectWaba": "WhatsApp Business Hesabı",
+          "selectWabaPlaceholder": "Bir hesap seçin...",
+          "selectPhone": "Telefon Numarası",
+          "selectPhonePlaceholder": "Bir telefon numarası seçin...",
+          "noPhoneNumbers": "Bu hesap için telefon numarası bulunamadı",
+          "cancel": "İptal",
+          "connect": "Bağlan",
+          "dismiss": "Kapat",
+          "requirementsInfo": "Bağlanmadan önce şunlara sahip olduğunuzdan emin olun:",
+          "requirement1": "Meta Business Manager'da bir WhatsApp Business hesabı",
+          "requirement2": "İşletme hesabına yönetici erişimi",
+          "requirement3": "WhatsApp Business'ta doğrulanmış bir telefon numarası"
+        },
+        "manualConnect": "Gelişmiş Kurulum",
+        "connectWithMeta": "Meta ile Bağlan"
       }
     },
     "messageTemplates": {

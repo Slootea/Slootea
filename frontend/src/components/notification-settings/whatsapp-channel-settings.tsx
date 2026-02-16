@@ -12,6 +12,7 @@ import {
   WhatsAppNotificationSettings,
 } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { WhatsAppOAuthDialog } from "./whatsapp-oauth-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from "@/components/ui/use-toast";
 import {
   MessageSquare,
@@ -39,6 +45,8 @@ import {
   Info,
   Copy,
   FileText,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 
 interface ConnectFormData {
@@ -62,8 +70,10 @@ export function WhatsAppChannelSettings({ className }: WhatsAppChannelSettingsPr
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [oauthDialogOpen, setOauthDialogOpen] = useState(false);
   const [connectingWhatsApp, setConnectingWhatsApp] = useState(false);
   const [templatesInfoOpen, setTemplatesInfoOpen] = useState(false);
+  const [manualEntryOpen, setManualEntryOpen] = useState(false);
 
   // Required Meta WhatsApp templates
   const requiredTemplates = [
@@ -496,108 +506,127 @@ Görüşmek üzere!`}</pre>
               </Button>
             </>
           ) : (
-            <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <Link className="h-4 w-4 mr-2" />
-                  {t("notifications.whatsapp.connect")}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>{t("notifications.whatsapp.connectDialog.title")}</DialogTitle>
-                  <DialogDescription>
-                    {t("notifications.whatsapp.connectDialog.description")}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200 text-sm">
-                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p>
-                        {t("notifications.whatsapp.connectDialog.findValues")}{" "}
-                        <a
-                          href="https://business.facebook.com/settings/whatsapp-business-accounts"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-medium"
-                        >
-                          Meta Business Settings
-                        </a>
+            <>
+              {/* Primary: OAuth Popup Flow */}
+              <Button size="sm" variant="default" onClick={() => setOauthDialogOpen(true)}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                {t("notifications.whatsapp.connectWithMeta") || "Connect with Meta"}
+              </Button>
+              
+              {/* OAuth Dialog */}
+              <WhatsAppOAuthDialog
+                organizationId={currentOrganization?.id}
+                open={oauthDialogOpen}
+                onOpenChange={setOauthDialogOpen}
+                onSuccess={(newSettings) => {
+                  setSettings(newSettings);
+                  toast({ title: t("notifications.whatsapp.connectedSuccess") });
+                }}
+              />
+
+              {/* Secondary: Manual Entry Dialog */}
+              <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="ghost" title={t("notifications.whatsapp.manualConnect") || "Manual Setup"}>
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>{t("notifications.whatsapp.connectDialog.title")}</DialogTitle>
+                    <DialogDescription>
+                      {t("notifications.whatsapp.connectDialog.description")}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200 text-sm">
+                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p>
+                          {t("notifications.whatsapp.connectDialog.findValues")}{" "}
+                          <a
+                            href="https://business.facebook.com/settings/whatsapp-business-accounts"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-medium"
+                          >
+                            Meta Business Settings
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="wabaId">{t("notifications.whatsapp.connectDialog.wabaId")} *</Label>
+                      <Input
+                        id="wabaId"
+                        value={connectForm.wabaId}
+                        onChange={(e) => setConnectForm({ ...connectForm, wabaId: e.target.value })}
+                        placeholder={t("notifications.whatsapp.connectDialog.wabaIdPlaceholder")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumberId">{t("notifications.whatsapp.connectDialog.phoneNumberId")} *</Label>
+                      <Input
+                        id="phoneNumberId"
+                        value={connectForm.phoneNumberId}
+                        onChange={(e) => setConnectForm({ ...connectForm, phoneNumberId: e.target.value })}
+                        placeholder={t("notifications.whatsapp.connectDialog.phoneNumberIdPlaceholder")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="accessToken">{t("notifications.whatsapp.connectDialog.accessToken")} *</Label>
+                      <Input
+                        id="accessToken"
+                        type="password"
+                        value={connectForm.accessToken}
+                        onChange={(e) => setConnectForm({ ...connectForm, accessToken: e.target.value })}
+                        placeholder={t("notifications.whatsapp.connectDialog.accessTokenPlaceholder")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("notifications.whatsapp.connectDialog.accessTokenHint")}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="displayPhoneNumber">{t("notifications.whatsapp.connectDialog.displayPhoneNumber")}</Label>
+                      <Input
+                        id="displayPhoneNumber"
+                        value={connectForm.displayPhoneNumber}
+                        onChange={(e) => setConnectForm({ ...connectForm, displayPhoneNumber: e.target.value })}
+                        placeholder={t("notifications.whatsapp.connectDialog.displayPhoneNumberPlaceholder")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("notifications.whatsapp.connectDialog.displayPhoneNumberHint")}
                       </p>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="wabaId">{t("notifications.whatsapp.connectDialog.wabaId")} *</Label>
-                    <Input
-                      id="wabaId"
-                      value={connectForm.wabaId}
-                      onChange={(e) => setConnectForm({ ...connectForm, wabaId: e.target.value })}
-                      placeholder={t("notifications.whatsapp.connectDialog.wabaIdPlaceholder")}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumberId">{t("notifications.whatsapp.connectDialog.phoneNumberId")} *</Label>
-                    <Input
-                      id="phoneNumberId"
-                      value={connectForm.phoneNumberId}
-                      onChange={(e) => setConnectForm({ ...connectForm, phoneNumberId: e.target.value })}
-                      placeholder={t("notifications.whatsapp.connectDialog.phoneNumberIdPlaceholder")}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="accessToken">{t("notifications.whatsapp.connectDialog.accessToken")} *</Label>
-                    <Input
-                      id="accessToken"
-                      type="password"
-                      value={connectForm.accessToken}
-                      onChange={(e) => setConnectForm({ ...connectForm, accessToken: e.target.value })}
-                      placeholder={t("notifications.whatsapp.connectDialog.accessTokenPlaceholder")}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t("notifications.whatsapp.connectDialog.accessTokenHint")}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="displayPhoneNumber">{t("notifications.whatsapp.connectDialog.displayPhoneNumber")}</Label>
-                    <Input
-                      id="displayPhoneNumber"
-                      value={connectForm.displayPhoneNumber}
-                      onChange={(e) => setConnectForm({ ...connectForm, displayPhoneNumber: e.target.value })}
-                      placeholder={t("notifications.whatsapp.connectDialog.displayPhoneNumberPlaceholder")}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t("notifications.whatsapp.connectDialog.displayPhoneNumberHint")}
-                    </p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setConnectDialogOpen(false)}>
-                    {t("notifications.whatsapp.connectDialog.cancel")}
-                  </Button>
-                  <Button
-                    onClick={handleConnectWhatsApp}
-                    disabled={
-                      connectingWhatsApp ||
-                      !connectForm.wabaId ||
-                      !connectForm.phoneNumberId ||
-                      !connectForm.accessToken
-                    }
-                  >
-                    {connectingWhatsApp ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Link className="h-4 w-4 mr-2" />
-                    )}
-                    {t("notifications.whatsapp.connect")}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setConnectDialogOpen(false)}>
+                      {t("notifications.whatsapp.connectDialog.cancel")}
+                    </Button>
+                    <Button
+                      onClick={handleConnectWhatsApp}
+                      disabled={
+                        connectingWhatsApp ||
+                        !connectForm.wabaId ||
+                        !connectForm.phoneNumberId ||
+                        !connectForm.accessToken
+                      }
+                    >
+                      {connectingWhatsApp ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Link className="h-4 w-4 mr-2" />
+                      )}
+                      {t("notifications.whatsapp.connect")}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
         </div>
       </div>

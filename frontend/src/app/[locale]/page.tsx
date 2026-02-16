@@ -206,8 +206,8 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
             &copy; {new Date().getFullYear()} Slootea. {t('footer.copyright')}
           </div>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground">{t('footer.privacy')}</Link>
-            <Link href="#" className="hover:text-foreground">{t('footer.terms')}</Link>
+            <Link href="/privacy" className="hover:text-foreground">{t('footer.privacy')}</Link>
+            <Link href="/terms" className="hover:text-foreground">{t('footer.terms')}</Link>
             <Link href="#" className="hover:text-foreground">{t('footer.contact')}</Link>
           </div>
         </div>

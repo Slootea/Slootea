@@ -633,6 +633,36 @@ export interface LinkTemplateToEventPayload {
   languageCode: string;
 }
 
+// Meta OAuth Types (WhatsApp Connection via Popup)
+export interface MetaOAuthUrlResponse {
+  authUrl: string;
+  state: string;
+}
+
+export interface WhatsAppBusinessAccount {
+  id: string;
+  name: string;
+  account_review_status?: string;
+}
+
+export interface WhatsAppPhoneNumber {
+  id: string;
+  display_phone_number: string;
+  verified_name: string;
+  quality_rating?: string;
+}
+
+export interface WhatsAppAssetsResponse {
+  whatsappBusinessAccounts: WhatsAppBusinessAccount[];
+  phoneNumbers: Record<string, WhatsAppPhoneNumber[]>;
+}
+
+export interface CompleteMetaOAuthPayload {
+  wabaId: string;
+  phoneNumberId: string;
+  displayPhoneNumber?: string;
+}
+
 // Message Template Types
 export enum MessageTemplateType {
   APPOINTMENT_BOOKED = 'APPOINTMENT_BOOKED',

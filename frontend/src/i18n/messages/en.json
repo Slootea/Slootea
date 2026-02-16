@@ -1079,7 +1079,35 @@
           "cancel": "Cancel",
           "missingFields": "Missing required fields",
           "fillAllFields": "Please fill in all required fields"
-        }
+        },
+        "oauth": {
+          "title": "Connect WhatsApp Business",
+          "description": "Connect your WhatsApp Business account using Meta's secure login. This allows us to send appointment notifications on your behalf.",
+          "selectAssets": "Select WhatsApp Account",
+          "selectAssetsDescription": "Choose which WhatsApp Business account and phone number to use for sending notifications.",
+          "connectWithMeta": "Connect with Meta",
+          "waitingForPopup": "Waiting for Meta login...",
+          "completeInPopup": "Complete the login in the popup window",
+          "loadingAssets": "Loading your WhatsApp accounts...",
+          "noAssetsFound": "No WhatsApp Business Accounts Found",
+          "noAssetsFoundDescription": "Make sure you have a WhatsApp Business account in Meta Business Manager and you are an admin of that business.",
+          "tryAgain": "Try Again",
+          "permissionsGranted": "Permissions granted successfully",
+          "selectWaba": "WhatsApp Business Account",
+          "selectWabaPlaceholder": "Select an account...",
+          "selectPhone": "Phone Number",
+          "selectPhonePlaceholder": "Select a phone number...",
+          "noPhoneNumbers": "No phone numbers found for this account",
+          "cancel": "Cancel",
+          "connect": "Connect",
+          "dismiss": "Dismiss",
+          "requirementsInfo": "Before connecting, make sure you have:",
+          "requirement1": "A WhatsApp Business account in Meta Business Manager",
+          "requirement2": "Admin access to the business account",
+          "requirement3": "A verified phone number in WhatsApp Business"
+        },
+        "manualConnect": "Advanced Setup",
+        "connectWithMeta": "Connect with Meta"
       }
     },
     "messageTemplates": {

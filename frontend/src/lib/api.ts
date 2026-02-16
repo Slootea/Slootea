@@ -445,6 +445,37 @@ export const notificationSettingsApi = {
   }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/link`, data),
 };
 
+// Meta OAuth API (WhatsApp Connection via Popup)
+export const metaOAuthApi = {
+  // Generate OAuth URL for Meta login popup
+  getOAuthUrl: (orgId: string, redirectUri?: string) =>
+    api.get(`/auth/meta/organizations/${orgId}/oauth-url`, {
+      params: redirectUri ? { redirectUri } : undefined,
+    }),
+  
+  // Get available WhatsApp Business assets after OAuth
+  getWhatsAppAssets: (orgId: string) =>
+    api.get(`/auth/meta/organizations/${orgId}/whatsapp-assets`),
+  
+  // Complete OAuth connection with selected assets
+  completeConnection: (orgId: string, data: {
+    wabaId: string;
+    phoneNumberId: string;
+    displayPhoneNumber?: string;
+  }) => api.post(`/auth/meta/organizations/${orgId}/complete`, {
+    organizationId: orgId,
+    ...data,
+  }),
+  
+  // Check if there's a pending OAuth session
+  hasPendingSession: (orgId: string) =>
+    api.get(`/auth/meta/organizations/${orgId}/pending-session`),
+  
+  // Cancel pending OAuth session
+  cancelSession: (orgId: string) =>
+    api.post(`/auth/meta/organizations/${orgId}/cancel-session`),
+};
+
 // Message Templates API
 export const messageTemplatesApi = {
   // Get all message templates for an organization
