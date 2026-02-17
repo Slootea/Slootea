@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { WhatsAppService } from './whatsapp.service';
-import { SmsService } from './sms.service';
-import { EmailService } from './email.service';
 import { NotificationService } from './notification.service';
 import { NotificationReminderService } from './notification-reminder.service';
 import {
@@ -12,38 +10,22 @@ import {
 import {
   OrganizationNotificationParameters,
 } from '../notification-settings/entities/organization-notification-parameters.entity';
-import {
-  OrganizationSmsSettings,
-} from '../notification-settings/entities/organization-sms-settings.entity';
-import {
-  OrganizationEmailSettings,
-} from '../notification-settings/entities/organization-email-settings.entity';
-import {
-  OrganizationMessageTemplate,
-} from '../notification-settings/entities/organization-message-template.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
-import { MessageTemplateService } from '../notification-settings/message-template.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       OrganizationWhatsAppSettings,
       OrganizationNotificationParameters,
-      OrganizationSmsSettings,
-      OrganizationEmailSettings,
-      OrganizationMessageTemplate,
       Appointment,
     ]),
     ConfigModule,
   ],
   providers: [
     WhatsAppService,
-    SmsService,
-    EmailService,
     NotificationService,
     NotificationReminderService,
-    MessageTemplateService,
   ],
-  exports: [WhatsAppService, SmsService, EmailService, NotificationService, MessageTemplateService],
+  exports: [WhatsAppService, NotificationService],
 })
 export class MessagingModule {}

@@ -1,7 +1,25 @@
 import { IsBoolean, IsOptional, IsString, IsDateString, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { WhatsAppEventType, WhatsAppTemplateStatus } from '../entities/organization-whatsapp-template.entity';
+
+/**
+ * WhatsApp notification event types (defined inline since entity was removed)
+ */
+export enum WhatsAppEventType {
+  APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
+  APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+  APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
+}
+
+/**
+ * WhatsApp template approval status (defined inline since entity was removed)
+ */
+export enum WhatsAppTemplateStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
 
 /**
  * DTO for notification parameters (which events trigger notifications)

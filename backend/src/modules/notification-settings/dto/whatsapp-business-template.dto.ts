@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsBoolean, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { WhatsAppEventType, WhatsAppTemplateStatus } from '../entities/organization-whatsapp-template.entity';
+import { WhatsAppEventType, WhatsAppTemplateStatus } from './whatsapp-notification-settings.dto';
 
 /**
  * WhatsApp template category enum

@@ -21,7 +21,6 @@ import {
 import { ServiceOptionsService } from '../service-options/service-options.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BlockedTimesService } from '../blocked-times/blocked-times.service';
-import { SettingsService } from '../settings/settings.service';
 import { OrganizationSettingsService } from '../settings/organization-settings.service';
 import { BookingLinksService } from '../booking-links/booking-links.service';
 import { ClientsService } from '../clients/clients.service';
@@ -149,7 +148,6 @@ export class AppointmentsService {
     private readonly serviceOptionsService: ServiceOptionsService,
     private readonly availabilityService: AvailabilityService,
     private readonly blockedTimesService: BlockedTimesService,
-    private readonly settingsService: SettingsService,
     private readonly organizationSettingsService: OrganizationSettingsService,
     private readonly bookingLinksService: BookingLinksService,
     @Inject(forwardRef(() => ClientsService))
@@ -438,8 +436,14 @@ export class AppointmentsService {
       );
     }
 
-    // Check if past confirmation deadline
-    const settings = await this.settingsService.findByUserId(appointment.userId);
+    // Get organization settings via the user's organization
+    // First get the user to find their organizationId
+    const user = await this.appointmentRepository.manager.findOne('User', { where: { id: appointment.userId } }) as { organizationId: string } | null;
+    if (!user?.organizationId) {
+      throw new BadRequestException('Cannot find organization settings');
+    }
+    
+    const settings = await this.organizationSettingsService.findByOrganizationId(user.organizationId);
     const deadline = new Date(appointment.startTime);
     deadline.setHours(
       deadline.getHours() - settings.confirmationDeadlineHours,
@@ -712,9 +716,20 @@ export class AppointmentsService {
     userId: string,
     serviceOptionId: string,
     date: string,
+    organizationId?: string,
   ): Promise<TimeSlot[]> {
     const serviceOption = await this.serviceOptionsService.findById(serviceOptionId);
-    const settings = await this.settingsService.findByUserId(userId);
+    
+    // Get organization settings
+    let orgId = organizationId;
+    if (!orgId) {
+      const user = await this.appointmentRepository.manager.findOne('User', { where: { id: userId } }) as { organizationId: string } | null;
+      orgId = user?.organizationId;
+    }
+    if (!orgId) {
+      return []; // No organization, can't get settings
+    }
+    const settings = await this.organizationSettingsService.findByOrganizationId(orgId);
 
     const requestedDate = new Date(date);
     const today = new Date();
@@ -1337,8 +1352,6 @@ export class AppointmentsService {
         const result = await this.notificationService.sendAppointmentCreatedNotification(notificationData);
         if (result.anySent) {
           this.logger.log(`Notification sent for appointment ${savedAppointment.id}`, {
-            email: result.email?.success,
-            sms: result.sms?.success,
             whatsapp: result.whatsapp?.success,
           });
         } else {
@@ -1431,9 +1444,15 @@ export class AppointmentsService {
     const serviceOption = await this.serviceOptionsService.findById(serviceOptionId);
     
     // Get settings based on context
-    const settings = organizationId 
-      ? await this.organizationSettingsService.findByOrganizationId(organizationId)
-      : await this.settingsService.findByUserId(userId);
+    let orgId = organizationId;
+    if (!orgId) {
+      const user = await this.appointmentRepository.manager.findOne('User', { where: { id: userId } }) as { organizationId: string } | null;
+      orgId = user?.organizationId;
+    }
+    if (!orgId) {
+      return { available: false, nextSlot: null, message: 'Organization not found' };
+    }
+    const settings = await this.organizationSettingsService.findByOrganizationId(orgId);
 
     const searchStartDate = fromDate ? new Date(fromDate) : new Date();
     const maxDate = new Date();
@@ -1641,9 +1660,15 @@ export class AppointmentsService {
     const serviceOption = await this.serviceOptionsService.findById(serviceOptionId);
     
     // Get settings based on context
-    const settings = organizationId 
-      ? await this.organizationSettingsService.findByOrganizationId(organizationId)
-      : await this.settingsService.findByUserId(userId);
+    let orgId = organizationId;
+    if (!orgId) {
+      const user = await this.appointmentRepository.manager.findOne('User', { where: { id: userId } }) as { organizationId: string } | null;
+      orgId = user?.organizationId;
+    }
+    if (!orgId) {
+      return { available: false, conflict: { reason: 'Organization not found' } };
+    }
+    const settings = await this.organizationSettingsService.findByOrganizationId(orgId);
 
     const requestedStart = new Date(startTime);
     const requestedEnd = new Date(requestedStart.getTime() + serviceOption.duration * 60000);

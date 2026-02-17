@@ -24,15 +24,9 @@ import { WhatsAppBusinessTemplateService } from './whatsapp-business-template.se
 import {
   UpdateWhatsAppSettingsDto,
   ConnectWhatsAppDto,
-  AssignWhatsAppTemplateDto,
   WhatsAppNotificationSettingsResponseDto,
   WhatsAppTemplateResponseDto,
 } from './dto/whatsapp-notification-settings.dto';
-import {
-  UpdateSmsSettingsDto,
-  ConnectSmsDto,
-  SmsNotificationSettingsResponseDto,
-} from './dto/sms-notification-settings.dto';
 import {
   CreateWhatsAppBusinessTemplateDto,
   UpdateWhatsAppBusinessTemplateDto,
@@ -144,49 +138,6 @@ export class NotificationSettingsController {
     return this.notificationSettingsService.disconnectWhatsApp(organizationId);
   }
 
-  /**
-   * Assign a WhatsApp template to an event type
-   */
-  @Post('whatsapp/templates')
-  @ApiOperation({ summary: 'Assign WhatsApp template to event type' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 201,
-    description: 'Template assigned successfully',
-    type: WhatsAppTemplateResponseDto,
-  })
-  async assignTemplate(
-    @Param('orgId') orgId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-    @Body() dto: AssignWhatsAppTemplateDto,
-  ): Promise<WhatsAppTemplateResponseDto> {
-    const organizationId = orgId || headerOrgId;
-    return this.notificationSettingsService.assignTemplate(organizationId, dto);
-  }
-
-  /**
-   * Delete a template assignment
-   */
-  @Delete('whatsapp/templates/:templateId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete template assignment' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiParam({ name: 'templateId', description: 'Template ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 204,
-    description: 'Template deleted successfully',
-  })
-  async deleteTemplate(
-    @Param('orgId') orgId: string,
-    @Param('templateId') templateId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-  ): Promise<void> {
-    const organizationId = orgId || headerOrgId;
-    return this.notificationSettingsService.deleteTemplate(organizationId, templateId);
-  }
-
   // ==================== WhatsApp Business Templates (Meta Graph API) ====================
 
   /**
@@ -273,15 +224,6 @@ export class NotificationSettingsController {
       components,
     });
     
-    // Link it to the local event type
-    await this.whatsappBusinessTemplateService.createOrUpdateLocalTemplate(
-      organizationId,
-      dto.eventType,
-      templateName,
-      dto.language,
-      false,
-    );
-    
     return template;
   }
 
@@ -349,127 +291,5 @@ export class NotificationSettingsController {
   ): Promise<SyncTemplatesResponseDto> {
     const organizationId = orgId || headerOrgId;
     return this.whatsappBusinessTemplateService.syncTemplatesFromMeta(organizationId);
-  }
-
-  /**
-   * Link an existing Meta template to a local event type
-   */
-  @Post('whatsapp/business-templates/link')
-  @ApiOperation({ summary: 'Link existing Meta template to event type' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 200,
-    description: 'Template linked successfully',
-    type: WhatsAppTemplateResponseDto,
-  })
-  async linkTemplateToEvent(
-    @Param('orgId') orgId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-    @Body() dto: LinkTemplateToEventDto,
-  ): Promise<WhatsAppTemplateResponseDto> {
-    const organizationId = orgId || headerOrgId;
-    const template = await this.whatsappBusinessTemplateService.createOrUpdateLocalTemplate(
-      organizationId,
-      dto.eventType,
-      dto.templateName,
-      dto.languageCode,
-      false,
-    );
-    
-    return {
-      id: template.id,
-      eventType: template.eventType,
-      templateName: template.templateName,
-      languageCode: template.languageCode,
-      status: template.status,
-    };
-  }
-
-  // ==================== SMS Settings Endpoints ====================
-
-  /**
-   * Get SMS notification settings for an organization
-   */
-  @Get('sms')
-  @ApiOperation({ summary: 'Get SMS notification settings' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 200,
-    description: 'SMS notification settings',
-    type: SmsNotificationSettingsResponseDto,
-  })
-  async getSmsSettings(
-    @Param('orgId') orgId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-  ): Promise<SmsNotificationSettingsResponseDto> {
-    const organizationId = orgId || headerOrgId;
-    return this.notificationSettingsService.getSmsSettings(organizationId);
-  }
-
-  /**
-   * Update SMS enabled status and notification parameters
-   */
-  @Put('sms')
-  @ApiOperation({ summary: 'Update SMS settings (enable/disable and parameters)' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 200,
-    description: 'Updated SMS notification settings',
-    type: SmsNotificationSettingsResponseDto,
-  })
-  async updateSmsSettings(
-    @Param('orgId') orgId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-    @Body() dto: UpdateSmsSettingsDto,
-  ): Promise<SmsNotificationSettingsResponseDto> {
-    const organizationId = orgId || headerOrgId;
-    return this.notificationSettingsService.updateSmsSettings(organizationId, dto);
-  }
-
-  /**
-   * Connect Twilio SMS
-   * 
-   * This endpoint stores the Twilio credentials for sending SMS.
-   */
-  @Post('sms/connect')
-  @ApiOperation({ summary: 'Connect Twilio SMS' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 200,
-    description: 'Twilio SMS connected successfully',
-    type: SmsNotificationSettingsResponseDto,
-  })
-  async connectSms(
-    @Param('orgId') orgId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-    @Body() dto: ConnectSmsDto,
-  ): Promise<SmsNotificationSettingsResponseDto> {
-    const organizationId = orgId || headerOrgId;
-    return this.notificationSettingsService.connectSms(organizationId, dto);
-  }
-
-  /**
-   * Disconnect Twilio SMS
-   */
-  @Post('sms/disconnect')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Disconnect Twilio SMS' })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  @ApiResponse({
-    status: 200,
-    description: 'Twilio SMS disconnected successfully',
-    type: SmsNotificationSettingsResponseDto,
-  })
-  async disconnectSms(
-    @Param('orgId') orgId: string,
-    @Headers('x-organization-id') headerOrgId: string,
-  ): Promise<SmsNotificationSettingsResponseDto> {
-    const organizationId = orgId || headerOrgId;
-    return this.notificationSettingsService.disconnectSms(organizationId);
   }
 }

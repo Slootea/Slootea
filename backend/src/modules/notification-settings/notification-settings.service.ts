@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -10,25 +10,10 @@ import {
   OrganizationNotificationParameters,
 } from './entities/organization-notification-parameters.entity';
 import {
-  OrganizationWhatsAppTemplate,
-  WhatsAppEventType,
-  WhatsAppTemplateStatus,
-} from './entities/organization-whatsapp-template.entity';
-import {
-  OrganizationSmsSettings,
-} from './entities/organization-sms-settings.entity';
-import {
   UpdateWhatsAppSettingsDto,
   ConnectWhatsAppDto,
-  AssignWhatsAppTemplateDto,
   WhatsAppNotificationSettingsResponseDto,
-  WhatsAppTemplateResponseDto,
 } from './dto/whatsapp-notification-settings.dto';
-import {
-  UpdateSmsSettingsDto,
-  ConnectSmsDto,
-  SmsNotificationSettingsResponseDto,
-} from './dto/sms-notification-settings.dto';
 
 @Injectable()
 export class NotificationSettingsService {
@@ -41,10 +26,6 @@ export class NotificationSettingsService {
     private readonly whatsappSettingsRepository: Repository<OrganizationWhatsAppSettings>,
     @InjectRepository(OrganizationNotificationParameters)
     private readonly notificationParamsRepository: Repository<OrganizationNotificationParameters>,
-    @InjectRepository(OrganizationWhatsAppTemplate)
-    private readonly whatsappTemplateRepository: Repository<OrganizationWhatsAppTemplate>,
-    @InjectRepository(OrganizationSmsSettings)
-    private readonly smsSettingsRepository: Repository<OrganizationSmsSettings>,
     private readonly configService: ConfigService,
   ) {
     // Get encryption key from environment or generate a default for development
@@ -138,34 +119,16 @@ export class NotificationSettingsService {
   }
 
   /**
-   * Get all WhatsApp templates for an organization
-   */
-  private async getTemplates(organizationId: string): Promise<OrganizationWhatsAppTemplate[]> {
-    return this.whatsappTemplateRepository.find({
-      where: { organizationId },
-    });
-  }
-
-  /**
    * Get complete WhatsApp notification settings for an organization
    */
   async getWhatsAppSettings(organizationId: string): Promise<WhatsAppNotificationSettingsResponseDto> {
-    const [whatsappSettings, notificationParams, templates] = await Promise.all([
+    const [whatsappSettings, notificationParams] = await Promise.all([
       this.getOrCreateWhatsAppSettings(organizationId),
       this.getOrCreateNotificationParams(organizationId),
-      this.getTemplates(organizationId),
     ]);
 
     // Check if connected (has wabaId and phoneNumberId)
     const isConnected = !!(whatsappSettings.wabaId && whatsappSettings.phoneNumberId && whatsappSettings.accessToken);
-
-    const templateResponses: WhatsAppTemplateResponseDto[] = templates.map((t) => ({
-      id: t.id,
-      eventType: t.eventType,
-      templateName: t.templateName,
-      languageCode: t.languageCode,
-      status: t.status,
-    }));
 
     return {
       enabled: whatsappSettings.enabled,
@@ -178,7 +141,7 @@ export class NotificationSettingsService {
         appointmentCanceled: notificationParams.appointmentCanceled,
         appointmentRescheduled: notificationParams.appointmentRescheduled,
       },
-      templates: templateResponses,
+      templates: [], // Templates are now managed directly in Meta Business Suite
     };
   }
 
@@ -265,71 +228,6 @@ export class NotificationSettingsService {
   }
 
   /**
-   * Assign a WhatsApp template to an event type
-   * Creates or updates the template mapping
-   */
-  async assignTemplate(
-    organizationId: string,
-    dto: AssignWhatsAppTemplateDto,
-  ): Promise<WhatsAppTemplateResponseDto> {
-    // Check if template already exists for this event type
-    let template = await this.whatsappTemplateRepository.findOne({
-      where: {
-        organizationId,
-        eventType: dto.eventType,
-      },
-    });
-
-    if (template) {
-      // Update existing template
-      template.templateName = dto.templateName;
-      template.languageCode = dto.languageCode;
-      template.status = WhatsAppTemplateStatus.PENDING; // Reset status on update
-    } else {
-      // Create new template
-      template = this.whatsappTemplateRepository.create({
-        organizationId,
-        eventType: dto.eventType,
-        templateName: dto.templateName,
-        languageCode: dto.languageCode,
-        status: WhatsAppTemplateStatus.PENDING,
-      });
-    }
-
-    template = await this.whatsappTemplateRepository.save(template);
-
-    // TODO: In future, verify template with Meta API and update status
-    // This would involve calling the WhatsApp Business API to verify
-    // the template exists and is approved
-
-    return {
-      id: template.id,
-      eventType: template.eventType,
-      templateName: template.templateName,
-      languageCode: template.languageCode,
-      status: template.status,
-    };
-  }
-
-  /**
-   * Delete a template assignment
-   */
-  async deleteTemplate(organizationId: string, templateId: string): Promise<void> {
-    const template = await this.whatsappTemplateRepository.findOne({
-      where: {
-        id: templateId,
-        organizationId,
-      },
-    });
-
-    if (!template) {
-      throw new NotFoundException('Template not found');
-    }
-
-    await this.whatsappTemplateRepository.remove(template);
-  }
-
-  /**
    * Get decrypted access token for sending messages (internal use only)
    * NOTE: This should only be called by the WhatsApp sending service
    */
@@ -360,148 +258,5 @@ export class NotificationSettingsService {
     });
 
     return !!(settings?.enabled && settings?.wabaId && settings?.phoneNumberId && settings?.accessToken);
-  }
-
-  // ==================== SMS Settings Management ====================
-
-  /**
-   * Get or create SMS settings for an organization
-   */
-  private async getOrCreateSmsSettings(organizationId: string): Promise<OrganizationSmsSettings> {
-    let settings = await this.smsSettingsRepository.findOne({
-      where: { organizationId },
-    });
-
-    if (!settings) {
-      settings = this.smsSettingsRepository.create({
-        organizationId,
-        enabled: false,
-      });
-      settings = await this.smsSettingsRepository.save(settings);
-    }
-
-    return settings;
-  }
-
-  /**
-   * Mask Account SID for display (show first 4 and last 4 characters)
-   */
-  private maskAccountSid(accountSid: string): string {
-    if (accountSid.length <= 8) {
-      return '****';
-    }
-    return `${accountSid.slice(0, 4)}...${accountSid.slice(-4)}`;
-  }
-
-  /**
-   * Get complete SMS notification settings for an organization
-   */
-  async getSmsSettings(organizationId: string): Promise<SmsNotificationSettingsResponseDto> {
-    const [smsSettings, notificationParams] = await Promise.all([
-      this.getOrCreateSmsSettings(organizationId),
-      this.getOrCreateNotificationParams(organizationId),
-    ]);
-
-    // Check if connected (has accountSid, authToken, and fromPhoneNumber)
-    const isConnected = !!(smsSettings.accountSid && smsSettings.authToken && smsSettings.fromPhoneNumber);
-
-    return {
-      enabled: smsSettings.enabled,
-      isConnected,
-      fromPhoneNumber: smsSettings.fromPhoneNumber || undefined,
-      accountSidMasked: smsSettings.accountSid ? this.maskAccountSid(smsSettings.accountSid) : undefined,
-      parameters: {
-        appointmentCreated: notificationParams.appointmentCreated,
-        appointmentReminder: notificationParams.appointmentReminder,
-        appointmentCanceled: notificationParams.appointmentCanceled,
-        appointmentRescheduled: notificationParams.appointmentRescheduled,
-      },
-    };
-  }
-
-  /**
-   * Update SMS enabled status and notification parameters
-   */
-  async updateSmsSettings(
-    organizationId: string,
-    dto: UpdateSmsSettingsDto,
-  ): Promise<SmsNotificationSettingsResponseDto> {
-    // Update SMS settings (enabled flag)
-    let smsSettings = await this.getOrCreateSmsSettings(organizationId);
-    smsSettings.enabled = dto.enabled;
-    await this.smsSettingsRepository.save(smsSettings);
-
-    // Update notification parameters if provided
-    if (dto.parameters) {
-      let notificationParams = await this.getOrCreateNotificationParams(organizationId);
-      if (dto.parameters.appointmentCreated !== undefined) {
-        notificationParams.appointmentCreated = dto.parameters.appointmentCreated;
-      }
-      if (dto.parameters.appointmentReminder !== undefined) {
-        notificationParams.appointmentReminder = dto.parameters.appointmentReminder;
-      }
-      if (dto.parameters.appointmentCanceled !== undefined) {
-        notificationParams.appointmentCanceled = dto.parameters.appointmentCanceled;
-      }
-      if (dto.parameters.appointmentRescheduled !== undefined) {
-        notificationParams.appointmentRescheduled = dto.parameters.appointmentRescheduled;
-      }
-      await this.notificationParamsRepository.save(notificationParams);
-    }
-
-    return this.getSmsSettings(organizationId);
-  }
-
-  /**
-   * Connect Twilio SMS
-   * Stores encrypted auth token
-   */
-  async connectSms(
-    organizationId: string,
-    dto: ConnectSmsDto,
-  ): Promise<SmsNotificationSettingsResponseDto> {
-    let settings = await this.getOrCreateSmsSettings(organizationId);
-
-    settings.accountSid = dto.accountSid;
-    settings.authToken = this.encrypt(dto.authToken);
-    settings.fromPhoneNumber = dto.fromPhoneNumber;
-
-    await this.smsSettingsRepository.save(settings);
-
-    this.logger.log(`Twilio SMS connected for organization ${organizationId}`);
-
-    return this.getSmsSettings(organizationId);
-  }
-
-  /**
-   * Disconnect Twilio SMS
-   */
-  async disconnectSms(organizationId: string): Promise<SmsNotificationSettingsResponseDto> {
-    let settings = await this.smsSettingsRepository.findOne({
-      where: { organizationId },
-    });
-
-    if (settings) {
-      settings.accountSid = null;
-      settings.authToken = null;
-      settings.fromPhoneNumber = null;
-      settings.enabled = false;
-      await this.smsSettingsRepository.save(settings);
-    }
-
-    this.logger.log(`Twilio SMS disconnected for organization ${organizationId}`);
-
-    return this.getSmsSettings(organizationId);
-  }
-
-  /**
-   * Check if SMS is enabled and connected for an organization
-   */
-  async isSmsReady(organizationId: string): Promise<boolean> {
-    const settings = await this.smsSettingsRepository.findOne({
-      where: { organizationId },
-    });
-
-    return !!(settings?.enabled && settings?.accountSid && settings?.authToken && settings?.fromPhoneNumber);
   }
 }

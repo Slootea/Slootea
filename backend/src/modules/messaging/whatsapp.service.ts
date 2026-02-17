@@ -8,8 +8,6 @@ import {
 import {
   OrganizationNotificationParameters,
 } from '../notification-settings/entities/organization-notification-parameters.entity';
-import { MessageTemplateService, MessageTemplateData } from '../notification-settings/message-template.service';
-import { MessageTemplateType } from '../notification-settings/entities/organization-message-template.entity';
 import * as crypto from 'crypto';
 
 /**
@@ -111,7 +109,6 @@ export class WhatsAppService {
     @InjectRepository(OrganizationNotificationParameters)
     private readonly notificationParamsRepository: Repository<OrganizationNotificationParameters>,
     private readonly configService: ConfigService,
-    private readonly messageTemplateService: MessageTemplateService,
   ) {
     // Get encryption key from environment or generate a default for development
     const keyString = this.configService.get<string>('WHATSAPP_TOKEN_ENCRYPTION_KEY');
@@ -215,99 +212,6 @@ export class WhatsAppService {
         return params.appointmentRescheduled;
       default:
         return false;
-    }
-  }
-
-  /**
-   * Map WhatsApp event type to message template type
-   */
-  private mapEventToTemplateType(eventType: WhatsAppEventType): MessageTemplateType {
-    switch (eventType) {
-      case WhatsAppEventType.APPOINTMENT_CREATED:
-        return MessageTemplateType.APPOINTMENT_BOOKED;
-      case WhatsAppEventType.APPOINTMENT_REMINDER:
-        return MessageTemplateType.APPOINTMENT_REMINDER;
-      case WhatsAppEventType.APPOINTMENT_CANCELED:
-        return MessageTemplateType.APPOINTMENT_CANCELED;
-      case WhatsAppEventType.APPOINTMENT_RESCHEDULED:
-        return MessageTemplateType.APPOINTMENT_UPDATED;
-      default:
-        return MessageTemplateType.APPOINTMENT_BOOKED;
-    }
-  }
-
-  /**
-   * Generate WhatsApp message based on event type using organization templates
-   */
-  private async generateMessage(eventType: WhatsAppEventType, data: AppointmentNotificationData): Promise<string> {
-    const templateType = this.mapEventToTemplateType(eventType);
-
-    // Format date and time for template
-    const formattedDate = data.appointmentDate.toLocaleDateString('en', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    const formattedTime = data.appointmentDate.toLocaleTimeString('en', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const templateData: MessageTemplateData = {
-      clientName: data.clientName,
-      serviceName: data.serviceName,
-      appointmentDate: formattedDate,
-      appointmentTime: formattedTime,
-      providerName: data.providerName,
-      organizationName: data.organizationName || 'Our clinic',
-      appointmentLink: data.confirmationLink,
-      confirmationLink: data.confirmationLink,
-    };
-
-    try {
-      const rendered = await this.messageTemplateService.getRenderedMessage(
-        data.organizationId,
-        templateType,
-        templateData,
-      );
-
-      if (rendered?.body) {
-        return rendered.body;
-      }
-    } catch (error) {
-      this.logger.warn(`Failed to get message template, using fallback: ${error.message}`);
-    }
-
-    // Fallback message
-    return this.generateFallbackMessage(eventType, data);
-  }
-
-  /**
-   * Fallback message generation if template service fails
-   */
-  private generateFallbackMessage(eventType: WhatsAppEventType, data: AppointmentNotificationData): string {
-    const formattedDate = data.appointmentDate.toLocaleString('en', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    const orgName = data.organizationName || 'Our clinic';
-
-    switch (eventType) {
-      case WhatsAppEventType.APPOINTMENT_CREATED:
-        return `Hi ${data.clientName}, your ${data.serviceName} appointment is confirmed for ${formattedDate}. - ${orgName}`;
-      case WhatsAppEventType.APPOINTMENT_REMINDER:
-        return `Hi ${data.clientName}, reminder: your ${data.serviceName} appointment is on ${formattedDate}. See you soon! - ${orgName}`;
-      case WhatsAppEventType.APPOINTMENT_CANCELED:
-        return `Hi ${data.clientName}, your ${data.serviceName} appointment on ${formattedDate} has been cancelled. - ${orgName}`;
-      case WhatsAppEventType.APPOINTMENT_RESCHEDULED:
-        return `Hi ${data.clientName}, your ${data.serviceName} appointment has been rescheduled to ${formattedDate}. - ${orgName}`;
-      default:
-        return '';
     }
   }
 

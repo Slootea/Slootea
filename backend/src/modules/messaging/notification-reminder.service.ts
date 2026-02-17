@@ -148,13 +148,11 @@ export class NotificationReminderService {
             : undefined,
         };
 
-        // Send notification to all channels
+        // Send notification via WhatsApp
         const result = await this.notificationService.sendNotification(eventType, notificationData);
 
         if (result.anySent) {
           this.logger.log(`${reminderType} reminder sent for appointment ${appointment.id}`, {
-            email: result.email?.success,
-            sms: result.sms?.success,
             whatsapp: result.whatsapp?.success,
           });
           
@@ -164,8 +162,6 @@ export class NotificationReminderService {
           });
         } else {
           this.logger.debug(`No ${reminderType} reminder sent for appointment ${appointment.id} - all channels failed or disabled`, {
-            email: result.email?.error,
-            sms: result.sms?.error,
             whatsapp: result.whatsapp?.error,
           });
         }

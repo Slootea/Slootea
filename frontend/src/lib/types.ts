@@ -665,41 +665,6 @@ export interface CompleteMetaOAuthPayload {
   displayPhoneNumber?: string;
 }
 
-// Message Template Types
-export enum MessageTemplateType {
-  APPOINTMENT_BOOKED = 'APPOINTMENT_BOOKED',
-  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
-  APPOINTMENT_UPDATED = 'APPOINTMENT_UPDATED',
-  APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
-}
-
-export interface MessageTemplate {
-  id: string;
-  organizationId: string;
-  templateType: MessageTemplateType;
-  emailSubject: string | null;
-  messageContent: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AllMessageTemplatesResponse {
-  templates: MessageTemplate[];
-  availablePlaceholders: string[];
-}
-
-export interface CreateMessageTemplatePayload {
-  templateType: MessageTemplateType;
-  emailSubject?: string;
-  messageContent: string;
-}
-
-export interface UpdateMessageTemplatePayload {
-  emailSubject?: string;
-  messageContent?: string;
-}
-
 // Public Appointment Management Types
 export interface PublicAppointmentDetails {
   id: string;

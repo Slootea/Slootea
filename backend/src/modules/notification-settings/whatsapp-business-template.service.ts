@@ -6,11 +6,7 @@ import * as crypto from 'crypto';
 import {
   OrganizationWhatsAppSettings,
 } from './entities/organization-whatsapp-settings.entity';
-import {
-  OrganizationWhatsAppTemplate,
-  WhatsAppTemplateStatus,
-  WhatsAppEventType,
-} from './entities/organization-whatsapp-template.entity';
+import { WhatsAppEventType, WhatsAppTemplateStatus } from './dto/whatsapp-notification-settings.dto';
 
 /**
  * WhatsApp Business Template Category
@@ -114,8 +110,6 @@ export class WhatsAppBusinessTemplateService {
   constructor(
     @InjectRepository(OrganizationWhatsAppSettings)
     private readonly whatsappSettingsRepository: Repository<OrganizationWhatsAppSettings>,
-    @InjectRepository(OrganizationWhatsAppTemplate)
-    private readonly whatsappTemplateRepository: Repository<OrganizationWhatsAppTemplate>,
     private readonly configService: ConfigService,
   ) {
     const keyString = this.configService.get<string>('WHATSAPP_TOKEN_ENCRYPTION_KEY');
@@ -176,22 +170,6 @@ export class WhatsAppBusinessTemplateService {
   }
 
   /**
-   * Map Meta status to local status
-   */
-  private mapMetaStatusToLocal(status: string): WhatsAppTemplateStatus {
-    switch (status.toUpperCase()) {
-      case 'APPROVED':
-        return WhatsAppTemplateStatus.APPROVED;
-      case 'REJECTED':
-      case 'DISABLED':
-        return WhatsAppTemplateStatus.REJECTED;
-      case 'PENDING':
-      default:
-        return WhatsAppTemplateStatus.PENDING;
-    }
-  }
-
-  /**
    * List all message templates from Meta WhatsApp Business API
    */
   async listTemplatesFromMeta(organizationId: string): Promise<WhatsAppBusinessTemplateDto[]> {
@@ -218,17 +196,7 @@ export class WhatsAppBusinessTemplateService {
 
       const templatesResponse = data as MetaTemplatesListResponse;
 
-      // Get local template mappings to include eventType info
-      const localTemplates = await this.whatsappTemplateRepository.find({
-        where: { organizationId },
-      });
-      const localTemplateMap = new Map<string, OrganizationWhatsAppTemplate>();
-      localTemplates.forEach(t => localTemplateMap.set(`${t.templateName}:${t.languageCode}`, t));
-
       return templatesResponse.data.map((template) => {
-        const localKey = `${template.name}:${template.language}`;
-        const localTemplate = localTemplateMap.get(localKey);
-
         return {
           id: template.id,
           name: template.name,
@@ -238,7 +206,6 @@ export class WhatsAppBusinessTemplateService {
           components: template.components,
           rejectedReason: template.rejected_reason,
           qualityScore: template.quality_score?.score,
-          localEventType: localTemplate?.eventType,
         };
       });
     } catch (error) {
@@ -444,12 +411,6 @@ export class WhatsAppBusinessTemplateService {
       }
 
       this.logger.log(`WhatsApp template deleted: ${templateName}`);
-
-      // Also delete local mapping if exists
-      await this.whatsappTemplateRepository.delete({
-        organizationId,
-        templateName,
-      });
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -460,8 +421,7 @@ export class WhatsAppBusinessTemplateService {
   }
 
   /**
-   * Sync templates from Meta to local database
-   * Updates local template status based on Meta API response
+   * Sync templates from Meta - returns list of templates
    */
   async syncTemplatesFromMeta(organizationId: string): Promise<{
     synced: number;
@@ -469,80 +429,10 @@ export class WhatsAppBusinessTemplateService {
   }> {
     const templates = await this.listTemplatesFromMeta(organizationId);
 
-    // Get existing local templates
-    const localTemplates = await this.whatsappTemplateRepository.find({
-      where: { organizationId },
-    });
-
-    let syncedCount = 0;
-
-    for (const localTemplate of localTemplates) {
-      const metaTemplate = templates.find(
-        t => t.name === localTemplate.templateName && t.language === localTemplate.languageCode
-      );
-
-      if (metaTemplate) {
-        const newStatus = this.mapMetaStatusToLocal(metaTemplate.status);
-        if (localTemplate.status !== newStatus) {
-          localTemplate.status = newStatus;
-          await this.whatsappTemplateRepository.save(localTemplate);
-          syncedCount++;
-          this.logger.debug(`Updated local template status: ${localTemplate.templateName} -> ${newStatus}`);
-        }
-      }
-    }
-
     return {
-      synced: syncedCount,
+      synced: templates.length,
       templates,
     };
-  }
-
-  /**
-   * Create or update a local template mapping and optionally create in Meta
-   */
-  async createOrUpdateLocalTemplate(
-    organizationId: string,
-    eventType: WhatsAppEventType,
-    templateName: string,
-    languageCode: string,
-    createInMeta: boolean = false,
-    metaTemplateData?: CreateWhatsAppBusinessTemplateDto,
-  ): Promise<OrganizationWhatsAppTemplate> {
-    // If createInMeta is true, first create the template in Meta
-    if (createInMeta && metaTemplateData) {
-      await this.createTemplateInMeta(organizationId, metaTemplateData);
-    }
-
-    // Check if local template exists
-    let template = await this.whatsappTemplateRepository.findOne({
-      where: {
-        organizationId,
-        eventType,
-      },
-    });
-
-    if (template) {
-      template.templateName = templateName;
-      template.languageCode = languageCode;
-      template.status = WhatsAppTemplateStatus.PENDING;
-    } else {
-      template = this.whatsappTemplateRepository.create({
-        organizationId,
-        eventType,
-        templateName,
-        languageCode,
-        status: WhatsAppTemplateStatus.PENDING,
-      });
-    }
-
-    // Try to fetch status from Meta
-    const metaTemplate = await this.getTemplateFromMeta(organizationId, templateName);
-    if (metaTemplate) {
-      template.status = this.mapMetaStatusToLocal(metaTemplate.status);
-    }
-
-    return this.whatsappTemplateRepository.save(template);
   }
 
   /**

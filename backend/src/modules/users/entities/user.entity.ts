@@ -5,13 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
-  OneToOne,
 } from 'typeorm';
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
 import { Availability } from '../../availability/entities/availability.entity';
 import { BlockedTime } from '../../blocked-times/entities/blocked-time.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
-import { BusinessSettings } from '../../settings/entities/business-settings.entity';
 
 @Entity('users')
 export class User {
@@ -65,7 +63,4 @@ export class User {
 
   @OneToMany(() => Appointment, (appointment) => appointment.user)
   appointments: Appointment[];
-
-  @OneToOne(() => BusinessSettings, (settings) => settings.user)
-  settings: BusinessSettings;
 }
