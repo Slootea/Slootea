@@ -280,7 +280,7 @@ export class AppointmentsService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.serviceOption', 'serviceOption')
       .leftJoinAndSelect('appointment.user', 'aptUser')
-      .innerJoin('user_organizations', 'uo', 'uo.user_id = appointment.userId')
+      .innerJoin('user_organizations', 'uo', 'uo.user_id = appointment."userId"')
       .where('uo.organization_id = :organizationId', { organizationId });
 
     // Filter by status
