@@ -1346,5 +1346,88 @@
   "appointment": {
     "confirmed": "Katılım Onaylandı",
     "confirmSuccess": "Randevunuzu onayladığınız için teşekkür ederiz!"
+  },
+  "onboarding": {
+    "title": "Slootea'ya Hoş Geldiniz!",
+    "subtitle": "Organizasyonunuzu birkaç adımda kuralım",
+    "steps": {
+      "settings": "Organizasyon Ayarları",
+      "settingsDesc": "Rezervasyon tercihlerinizi yapılandırın",
+      "services": "Hizmetler",
+      "servicesDesc": "Sunduğunuz hizmetleri ekleyin",
+      "availability": "Müsaitlik",
+      "availabilityDesc": "Çalışma saatlerinizi belirleyin"
+    },
+    "settingsStep": {
+      "title": "Organizasyonunuzu Yapılandırın",
+      "description": "Rezervasyon tercihlerinizi ve saat diliminizi ayarlayın. Bu ayarlar tüm ekip üyeleri için geçerli olacaktır.",
+      "timezone": "Saat Dilimi",
+      "timezoneHint": "Tüm randevu saatleri bu saat dilimine göre olacaktır",
+      "providerMode": "Sağlayıcı Seçimi",
+      "providerModeHint": "Müşteriler sağlayıcılara nasıl atanmalı?",
+      "autoAssign": "Müsaitliğe göre otomatik ata",
+      "clientChooses": "Müşterilerin sağlayıcısını seçmesine izin ver",
+      "bufferTime": "Ara Süre (dakika)",
+      "bufferTimeHint": "Randevular arasındaki süre",
+      "minAdvance": "Minimum Önceden Rezervasyon (saat)",
+      "minAdvanceHint": "Müşterilerin ne kadar önceden rezervasyon yapması gerektiği",
+      "maxAdvance": "Maksimum Önceden Rezervasyon (gün)",
+      "maxAdvanceHint": "Müşterilerin ne kadar önceden rezervasyon yapabileceği"
+    },
+    "servicesStep": {
+      "title": "Hizmetlerinizi Ekleyin",
+      "description": "Müşterilerin rezervasyon yapabileceği en az bir hizmet oluşturun. Daha sonra daha fazla hizmet ekleyebilirsiniz.",
+      "addService": "Hizmet Ekle",
+      "serviceName": "Hizmet Adı",
+      "serviceNamePlaceholder": "örn. Saç Kesimi, Danışmanlık, Masaj",
+      "duration": "Süre (dakika)",
+      "description": "Açıklama (isteğe bağlı)",
+      "descriptionPlaceholder": "Bu hizmetin kısa açıklaması",
+      "noServices": "Henüz hizmet eklenmedi",
+      "noServicesHint": "Devam etmek için en az bir hizmet ekleyin"
+    },
+    "availabilityStep": {
+      "title": "Müsaitliğinizi Ayarlayın",
+      "description": "Çalışma saatlerinizi tanımlayın. Müşterileriniz sadece bu saatlerde rezervasyon yapabilecek.",
+      "useTemplate": "Şablon Kullan",
+      "standardHours": "Standart (09:00 - 17:00)",
+      "morningHours": "Sabah (06:00 - 12:00)",
+      "eveningHours": "Akşam (17:00 - 21:00)",
+      "customHours": "Özel",
+      "selectDays": "Çalışma Günleri",
+      "timeRange": "Çalışma Saatleri",
+      "noAvailability": "Müsaitlik ayarlanmadı",
+      "noAvailabilityHint": "Devam etmek için çalışma saatlerinizi ayarlayın"
+    },
+    "notificationsStep": {
+      "title": "WhatsApp Bağlantısı (İsteğe Bağlı)",
+      "description": "Müşterilerinizi bilgilendirmek için WhatsApp üzerinden randevu bildirimleri gönderin.",
+      "whatsappHint": "WhatsApp Business hesabınızı bağlayarak müşterilerinize otomatik randevu onayları, hatırlatmalar ve güncellemeler gönderin.",
+      "optionalTitle": "Bu adım isteğe bağlıdır",
+      "optionalHint": "Bu adımı atlayabilir ve WhatsApp bildirimlerini daha sonra organizasyon ayarlarından kurabilirsiniz."
+    },
+    "navigation": {
+      "back": "Geri",
+      "next": "İleri",
+      "skip": "Şimdilik atla",
+      "finish": "Kurulumu Tamamla"
+    },
+    "completion": {
+      "title": "Hazırsınız!",
+      "description": "Organizasyonunuz rezervasyon almaya hazır",
+      "bookingLinkLabel": "Rezervasyon Linkiniz",
+      "bookingLinkHint": "Müşterilerinizin randevu alabilmesi için bu linki paylaşın",
+      "copyLink": "Linki Kopyala",
+      "linkCopied": "Link kopyalandı!",
+      "goToDashboard": "Panele Git",
+      "viewBookingPage": "Rezervasyon Sayfasını Önizle"
+    },
+    "progress": {
+      "step": "Adım {current} / {total}"
+    },
+    "errors": {
+      "saveFailed": "Kaydetme başarısız. Lütfen tekrar deneyin.",
+      "completeOnboardingFailed": "Kurulum tamamlanamadı. Lütfen tekrar deneyin."
+    }
   }
 }

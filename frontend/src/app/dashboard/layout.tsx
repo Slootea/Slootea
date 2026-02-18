@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { setAuthToken } from "@/lib/api";
+import { setAuthToken, setOrganizationContext, organizationsApi } from "@/lib/api";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -24,6 +25,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const t = useTranslations("sidebar");
   const tLayout = useTranslations("layoutPage");
+  const { currentOrganization, isAdmin, isLoading: orgLoading } = useOrganizationContext();
+  
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   const navItems = [
     { href: "/dashboard", label: tLayout("overview") },
@@ -52,7 +56,48 @@ export default function DashboardLayout({
     setupAuth();
   }, [isSignedIn, getToken]);
 
+  // Check onboarding status for org admins
+  const checkOnboardingStatus = useCallback(async () => {
+    if (!currentOrganization || !isAdmin || orgLoading) return;
+
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+
+      const response = await organizationsApi.getOnboardingStatus(currentOrganization.id);
+      
+      if (!response.data.onboarded) {
+        // Not onboarded, redirect to onboarding
+        router.replace("/onboarding");
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check onboarding status:", error);
+    } finally {
+      setOnboardingChecked(true);
+    }
+  }, [currentOrganization, isAdmin, orgLoading, getToken, router]);
+
+  useEffect(() => {
+    if (isSignedIn && currentOrganization && isAdmin && !orgLoading) {
+      checkOnboardingStatus();
+    } else if (isSignedIn && (!isAdmin || !currentOrganization)) {
+      // Non-admin users or no org selected - skip onboarding check
+      setOnboardingChecked(true);
+    }
+  }, [isSignedIn, currentOrganization, isAdmin, orgLoading, checkOnboardingStatus]);
+
   if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show loading while checking onboarding status for admins
+  if (isAdmin && currentOrganization && !onboardingChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

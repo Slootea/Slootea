@@ -231,6 +231,9 @@ export const organizationsApi = {
     api.patch(`/organizations/${id}/members/${memberId}`, { role }),
   removeMember: (id: string, memberId: string) => api.delete(`/organizations/${id}/members/${memberId}`),
   getMyRole: (id: string) => api.get(`/organizations/${id}/my-role`),
+  // Onboarding
+  getOnboardingStatus: (id: string) => api.get(`/organizations/${id}/onboarding-status`),
+  completeOnboarding: (id: string) => api.post(`/organizations/${id}/complete-onboarding`),
 };
 
 // Public API (no auth required)

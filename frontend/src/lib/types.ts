@@ -53,6 +53,7 @@ export interface Organization {
   website?: string;
   logoUrl?: string;
   email?: string;
+  onboarded?: boolean;
   createdAt: string;
   updatedAt: string;
 }

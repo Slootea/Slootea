@@ -128,4 +128,21 @@ export class OrganizationsController {
   getMyRole(@Param('id') id: string, @Request() req: any) {
     return this.organizationsService.getOrganizationRole(id, req.user.dbUserId);
   }
+
+  @Get(':id/onboarding-status')
+  @ApiOperation({ summary: 'Get onboarding status for organization' })
+  @ApiResponse({ status: 200, description: 'Onboarding status retrieved successfully' })
+  getOnboardingStatus(@Param('id') id: string) {
+    return this.organizationsService.getOnboardingStatus(id);
+  }
+
+  @Post(':id/complete-onboarding')
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Complete onboarding for organization (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Onboarding completed successfully' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  completeOnboarding(@Param('id') id: string) {
+    return this.organizationsService.completeOnboarding(id);
+  }
 }

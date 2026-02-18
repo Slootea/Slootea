@@ -1359,5 +1359,88 @@
   "appointment": {
     "confirmed": "Attendance Confirmed",
     "confirmSuccess": "Thank you for confirming your appointment!"
+  },
+  "onboarding": {
+    "title": "Welcome to Slootea!",
+    "subtitle": "Let's get your organization set up in just a few steps",
+    "steps": {
+      "settings": "Organization Settings",
+      "settingsDesc": "Configure your booking preferences",
+      "services": "Services",
+      "servicesDesc": "Add the services you offer",
+      "availability": "Availability",
+      "availabilityDesc": "Set your working hours"
+    },
+    "settingsStep": {
+      "title": "Configure Your Organization",
+      "description": "Set up your booking preferences and timezone. These settings will apply to all team members.",
+      "timezone": "Timezone",
+      "timezoneHint": "All appointment times will be based on this timezone",
+      "providerMode": "Provider Selection",
+      "providerModeHint": "How should clients be assigned to providers?",
+      "autoAssign": "Auto-assign based on availability",
+      "clientChooses": "Let clients choose their provider",
+      "bufferTime": "Buffer Time (minutes)",
+      "bufferTimeHint": "Time between appointments",
+      "minAdvance": "Minimum Advance Booking (hours)",
+      "minAdvanceHint": "How far in advance clients must book",
+      "maxAdvance": "Maximum Advance Booking (days)",
+      "maxAdvanceHint": "How far ahead clients can book"
+    },
+    "servicesStep": {
+      "title": "Add Your Services",
+      "description": "Create at least one service that clients can book. You can add more services later.",
+      "addService": "Add Service",
+      "serviceName": "Service Name",
+      "serviceNamePlaceholder": "e.g., Haircut, Consultation, Massage",
+      "duration": "Duration (minutes)",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Brief description of this service",
+      "noServices": "No services added yet",
+      "noServicesHint": "Add at least one service to continue"
+    },
+    "availabilityStep": {
+      "title": "Set Your Availability",
+      "description": "Define your working hours. Your clients will only be able to book during these times.",
+      "useTemplate": "Use a Template",
+      "standardHours": "Standard (9 AM - 5 PM)",
+      "morningHours": "Morning (6 AM - 12 PM)",
+      "eveningHours": "Evening (5 PM - 9 PM)",
+      "customHours": "Custom",
+      "selectDays": "Working Days",
+      "timeRange": "Working Hours",
+      "noAvailability": "No availability set",
+      "noAvailabilityHint": "Set your working hours to continue"
+    },
+    "notificationsStep": {
+      "title": "Connect WhatsApp (Optional)",
+      "description": "Send appointment notifications via WhatsApp to keep your clients informed.",
+      "whatsappHint": "Connect your WhatsApp Business account to send automated appointment confirmations, reminders, and updates to your clients.",
+      "optionalTitle": "This step is optional",
+      "optionalHint": "You can skip this step and set up WhatsApp notifications later from your organization settings."
+    },
+    "navigation": {
+      "back": "Back",
+      "next": "Next",
+      "skip": "Skip for now",
+      "finish": "Complete Setup"
+    },
+    "completion": {
+      "title": "You're All Set!",
+      "description": "Your organization is ready to accept bookings",
+      "bookingLinkLabel": "Your Booking Link",
+      "bookingLinkHint": "Share this link with your clients so they can book appointments",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link copied!",
+      "goToDashboard": "Go to Dashboard",
+      "viewBookingPage": "Preview Booking Page"
+    },
+    "progress": {
+      "step": "Step {current} of {total}"
+    },
+    "errors": {
+      "saveFailed": "Failed to save. Please try again.",
+      "completeOnboardingFailed": "Failed to complete setup. Please try again."
+    }
   }
 }

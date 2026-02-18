@@ -3,6 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   Logger,
+  Inject,
+  forwardRef,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -14,6 +16,8 @@ import {
 import { CreateOrganizationDto } from "./dto/create-organization.dto";
 import { UpdateOrganizationDto } from "./dto/update-organization.dto";
 import { ClerkService } from "../auth/clerk.service";
+import { BookingLinksService } from "../booking-links/booking-links.service";
+import { BookingLinkType } from "../booking-links/entities/booking-link.entity";
 
 /**
  * OrganizationsService - Updated for Clerk Integration
@@ -32,6 +36,8 @@ export class OrganizationsService {
     @InjectRepository(UserOrganization)
     private userOrganizationsRepository: Repository<UserOrganization>,
     private clerkService: ClerkService,
+    @Inject(forwardRef(() => BookingLinksService))
+    private bookingLinksService: BookingLinksService,
   ) {}
   async create(
     createOrganizationDto: CreateOrganizationDto,
@@ -448,5 +454,75 @@ export class OrganizationsService {
     }
     
     this.logger.log(`Synced ${members.length} memberships for org ${organizationId}`);
+  }
+
+  /**
+   * Get onboarding status for an organization
+   */
+  async getOnboardingStatus(organizationId: string): Promise<{ onboarded: boolean }> {
+    const organization = await this.organizationsRepository.findOne({
+      where: { id: organizationId },
+      select: ['id', 'onboarded'],
+    });
+
+    if (!organization) {
+      // If org not found locally, assume not onboarded
+      return { onboarded: false };
+    }
+
+    return { onboarded: organization.onboarded || false };
+  }
+
+  /**
+   * Complete onboarding for an organization
+   * Sets onboarded flag to true and creates a default booking link
+   */
+  async completeOnboarding(organizationId: string): Promise<{ success: boolean; bookingLink?: { id: string; slug: string } }> {
+    // First ensure the organization exists
+    let organization = await this.organizationsRepository.findOne({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      // Try to sync from Clerk
+      const clerkOrg = await this.clerkService.getOrganization(organizationId);
+      if (clerkOrg) {
+        organization = await this.syncOrganizationFromClerk(
+          clerkOrg.id,
+          clerkOrg.name,
+          clerkOrg.publicMetadata
+        );
+      }
+    }
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    // Update onboarded status
+    organization.onboarded = true;
+    await this.organizationsRepository.save(organization);
+
+    // Create a default booking link for the organization
+    try {
+      const bookingLink = await this.bookingLinksService.create(organizationId, {
+        name: 'Default Booking Link',
+        type: BookingLinkType.ALL_OPTIONS,
+      });
+
+      this.logger.log(`Completed onboarding for organization ${organizationId}, created booking link ${bookingLink.slug}`);
+
+      return { 
+        success: true, 
+        bookingLink: { 
+          id: bookingLink.id, 
+          slug: bookingLink.slug 
+        } 
+      };
+    } catch (error) {
+      this.logger.error(`Failed to create booking link during onboarding: ${error.message}`);
+      // Still mark as onboarded even if booking link creation fails
+      return { success: true };
+    }
   }
 }

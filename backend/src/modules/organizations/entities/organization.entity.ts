@@ -39,6 +39,9 @@ export class Organization {
   @Column({ nullable: true })
   email: string;
 
+  @Column({ default: false, comment: 'Whether organization has completed onboarding' })
+  onboarded: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 
