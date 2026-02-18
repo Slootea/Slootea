@@ -205,6 +205,7 @@ export default function ClientsPage() {
       }
 
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const queryParams: Record<string, any> = {
           page: filters.page,
           limit: filters.limit,
@@ -366,10 +367,11 @@ export default function ClientsPage() {
       await fetchClientPenalty(selectedClient.id);
       // Refresh the clients list to update visual indicators
       await fetchData(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       toast({
         title: t('error'),
-        description: error.response?.data?.message || t('penalty.createError'),
+        description: err.response?.data?.message || t('penalty.createError'),
         variant: "destructive",
       });
     } finally {
@@ -399,10 +401,11 @@ export default function ClientsPage() {
       setClientPenalty(null);
       // Refresh the clients list to update visual indicators
       await fetchData(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       toast({
         title: t('error'),
-        description: error.response?.data?.message || t('penalty.removeError'),
+        description: err.response?.data?.message || t('penalty.removeError'),
         variant: "destructive",
       });
     } finally {
@@ -496,11 +499,12 @@ export default function ClientsPage() {
           notes: formData.notes || undefined,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       toast({
         title: t('error'),
         description:
-          error.response?.data?.message || t('loadError'),
+          err.response?.data?.message || t('loadError'),
         variant: "destructive",
       });
     } finally {

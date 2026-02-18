@@ -169,8 +169,8 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {remainingAppointments.slice(0, 2).map((apt, index) => (
-                    <ScheduleItem key={apt.id} appointment={apt} index={index} tAppointments={tAppointments} />
+                  {remainingAppointments.slice(0, 2).map((apt) => (
+                    <ScheduleItem key={apt.id} appointment={apt} tAppointments={tAppointments} />
                   ))}
                   {remainingAppointments.length > 2 && (
                     <div className="pt-2">
@@ -252,8 +252,11 @@ export default function DashboardPage() {
   );
 }
 
+// Define translation function type
+type TranslationFunction = (key: string) => string;
+
 // Next Client Elegant Card
-function NextClientCard({ appointment, t, tAppointments }: { appointment: Appointment; t: any; tAppointments: any }) {
+function NextClientCard({ appointment, t, tAppointments }: { appointment: Appointment; t: TranslationFunction; tAppointments: TranslationFunction }) {
   const startTime = parseISO(appointment.startTime);
   const endTime = parseISO(appointment.endTime);
   const minutesUntil = differenceInMinutes(startTime, new Date());
@@ -386,7 +389,7 @@ function NextClientCard({ appointment, t, tAppointments }: { appointment: Appoin
 }
 
 // No Upcoming Appointments Card
-function NoUpcomingCard({ hasAppointments, t }: { hasAppointments: boolean; t: any }) {
+function NoUpcomingCard({ hasAppointments, t }: { hasAppointments: boolean; t: TranslationFunction }) {
   return (
     <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <CardContent className="p-8 text-center">
@@ -413,7 +416,7 @@ function NoUpcomingCard({ hasAppointments, t }: { hasAppointments: boolean; t: a
 }
 
 // Schedule Item Component
-function ScheduleItem({ appointment, index, tAppointments }: { appointment: Appointment; index: number; tAppointments: any }) {
+function ScheduleItem({ appointment, tAppointments }: { appointment: Appointment; tAppointments: TranslationFunction }) {
   const startTime = parseISO(appointment.startTime);
   const isPast = new Date() > parseISO(appointment.endTime);
   const isCompleted = appointment.status === AppointmentStatus.COMPLETED;
@@ -492,7 +495,7 @@ function StatCard({
 }
 
 // Enhanced Status Badge
-function StatusBadge({ status, size = "default", tAppointments }: { status: string; size?: "sm" | "default"; tAppointments: any }) {
+function StatusBadge({ status, size = "default", tAppointments }: { status: string; size?: "sm" | "default"; tAppointments: TranslationFunction }) {
   const config: Record<
     string,
     { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }

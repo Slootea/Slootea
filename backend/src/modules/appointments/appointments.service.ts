@@ -279,8 +279,9 @@ export class AppointmentsService {
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.serviceOption', 'serviceOption')
-      .leftJoinAndSelect('appointment.user', 'user')
-      .where('user.organizationId = :organizationId', { organizationId });
+      .leftJoinAndSelect('appointment.user', 'aptUser')
+      .innerJoin('user_organizations', 'uo', 'uo.user_id = appointment.userId')
+      .where('uo.organization_id = :organizationId', { organizationId });
 
     // Filter by status
     if (status) {

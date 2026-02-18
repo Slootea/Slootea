@@ -34,9 +34,10 @@ export default function BookingPage() {
         if (!linkRes.data.settings?.aiAssistantEnabled) {
           setViewMode('services');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } };
         setError(
-          err.response?.data?.message || "This booking link is not available"
+          error.response?.data?.message || "This booking link is not available"
         );
       } finally {
         setLoading(false);

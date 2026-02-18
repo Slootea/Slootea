@@ -1528,6 +1528,7 @@ export default function AvailabilityPage() {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const requests: Promise<any>[] = [
         availabilityApi.getAll(),
         blockedTimesApi.getAll(),
@@ -1754,7 +1755,13 @@ export default function AvailabilityPage() {
   // Block time handlers
   const handleCreateBlockTime = async () => {
     try {
-      const payload: any = {
+      const payload: {
+        date: string;
+        isFullDay: boolean;
+        reason?: string;
+        startTime?: string;
+        endTime?: string;
+      } = {
         date: blockFormData.date,
         isFullDay: blockFormData.isFullDay,
         reason: blockFormData.reason || undefined,

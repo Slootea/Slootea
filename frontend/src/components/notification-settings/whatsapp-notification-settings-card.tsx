@@ -689,7 +689,7 @@ Görüşmek üzere!`}</pre>
                           <li>Template names must match exactly as shown above</li>
                           <li>Templates must be approved by Meta before use</li>
                           <li>All 8 parameters will be sent in order, use only what you need</li>
-                          <li>Set template language to match your organization's language setting</li>
+                          <li>Set template language to match your organization&apos;s language setting</li>
                         </ul>
                       </div>
                     </div>

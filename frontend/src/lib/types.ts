@@ -740,7 +740,7 @@ export interface AiStreamChunk {
   content?: string;
   services?: AiSuggestedService[];
   tool?: string;
-  args?: any;
+  args?: Record<string, unknown>;
   // Structured response fields
   responseType?: 'service' | 'message';
   serviceId?: string | null;

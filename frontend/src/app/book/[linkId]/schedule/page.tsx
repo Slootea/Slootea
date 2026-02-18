@@ -96,7 +96,7 @@ export default function SchedulePage() {
             }
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: common('error'),
           description: t('failedToLoad'),
@@ -159,7 +159,7 @@ export default function SchedulePage() {
           selectedProvider?.id
         );
         setSlots(res.data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: common('error'),
           description: t('failedToLoadSlots'),
@@ -213,10 +213,11 @@ export default function SchedulePage() {
 
       // Redirect to success or back to service selection
       router.push(`/book/${slug}/success`);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       toast({
         title: t('bookingFailed'),
-        description: err.response?.data?.message || t('bookingError'),
+        description: error.response?.data?.message || t('bookingError'),
         variant: "destructive",
       });
     } finally {

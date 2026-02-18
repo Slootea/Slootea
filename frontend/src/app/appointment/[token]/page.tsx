@@ -92,8 +92,9 @@ export default function AppointmentManagementPage() {
       if (res.data.status === AppointmentStatus.CONFIRMED) {
         setConfirmed(true);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Unable to load appointment");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || "Unable to load appointment");
     } finally {
       setLoading(false);
     }
@@ -168,10 +169,11 @@ export default function AppointmentManagementPage() {
         description: t('confirmSuccess') || "Thank you for confirming your appointment!",
       });
       await fetchAppointment();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       toast({
         title: common('error') || "Error",
-        description: err.response?.data?.message || "Failed to confirm appointment",
+        description: error.response?.data?.message || "Failed to confirm appointment",
         variant: "destructive",
       });
     } finally {
@@ -189,10 +191,11 @@ export default function AppointmentManagementPage() {
       });
       setShowCancelDialog(false);
       await fetchAppointment();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       toast({
         title: "Error",
-        description: err.response?.data?.message || "Failed to cancel appointment",
+        description: error.response?.data?.message || "Failed to cancel appointment",
         variant: "destructive",
       });
     } finally {
@@ -216,10 +219,11 @@ export default function AppointmentManagementPage() {
       setSelectedDate(undefined);
       setSelectedSlot(null);
       await fetchAppointment();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       toast({
         title: "Error",
-        description: err.response?.data?.message || "Failed to reschedule appointment",
+        description: error.response?.data?.message || "Failed to reschedule appointment",
         variant: "destructive",
       });
     } finally {
@@ -454,7 +458,7 @@ export default function AppointmentManagementPage() {
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Yes, I'll Attend
+                  Yes, I&apos;ll Attend
                 </>
               )}
             </AlertDialogAction>

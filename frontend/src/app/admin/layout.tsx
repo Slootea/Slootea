@@ -13,6 +13,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Shield, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
 
 export default function AdminLayout({
   children,
@@ -82,9 +83,9 @@ export default function AdminLayout({
             You do not have system administrator privileges. This area is restricted to authorized administrators only.
             <br />
             <br />
-            <a href="/dashboard" className="underline hover:no-underline">
+            <Link href="/dashboard" className="underline hover:no-underline">
               Return to Dashboard
-            </a>
+            </Link>
           </AlertDescription>
         </Alert>
       </div>

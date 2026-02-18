@@ -55,9 +55,10 @@ export default function ConfirmPage() {
         const res = await publicApi.getAppointmentByToken(token);
         setAppointment(res.data);
         setConfirmed(res.data.confirmed);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } };
         setError(
-          err.response?.data?.message || t('unableToLoad')
+          error.response?.data?.message || t('unableToLoad')
         );
       } finally {
         setLoading(false);
@@ -75,10 +76,11 @@ export default function ConfirmPage() {
         title: t('confirmed'),
         description: t('confirmSuccess'),
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       toast({
         title: common('error'),
-        description: err.response?.data?.message || t('confirmError'),
+        description: error.response?.data?.message || t('confirmError'),
         variant: "destructive",
       });
     } finally {

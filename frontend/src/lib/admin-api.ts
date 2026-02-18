@@ -241,7 +241,7 @@ export const adminApi = {
     api.post(`/admin/users/${clerkId}/set-admin`),
   removeSystemAdminRole: (clerkId: string) =>
     api.post(`/admin/users/${clerkId}/remove-admin`),
-  updateUserMetadata: (clerkId: string, metadata: Record<string, any>) =>
+  updateUserMetadata: (clerkId: string, metadata: Record<string, unknown>) =>
     api.put(`/admin/users/${clerkId}/metadata`, metadata),
 
   // Appointments

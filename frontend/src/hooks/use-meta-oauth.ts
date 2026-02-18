@@ -84,8 +84,9 @@ export function useMetaOAuth({
 
       const response = await metaOAuthApi.getWhatsAppAssets(organizationId);
       setAssets(response.data as WhatsAppAssetsResponse);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to fetch WhatsApp assets";
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error.response?.data?.message || error.message || "Failed to fetch WhatsApp assets";
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -207,8 +208,9 @@ export function useMetaOAuth({
           setIsLoading(false);
         }
       }, 500);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to start OAuth flow";
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error.response?.data?.message || error.message || "Failed to start OAuth flow";
       setError(errorMessage);
       onError?.(errorMessage);
       setIsLoading(false);
@@ -253,8 +255,9 @@ export function useMetaOAuth({
       setHasPendingSession(false);
       setAssets(null);
       onSuccess?.(enableResponse.data as WhatsAppNotificationSettings);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to complete connection";
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error.response?.data?.message || error.message || "Failed to complete connection";
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {

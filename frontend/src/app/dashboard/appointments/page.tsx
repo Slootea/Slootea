@@ -153,6 +153,7 @@ export default function AppointmentsPage() {
 
     try {
       // Build query params for paginated results
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const queryParams: Record<string, any> = {
         page: filters.page,
         limit: filters.limit,
@@ -186,6 +187,7 @@ export default function AppointmentsPage() {
       }
 
       // Fetch all appointments for sections (upcoming confirmed & pending) - only future appointments
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const allQueryParams: Record<string, any> = {
         page: 1,
         limit: 50,
