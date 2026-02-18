@@ -37,11 +37,13 @@ export class User {
   @Column({ nullable: true })
   timezone: string;
 
+  /**
+   * The user's currently active/selected organization.
+   * When the user logs in, this organization is selected automatically.
+   * All user's organization memberships are stored in user_organizations table.
+   */
   @Column({ nullable: true })
-  organizationId: string;
-
-  @Column({ nullable: true })
-  organizationRole: string;
+  activeOrganizationId: string;
 
   @Column({ default: true })
   isActive: boolean;

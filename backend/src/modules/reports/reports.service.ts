@@ -35,6 +35,32 @@ export class ReportsService {
   ) {}
 
   /**
+   * Get all active members for an organization from user_organizations table
+   */
+  private async getOrganizationMembers(organizationId: string): Promise<User[]> {
+    const userOrgs = await this.userOrganizationRepository.find({
+      where: { organizationId },
+      relations: ['user'],
+    });
+    
+    return userOrgs
+      .map(uo => uo.user)
+      .filter((user): user is User => user !== null && user.isActive);
+  }
+
+  /**
+   * Check if a member belongs to an organization
+   */
+  private async isMemberOfOrganization(memberId: string, organizationId: string): Promise<User | null> {
+    const userOrg = await this.userOrganizationRepository.findOne({
+      where: { userId: memberId, organizationId },
+      relations: ['user'],
+    });
+    
+    return userOrg?.user || null;
+  }
+
+  /**
    * Get comprehensive organization overview with stats, trends, and analytics
    */
   async getOrganizationOverview(
@@ -68,10 +94,8 @@ export class ReportsService {
     organizationId: string,
     query?: ReportsQueryDto,
   ): Promise<OrganizationStatsDto> {
-    // Get organization members
-    const members = await this.userRepository.find({
-      where: { organizationId, isActive: true },
-    });
+    // Get organization members from user_organizations table
+    const members = await this.getOrganizationMembers(organizationId);
     const memberIds = members.map(m => m.id);
 
     if (memberIds.length === 0) {
@@ -250,9 +274,7 @@ export class ReportsService {
     organizationId: string,
     monthsBack: number = 12,
   ): Promise<MonthlyAnalyticsDto[]> {
-    const members = await this.userRepository.find({
-      where: { organizationId, isActive: true },
-    });
+    const members = await this.getOrganizationMembers(organizationId);
     const memberIds = members.map(m => m.id);
 
     if (memberIds.length === 0) {
@@ -308,9 +330,7 @@ export class ReportsService {
     organizationId: string,
     query?: ReportsQueryDto,
   ): Promise<MemberStatsDto[]> {
-    const members = await this.userRepository.find({
-      where: { organizationId, isActive: true },
-    });
+    const members = await this.getOrganizationMembers(organizationId);
 
     if (members.length === 0) {
       return [];
@@ -381,9 +401,7 @@ export class ReportsService {
     memberId: string,
     query?: ReportsQueryDto,
   ): Promise<MemberStatsDto & { monthlyData: MonthlyAnalyticsDto[] }> {
-    const member = await this.userRepository.findOne({
-      where: { id: memberId, organizationId },
-    });
+    const member = await this.isMemberOfOrganization(memberId, organizationId);
 
     if (!member) {
       throw new NotFoundException('Member not found in organization');
@@ -493,9 +511,7 @@ export class ReportsService {
     organizationId: string,
     daysBack: number = 30,
   ): Promise<TrendDataDto[]> {
-    const members = await this.userRepository.find({
-      where: { organizationId, isActive: true },
-    });
+    const members = await this.getOrganizationMembers(organizationId);
     const memberIds = members.map(m => m.id);
 
     if (memberIds.length === 0) {
@@ -539,9 +555,7 @@ export class ReportsService {
     organizationId: string,
     query?: ReportsQueryDto,
   ): Promise<ServiceStatDto[]> {
-    const members = await this.userRepository.find({
-      where: { organizationId, isActive: true },
-    });
+    const members = await this.getOrganizationMembers(organizationId);
     const memberIds = members.map(m => m.id);
 
     if (memberIds.length === 0) {

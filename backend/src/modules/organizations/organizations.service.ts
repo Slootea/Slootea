@@ -13,6 +13,7 @@ import {
   UserOrganization,
   UserOrganizationRole,
 } from "./entities/user-organization.entity";
+import { User } from "../users/entities/user.entity";
 import { CreateOrganizationDto } from "./dto/create-organization.dto";
 import { UpdateOrganizationDto } from "./dto/update-organization.dto";
 import { ClerkService } from "../auth/clerk.service";
@@ -35,6 +36,8 @@ export class OrganizationsService {
     private organizationsRepository: Repository<Organization>,
     @InjectRepository(UserOrganization)
     private userOrganizationsRepository: Repository<UserOrganization>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private clerkService: ClerkService,
     @Inject(forwardRef(() => BookingLinksService))
     private bookingLinksService: BookingLinksService,
@@ -56,11 +59,11 @@ export class OrganizationsService {
     const savedOrganization =
       await this.organizationsRepository.save(organization);
 
-    // Add creator as owner
+    // Add creator as admin (org:admin role)
     const userOrganization = this.userOrganizationsRepository.create({
       userId: userId,
       organizationId: savedOrganization.id,
-      role: UserOrganizationRole.OWNER,
+      role: UserOrganizationRole.ADMIN,
     });
 
     console.log("Creating user organization:", userOrganization);
@@ -69,10 +72,14 @@ export class OrganizationsService {
     return savedOrganization;
   }
 
-  async findAllForUser(userId: string): Promise<Organization[]> {
+  /**
+   * Get all organizations for a user
+   * @param clerkUserId - The Clerk user ID (e.g., user_xxx)
+   */
+  async findAllForUser(clerkUserId: string): Promise<Organization[]> {
     // Fetch organizations from Clerk first to ensure they're synced
     try {
-      const clerkMemberships = await this.clerkService.getUserOrganizations(userId);
+      const clerkMemberships = await this.clerkService.getUserOrganizations(clerkUserId);
       
       // Sync each organization from Clerk
       for (const membership of clerkMemberships) {
@@ -85,9 +92,9 @@ export class OrganizationsService {
             clerkOrg.publicMetadata
           );
           
-          // Sync membership
+          // Sync membership (this method resolves Clerk ID to internal UUID)
           await this.syncMembershipFromClerk(
-            userId,
+            clerkUserId,
             clerkOrg.id,
             membership.role
           );
@@ -97,9 +104,19 @@ export class OrganizationsService {
       this.logger.error(`Failed to sync organizations from Clerk: ${error.message}`);
     }
 
+    // Resolve Clerk user ID to internal ID for local DB query
+    const user = await this.userRepository.findOne({
+      where: { clerkId: clerkUserId },
+    });
+    
+    if (!user) {
+      this.logger.warn(`User with Clerk ID ${clerkUserId} not found in local DB`);
+      return [];
+    }
+
     // Now fetch from local DB (which should be synced)
     const userOrganizations = await this.userOrganizationsRepository.find({
-      where: { userId: userId },
+      where: { userId: user.id },
       relations: ["organization"],
     });
 
@@ -123,20 +140,13 @@ export class OrganizationsService {
     updateOrganizationDto: UpdateOrganizationDto,
     userId: string
   ): Promise<Organization> {
-    // Check if user has admin access
+    // Check if user has admin access (org:admin role)
     const userOrganization = await this.userOrganizationsRepository.findOne({
-      where: [
-        {
-          userId: userId,
-          organizationId: id,
-          role: UserOrganizationRole.OWNER,
-        },
-        {
-          userId: userId,
-          organizationId: id,
-          role: UserOrganizationRole.ADMIN,
-        },
-      ],
+      where: {
+        userId: userId,
+        organizationId: id,
+        role: UserOrganizationRole.ADMIN,
+      },
     });
 
     if (!userOrganization) {
@@ -150,18 +160,18 @@ export class OrganizationsService {
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    // Check if user is owner
+    // Check if user is admin (org:admin role)
     const userOrganization = await this.userOrganizationsRepository.findOne({
       where: {
         userId: userId,
         organizationId: id,
-        role: UserOrganizationRole.OWNER,
+        role: UserOrganizationRole.ADMIN,
       },
     });
 
     if (!userOrganization) {
       throw new ForbiddenException(
-        "Only organization owners can delete organizations"
+        "Only organization admins can delete organizations"
       );
     }
 
@@ -173,20 +183,13 @@ export class OrganizationsService {
     role: UserOrganizationRole,
     inviterId: string
   ): Promise<void> {
-    // Check if inviter has admin access
+    // Check if inviter has admin access (org:admin role)
     const inviterRole = await this.userOrganizationsRepository.findOne({
-      where: [
-        {
-          userId: inviterId,
-          organizationId: organizationId,
-          role: UserOrganizationRole.OWNER,
-        },
-        {
-          userId: inviterId,
-          organizationId: organizationId,
-          role: UserOrganizationRole.ADMIN,
-        },
-      ],
+      where: {
+        userId: inviterId,
+        organizationId: organizationId,
+        role: UserOrganizationRole.ADMIN,
+      },
     });
 
     if (!inviterRole) {
@@ -245,20 +248,13 @@ export class OrganizationsService {
     role: UserOrganizationRole,
     adminId: string
   ): Promise<void> {
-    // Check if admin has sufficient permissions
+    // Check if admin has sufficient permissions (org:admin role)
     const adminRole = await this.userOrganizationsRepository.findOne({
-      where: [
-        {
-          userId: adminId,
-          organizationId: organizationId,
-          role: UserOrganizationRole.OWNER,
-        },
-        {
-          userId: adminId,
-          organizationId: organizationId,
-          role: UserOrganizationRole.ADMIN,
-        },
-      ],
+      where: {
+        userId: adminId,
+        organizationId: organizationId,
+        role: UserOrganizationRole.ADMIN,
+      },
     });
 
     if (!adminRole) {
@@ -277,20 +273,13 @@ export class OrganizationsService {
     memberId: string,
     adminId: string
   ): Promise<void> {
-    // Check if admin has sufficient permissions
+    // Check if admin has sufficient permissions (org:admin role)
     const adminRole = await this.userOrganizationsRepository.findOne({
-      where: [
-        {
-          userId: adminId,
-          organizationId: organizationId,
-          role: UserOrganizationRole.OWNER,
-        },
-        {
-          userId: adminId,
-          organizationId: organizationId,
-          role: UserOrganizationRole.ADMIN,
-        },
-      ],
+      where: {
+        userId: adminId,
+        organizationId: organizationId,
+        role: UserOrganizationRole.ADMIN,
+      },
     });
 
     if (!adminRole) {
@@ -311,10 +300,7 @@ export class OrganizationsService {
     adminId: string
   ): Promise<void> {
     const adminRole = await this.getOrganizationRole(organizationId, adminId);
-    if (
-      adminRole !== UserOrganizationRole.OWNER &&
-      adminRole !== UserOrganizationRole.ADMIN
-    ) {
+    if (adminRole !== UserOrganizationRole.ADMIN) {
       throw new ForbiddenException("Insufficient permissions to add members");
     }
     //fetch-user-id-based-on-email
@@ -331,7 +317,7 @@ export class OrganizationsService {
     await this.userOrganizationsRepository.save({
       userId: member.id,
       organizationId: organizationId,
-      role: UserOrganizationRole.RECRUITER,
+      role: UserOrganizationRole.MEMBER,
     });
   }
 
@@ -385,58 +371,87 @@ export class OrganizationsService {
 
   /**
    * Sync organization membership from Clerk
-   * Maps Clerk roles to local UserOrganizationRole
+   * Clerk roles are stored directly (org:admin, org:member)
+   * @param clerkUserId - The Clerk user ID (e.g., user_xxx)
+   * @param organizationId - The Clerk organization ID (synced to local DB)
+   * @param clerkRole - The role from Clerk (org:admin or org:member)
    */
   async syncMembershipFromClerk(
-    userId: string,
+    clerkUserId: string,
     organizationId: string,
     clerkRole: string,
   ): Promise<void> {
-    // Map Clerk roles to local roles
-    let localRole: UserOrganizationRole;
-    switch (clerkRole) {
-      case 'org:admin':
-        localRole = UserOrganizationRole.ADMIN;
-        break;
-      case 'org:member':
-      default:
-        localRole = UserOrganizationRole.RECRUITER;
-        break;
+    this.logger.log(`[syncMembershipFromClerk] START - clerkUserId: ${clerkUserId}, orgId: ${organizationId}, clerkRole: ${clerkRole}`);
+    
+    // Resolve Clerk user ID to internal database UUID
+    const user = await this.userRepository.findOne({
+      where: { clerkId: clerkUserId },
+    });
+    
+    if (!user) {
+      this.logger.warn(`Cannot sync membership: user with Clerk ID ${clerkUserId} not found in local DB`);
+      return;
     }
+
+    const internalUserId = user.id;
+    this.logger.log(`[syncMembershipFromClerk] Resolved Clerk ID ${clerkUserId} to internal UUID ${internalUserId}`);
+
+    // Clerk roles map directly to UserOrganizationRole
+    const localRole = clerkRole === 'org:admin' 
+      ? UserOrganizationRole.ADMIN 
+      : UserOrganizationRole.MEMBER;
+    this.logger.log(`[syncMembershipFromClerk] Mapped clerkRole "${clerkRole}" to localRole "${localRole}"`);
 
     // Check if membership already exists
     const existing = await this.userOrganizationsRepository.findOne({
-      where: { userId: userId, organizationId: organizationId },
+      where: { userId: internalUserId, organizationId: organizationId },
     });
 
     if (existing) {
+      this.logger.log(`[syncMembershipFromClerk] Found existing membership with role: ${existing.role}`);
       // Update role if changed
       if (existing.role !== localRole) {
+        this.logger.log(`[syncMembershipFromClerk] Updating role from ${existing.role} to ${localRole}`);
         existing.role = localRole;
         await this.userOrganizationsRepository.save(existing);
-        this.logger.log(`Updated membership for user ${userId} in org ${organizationId}: ${localRole}`);
+        this.logger.log(`Updated membership for user ${internalUserId} in org ${organizationId}: ${localRole}`);
+      } else {
+        this.logger.log(`[syncMembershipFromClerk] Role unchanged, no update needed`);
       }
     } else {
       // Create new membership
+      this.logger.log(`[syncMembershipFromClerk] No existing membership found, creating new one`);
       const membership = this.userOrganizationsRepository.create({
-        userId: userId,
+        userId: internalUserId,
         organizationId: organizationId,
         role: localRole,
       });
       await this.userOrganizationsRepository.save(membership);
-      this.logger.log(`Created membership for user ${userId} in org ${organizationId}: ${localRole}`);
+      this.logger.log(`Created membership for user ${internalUserId} in org ${organizationId}: ${localRole}`);
     }
   }
 
   /**
    * Remove organization membership (called when user leaves org in Clerk)
+   * @param clerkUserId - The Clerk user ID (e.g., user_xxx)
+   * @param organizationId - The organization ID
    */
-  async removeMembershipFromClerk(userId: string, organizationId: string): Promise<void> {
+  async removeMembershipFromClerk(clerkUserId: string, organizationId: string): Promise<void> {
+    // Resolve Clerk user ID to internal database UUID
+    const user = await this.userRepository.findOne({
+      where: { clerkId: clerkUserId },
+    });
+    
+    if (!user) {
+      this.logger.warn(`Cannot remove membership: user with Clerk ID ${clerkUserId} not found in local DB`);
+      return;
+    }
+
     await this.userOrganizationsRepository.delete({
-      userId: userId,
+      userId: user.id,
       organizationId: organizationId,
     });
-    this.logger.log(`Removed membership for user ${userId} from org ${organizationId}`);
+    this.logger.log(`Removed membership for user ${user.id} from org ${organizationId}`);
   }
 
   /**
@@ -458,15 +473,48 @@ export class OrganizationsService {
 
   /**
    * Get onboarding status for an organization
+   * Will sync from Clerk if org not found locally
+   * @param organizationId - The organization ID
+   * @param clerkUserId - Optional Clerk user ID to sync membership
    */
-  async getOnboardingStatus(organizationId: string): Promise<{ onboarded: boolean }> {
-    const organization = await this.organizationsRepository.findOne({
+  async getOnboardingStatus(organizationId: string, clerkUserId?: string): Promise<{ onboarded: boolean }> {
+    let organization = await this.organizationsRepository.findOne({
       where: { id: organizationId },
       select: ['id', 'onboarded'],
     });
 
     if (!organization) {
-      // If org not found locally, assume not onboarded
+      // Try to sync from Clerk first
+      try {
+        const clerkOrg = await this.clerkService.getOrganization(organizationId);
+        if (clerkOrg) {
+          organization = await this.syncOrganizationFromClerk(
+            clerkOrg.id,
+            clerkOrg.name,
+            clerkOrg.publicMetadata
+          );
+          this.logger.log(`Synced org ${organizationId} from Clerk for onboarding check`);
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to sync org ${organizationId} from Clerk: ${error.message}`);
+      }
+    }
+
+    // Sync membership for the user if Clerk user ID is provided
+    if (clerkUserId) {
+      try {
+        const memberships = await this.clerkService.getUserOrganizations(clerkUserId);
+        const orgMembership = memberships.find(m => m.organizationId === organizationId);
+        if (orgMembership) {
+          await this.syncMembershipFromClerk(clerkUserId, organizationId, orgMembership.role);
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to sync membership during onboarding check: ${error.message}`);
+      }
+    }
+
+    if (!organization) {
+      // If org still not found, assume not onboarded
       return { onboarded: false };
     }
 
@@ -476,8 +524,10 @@ export class OrganizationsService {
   /**
    * Complete onboarding for an organization
    * Sets onboarded flag to true and creates a default booking link
+   * @param organizationId - The organization ID
+   * @param clerkUserId - Optional Clerk user ID to sync membership
    */
-  async completeOnboarding(organizationId: string): Promise<{ success: boolean; bookingLink?: { id: string; slug: string } }> {
+  async completeOnboarding(organizationId: string, clerkUserId?: string): Promise<{ success: boolean; bookingLink?: { id: string; slug: string } }> {
     // First ensure the organization exists
     let organization = await this.organizationsRepository.findOne({
       where: { id: organizationId },
@@ -497,6 +547,19 @@ export class OrganizationsService {
 
     if (!organization) {
       throw new NotFoundException('Organization not found');
+    }
+
+    // Sync membership for the user if Clerk user ID is provided
+    if (clerkUserId) {
+      try {
+        const memberships = await this.clerkService.getUserOrganizations(clerkUserId);
+        const orgMembership = memberships.find(m => m.organizationId === organizationId);
+        if (orgMembership) {
+          await this.syncMembershipFromClerk(clerkUserId, organizationId, orgMembership.role);
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to sync membership during onboarding: ${error.message}`);
+      }
     }
 
     // Update onboarded status

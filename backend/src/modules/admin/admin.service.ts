@@ -555,11 +555,15 @@ export class AdminService {
     }
 
     if (organizationId) {
-      queryBuilder.andWhere('user.organizationId = :organizationId', { organizationId });
+      queryBuilder.andWhere('user.activeOrganizationId = :organizationId', { organizationId });
     }
 
+    // Role filtering uses user_organizations table
+    // Roles are stored as 'org:admin' or 'org:member' to match Clerk
     if (role) {
-      queryBuilder.andWhere('user.organizationRole = :role', { role });
+      queryBuilder
+        .innerJoin('user_organizations', 'uo', 'uo.user_id = user.id')
+        .andWhere('uo.role = :role', { role });
     }
 
     const orderField = sortBy || 'createdAt';

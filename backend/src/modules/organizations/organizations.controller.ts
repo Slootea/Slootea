@@ -39,7 +39,8 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Get all organizations for current user' })
   @ApiResponse({ status: 200, description: 'Organizations retrieved successfully' })
   findAll(@Request() req: any) {
-    return this.organizationsService.findAllForUser(req.user.dbUserId);
+    // Pass Clerk user ID (req.user.id) for Clerk API sync calls
+    return this.organizationsService.findAllForUser(req.user.id);
   }
 
   @Get(':id')
@@ -76,7 +77,7 @@ export class OrganizationsController {
   @ApiResponse({ status: 201, description: 'User invited successfully' })
   @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   inviteUser(@Param('id') id: string, @Body() inviteUserDto: InviteUserDto, @Request() req: any) {
-    return this.organizationsService.inviteUser(id, inviteUserDto.email, UserOrganizationRole.RECRUITER, req.user.dbUserId);
+    return this.organizationsService.inviteUser(id, inviteUserDto.email, UserOrganizationRole.MEMBER, req.user.dbUserId);
   }
 
   @Get(':id/members')
@@ -132,8 +133,9 @@ export class OrganizationsController {
   @Get(':id/onboarding-status')
   @ApiOperation({ summary: 'Get onboarding status for organization' })
   @ApiResponse({ status: 200, description: 'Onboarding status retrieved successfully' })
-  getOnboardingStatus(@Param('id') id: string) {
-    return this.organizationsService.getOnboardingStatus(id);
+  getOnboardingStatus(@Param('id') id: string, @Request() req: any) {
+    // Pass Clerk user ID (req.user.id) to sync membership
+    return this.organizationsService.getOnboardingStatus(id, req.user?.id);
   }
 
   @Post(':id/complete-onboarding')
@@ -142,7 +144,8 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Complete onboarding for organization (Admin only)' })
   @ApiResponse({ status: 201, description: 'Onboarding completed successfully' })
   @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
-  completeOnboarding(@Param('id') id: string) {
-    return this.organizationsService.completeOnboarding(id);
+  completeOnboarding(@Param('id') id: string, @Request() req: any) {
+    // Pass Clerk user ID (req.user.id) to sync membership
+    return this.organizationsService.completeOnboarding(id, req.user.id);
   }
 }

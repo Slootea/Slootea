@@ -30,7 +30,7 @@ export class ClerkAuthGuard implements CanActivate {
     try {
       const user = await this.clerkService.verifyToken(token);
       
-      // Determine organization role from memberships
+      // Determine organization role from memberships (Clerk is source of truth)
       let orgRole: string | undefined = undefined;
       if (organizationId && user.memberships) {
         const orgMembership = user.memberships.find(m => m.organizationId === organizationId);
@@ -40,7 +40,8 @@ export class ClerkAuthGuard implements CanActivate {
       }
       
       // Sync user to database on every authenticated request
-      // This ensures the user record is created or updated in PostgreSQL
+      // Only sync the active organization ID, not the role
+      // Role is always fetched from Clerk/user_organizations table
       try {
         const fullName = [user.firstName, user.lastName]
           .filter(Boolean)
@@ -52,12 +53,12 @@ export class ClerkAuthGuard implements CanActivate {
           fullName,
           user.imageUrl,
           organizationId,
-          orgRole,
         );
         
-        this.logger.debug(`User ${user.id} synced to database with org: ${organizationId}`);
+        this.logger.debug(`User ${user.id} synced to database with active org: ${organizationId}`);
         
         // Attach both Clerk user info and DB user to request
+        // orgRole comes from Clerk memberships, not from the database
         (request as any).user = { 
           ...user, 
           dbUserId: dbUser.id,

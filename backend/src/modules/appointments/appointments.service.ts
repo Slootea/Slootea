@@ -942,7 +942,7 @@ export class AppointmentsService {
     // Group appointments by organization
     const appointmentsByOrg = new Map<string, Appointment[]>();
     for (const appointment of appointments) {
-      const orgId = appointment.user?.organizationId;
+      const orgId = appointment.serviceOption?.organizationId;
       if (!orgId) continue;
       
       if (!appointmentsByOrg.has(orgId)) {

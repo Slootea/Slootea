@@ -166,8 +166,8 @@ export default function UsersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="org:admin">Org Admin</SelectItem>
-                <SelectItem value="org:member">Org Member</SelectItem>
+                <SelectItem value="org:admin">Admin</SelectItem>
+                <SelectItem value="org:member">Member</SelectItem>
               </SelectContent>
             </Select>
             <Button type="submit">Search</Button>
@@ -200,7 +200,7 @@ export default function UsersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
-                    <TableHead>Organization Role</TableHead>
+                    <TableHead>Active Organization</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -225,10 +225,10 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {user.organizationRole ? (
-                          <Badge variant={user.organizationRole === "org:admin" ? "default" : "secondary"}>
-                            {user.organizationRole.replace("org:", "").toUpperCase()}
-                          </Badge>
+                        {user.activeOrganizationId ? (
+                          <span className="text-sm font-mono truncate max-w-[200px] block" title={user.activeOrganizationId}>
+                            {user.activeOrganizationId.slice(0, 12)}...
+                          </span>
                         ) : (
                           <span className="text-muted-foreground">None</span>
                         )}

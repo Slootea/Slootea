@@ -252,7 +252,7 @@ export class PublicController {
 
     // Get organization settings for timezone and cancellation policy
     const settings = await this.organizationSettingsService.getPublicSettings(
-      appointment.user?.organizationId || '',
+      appointment.serviceOption?.organizationId || '',
     );
 
     // Check if appointment can still be modified
@@ -294,7 +294,7 @@ export class PublicController {
 
     // Get organization settings
     const settings = await this.organizationSettingsService.findByOrganizationId(
-      appointment.user?.organizationId || '',
+      appointment.serviceOption?.organizationId || '',
     );
 
     if (hoursUntilAppointment < settings.minAdvanceBookingHours) {
@@ -312,7 +312,7 @@ export class PublicController {
       const updatedAppointment = await this.appointmentsService.updateByToken(
         token,
         updateDto,
-        appointment.user?.organizationId || '',
+        appointment.serviceOption?.organizationId || '',
       );
       return updatedAppointment;
     }
@@ -321,7 +321,7 @@ export class PublicController {
     const updatedAppointment = await this.appointmentsService.updateByToken(
       token,
       updateDto,
-      appointment.user?.organizationId || '',
+      appointment.serviceOption?.organizationId || '',
     );
 
     return updatedAppointment;
@@ -350,7 +350,7 @@ export class PublicController {
     const cancelledAppointment = await this.appointmentsService.cancelByToken(
       token,
       cancelDto.reason,
-      appointment.user?.organizationId || '',
+      appointment.serviceOption?.organizationId || '',
     );
 
     return cancelledAppointment;
@@ -377,7 +377,7 @@ export class PublicController {
 
     // Get available slots for the same service and provider
     const slots = await this.appointmentsService.getAvailableSlotsForOrganization(
-      appointment.user?.organizationId || '',
+      appointment.serviceOption?.organizationId || '',
       appointment.serviceOptionId,
       date,
       appointment.user?.clerkId, // Keep same provider
@@ -407,7 +407,7 @@ export class PublicController {
 
     // Get available dates for the same service and provider
     const availableDates = await this.appointmentsService.getAvailableDatesForOrganization(
-      appointment.user?.organizationId || '',
+      appointment.serviceOption?.organizationId || '',
       appointment.serviceOptionId,
       month,
       appointment.user?.clerkId, // Keep same provider

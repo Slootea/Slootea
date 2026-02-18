@@ -163,8 +163,7 @@ export interface User {
   businessName?: string;
   phone?: string;
   timezone?: string;
-  organizationId?: string;
-  organizationRole?: string;
+  activeOrganizationId?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

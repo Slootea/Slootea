@@ -94,8 +94,8 @@ export class NotificationReminderService {
       this.logger.log(`Found ${appointmentsWithContact.length} appointments for ${reminderType} reminders`);
 
       for (const appointment of appointmentsWithContact) {
-        // Get organization ID from user
-        const organizationId = appointment.user?.organizationId;
+        // Get organization ID from service option (service belongs to organization)
+        const organizationId = appointment.serviceOption?.organizationId;
         
         if (!organizationId) {
           this.logger.debug(`No organization ID for appointment ${appointment.id}`);

@@ -10,11 +10,14 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Organization } from './organization.entity';
 
+/**
+ * Role values match Clerk's organization roles exactly.
+ * org:admin - Full administrative access
+ * org:member - Standard member access
+ */
 export enum UserOrganizationRole {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  RECRUITER = 'recruiter',
-  VIEWER = 'viewer',
+  ADMIN = 'org:admin',
+  MEMBER = 'org:member',
 }
 
 @Entity('user_organizations')
@@ -31,7 +34,7 @@ export class UserOrganization {
 
   @Column({
     type: 'text',
-    default: UserOrganizationRole.RECRUITER,
+    default: UserOrganizationRole.MEMBER,
   })
   role: UserOrganizationRole;
 
