@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -934,14 +935,14 @@ export default function OrganizationDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="service-duration">Duration (minutes)</Label>
-                <Input
+                <NumberInput
                   id="service-duration"
-                  type="number"
                   min={5}
                   max={480}
                   value={serviceFormData.duration}
-                  onChange={(e) =>
-                    setServiceFormData({ ...serviceFormData, duration: parseInt(e.target.value) || 30 })
+                  defaultValue={30}
+                  onChange={(value) =>
+                    setServiceFormData({ ...serviceFormData, duration: value })
                   }
                 />
               </div>

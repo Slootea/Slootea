@@ -8,7 +8,7 @@ import { OrganizationSettings, ProviderSelectionMode } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -272,16 +272,16 @@ export default function OrganizationSettingsPage() {
                 <Label htmlFor="confirmationRequiredHours">
                   {t('confirmation.sendReminder') || 'Send attendance reminder (hours before)'}
                 </Label>
-                <Input
+                <NumberInput
                   id="confirmationRequiredHours"
-                  type="number"
                   min={1}
                   max={168}
                   value={settings.confirmationRequiredHours || 24}
-                  onChange={(e) =>
+                  defaultValue={24}
+                  onChange={(value) =>
                     setSettings({
                       ...settings,
-                      confirmationRequiredHours: parseInt(e.target.value) || 24,
+                      confirmationRequiredHours: value,
                     })
                   }
                 />
@@ -294,16 +294,16 @@ export default function OrganizationSettingsPage() {
                 <Label htmlFor="confirmationDeadlineHours">
                   {t('confirmation.deadline') || 'Attendance confirmation deadline (hours before)'}
                 </Label>
-                <Input
+                <NumberInput
                   id="confirmationDeadlineHours"
-                  type="number"
                   min={1}
                   max={72}
                   value={settings.confirmationDeadlineHours || 3}
-                  onChange={(e) =>
+                  defaultValue={3}
+                  onChange={(value) =>
                     setSettings({
                       ...settings,
-                      confirmationDeadlineHours: parseInt(e.target.value) || 3,
+                      confirmationDeadlineHours: value,
                     })
                   }
                 />
@@ -348,16 +348,16 @@ export default function OrganizationSettingsPage() {
             <Label htmlFor="minAdvanceBookingHours">
               {t('booking.minAdvanceBooking')}
             </Label>
-            <Input
+            <NumberInput
               id="minAdvanceBookingHours"
-              type="number"
               min={0}
               max={168}
               value={settings.minAdvanceBookingHours}
-              onChange={(e) =>
+              defaultValue={0}
+              onChange={(value) =>
                 setSettings({
                   ...settings,
-                  minAdvanceBookingHours: parseInt(e.target.value) || 0,
+                  minAdvanceBookingHours: value,
                 })
               }
             />
@@ -370,16 +370,16 @@ export default function OrganizationSettingsPage() {
             <Label htmlFor="maxAdvanceBookingDays">
               {t('booking.maxAdvanceBooking')}
             </Label>
-            <Input
+            <NumberInput
               id="maxAdvanceBookingDays"
-              type="number"
               min={1}
               max={365}
               value={settings.maxAdvanceBookingDays}
-              onChange={(e) =>
+              defaultValue={30}
+              onChange={(value) =>
                 setSettings({
                   ...settings,
-                  maxAdvanceBookingDays: parseInt(e.target.value) || 30,
+                  maxAdvanceBookingDays: value,
                 })
               }
             />
@@ -392,16 +392,16 @@ export default function OrganizationSettingsPage() {
             <Label htmlFor="bufferTimeMinutes">
               {t('booking.bufferTime')}
             </Label>
-            <Input
+            <NumberInput
               id="bufferTimeMinutes"
-              type="number"
               min={0}
               max={120}
               value={settings.bufferTimeMinutes}
-              onChange={(e) =>
+              defaultValue={0}
+              onChange={(value) =>
                 setSettings({
                   ...settings,
-                  bufferTimeMinutes: parseInt(e.target.value) || 0,
+                  bufferTimeMinutes: value,
                 })
               }
             />
@@ -414,16 +414,16 @@ export default function OrganizationSettingsPage() {
             <Label htmlFor="maxAppointmentsPerDay">
               {t('booking.maxAppointmentsPerDay')}
             </Label>
-            <Input
+            <NumberInput
               id="maxAppointmentsPerDay"
-              type="number"
               min={0}
               max={100}
               value={settings.maxAppointmentsPerDay}
-              onChange={(e) =>
+              defaultValue={0}
+              onChange={(value) =>
                 setSettings({
                   ...settings,
-                  maxAppointmentsPerDay: parseInt(e.target.value) || 0,
+                  maxAppointmentsPerDay: value,
                 })
               }
             />

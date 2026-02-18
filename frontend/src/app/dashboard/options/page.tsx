@@ -8,6 +8,7 @@ import { useOrganizationContext } from "@/components/providers/organization-prov
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -784,14 +785,14 @@ export default function ServiceOptionsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="duration">{t("dialog.duration")}</Label>
-                  <Input
+                  <NumberInput
                     id="duration"
-                    type="number"
                     min={5}
                     max={480}
                     value={formData.duration}
-                    onChange={(e) =>
-                      setFormData({ ...formData, duration: parseInt(e.target.value) || 30 })
+                    defaultValue={30}
+                    onChange={(value) =>
+                      setFormData({ ...formData, duration: value })
                     }
                   />
                 </div>
@@ -843,14 +844,14 @@ export default function ServiceOptionsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">{t("dialog.duration")}</Label>
-                <Input
+                <NumberInput
                   id="duration"
-                  type="number"
                   min={5}
                   max={480}
                   value={formData.duration}
-                  onChange={(e) =>
-                    setFormData({ ...formData, duration: parseInt(e.target.value) || 30 })
+                  defaultValue={30}
+                  onChange={(value) =>
+                    setFormData({ ...formData, duration: value })
                   }
                 />
               </div>

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -346,52 +347,52 @@ export default function OrganizationSettingsPage() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     Buffer Time (minutes)
                   </Label>
-                  <Input
+                  <NumberInput
                     id="bufferTime"
-                    type="number"
                     min={0}
                     max={120}
                     value={settings.bufferTimeMinutes}
-                    onChange={(e) => updateSetting("bufferTimeMinutes", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("bufferTimeMinutes", value)}
                   />
                   <p className="text-xs text-muted-foreground">Break time between consecutive appointments</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="maxPerDay">Max Appointments Per Day</Label>
-                  <Input
+                  <NumberInput
                     id="maxPerDay"
-                    type="number"
                     min={1}
                     max={100}
                     value={settings.maxAppointmentsPerDay}
-                    onChange={(e) => updateSetting("maxAppointmentsPerDay", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("maxAppointmentsPerDay", value)}
                   />
                   <p className="text-xs text-muted-foreground">Maximum appointments per provider per day</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="minAdvance">Min Advance Booking (hours)</Label>
-                  <Input
+                  <NumberInput
                     id="minAdvance"
-                    type="number"
                     min={0}
                     max={168}
                     value={settings.minAdvanceBookingHours}
-                    onChange={(e) => updateSetting("minAdvanceBookingHours", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("minAdvanceBookingHours", value)}
                   />
                   <p className="text-xs text-muted-foreground">Minimum hours before appointment can be booked</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="maxAdvance">Max Advance Booking (days)</Label>
-                  <Input
+                  <NumberInput
                     id="maxAdvance"
-                    type="number"
                     min={1}
                     max={365}
                     value={settings.maxAdvanceBookingDays}
-                    onChange={(e) => updateSetting("maxAdvanceBookingDays", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("maxAdvanceBookingDays", value)}
                   />
                   <p className="text-xs text-muted-foreground">How far in advance clients can book</p>
                 </div>
@@ -538,26 +539,26 @@ export default function OrganizationSettingsPage() {
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="confirmationRequired">Confirmation Required (hours before)</Label>
-                  <Input
+                  <NumberInput
                     id="confirmationRequired"
-                    type="number"
                     min={0}
                     max={168}
                     value={settings.confirmationRequiredHours}
-                    onChange={(e) => updateSetting("confirmationRequiredHours", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("confirmationRequiredHours", value)}
                   />
                   <p className="text-xs text-muted-foreground">When to send confirmation request</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmationDeadline">Confirmation Deadline (hours before)</Label>
-                  <Input
+                  <NumberInput
                     id="confirmationDeadline"
-                    type="number"
                     min={0}
                     max={168}
                     value={settings.confirmationDeadlineHours}
-                    onChange={(e) => updateSetting("confirmationDeadlineHours", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("confirmationDeadlineHours", value)}
                   />
                   <p className="text-xs text-muted-foreground">Deadline for client to confirm</p>
                 </div>
@@ -895,13 +896,13 @@ export default function OrganizationSettingsPage() {
                 <h4 className="font-medium">Reminder Settings</h4>
                 <div className="space-y-2 max-w-sm">
                   <Label htmlFor="reminderHours">Reminder Timing (hours before appointment)</Label>
-                  <Input
+                  <NumberInput
                     id="reminderHours"
-                    type="number"
                     min={1}
                     max={72}
                     value={settings.reminderHoursBefore}
-                    onChange={(e) => updateSetting("reminderHoursBefore", parseInt(e.target.value) || 0)}
+                    defaultValue={0}
+                    onChange={(value) => updateSetting("reminderHoursBefore", value)}
                   />
                   <p className="text-xs text-muted-foreground">
                     When to send WhatsApp reminder messages before appointments
