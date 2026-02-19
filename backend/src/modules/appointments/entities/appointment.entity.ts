@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
@@ -21,9 +22,18 @@ export enum AppointmentStatus {
 }
 
 @Entity('appointments')
+@Index(['organizationId', 'startTime'])
+@Index(['organizationId', 'userId', 'startTime'])
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /**
+   * Organization that this appointment belongs to.
+   * Required for multi-tenant data isolation.
+   */
+  @Column({ nullable: true })
+  organizationId: string;
 
   @Column({ type: 'timestamp' })
   startTime: Date;

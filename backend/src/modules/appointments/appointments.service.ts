@@ -280,8 +280,7 @@ export class AppointmentsService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.serviceOption', 'serviceOption')
       .leftJoinAndSelect('appointment.user', 'aptUser')
-      .innerJoin('user_organizations', 'uo', 'uo.user_id = appointment."userId"')
-      .where('uo.organization_id = :organizationId', { organizationId });
+      .where('appointment.organizationId = :organizationId', { organizationId });
 
     // Filter by status
     if (status) {
@@ -406,9 +405,15 @@ export class AppointmentsService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<Appointment> {
+  async findOne(id: string, userId: string, organizationId?: string): Promise<Appointment> {
+    // If organizationId is provided, allow org-level access (for admins)
+    // Otherwise fall back to user-level access
+    const whereClause = organizationId 
+      ? { id, organizationId }
+      : { id, userId };
+    
     const appointment = await this.appointmentRepository.findOne({
-      where: { id, userId },
+      where: whereClause,
       relations: ['serviceOption'],
     });
     if (!appointment) {
@@ -503,6 +508,7 @@ export class AppointmentsService {
       endTime,
       userId,
       clientId,
+      organizationId,
       confirmationToken,
       status: AppointmentStatus.PENDING_CONFIRMATION,
     });
@@ -517,8 +523,9 @@ export class AppointmentsService {
     userId: string,
     updateDto: UpdateAppointmentDto,
     organizationId?: string,
+    isOrgAdmin?: boolean,
   ): Promise<Appointment> {
-    const appointment = await this.findOne(id, userId);
+    const appointment = await this.findOne(id, userId, isOrgAdmin ? organizationId : undefined);
     const previousStatus = appointment.status;
     const previousStartTime = appointment.startTime;
     let timeWasUpdated = false;
@@ -643,8 +650,8 @@ export class AppointmentsService {
     return savedAppointment;
   }
 
-  async cancel(id: string, userId: string, organizationId?: string): Promise<Appointment> {
-    const appointment = await this.findOne(id, userId);
+  async cancel(id: string, userId: string, organizationId?: string, isOrgAdmin?: boolean): Promise<Appointment> {
+    const appointment = await this.findOne(id, userId, isOrgAdmin ? organizationId : undefined);
     const previousStatus = appointment.status;
     appointment.status = AppointmentStatus.CANCELLED;
     const savedAppointment = await this.appointmentRepository.save(appointment);
@@ -686,8 +693,8 @@ export class AppointmentsService {
     return savedAppointment;
   }
 
-  async confirmFromDashboard(id: string, userId: string): Promise<Appointment> {
-    const appointment = await this.findOne(id, userId);
+  async confirmFromDashboard(id: string, userId: string, organizationId?: string, isOrgAdmin?: boolean): Promise<Appointment> {
+    const appointment = await this.findOne(id, userId, isOrgAdmin ? organizationId : undefined);
 
     if (appointment.status !== AppointmentStatus.PENDING_CONFIRMATION) {
       throw new BadRequestException(
@@ -700,8 +707,8 @@ export class AppointmentsService {
     return this.appointmentRepository.save(appointment);
   }
 
-  async completeFromDashboard(id: string, userId: string): Promise<Appointment> {
-    const appointment = await this.findOne(id, userId);
+  async completeFromDashboard(id: string, userId: string, organizationId?: string, isOrgAdmin?: boolean): Promise<Appointment> {
+    const appointment = await this.findOne(id, userId, isOrgAdmin ? organizationId : undefined);
 
     if (appointment.status !== AppointmentStatus.CONFIRMED) {
       throw new BadRequestException(
@@ -1319,6 +1326,7 @@ export class AppointmentsService {
       endTime,
       userId: assignedUserId,
       clientId,
+      organizationId,
       confirmationToken,
       status: appointmentStatus,
       confirmedAt: autoConfirm ? new Date() : undefined,
@@ -1407,6 +1415,7 @@ export class AppointmentsService {
       endTime,
       userId,
       clientId,
+      organizationId,
       confirmationToken,
       status: AppointmentStatus.CONFIRMED,
       confirmedAt: new Date(),

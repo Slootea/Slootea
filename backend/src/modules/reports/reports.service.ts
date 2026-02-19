@@ -111,10 +111,10 @@ export class ReportsService {
       : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000); // Default: last 30 days
     startDate.setHours(0, 0, 0, 0);
 
-    // Get appointments for date range
+    // Get appointments for date range - use organizationId directly for proper data isolation
     const appointments = await this.appointmentRepository.find({
       where: {
-        userId: In(memberIds),
+        organizationId,
         startTime: Between(startDate, endDate),
       },
       relations: ['serviceOption', 'user'],
@@ -274,13 +274,6 @@ export class ReportsService {
     organizationId: string,
     monthsBack: number = 12,
   ): Promise<MonthlyAnalyticsDto[]> {
-    const members = await this.getOrganizationMembers(organizationId);
-    const memberIds = members.map(m => m.id);
-
-    if (memberIds.length === 0) {
-      return [];
-    }
-
     const result: MonthlyAnalyticsDto[] = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -293,9 +286,10 @@ export class ReportsService {
       const startOfMonth = new Date(date);
       const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 
+      // Use organizationId directly for proper data isolation
       const appointments = await this.appointmentRepository.find({
         where: {
-          userId: In(memberIds),
+          organizationId,
           startTime: Between(startOfMonth, endOfMonth),
         },
       });
@@ -511,13 +505,6 @@ export class ReportsService {
     organizationId: string,
     daysBack: number = 30,
   ): Promise<TrendDataDto[]> {
-    const members = await this.getOrganizationMembers(organizationId);
-    const memberIds = members.map(m => m.id);
-
-    if (memberIds.length === 0) {
-      return [];
-    }
-
     const result: TrendDataDto[] = [];
 
     for (let i = daysBack - 1; i >= 0; i--) {
@@ -529,9 +516,10 @@ export class ReportsService {
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
+      // Use organizationId directly for proper data isolation
       const appointments = await this.appointmentRepository.find({
         where: {
-          userId: In(memberIds),
+          organizationId,
           startTime: Between(startOfDay, endOfDay),
         },
       });
@@ -555,13 +543,6 @@ export class ReportsService {
     organizationId: string,
     query?: ReportsQueryDto,
   ): Promise<ServiceStatDto[]> {
-    const members = await this.getOrganizationMembers(organizationId);
-    const memberIds = members.map(m => m.id);
-
-    if (memberIds.length === 0) {
-      return [];
-    }
-
     // Date range
     const endDate = query?.endDate ? new Date(query.endDate) : new Date();
     endDate.setHours(23, 59, 59, 999);
@@ -571,9 +552,10 @@ export class ReportsService {
       : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
     startDate.setHours(0, 0, 0, 0);
 
+    // Use organizationId directly for proper data isolation
     const appointments = await this.appointmentRepository.find({
       where: {
-        userId: In(memberIds),
+        organizationId,
         startTime: Between(startDate, endDate),
       },
       relations: ['serviceOption'],

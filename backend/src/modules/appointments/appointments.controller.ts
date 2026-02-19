@@ -155,11 +155,22 @@ export class AppointmentsController {
   }
 
   @Get(':id')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get a specific appointment' })
-  async findOne(@Request() req: any, @Param('id') id: string) {
-    return this.appointmentsService.findOne(id, req.user.dbUserId);
+  async findOne(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    // Org admins can view any appointment in their org, members can only view their own
+    return this.appointmentsService.findOne(
+      id,
+      req.user.dbUserId,
+      isOrgAdmin ? organizationId : undefined,
+    );
   }
 
   @Post()
@@ -197,41 +208,66 @@ export class AppointmentsController {
   }
 
   @Put(':id')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Update an appointment' })
   async update(
     @Request() req: any,
     @Param('id') id: string,
     @Body() updateDto: UpdateAppointmentDto,
+    @Headers('x-organization-id') organizationId?: string,
   ) {
-    const organizationId = req.organizationId || req.headers['x-organization-id'];
-    return this.appointmentsService.update(id, req.user.dbUserId, updateDto, organizationId);
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    return this.appointmentsService.update(
+      id,
+      req.user.dbUserId,
+      updateDto,
+      organizationId,
+      isOrgAdmin,
+    );
   }
 
   @Put(':id/cancel')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Cancel an appointment' })
-  async cancel(@Request() req: any, @Param('id') id: string) {
-    const organizationId = req.organizationId || req.headers['x-organization-id'];
-    return this.appointmentsService.cancel(id, req.user.dbUserId, organizationId);
+  async cancel(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    return this.appointmentsService.cancel(id, req.user.dbUserId, organizationId, isOrgAdmin);
   }
 
   @Put(':id/confirm')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Confirm an appointment from dashboard' })
-  async confirmFromDashboard(@Request() req: any, @Param('id') id: string) {
-    return this.appointmentsService.confirmFromDashboard(id, req.user.dbUserId);
+  async confirmFromDashboard(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    return this.appointmentsService.confirmFromDashboard(id, req.user.dbUserId, organizationId, isOrgAdmin);
   }
 
   @Put(':id/complete')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(ClerkAuthGuard, OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Mark an appointment as completed from dashboard' })
-  async completeFromDashboard(@Request() req: any, @Param('id') id: string) {
-    return this.appointmentsService.completeFromDashboard(id, req.user.dbUserId);
+  async completeFromDashboard(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    const isOrgAdmin = req.user.orgRole === 'org:admin';
+    return this.appointmentsService.completeFromDashboard(id, req.user.dbUserId, organizationId, isOrgAdmin);
   }
 
   // Public routes (no authentication required)
