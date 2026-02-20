@@ -21,6 +21,7 @@ import { CreateAppointmentDto, UpdateAppointmentByTokenDto, CancelAppointmentByT
 import { UserServiceOptionsService } from '../service-options/user-service-options.service';
 import { ClerkService } from '../auth/clerk.service';
 import { ClientPenaltyService } from '../clients/client-penalty.service';
+import { OrganizationsService } from '../organizations/organizations.service';
 
 @ApiTags('public')
 @Controller('public')
@@ -35,6 +36,7 @@ export class PublicController {
     private readonly userServiceOptionsService: UserServiceOptionsService,
     private readonly clerkService: ClerkService,
     private readonly clientPenaltyService: ClientPenaltyService,
+    private readonly organizationsService: OrganizationsService,
   ) {}
 
   @Get('book/:slug')
@@ -51,12 +53,24 @@ export class PublicController {
       bookingLink.organizationId,
     );
 
+    // Get organization info for metadata (name and logo)
+    let organization = null;
+    try {
+      organization = await this.organizationsService.findOne(bookingLink.organizationId);
+    } catch {
+      // Organization not found in local DB, ignore
+    }
+
     // If it's a specific option link, return just that option
     if (bookingLink.serviceOption) {
       return {
         ...bookingLink,
         serviceOptions: [bookingLink.serviceOption],
         settings: orgSettings,
+        organization: organization ? {
+          name: organization.name,
+          logoUrl: organization.logo_url,
+        } : null,
       };
     }
 
@@ -69,6 +83,10 @@ export class PublicController {
       ...bookingLink,
       serviceOptions,
       settings: orgSettings,
+      organization: organization ? {
+        name: organization.name,
+        logoUrl: organization.logo_url,
+      } : null,
     };
   }
 

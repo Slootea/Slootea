@@ -9,6 +9,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { ClientsModule } from '../clients/clients.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ClientsModule } from '../clients/clients.module';
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
     forwardRef(() => ClientsModule),
+    forwardRef(() => OrganizationsModule),
   ],
   controllers: [PublicController],
 })

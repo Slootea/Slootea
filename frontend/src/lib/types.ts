@@ -309,10 +309,16 @@ export interface PublicBookingSettings {
   aiAssistantEnabled?: boolean;
 }
 
+export interface PublicOrganizationInfo {
+  name: string;
+  logoUrl?: string | null;
+}
+
 export interface PublicBookingLink extends BookingLink {
   user: User;
   serviceOptions: ServiceOption[];
   settings?: PublicBookingSettings;
+  organization?: PublicOrganizationInfo | null;
 }
 
 export interface PaginationMeta {
