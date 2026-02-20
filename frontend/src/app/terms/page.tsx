@@ -224,7 +224,7 @@ export default function TermsOfServicePage() {
               <div className="mt-4 p-4 bg-muted/30 rounded-lg">
                 <p className="text-muted-foreground">
                   <strong>Slootea</strong><br />
-                  Email: legal@slootea.com<br />
+                  Email: info@slootea.com<br />
                   Website: www.slootea.com
                 </p>
               </div>

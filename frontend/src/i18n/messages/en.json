@@ -55,55 +55,156 @@
     }
   },
   "landing": {
-    "badge": "Now available for free public beta",
-    "heroTitle": "Recover Lost Revenue From",
+    "badge": "Smart appointment management for modern businesses",
+    "heroTitle": "Never Lose Revenue to",
     "heroTitleHighlight": "Empty Appointments",
-    "heroDescription": "Automate your booking workflow. Eliminate no-shows with smart confirmations and instantly refill cancelled slots without lifting a finger.",
-    "ctaButton": "Start Recovering Revenue",
+    "heroDescription": "AI-powered booking assistant, WhatsApp confirmations that eliminate no-shows, client tracking, and a mobile app to manage everything on the go.",
+    "ctaButton": "Start Free Trial",
+    "watchDemo": "Watch Demo",
     "noCreditCard": "No credit card required",
     "freeTrial": "14-day free trial",
+    "setupMinutes": "Setup in 5 minutes",
+    "trustedBy": "Trusted by service businesses worldwide",
+    "nav": {
+      "features": "Features",
+      "howItWorks": "How It Works",
+      "testimonials": "Testimonials"
+    },
+    "hero": {
+      "imagePlaceholder": "Dashboard Preview Image"
+    },
+    "problem": {
+      "badge": "The Problem",
+      "title": "Stop wasting time on phone calls and no-shows",
+      "description": "Endless phone calls to explain services, clients who don't show up, and scattered notes across different apps. Slootea brings everything together and automates the busy work."
+    },
     "stats": {
       "noShowReduction": "Reduction in No-Shows",
       "automatedBooking": "Automated Booking",
       "setupTime": "Setup Time",
-      "recoveryRate": "Slot Recovery Rate"
+      "recoveryRate": "Slot Recovery"
     },
     "features": {
+      "badge": "Features",
       "title": "Everything you need to run smoothly",
       "subtitle": "Powerful features designed to help service-based businesses maximize their efficiency and revenue.",
+      "aiAssistant": {
+        "badge": "AI-Powered",
+        "title": "AI Service Assistant",
+        "description": "Let AI handle customer inquiries 24/7. Clients can ask questions about services, pricing, and availability - getting instant answers without you having to pick up the phone.",
+        "imageAlt": "AI Assistant Chat Interface",
+        "feature1": "24/7 automated service recommendations",
+        "feature2": "Answers client questions about services instantly",
+        "feature3": "Reduces time spent on phone calls by 70%"
+      },
+      "whatsappConfirmation": {
+        "badge": "Zero No-Shows",
+        "title": "WhatsApp Confirmation System",
+        "description": "Clients must confirm via WhatsApp that they're coming - or their slot gets automatically released to someone else. No more empty chairs.",
+        "imageAlt": "WhatsApp Confirmation Messages",
+        "feature1": "Automatic confirmation requests via WhatsApp",
+        "feature2": "Unconfirmed slots auto-released to waitlist",
+        "feature3": "Customizable deadline for confirmations"
+      },
+      "clientTracking": {
+        "title": "Client Tracking & Notes",
+        "description": "Build lasting relationships with detailed client profiles. Track visit history, preferences, and add notes that help you deliver personalized service every time.",
+        "imageAlt": "Client Profile Dashboard",
+        "feature1": "Complete appointment history per client",
+        "feature2": "Private notes and preferences",
+        "feature3": "Track reliability and no-show history"
+      },
+      "mobileApp": {
+        "badge": "Coming Soon",
+        "title": "Mobile App",
+        "description": "Manage your business on the go. View appointments, get notifications, and stay connected with clients from anywhere using our native mobile app.",
+        "imageAlt": "Mobile App Screenshots",
+        "feature1": "Real-time push notifications",
+        "feature2": "Quick appointment management",
+        "feature3": "Works offline - syncs when connected"
+      }
+    },
+    "moreFeatures": {
+      "title": "And so much more",
+      "subtitle": "Every feature you need to manage appointments professionally",
       "bookingLinks": {
         "title": "Smart Booking Links",
-        "description": "Create custom booking links for specific services or general availability. Share them anywhere."
+        "description": "Create custom shareable links for specific services or campaigns."
       },
-      "availability": {
-        "title": "Dynamic Availability",
-        "description": "Set your working hours and blocking rules. The system automatically manages your calendar."
+      "scheduling": {
+        "title": "Intelligent Scheduling",
+        "description": "Set working hours, buffer time, and let the system handle availability."
       },
-      "confirmations": {
-        "title": "Pre-Appointment Confirmations",
-        "description": "Automatically send confirmation requests. If they don't confirm, the slot opens up for others."
+      "teamManagement": {
+        "title": "Team Management",
+        "description": "Manage multiple providers, assign services, and track individual performance."
       },
-      "recovery": {
-        "title": "Revenue Recovery",
-        "description": "Waitlists and instant notifications help you fill last-minute cancellations immediately."
+      "analytics": {
+        "title": "Reports & Analytics",
+        "description": "Track no-show rates, busiest hours, and team performance in one dashboard."
       },
-      "clients": {
-        "title": "Client Management",
-        "description": "Keep track of client history, preferences, and reliability scores all in one place."
+      "bufferTime": {
+        "title": "Smart Buffer Times",
+        "description": "Automatically add break time between appointments to avoid back-to-back stress."
       },
       "security": {
-        "title": "Secure & Reliable",
-        "description": "Enterprise-grade security keeps your data safe while assuming 99.9% uptime."
+        "title": "Enterprise Security",
+        "description": "Your data is protected with enterprise-grade encryption and security."
+      }
+    },
+    "howItWorks": {
+      "badge": "How It Works",
+      "title": "Get started in three simple steps",
+      "subtitle": "No complex setup required. Start accepting bookings within minutes.",
+      "step1": {
+        "title": "Create your services",
+        "description": "Add the services you offer with durations and descriptions. Assign team members if you have a team."
+      },
+      "step2": {
+        "title": "Set your availability",
+        "description": "Define your working hours and any blocked times. Use templates or customize completely."
+      },
+      "step3": {
+        "title": "Share and grow",
+        "description": "Share your booking link with clients. They book, you focus on delivering great service."
+      }
+    },
+    "testimonials": {
+      "badge": "Testimonials",
+      "title": "Loved by professionals everywhere",
+      "subtitle": "See what our customers have to say about transforming their booking experience.",
+      "testimonial1": {
+        "quote": "Slootea reduced our no-show rate by 35% in the first month. The automatic confirmations are a game changer.",
+        "author": "Sarah Johnson",
+        "role": "Salon Owner"
+      },
+      "testimonial2": {
+        "quote": "I used to spend hours managing appointments. Now it's all automated and I can focus on my clients.",
+        "author": "Michael Chen",
+        "role": "Personal Trainer"
+      },
+      "testimonial3": {
+        "quote": "The team management features are incredible. I can see everyone's schedule and performance at a glance.",
+        "author": "Emily Rodriguez",
+        "role": "Clinic Manager"
       }
     },
     "cta": {
-      "title": "Ready to optimize your schedule?",
-      "subtitle": "Join thousands of professionals who have automated their booking workflow.",
-      "button": "Get Started for Free"
+      "title": "Ready to transform your booking experience?",
+      "subtitle": "Join thousands of professionals who have automated their scheduling and reduced no-shows. Start your free trial today.",
+      "button": "Get Started for Free",
+      "note": "No credit card required. Cancel anytime."
     },
     "footer": {
-      "privacy": "Privacy",
-      "terms": "Terms",
+      "description": "The smart appointment management platform for service businesses.",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "about": "About",
+      "blog": "Blog",
+      "pricing": "Pricing",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
       "contact": "Contact",
       "copyright": "All rights reserved."
     }

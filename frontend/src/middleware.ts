@@ -11,6 +11,9 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/book(.*)",
   "/confirm(.*)",
+  "/terms(.*)",
+  "/privacy(.*)",
+  "/data-deletion(.*)",
 ]);
 
 // Define admin routes that require special handling

@@ -55,55 +55,156 @@
     }
   },
   "landing": {
-    "badge": "Ücretsiz beta sürümü artık kullanımda",
-    "heroTitle": "Boş Randevulardan Kaybedilen",
-    "heroTitleHighlight": "Geliri Geri Kazanın",
-    "heroDescription": "Randevu iş akışınızı otomatikleştirin. Akıllı onaylarla gelmeyenleri ortadan kaldırın ve iptal edilen slotları anında doldurun.",
-    "ctaButton": "Gelir Kazanmaya Başla",
+    "badge": "Modern işletmeler için akıllı randevu yönetimi",
+    "heroTitle": "Boş Randevulardan",
+    "heroTitleHighlight": "Gelir Kaybetmeyin",
+    "heroDescription": "Yapay zeka destekli randevu asistanı, gelmeyenleri ortadan kaldıran WhatsApp onayları, müşteri takibi ve hareket halinde her şeyi yönetmek için mobil uygulama.",
+    "ctaButton": "Ücretsiz Deneyin",
+    "watchDemo": "Demo İzle",
     "noCreditCard": "Kredi kartı gerekmez",
     "freeTrial": "14 gün ücretsiz deneme",
+    "setupMinutes": "5 dakikada kurulum",
+    "trustedBy": "Dünya genelinde hizmet işletmeleri tarafından tercih ediliyor",
+    "nav": {
+      "features": "Özellikler",
+      "howItWorks": "Nasıl Çalışır",
+      "testimonials": "Referanslar"
+    },
+    "hero": {
+      "imagePlaceholder": "Panel Önizleme Görseli"
+    },
+    "problem": {
+      "badge": "Problem",
+      "title": "Telefon görüşmeleri ve gelmeyenlerle zaman kaybetmeyin",
+      "description": "Hizmetleri açıklamak için sonsuz telefon görüşmeleri, gelmeyen müşteriler ve farklı uygulamalara dağılmış notlar. Slootea her şeyi bir araya getirir ve meşgul işleri otomatikleştirir."
+    },
     "stats": {
       "noShowReduction": "Gelmeme Oranında Azalma",
       "automatedBooking": "Otomatik Rezervasyon",
       "setupTime": "Kurulum Süresi",
-      "recoveryRate": "Slot Kurtarma Oranı"
+      "recoveryRate": "Slot Kurtarma"
     },
     "features": {
+      "badge": "Özellikler",
       "title": "Sorunsuz çalışmanız için her şey",
       "subtitle": "Hizmet tabanlı işletmelerin verimliliğini ve gelirini maksimize etmek için tasarlanmış güçlü özellikler.",
+      "aiAssistant": {
+        "badge": "Yapay Zeka Destekli",
+        "title": "AI Hizmet Asistanı",
+        "description": "Yapay zekanın müşteri sorularını 7/24 yanıtlamasına izin verin. Müşteriler hizmetler, fiyatlandırma ve müsaitlik hakkında sorular sorabilir - siz telefona cevap vermek zorunda kalmadan anında yanıt alırlar.",
+        "imageAlt": "AI Asistan Sohbet Arayüzü",
+        "feature1": "7/24 otomatik hizmet önerileri",
+        "feature2": "Hizmetler hakkındaki müşteri sorularını anında yanıtlar",
+        "feature3": "Telefon görüşmelerinde harcanan süreyi %70 azaltır"
+      },
+      "whatsappConfirmation": {
+        "badge": "Sıfır Gelmeme",
+        "title": "WhatsApp Onay Sistemi",
+        "description": "Müşteriler WhatsApp üzerinden geleceklerini onaylamalı - yoksa slotları otomatik olarak başka birine açılır. Artık boş koltuklar yok.",
+        "imageAlt": "WhatsApp Onay Mesajları",
+        "feature1": "WhatsApp üzerinden otomatik onay talepleri",
+        "feature2": "Onaylanmayan slotlar bekleme listesine otomatik açılır",
+        "feature3": "Onaylar için özelleştirilebilir son tarih"
+      },
+      "clientTracking": {
+        "title": "Müşteri Takibi ve Notlar",
+        "description": "Detaylı müşteri profilleriyle kalıcı ilişkiler kurun. Ziyaret geçmişini, tercihleri takip edin ve her seferinde kişiselleştirilmiş hizmet sunmanıza yardımcı olacak notlar ekleyin.",
+        "imageAlt": "Müşteri Profili Paneli",
+        "feature1": "Müşteri başına tam randevu geçmişi",
+        "feature2": "Özel notlar ve tercihler",
+        "feature3": "Güvenilirlik ve gelmeme geçmişini takip"
+      },
+      "mobileApp": {
+        "badge": "Yakında",
+        "title": "Mobil Uygulama",
+        "description": "İşletmenizi hareket halinde yönetin. Yerel mobil uygulamamızı kullanarak randevuları görüntüleyin, bildirimler alın ve her yerden müşterilerinizle bağlantıda kalın.",
+        "imageAlt": "Mobil Uygulama Ekran Görüntüleri",
+        "feature1": "Gerçek zamanlı anlık bildirimler",
+        "feature2": "Hızlı randevu yönetimi",
+        "feature3": "Çevrimdışı çalışır - bağlandığında senkronize olur"
+      }
+    },
+    "moreFeatures": {
+      "title": "Ve çok daha fazlası",
+      "subtitle": "Randevuları profesyonelce yönetmek için ihtiyacınız olan her özellik",
       "bookingLinks": {
         "title": "Akıllı Rezervasyon Linkleri",
-        "description": "Belirli hizmetler veya genel müsaitlik için özel rezervasyon linkleri oluşturun. Her yerde paylaşın."
+        "description": "Belirli hizmetler veya kampanyalar için özel paylaşılabilir linkler oluşturun."
       },
-      "availability": {
-        "title": "Dinamik Müsaitlik",
-        "description": "Çalışma saatlerinizi ve engelleme kurallarınızı belirleyin. Sistem takviminizi otomatik olarak yönetir."
+      "scheduling": {
+        "title": "Akıllı Planlama",
+        "description": "Çalışma saatleri, ara süreleri ayarlayın ve sistemin müsaitliği yönetmesine izin verin."
       },
-      "confirmations": {
-        "title": "Randevu Öncesi Onaylar",
-        "description": "Otomatik olarak onay talepleri gönderin. Onaylamazlarsa, slot başkalarına açılır."
+      "teamManagement": {
+        "title": "Ekip Yönetimi",
+        "description": "Birden fazla sağlayıcıyı yönetin, hizmetler atayın ve bireysel performansı takip edin."
       },
-      "recovery": {
-        "title": "Gelir Kurtarma",
-        "description": "Bekleme listeleri ve anlık bildirimler, son dakika iptallerini anında doldurmanıza yardımcı olur."
+      "analytics": {
+        "title": "Raporlar ve Analiz",
+        "description": "Gelmeme oranlarını, en yoğun saatleri ve ekip performansını tek panelde takip edin."
       },
-      "clients": {
-        "title": "Müşteri Yönetimi",
-        "description": "Müşteri geçmişini, tercihlerini ve güvenilirlik puanlarını tek bir yerde takip edin."
+      "bufferTime": {
+        "title": "Akıllı Ara Süreleri",
+        "description": "Arka arkaya stres yaşamamak için randevular arasına otomatik ara süresi ekleyin."
       },
       "security": {
-        "title": "Güvenli ve Güvenilir",
-        "description": "Kurumsal düzeyde güvenlik, verilerinizi korurken %99.9 çalışma süresi sağlar."
+        "title": "Kurumsal Güvenlik",
+        "description": "Verileriniz kurumsal düzeyde şifreleme ve güvenlikle korunur."
+      }
+    },
+    "howItWorks": {
+      "badge": "Nasıl Çalışır",
+      "title": "Üç basit adımda başlayın",
+      "subtitle": "Karmaşık kurulum gerekmez. Dakikalar içinde rezervasyon almaya başlayın.",
+      "step1": {
+        "title": "Hizmetlerinizi oluşturun",
+        "description": "Sunduğunuz hizmetleri süreleri ve açıklamalarıyla ekleyin. Ekibiniz varsa üyeleri atayın."
+      },
+      "step2": {
+        "title": "Müsaitliğinizi ayarlayın",
+        "description": "Çalışma saatlerinizi ve engelli zamanları tanımlayın. Şablonları kullanın veya tamamen özelleştirin."
+      },
+      "step3": {
+        "title": "Paylaşın ve büyüyün",
+        "description": "Rezervasyon linkinizi müşterilerle paylaşın. Onlar rezervasyon yapar, siz harika hizmet sunmaya odaklanın."
+      }
+    },
+    "testimonials": {
+      "badge": "Referanslar",
+      "title": "Her yerde profesyoneller tarafından seviliyor",
+      "subtitle": "Müşterilerimizin rezervasyon deneyimlerini dönüştürme hakkında söylediklerini görün.",
+      "testimonial1": {
+        "quote": "Slootea ilk ayda gelmeme oranımızı %35 azalttı. Otomatik onaylar oyun değiştirici.",
+        "author": "Sarah Johnson",
+        "role": "Kuaför Sahibi"
+      },
+      "testimonial2": {
+        "quote": "Randevuları yönetmek için saatler harcıyordum. Artık her şey otomatik ve müşterilerime odaklanabiliyorum.",
+        "author": "Michael Chen",
+        "role": "Kişisel Antrenör"
+      },
+      "testimonial3": {
+        "quote": "Ekip yönetimi özellikleri inanılmaz. Herkesin programını ve performansını bir bakışta görebiliyorum.",
+        "author": "Emily Rodriguez",
+        "role": "Klinik Müdürü"
       }
     },
     "cta": {
-      "title": "Programınızı optimize etmeye hazır mısınız?",
-      "subtitle": "Rezervasyon iş akışını otomatikleştiren binlerce profesyonele katılın.",
-      "button": "Ücretsiz Başla"
+      "title": "Rezervasyon deneyiminizi dönüştürmeye hazır mısınız?",
+      "subtitle": "Planlamayı otomatikleştiren ve gelmeyenleri azaltan binlerce profesyonele katılın. Bugün ücretsiz denemenize başlayın.",
+      "button": "Ücretsiz Başla",
+      "note": "Kredi kartı gerekmez. İstediğiniz zaman iptal edin."
     },
     "footer": {
-      "privacy": "Gizlilik",
-      "terms": "Şartlar",
+      "description": "Hizmet işletmeleri için akıllı randevu yönetim platformu.",
+      "product": "Ürün",
+      "company": "Şirket",
+      "legal": "Yasal",
+      "about": "Hakkımızda",
+      "blog": "Blog",
+      "pricing": "Fiyatlandırma",
+      "privacy": "Gizlilik Politikası",
+      "terms": "Kullanım Şartları",
       "contact": "İletişim",
       "copyright": "Tüm hakları saklıdır."
     }

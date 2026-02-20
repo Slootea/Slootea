@@ -1,7 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,19 +17,27 @@ interface LanguageSwitcherProps {
 
 export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const pathname = usePathname();
+  const router = useRouter();
   
-  const getLocalizedPath = (locale: Locale) => {
-    // For locale landing pages, simply switch locale prefix
+  const switchLocale = (locale: Locale) => {
+    // Set the locale cookie
+    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; samesite=lax`;
+    
+    // Calculate the new path
     const segments = pathname.split('/').filter(Boolean);
     
+    let newPath: string;
     // Check if current path starts with a locale
     if (locales.includes(segments[0] as Locale)) {
       segments[0] = locale;
-      return '/' + segments.join('/');
+      newPath = '/' + segments.join('/');
+    } else {
+      // If no locale prefix, add one
+      newPath = `/${locale}${pathname}`;
     }
     
-    // If no locale prefix, add one
-    return `/${locale}`;
+    // Navigate to the new locale
+    router.push(newPath);
   };
 
   return (
@@ -45,14 +52,13 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {locales.map((locale) => (
-          <DropdownMenuItem key={locale} asChild>
-            <Link 
-              href={getLocalizedPath(locale)}
-              className={currentLocale === locale ? "font-semibold" : ""}
-            >
-              <span className="mr-2">{localeFlags[locale]}</span>
-              {localeNames[locale]}
-            </Link>
+          <DropdownMenuItem 
+            key={locale} 
+            onClick={() => switchLocale(locale)}
+            className={`cursor-pointer ${currentLocale === locale ? "font-semibold bg-accent" : ""}`}
+          >
+            <span className="mr-2">{localeFlags[locale]}</span>
+            {localeNames[locale]}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

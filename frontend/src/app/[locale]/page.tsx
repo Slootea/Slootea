@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { 
@@ -12,10 +11,17 @@ import {
   Clock, 
   Link2, 
   CheckCircle2, 
-  ShieldCheck, 
   ArrowRight,
-  TrendingUp,
-  Users
+  BarChart3,
+  Users,
+  Shield,
+  Sparkles,
+  Quote,
+  Play,
+  MessageCircle,
+  Bot,
+  ClipboardList,
+  Smartphone
 } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -49,22 +55,27 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+      <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
             <Image 
               src="/Slootea_logo.png" 
               alt="Slootea Logo" 
-              width={32}
-              height={32}
-              className="h-8 w-8"
+              width={36}
+              height={36}
+              className="h-9 w-9"
             />
-            <span className="text-xl font-bold tracking-tight">Slootea</span>
+            <span className="text-xl font-semibold tracking-tight">Slootea</span>
           </div>
-          <div className="flex items-center space-x-4">
+          <nav className="hidden md:flex items-center space-x-8">
+            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.features')}</a>
+            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.howItWorks')}</a>
+            <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.testimonials')}</a>
+          </nav>
+          <div className="flex items-center space-x-3">
             <LanguageSwitcher currentLocale={locale} />
             <Link href="/sign-in">
-              <Button variant="ghost" className="text-sm font-medium">{common('logIn')}</Button>
+              <Button variant="ghost" size="sm" className="font-medium">{common('logIn')}</Button>
             </Link>
             <Link href="/sign-up">
               <Button size="sm" className="font-medium">{common('getStarted')}</Button>
@@ -75,140 +86,433 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-32 overflow-hidden">
-          <div className="container px-4 mx-auto relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-normal rounded-full">
-                <span className="flex h-2 w-2 rounded-full bg-primary mr-2"></span>
-                {t('badge')}
-              </Badge>
-              <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                {t('heroTitle')} <br className="hidden sm:inline" /> 
-                <span className="text-primary">{t('heroTitleHighlight')}</span>
-              </h1>
-              <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                {t('heroDescription')}
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/sign-up" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto text-lg h-12 px-8">
-                    {t('ctaButton')}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+        <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-40 overflow-hidden">
+          {/* Subtle gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
+          
+          <div className="container px-6 mx-auto relative z-10">
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-12">
+                <Badge variant="secondary" className="mb-8 px-4 py-2 text-sm font-medium rounded-full border border-border/50 bg-background/50 backdrop-blur-sm">
+                  <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
+                  {t('badge')}
+                </Badge>
+                
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[1.1] mb-8">
+                  {t('heroTitle')}{' '}
+                  <span className="text-primary">
+                    {t('heroTitleHighlight')}
+                  </span>
+                </h1>
+                
+                <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10">
+                  {t('heroDescription')}
+                </p>
+                
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                  <Link href="/sign-up">
+                    <Button size="lg" className="h-12 px-8 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all">
+                      {t('ctaButton')}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
+                    <Play className="mr-2 h-4 w-4" />
+                    {t('watchDemo')}
                   </Button>
-                </Link>
+                </div>
+                
+                {/* Trust indicators */}
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    {t('noCreditCard')}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    {t('freeTrial')}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    {t('setupMinutes')}
+                  </div>
+                </div>
               </div>
               
-              {/* Trust indicators */}
-              <div className="mt-12 flex items-center justify-center space-x-8 text-muted-foreground/60">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" /> {t('noCreditCard')}
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" /> {t('freeTrial')}
+              {/* Hero Image Placeholder */}
+              <div className="relative mt-16">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-2xl opacity-40" />
+                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 shadow-2xl overflow-hidden">
+                  <div className="aspect-[16/9] flex items-center justify-center bg-muted/30">
+                    <div className="text-center p-8">
+                      <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <Calendar className="h-10 w-10 text-primary" />
+                      </div>
+                      <p className="text-muted-foreground font-medium">{t('hero.imagePlaceholder')}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Background decoration */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-10 bg-primary rounded-full blur-[100px] pointer-events-none" />
         </section>
 
-        {/* Stats Section */}
-        <section className="border-y bg-muted/30">
-          <div className="container px-4 py-12 mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <StatItem value="30%" label={t('stats.noShowReduction')} />
-              <StatItem value="24/7" label={t('stats.automatedBooking')} />
-              <StatItem value="10min" label={t('stats.setupTime')} />
-              <StatItem value="100%" label={t('stats.recoveryRate')} />
+        {/* Social Proof / Logos */}
+        <section className="py-16 border-y border-border/50 bg-muted/20">
+          <div className="container px-6 mx-auto">
+            <p className="text-center text-sm font-medium text-muted-foreground mb-8">{t('trustedBy')}</p>
+            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-8 w-24 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-xs text-muted-foreground">Logo {i}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Features Grid */}
-        <section className="py-24 bg-background">
-          <div className="container px-4 mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">{t('features.title')}</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                {t('features.subtitle')}
+        {/* Problem/Solution Section */}
+        <section className="py-24 lg:py-32">
+          <div className="container px-6 mx-auto">
+            <div className="max-w-3xl mx-auto text-center mb-20">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+                {t('problem.badge')}
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+                {t('problem.title')}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {t('problem.description')}
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-4xl mx-auto">
+              <StatCard value="30%" label={t('stats.noShowReduction')} />
+              <StatCard value="24/7" label={t('stats.automatedBooking')} />
+              <StatCard value="5min" label={t('stats.setupTime')} />
+              <StatCard value="100%" label={t('stats.recoveryRate')} />
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-24 lg:py-32 bg-muted/30">
+          <div className="container px-6 mx-auto">
+            <div className="max-w-3xl mx-auto text-center mb-20">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+                {t('features.badge')}
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+                {t('features.title')}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {t('features.subtitle')}
+              </p>
+            </div>
+
+            {/* Feature 1 - AI Assistant */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
+              <div className="order-2 lg:order-1">
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
+                  {t('features.aiAssistant.badge')}
+                </Badge>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <Bot className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.aiAssistant.title')}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  {t('features.aiAssistant.description')}
+                </p>
+                <ul className="space-y-3">
+                  {['feature1', 'feature2', 'feature3'].map((key) => (
+                    <li key={key} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{t(`features.aiAssistant.${key}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="order-1 lg:order-2">
+                <FeatureImagePlaceholder icon={<Bot className="h-8 w-8" />} label={t('features.aiAssistant.imageAlt')} />
+              </div>
+            </div>
+
+            {/* Feature 2 - WhatsApp Confirmation */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
+              <div>
+                <FeatureImagePlaceholder icon={<MessageCircle className="h-8 w-8" />} label={t('features.whatsappConfirmation.imageAlt')} />
+              </div>
+              <div>
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
+                  {t('features.whatsappConfirmation.badge')}
+                </Badge>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <MessageCircle className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.whatsappConfirmation.title')}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  {t('features.whatsappConfirmation.description')}
+                </p>
+                <ul className="space-y-3">
+                  {['feature1', 'feature2', 'feature3'].map((key) => (
+                    <li key={key} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{t(`features.whatsappConfirmation.${key}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Feature 3 - Client Tracking */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
+              <div className="order-2 lg:order-1">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <ClipboardList className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.clientTracking.title')}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  {t('features.clientTracking.description')}
+                </p>
+                <ul className="space-y-3">
+                  {['feature1', 'feature2', 'feature3'].map((key) => (
+                    <li key={key} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{t(`features.clientTracking.${key}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="order-1 lg:order-2">
+                <FeatureImagePlaceholder icon={<ClipboardList className="h-8 w-8" />} label={t('features.clientTracking.imageAlt')} />
+              </div>
+            </div>
+
+            {/* Feature 4 - Mobile App */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div>
+                <FeatureImagePlaceholder icon={<Smartphone className="h-8 w-8" />} label={t('features.mobileApp.imageAlt')} />
+              </div>
+              <div>
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
+                  {t('features.mobileApp.badge')}
+                </Badge>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <Smartphone className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.mobileApp.title')}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  {t('features.mobileApp.description')}
+                </p>
+                <ul className="space-y-3">
+                  {['feature1', 'feature2', 'feature3'].map((key) => (
+                    <li key={key} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{t(`features.mobileApp.${key}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Additional Features Grid */}
+        <section className="py-24 lg:py-32">
+          <div className="container px-6 mx-auto">
+            <div className="max-w-3xl mx-auto text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">
+                {t('moreFeatures.title')}
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                {t('moreFeatures.subtitle')}
+              </p>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
               <FeatureCard 
-                icon={<Link2 className="h-6 w-6" />}
-                title={t('features.bookingLinks.title')}
-                description={t('features.bookingLinks.description')}
+                icon={<Link2 className="h-5 w-5" />}
+                title={t('moreFeatures.bookingLinks.title')}
+                description={t('moreFeatures.bookingLinks.description')}
               />
               <FeatureCard 
-                icon={<Calendar className="h-6 w-6" />}
-                title={t('features.availability.title')}
-                description={t('features.availability.description')}
+                icon={<Calendar className="h-5 w-5" />}
+                title={t('moreFeatures.scheduling.title')}
+                description={t('moreFeatures.scheduling.description')}
               />
               <FeatureCard 
-                icon={<Clock className="h-6 w-6" />}
-                title={t('features.confirmations.title')}
-                description={t('features.confirmations.description')}
+                icon={<Users className="h-5 w-5" />}
+                title={t('moreFeatures.teamManagement.title')}
+                description={t('moreFeatures.teamManagement.description')}
               />
               <FeatureCard 
-                icon={<TrendingUp className="h-6 w-6" />}
-                title={t('features.recovery.title')}
-                description={t('features.recovery.description')}
+                icon={<BarChart3 className="h-5 w-5" />}
+                title={t('moreFeatures.analytics.title')}
+                description={t('moreFeatures.analytics.description')}
               />
               <FeatureCard 
-                icon={<Users className="h-6 w-6" />}
-                title={t('features.clients.title')}
-                description={t('features.clients.description')}
+                icon={<Clock className="h-5 w-5" />}
+                title={t('moreFeatures.bufferTime.title')}
+                description={t('moreFeatures.bufferTime.description')}
               />
               <FeatureCard 
-                icon={<ShieldCheck className="h-6 w-6" />}
-                title={t('features.security.title')}
-                description={t('features.security.description')}
+                icon={<Shield className="h-5 w-5" />}
+                title={t('moreFeatures.security.title')}
+                description={t('moreFeatures.security.description')}
               />
             </div>
           </div>
         </section>
 
-        {/* CTR Section */}
-        <section className="py-24 bg-muted/50">
-          <div className="container px-4 mx-auto text-center">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">{t('cta.title')}</h2>
-              <p className="text-xl text-muted-foreground mb-8">
-                {t('cta.subtitle')}
+        {/* How It Works */}
+        <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30">
+          <div className="container px-6 mx-auto">
+            <div className="max-w-3xl mx-auto text-center mb-20">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+                {t('howItWorks.badge')}
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+                {t('howItWorks.title')}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {t('howItWorks.subtitle')}
               </p>
-              <Link href="/sign-up">
-                <Button size="lg" className="text-lg h-12 px-8">
-                  {t('cta.button')}
-                </Button>
-              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-5xl mx-auto">
+              <StepCard 
+                number="01"
+                title={t('howItWorks.step1.title')}
+                description={t('howItWorks.step1.description')}
+              />
+              <StepCard 
+                number="02"
+                title={t('howItWorks.step2.title')}
+                description={t('howItWorks.step2.description')}
+              />
+              <StepCard 
+                number="03"
+                title={t('howItWorks.step3.title')}
+                description={t('howItWorks.step3.description')}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section id="testimonials" className="py-24 lg:py-32">
+          <div className="container px-6 mx-auto">
+            <div className="max-w-3xl mx-auto text-center mb-20">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+                {t('testimonials.badge')}
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+                {t('testimonials.title')}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {t('testimonials.subtitle')}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+              <TestimonialCard 
+                quote={t('testimonials.testimonial1.quote')}
+                author={t('testimonials.testimonial1.author')}
+                role={t('testimonials.testimonial1.role')}
+              />
+              <TestimonialCard 
+                quote={t('testimonials.testimonial2.quote')}
+                author={t('testimonials.testimonial2.author')}
+                role={t('testimonials.testimonial2.role')}
+              />
+              <TestimonialCard 
+                quote={t('testimonials.testimonial3.quote')}
+                author={t('testimonials.testimonial3.author')}
+                role={t('testimonials.testimonial3.role')}
+                className="md:col-span-2 lg:col-span-1"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="py-24 lg:py-32">
+          <div className="container px-6 mx-auto">
+            <div className="relative max-w-4xl mx-auto">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-3xl blur-2xl" />
+              <div className="relative bg-gradient-to-b from-background to-muted/50 rounded-3xl border border-border/50 p-12 lg:p-16 text-center">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+                  {t('cta.title')}
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+                  {t('cta.subtitle')}
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Link href="/sign-up">
+                    <Button size="lg" className="h-12 px-8 text-base font-medium shadow-lg shadow-primary/20">
+                      {t('cta.button')}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <p className="mt-6 text-sm text-muted-foreground">
+                  {t('cta.note')}
+                </p>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-background">
-        <div className="container px-4 py-8 mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Image 
-              src="/Slootea_logo.png" 
-              alt="Slootea Logo" 
-              width={24}
-              height={24}
-              className="h-6 w-6 grayscale opacity-80"
-            />
-            <span className="text-sm font-semibold text-muted-foreground">Slootea</span>
+      <footer className="border-t border-border/50 bg-muted/20">
+        <div className="container px-6 py-12 lg:py-16 mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 mb-12">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center space-x-3 mb-4">
+                <Image 
+                  src="/Slootea_logo.png" 
+                  alt="Slootea Logo" 
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+                <span className="text-lg font-semibold">Slootea</span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {t('footer.description')}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">{t('footer.product')}</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground transition-colors">{t('nav.features')}</a></li>
+                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">{t('nav.howItWorks')}</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.pricing')}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">{t('footer.company')}</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.about')}</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.blog')}</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.contact')}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">{t('footer.legal')}</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
+                <li><Link href="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
+              </ul>
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Slootea. {t('footer.copyright')}
-          </div>
-          <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href="/privacy" className="hover:text-foreground">{t('footer.privacy')}</Link>
-            <Link href="/terms" className="hover:text-foreground">{t('footer.terms')}</Link>
-            <Link href="#" className="hover:text-foreground">{t('footer.contact')}</Link>
+          <div className="border-t border-border/50 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              &copy; {new Date().getFullYear()} Slootea. {t('footer.copyright')}
+            </p>
           </div>
         </div>
       </footer>
@@ -216,15 +520,11 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
   );
 }
 
-function StatItem({ value, label }: { value: string; label: string }) {
+function StatCard({ value, label }: { value: string; label: string }) {
   return (
-    <div className="text-center">
-      <div className="text-3xl font-bold bg-primary/10 text-primary py-1 px-3 rounded-lg inline-block mb-2">
-        {value}
-      </div>
-      <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-        {label}
-      </div>
+    <div className="bg-background rounded-2xl border border-border/50 p-6 text-center">
+      <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">{value}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -239,18 +539,68 @@ function FeatureCard({
   description: string; 
 }) {
   return (
-    <Card className="border-none shadow-none bg-muted/30 hover:bg-muted/50 transition-colors">
-      <CardHeader>
-        <div className="h-12 w-12 bg-background rounded-xl flex items-center justify-center mb-4 shadow-sm text-primary">
-          {icon}
+    <div className="bg-background rounded-2xl border border-border/50 p-6 hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+      <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary mb-4">
+        {icon}
+      </div>
+      <h3 className="font-semibold mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function FeatureImagePlaceholder({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="relative">
+      <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+      <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3] flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            {icon}
+          </div>
+          <p className="text-sm text-muted-foreground">{label}</p>
         </div>
-        <CardTitle className="text-xl">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground leading-relaxed">
-          {description}
-        </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+  );
+}
+
+function StepCard({ number, title, description }: { number: string; title: string; description: string }) {
+  return (
+    <div className="text-center">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground text-xl font-bold mb-6">
+        {number}
+      </div>
+      <h3 className="text-xl font-semibold mb-3">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function TestimonialCard({ 
+  quote, 
+  author, 
+  role,
+  className = ""
+}: { 
+  quote: string; 
+  author: string; 
+  role: string;
+  className?: string;
+}) {
+  return (
+    <div className={`bg-background rounded-2xl border border-border/50 p-6 lg:p-8 ${className}`}>
+      <Quote className="h-8 w-8 text-primary/20 mb-4" />
+      <p className="text-muted-foreground leading-relaxed mb-6">{quote}</p>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+          <span className="text-sm font-semibold text-muted-foreground">{author.charAt(0)}</span>
+        </div>
+        <div>
+          <p className="font-semibold text-sm">{author}</p>
+          <p className="text-sm text-muted-foreground">{role}</p>
+        </div>
+      </div>
+    </div>
   );
 }
