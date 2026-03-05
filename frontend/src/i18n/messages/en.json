@@ -1216,6 +1216,86 @@
         },
         "manualConnect": "Advanced Setup",
         "connectWithMeta": "Connect with Meta"
+      },
+      "sms": {
+        "title": "SMS Notifications",
+        "description": "Send SMS notifications to clients using Verimor",
+        "loading": "Loading SMS settings...",
+        "connected": "Connected",
+        "notConnected": "Not Connected",
+        "usingGlobal": "Using Global Settings",
+        "sendNotificationsVia": "Send notifications via SMS (sender: {sender})",
+        "enabled": "SMS notifications enabled",
+        "disabled": "SMS notifications disabled",
+        "updateFailed": "Failed to update SMS settings",
+        "languageUpdated": "SMS notification language updated",
+        "credentialsUpdated": "SMS credentials updated",
+        "language": {
+          "title": "Notification Language",
+          "description": "Select language for SMS message templates",
+          "turkish": "Turkish",
+          "english": "English"
+        },
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connectedSuccess": "SMS service connected successfully",
+        "disconnected": "SMS service disconnected",
+        "connectFailed": "Failed to connect SMS service",
+        "disconnectFailed": "Failed to disconnect SMS service",
+        "checkCredentials": "Please check your Verimor credentials and try again",
+        "useGlobalCredentials": "Use platform SMS credentials",
+        "useGlobalToggle": {
+          "title": "Use Global Credentials",
+          "description": "Use the platform's Verimor account instead of custom credentials"
+        },
+        "editTemplates": "Edit SMS templates",
+        "templatesDialog": {
+          "title": "SMS Message Templates",
+          "description": "Customize the SMS messages sent for each notification type. Use variables to personalize messages.",
+          "availableVariables": "Available Variables",
+          "copiedToClipboard": "Copied to clipboard"
+        },
+        "templates": {
+          "appointmentCreated": "New Appointment",
+          "appointmentReminder": "Appointment Reminder",
+          "appointmentCanceled": "Appointment Canceled",
+          "appointmentRescheduled": "Appointment Rescheduled"
+        },
+        "variables": {
+          "clientName": "Client's name",
+          "serviceName": "Service name",
+          "appointmentDate": "Appointment date",
+          "appointmentTime": "Appointment time",
+          "providerName": "Provider name",
+          "organizationName": "Business name",
+          "confirmationLink": "Confirmation link",
+          "appointmentLink": "Appointment details link"
+        },
+        "connectDialog": {
+          "title": "Connect SMS Service",
+          "description": "Enter your Verimor SMS API credentials to enable SMS notifications.",
+          "username": "Verimor Username",
+          "usernamePlaceholder": "Your Verimor username",
+          "password": "Verimor Password",
+          "passwordPlaceholder": "Your Verimor password",
+          "sourceAddr": "Sender Name (Source Address)",
+          "sourceAddrPlaceholder": "e.g., MYCOMPANY",
+          "sourceAddrHint": "The sender name displayed to recipients (max 11 characters, must be registered with Verimor)",
+          "cancel": "Cancel",
+          "missingFields": "Missing required fields",
+          "fillAllFields": "Please fill in all required fields"
+        },
+        "templateSaved": "SMS template saved",
+        "templateSaveFailed": "Failed to save SMS template",
+        "templateReset": "SMS template reset to default",
+        "templateResetFailed": "Failed to reset SMS template",
+        "active": "Active",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "reset": "Reset",
+        "resetToDefault": "Reset to default template",
+        "close": "Close"
       }
     },
     "messageTemplates": {
@@ -1514,11 +1594,12 @@
       "noAvailabilityHint": "Set your working hours to continue"
     },
     "notificationsStep": {
-      "title": "Connect WhatsApp (Optional)",
-      "description": "Send appointment notifications via WhatsApp to keep your clients informed.",
+      "title": "Connect Notifications (Optional)",
+      "description": "Send appointment notifications via WhatsApp and SMS to keep your clients informed.",
       "whatsappHint": "Connect your WhatsApp Business account to send automated appointment confirmations, reminders, and updates to your clients.",
+      "smsHint": "Enable SMS notifications using Verimor to reach clients via text messages.",
       "optionalTitle": "This step is optional",
-      "optionalHint": "You can skip this step and set up WhatsApp notifications later from your organization settings."
+      "optionalHint": "You can skip this step and set up notifications later from your organization settings."
     },
     "navigation": {
       "back": "Back",

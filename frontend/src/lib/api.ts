@@ -450,6 +450,55 @@ export const notificationSettingsApi = {
   }) => api.post(`/organizations/${orgId}/notification-settings/whatsapp/business-templates/link`, data),
 };
 
+// SMS Notification Settings API (Verimor SMS)
+export const smsSettingsApi = {
+  // Get SMS notification settings
+  getSettings: (orgId: string) =>
+    api.get(`/organizations/${orgId}/notification-settings/sms`),
+  
+  // Update SMS enabled status and settings
+  updateSettings: (orgId: string, data: {
+    enabled?: boolean;
+    templateLanguage?: string;
+    useGlobalCredentials?: boolean;
+  }) => api.put(`/organizations/${orgId}/notification-settings/sms`, data),
+  
+  // Connect SMS with custom Verimor credentials
+  connect: (orgId: string, data: {
+    username: string;
+    password: string;
+    sourceAddr: string;
+  }) => api.post(`/organizations/${orgId}/notification-settings/sms/connect`, data),
+  
+  // Disconnect SMS (clear custom credentials)
+  disconnect: (orgId: string) =>
+    api.post(`/organizations/${orgId}/notification-settings/sms/disconnect`),
+  
+  // Get all SMS templates for organization
+  getTemplates: (orgId: string) =>
+    api.get(`/organizations/${orgId}/notification-settings/sms/templates`),
+  
+  // Create a new SMS template
+  createTemplate: (orgId: string, data: {
+    eventType: string;
+    language: string;
+    name: string;
+    content: string;
+    isActive?: boolean;
+  }) => api.post(`/organizations/${orgId}/notification-settings/sms/templates`, data),
+  
+  // Update an existing SMS template
+  updateTemplate: (orgId: string, templateId: string, data: {
+    name?: string;
+    content?: string;
+    isActive?: boolean;
+  }) => api.put(`/organizations/${orgId}/notification-settings/sms/templates/${templateId}`, data),
+  
+  // Delete an SMS template
+  deleteTemplate: (orgId: string, templateId: string) =>
+    api.delete(`/organizations/${orgId}/notification-settings/sms/templates/${templateId}`),
+};
+
 // Meta OAuth API (WhatsApp Connection via Popup)
 export const metaOAuthApi = {
   // Generate OAuth URL for Meta login popup

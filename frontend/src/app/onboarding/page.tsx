@@ -39,7 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { WhatsAppChannelSettings } from "@/components/notification-settings";
+import { WhatsAppChannelSettings, SmsChannelSettings } from "@/components/notification-settings";
 import {
   Settings,
   Briefcase,
@@ -1152,6 +1152,13 @@ export default function OnboardingPage() {
                     {t("notificationsStep.whatsappHint")}
                   </p>
                   <WhatsAppChannelSettings />
+                </div>
+
+                <div className="p-4 rounded-lg border bg-muted/30">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t("notificationsStep.smsHint")}
+                  </p>
+                  <SmsChannelSettings />
                 </div>
 
                 <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">

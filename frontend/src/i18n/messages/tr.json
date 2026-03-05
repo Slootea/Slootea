@@ -1216,6 +1216,86 @@
         },
         "manualConnect": "Gelişmiş Kurulum",
         "connectWithMeta": "Meta ile Bağlan"
+      },
+      "sms": {
+        "title": "SMS Bildirimleri",
+        "description": "Verimor üzerinden müşterilere SMS bildirimleri gönderin",
+        "loading": "SMS ayarları yükleniyor...",
+        "connected": "Bağlı",
+        "notConnected": "Bağlı Değil",
+        "usingGlobal": "Global Ayarları Kullanıyor",
+        "sendNotificationsVia": "SMS ile bildirim gönder (gönderen: {sender})",
+        "enabled": "SMS bildirimleri etkinleştirildi",
+        "disabled": "SMS bildirimleri devre dışı bırakıldı",
+        "updateFailed": "SMS ayarları güncellenemedi",
+        "languageUpdated": "SMS bildirim dili güncellendi",
+        "credentialsUpdated": "SMS kimlik bilgileri güncellendi",
+        "language": {
+          "title": "Bildirim Dili",
+          "description": "SMS mesaj şablonları için dil seçin",
+          "turkish": "Türkçe",
+          "english": "İngilizce"
+        },
+        "connect": "Bağlan",
+        "disconnect": "Bağlantıyı Kes",
+        "connectedSuccess": "SMS servisi başarıyla bağlandı",
+        "disconnected": "SMS servisi bağlantısı kesildi",
+        "connectFailed": "SMS servisi bağlanamadı",
+        "disconnectFailed": "SMS servisi bağlantısı kesilemedi",
+        "checkCredentials": "Lütfen Verimor kimlik bilgilerinizi kontrol edip tekrar deneyin",
+        "useGlobalCredentials": "Platform SMS kimlik bilgilerini kullan",
+        "useGlobalToggle": {
+          "title": "Global Kimlik Bilgilerini Kullan",
+          "description": "Özel kimlik bilgileri yerine platformun Verimor hesabını kullanın"
+        },
+        "editTemplates": "SMS şablonlarını düzenle",
+        "templatesDialog": {
+          "title": "SMS Mesaj Şablonları",
+          "description": "Her bildirim türü için gönderilen SMS mesajlarını özelleştirin. Mesajları kişiselleştirmek için değişkenleri kullanın.",
+          "availableVariables": "Kullanılabilir Değişkenler",
+          "copiedToClipboard": "Panoya kopyalandı"
+        },
+        "templates": {
+          "appointmentCreated": "Yeni Randevu",
+          "appointmentReminder": "Randevu Hatırlatma",
+          "appointmentCanceled": "Randevu İptal",
+          "appointmentRescheduled": "Randevu Güncellendi"
+        },
+        "variables": {
+          "clientName": "Müşteri adı",
+          "serviceName": "Hizmet adı",
+          "appointmentDate": "Randevu tarihi",
+          "appointmentTime": "Randevu saati",
+          "providerName": "Sağlayıcı adı",
+          "organizationName": "İşletme adı",
+          "confirmationLink": "Onay linki",
+          "appointmentLink": "Randevu detay linki"
+        },
+        "connectDialog": {
+          "title": "SMS Servisini Bağla",
+          "description": "SMS bildirimlerini etkinleştirmek için Verimor SMS API kimlik bilgilerinizi girin.",
+          "username": "Verimor Kullanıcı Adı",
+          "usernamePlaceholder": "Verimor kullanıcı adınız",
+          "password": "Verimor Şifre",
+          "passwordPlaceholder": "Verimor şifreniz",
+          "sourceAddr": "Gönderen Adı (Kaynak Adresi)",
+          "sourceAddrPlaceholder": "örn., SIRKETIM",
+          "sourceAddrHint": "Alıcılara gösterilen gönderen adı (maksimum 11 karakter, Verimor'da kayıtlı olmalı)",
+          "cancel": "İptal",
+          "missingFields": "Gerekli alanlar eksik",
+          "fillAllFields": "Lütfen tüm gerekli alanları doldurun"
+        },
+        "templateSaved": "SMS şablonu kaydedildi",
+        "templateSaveFailed": "SMS şablonu kaydedilemedi",
+        "templateReset": "SMS şablonu varsayılana sıfırlandı",
+        "templateResetFailed": "SMS şablonu sıfırlanamadı",
+        "active": "Aktif",
+        "edit": "Düzenle",
+        "save": "Kaydet",
+        "cancel": "İptal",
+        "reset": "Sıfırla",
+        "resetToDefault": "Varsayılan şablona sıfırla",
+        "close": "Kapat"
       }
     },
     "messageTemplates": {
@@ -1501,11 +1581,12 @@
       "noAvailabilityHint": "Devam etmek için çalışma saatlerinizi ayarlayın"
     },
     "notificationsStep": {
-      "title": "WhatsApp Bağlantısı (İsteğe Bağlı)",
-      "description": "Müşterilerinizi bilgilendirmek için WhatsApp üzerinden randevu bildirimleri gönderin.",
+      "title": "Bildirim Bağlantısı (İsteğe Bağlı)",
+      "description": "Müşterilerinizi bilgilendirmek için WhatsApp ve SMS üzerinden randevu bildirimleri gönderin.",
       "whatsappHint": "WhatsApp Business hesabınızı bağlayarak müşterilerinize otomatik randevu onayları, hatırlatmalar ve güncellemeler gönderin.",
+      "smsHint": "Verimor ile SMS bildirimlerini etkinleştirerek müşterilerinize kısa mesaj ile ulaşın.",
       "optionalTitle": "Bu adım isteğe bağlıdır",
-      "optionalHint": "Bu adımı atlayabilir ve WhatsApp bildirimlerini daha sonra organizasyon ayarlarından kurabilirsiniz."
+      "optionalHint": "Bu adımı atlayabilir ve bildirimleri daha sonra organizasyon ayarlarından kurabilirsiniz."
     },
     "navigation": {
       "back": "Geri",

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2, Bot } from "lucide-react";
-import { WhatsAppChannelSettings } from "@/components/notification-settings";
+import { WhatsAppChannelSettings, SmsChannelSettings } from "@/components/notification-settings";
 
 export default function OrganizationSettingsPage() {
   const { getToken } = useAuth();
@@ -444,9 +444,11 @@ export default function OrganizationSettingsPage() {
           <CardDescription>{t('notifications.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Email and SMS toggles hidden - only WhatsApp enabled for now */}
           {/* WhatsApp */}
           <WhatsAppChannelSettings />
+          
+          {/* SMS (Verimor) */}
+          <SmsChannelSettings />
         </CardContent>
       </Card>
 

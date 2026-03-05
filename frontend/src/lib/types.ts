@@ -759,3 +759,59 @@ export interface AiStreamChunk {
   };
 }
 
+// SMS Notification Settings Types (Verimor)
+export enum SmsEventType {
+  APPOINTMENT_CREATED = 'APPOINTMENT_CREATED',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
+  APPOINTMENT_CANCELED = 'APPOINTMENT_CANCELED',
+  APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
+}
+
+export interface SmsTemplate {
+  id: string;
+  organizationId: string | null;
+  eventType: SmsEventType;
+  language: string;
+  name: string;
+  content: string;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SmsNotificationSettings {
+  enabled: boolean;
+  isConnected: boolean;
+  sourceAddr?: string;
+  templateLanguage: string;
+  useGlobalCredentials: boolean;
+  templates: SmsTemplate[];
+}
+
+export interface UpdateSmsSettingsPayload {
+  enabled?: boolean;
+  templateLanguage?: string;
+  useGlobalCredentials?: boolean;
+}
+
+export interface ConnectSmsPayload {
+  username: string;
+  password: string;
+  sourceAddr: string;
+}
+
+export interface CreateSmsTemplatePayload {
+  eventType: SmsEventType;
+  language: string;
+  name: string;
+  content: string;
+  isActive?: boolean;
+}
+
+export interface UpdateSmsTemplatePayload {
+  name?: string;
+  content?: string;
+  isActive?: boolean;
+}
+

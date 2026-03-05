@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Appointment } from './entities/appointment.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 import { AppointmentsService } from './appointments.service';
 import { AppointmentsController } from './appointments.controller';
 import { ServiceOptionsModule } from '../service-options/service-options.module';
@@ -14,7 +15,7 @@ import { MessagingModule } from '../messaging/messaging.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Appointment]),
+    TypeOrmModule.forFeature([Appointment, Organization]),
     forwardRef(() => ServiceOptionsModule),
     AvailabilityModule,
     BlockedTimesModule,

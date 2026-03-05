@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WhatsAppService, AppointmentNotificationData as WhatsAppNotificationData, WhatsAppEventType } from './whatsapp.service';
+import { VerimorSmsService, SmsNotificationData, SmsEventType } from './verimor-sms.service';
 
 /**
  * Notification event types (unified across all channels)
@@ -34,6 +35,7 @@ export interface NotificationData {
 export interface ChannelResult {
   success: boolean;
   messageId?: string;
+  campaignId?: number;
   error?: string;
 }
 
@@ -42,6 +44,7 @@ export interface ChannelResult {
  */
 export interface NotificationResult {
   whatsapp?: ChannelResult;
+  sms?: ChannelResult;
   anySent: boolean;
   allFailed: boolean;
 }
@@ -49,9 +52,9 @@ export interface NotificationResult {
 /**
  * Unified Notification Service
  * 
- * This service orchestrates sending notifications via WhatsApp (Meta Cloud API).
+ * This service orchestrates sending notifications via WhatsApp (Meta Cloud API) and SMS (Verimor API).
  * 
- * It checks if the channel is configured and enabled for the organization
+ * It checks if each channel is configured and enabled for the organization
  * before attempting to send.
  * 
  * Usage:
@@ -71,6 +74,7 @@ export class NotificationService {
 
   constructor(
     private readonly whatsAppService: WhatsAppService,
+    private readonly smsService: VerimorSmsService,
   ) {}
 
   /**
@@ -86,6 +90,22 @@ export class NotificationService {
         return WhatsAppEventType.APPOINTMENT_CANCELED;
       case NotificationEventType.APPOINTMENT_RESCHEDULED:
         return WhatsAppEventType.APPOINTMENT_RESCHEDULED;
+    }
+  }
+
+  /**
+   * Map NotificationEventType to SmsEventType
+   */
+  private mapToSmsEventType(eventType: NotificationEventType): SmsEventType {
+    switch (eventType) {
+      case NotificationEventType.APPOINTMENT_CREATED:
+        return SmsEventType.APPOINTMENT_CREATED;
+      case NotificationEventType.APPOINTMENT_REMINDER:
+        return SmsEventType.APPOINTMENT_REMINDER;
+      case NotificationEventType.APPOINTMENT_CANCELED:
+        return SmsEventType.APPOINTMENT_CANCELED;
+      case NotificationEventType.APPOINTMENT_RESCHEDULED:
+        return SmsEventType.APPOINTMENT_RESCHEDULED;
     }
   }
 
@@ -111,11 +131,33 @@ export class NotificationService {
   }
 
   /**
-   * Send notification via WhatsApp
+   * Convert unified notification data to SMS format
+   */
+  private toSmsData(data: NotificationData): SmsNotificationData | null {
+    if (!data.clientPhone) {
+      return null;
+    }
+
+    return {
+      organizationId: data.organizationId,
+      clientName: data.clientName,
+      clientPhone: data.clientPhone,
+      serviceName: data.serviceName,
+      appointmentDate: data.appointmentDate,
+      providerName: data.providerName,
+      organizationName: data.organizationName,
+      confirmationLink: data.confirmationLink,
+      appointmentLink: data.appointmentLink,
+      cancellationReason: data.cancellationReason,
+    };
+  }
+
+  /**
+   * Send notification via all enabled channels (WhatsApp, SMS)
    * 
    * @param eventType - The type of event (created, reminder, canceled)
    * @param data - The notification data
-   * @returns Results from the channel
+   * @returns Results from all channels
    */
   async sendNotification(
     eventType: NotificationEventType,
@@ -144,11 +186,33 @@ export class NotificationService {
       }
     }
 
+    // Send SMS notification
+    const smsData = this.toSmsData(data);
+    if (smsData) {
+      try {
+        const smsResult = await this.sendSmsNotification(eventType, smsData);
+        result.sms = smsResult;
+        if (smsResult.success) {
+          result.anySent = true;
+          result.allFailed = false;
+        }
+      } catch (error) {
+        result.sms = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }
+
     // Log summary
-    if (result.whatsapp?.success) {
-      this.logger.log(`Notification sent via WhatsApp for event ${eventType}`);
+    const sentChannels = [];
+    if (result.whatsapp?.success) sentChannels.push('WhatsApp');
+    if (result.sms?.success) sentChannels.push('SMS');
+
+    if (sentChannels.length > 0) {
+      this.logger.log(`Notification sent via ${sentChannels.join(', ')} for event ${eventType}`);
     } else {
-      this.logger.debug(`No notifications sent for event ${eventType} - channel not configured or disabled`);
+      this.logger.debug(`No notifications sent for event ${eventType} - channels not configured or disabled`);
     }
 
     return result;
@@ -174,6 +238,44 @@ export class NotificationService {
         default:
           return { success: false, error: 'Unknown event type' };
       }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Send SMS notification based on event type
+   */
+  private async sendSmsNotification(
+    eventType: NotificationEventType,
+    data: SmsNotificationData,
+  ): Promise<ChannelResult> {
+    try {
+      let result;
+      switch (eventType) {
+        case NotificationEventType.APPOINTMENT_CREATED:
+          result = await this.smsService.sendAppointmentCreatedNotification(data);
+          break;
+        case NotificationEventType.APPOINTMENT_REMINDER:
+          result = await this.smsService.sendAppointmentReminderNotification(data);
+          break;
+        case NotificationEventType.APPOINTMENT_CANCELED:
+          result = await this.smsService.sendAppointmentCanceledNotification(data);
+          break;
+        case NotificationEventType.APPOINTMENT_RESCHEDULED:
+          result = await this.smsService.sendAppointmentRescheduledNotification(data);
+          break;
+        default:
+          return { success: false, error: 'Unknown event type' };
+      }
+      return {
+        success: result.success,
+        campaignId: result.campaignId,
+        error: result.error,
+      };
     } catch (error) {
       return {
         success: false,
@@ -219,8 +321,11 @@ export class NotificationService {
    * Check if any notification channel is configured for an organization
    */
   async isAnyChannelReady(organizationId: string): Promise<boolean> {
-    const whatsapp = await this.whatsAppService.isWhatsAppReady(organizationId);
-    return whatsapp;
+    const [whatsapp, sms] = await Promise.all([
+      this.whatsAppService.isWhatsAppReady(organizationId),
+      this.smsService.isSmsReady(organizationId),
+    ]);
+    return whatsapp || sms;
   }
 
   /**
@@ -228,8 +333,12 @@ export class NotificationService {
    */
   async getChannelStatus(organizationId: string): Promise<{
     whatsapp: boolean;
+    sms: boolean;
   }> {
-    const whatsapp = await this.whatsAppService.isWhatsAppReady(organizationId);
-    return { whatsapp };
+    const [whatsapp, sms] = await Promise.all([
+      this.whatsAppService.isWhatsAppReady(organizationId),
+      this.smsService.isSmsReady(organizationId),
+    ]);
+    return { whatsapp, sms };
   }
 }

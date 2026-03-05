@@ -10,6 +10,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThan, Like, ILike, LessThanOrEqual, In } from 'typeorm';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
@@ -145,6 +146,8 @@ export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentRepository: Repository<Appointment>,
+    @InjectRepository(Organization)
+    private readonly organizationRepository: Repository<Organization>,
     private readonly serviceOptionsService: ServiceOptionsService,
     private readonly availabilityService: AvailabilityService,
     private readonly blockedTimesService: BlockedTimesService,
@@ -156,6 +159,17 @@ export class AppointmentsService {
     private readonly userServiceOptionsService: UserServiceOptionsService,
     private readonly notificationService: NotificationService,
   ) {}
+
+  /**
+   * Get organization name by ID
+   */
+  private async getOrganizationName(organizationId: string): Promise<string> {
+    const org = await this.organizationRepository.findOne({
+      where: { id: organizationId },
+      select: ['name'],
+    });
+    return org?.name || '';
+  }
 
   async create(createDto: CreateAppointmentDto): Promise<Appointment> {
     // Get booking link to find the organization
@@ -442,14 +456,12 @@ export class AppointmentsService {
       );
     }
 
-    // Get organization settings via the user's organization
-    // First get the user to find their organizationId
-    const user = await this.appointmentRepository.manager.findOne('User', { where: { id: appointment.userId } }) as { organizationId: string } | null;
-    if (!user?.organizationId) {
+    // Get organization settings from appointment's organizationId
+    if (!appointment.organizationId) {
       throw new BadRequestException('Cannot find organization settings');
     }
     
-    const settings = await this.organizationSettingsService.findByOrganizationId(user.organizationId);
+    const settings = await this.organizationSettingsService.findByOrganizationId(appointment.organizationId);
     const deadline = new Date(appointment.startTime);
     deadline.setHours(
       deadline.getHours() - settings.confirmationDeadlineHours,
@@ -525,7 +537,9 @@ export class AppointmentsService {
     organizationId?: string,
     isOrgAdmin?: boolean,
   ): Promise<Appointment> {
+    this.logger.debug(`Update called - id: ${id}, userId: ${userId}, organizationId: ${organizationId}, isOrgAdmin: ${isOrgAdmin}`);
     const appointment = await this.findOne(id, userId, isOrgAdmin ? organizationId : undefined);
+    this.logger.debug(`After findOne - clientPhone: ${appointment.clientPhone}, clientEmail: ${appointment.clientEmail}`);
     const previousStatus = appointment.status;
     const previousStartTime = appointment.startTime;
     let timeWasUpdated = false;
@@ -553,10 +567,18 @@ export class AppointmentsService {
     const shouldSendNotification = updateDto.sendNotification !== false;
     delete updateDto.sendNotification;
     
-    Object.assign(appointment, updateDto);
+    // Filter out undefined values to prevent overwriting existing data
+    const filteredUpdateDto = Object.fromEntries(
+      Object.entries(updateDto).filter(([_, value]) => value !== undefined)
+    );
+    
+    this.logger.debug(`Before Object.assign - updateDto keys: ${Object.keys(updateDto).join(', ')}, filteredDto keys: ${Object.keys(filteredUpdateDto).join(', ')}`);
+    Object.assign(appointment, filteredUpdateDto);
+    this.logger.debug(`After Object.assign - clientPhone: ${appointment.clientPhone}, clientEmail: ${appointment.clientEmail}`);
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
     // Send reschedule notification if time was updated and notification is enabled
+    this.logger.debug(`Update check - timeWasUpdated: ${timeWasUpdated}, shouldSendNotification: ${shouldSendNotification}, organizationId: ${organizationId}, clientPhone: ${appointment.clientPhone}, clientEmail: ${appointment.clientEmail}`);
     if (timeWasUpdated && shouldSendNotification && organizationId && (appointment.clientPhone || appointment.clientEmail)) {
       try {
         const fullAppointment = await this.appointmentRepository.findOne({
@@ -565,8 +587,10 @@ export class AppointmentsService {
         });
 
         if (fullAppointment) {
+          const organizationName = await this.getOrganizationName(organizationId);
           const notificationData: NotificationData = {
             organizationId,
+            organizationName,
             clientName: fullAppointment.clientName,
             clientPhone: fullAppointment.clientPhone || undefined,
             clientEmail: fullAppointment.clientEmail || undefined,
@@ -617,8 +641,10 @@ export class AppointmentsService {
               });
 
               if (fullAppointment) {
+                const organizationName = await this.getOrganizationName(organizationId);
                 const notificationData: NotificationData = {
                   organizationId,
+                  organizationName,
                   clientName: fullAppointment.clientName,
                   clientPhone: fullAppointment.clientPhone || undefined,
                   clientEmail: fullAppointment.clientEmail || undefined,
@@ -669,8 +695,10 @@ export class AppointmentsService {
         });
 
         if (fullAppointment) {
+          const organizationName = await this.getOrganizationName(organizationId);
           const notificationData: NotificationData = {
             organizationId,
+            organizationName,
             clientName: fullAppointment.clientName,
             clientPhone: fullAppointment.clientPhone || undefined,
             clientEmail: fullAppointment.clientEmail || undefined,
@@ -1344,8 +1372,10 @@ export class AppointmentsService {
       try {
         const providerUser = await this.userServiceOptionsService.getUserById(assignedUserId);
         const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const organizationName = await this.getOrganizationName(organizationId);
         const notificationData: NotificationData = {
           organizationId,
+          organizationName,
           clientName: createDto.clientName,
           clientPhone: createDto.clientPhone || undefined,
           clientEmail: createDto.clientEmail || undefined,
@@ -1423,13 +1453,18 @@ export class AppointmentsService {
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const organizationName = organizationId ? await this.getOrganizationName(organizationId) : '';
     await this.notificationService.sendAppointmentCreatedNotification({
       organizationId: organizationId || "",
+      organizationName,
       clientName: createDto.clientName,
       clientPhone: createDto.clientPhone || undefined,
       clientEmail: createDto.clientEmail || undefined,
       serviceName: serviceOption.title,
       appointmentDate: startTime,
+      confirmationLink: `${baseUrl}/confirm/${confirmationToken}`,
+      appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
     }).catch((error) => {
       this.logger.error(`Failed to send notification for appointment ${savedAppointment.id}`, error);
     });
@@ -1962,8 +1997,10 @@ export class AppointmentsService {
         });
 
         if (fullAppointment) {
+          const organizationName = await this.getOrganizationName(organizationId);
           const notificationData: NotificationData = {
             organizationId,
+            organizationName,
             clientName: fullAppointment.clientName,
             clientPhone: fullAppointment.clientPhone || undefined,
             clientEmail: fullAppointment.clientEmail || undefined,
@@ -2036,8 +2073,10 @@ export class AppointmentsService {
         });
 
         if (fullAppointment && organizationId) {
+          const organizationName = await this.getOrganizationName(organizationId);
           const notificationData: NotificationData = {
             organizationId,
+            organizationName,
             clientName: fullAppointment.clientName,
             clientPhone: fullAppointment.clientPhone || undefined,
             clientEmail: fullAppointment.clientEmail || undefined,

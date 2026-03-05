@@ -20,6 +20,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { NotificationSettingsService } from './notification-settings.service';
+import { SmsSettingsService } from './sms-settings.service';
 import { WhatsAppBusinessTemplateService } from './whatsapp-business-template.service';
 import {
   UpdateWhatsAppSettingsDto,
@@ -27,6 +28,15 @@ import {
   WhatsAppNotificationSettingsResponseDto,
   WhatsAppTemplateResponseDto,
 } from './dto/whatsapp-notification-settings.dto';
+import {
+  UpdateSmsSettingsDto,
+  ConnectSmsDto,
+  SmsNotificationSettingsResponseDto,
+  CreateSmsTemplateDto,
+  UpdateSmsTemplateDto,
+  SmsTemplateResponseDto,
+  SmsTemplatesListResponseDto,
+} from './dto/sms-notification-settings.dto';
 import {
   CreateWhatsAppBusinessTemplateDto,
   UpdateWhatsAppBusinessTemplateDto,
@@ -48,6 +58,7 @@ import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
 export class NotificationSettingsController {
   constructor(
     private readonly notificationSettingsService: NotificationSettingsService,
+    private readonly smsSettingsService: SmsSettingsService,
     private readonly whatsappBusinessTemplateService: WhatsAppBusinessTemplateService,
   ) {}
 
@@ -291,5 +302,179 @@ export class NotificationSettingsController {
   ): Promise<SyncTemplatesResponseDto> {
     const organizationId = orgId || headerOrgId;
     return this.whatsappBusinessTemplateService.syncTemplatesFromMeta(organizationId);
+  }
+
+  // ==================== SMS (Verimor) Settings ====================
+
+  /**
+   * Get SMS notification settings for an organization
+   */
+  @Get('sms')
+  @ApiOperation({ summary: 'Get SMS notification settings' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'SMS notification settings',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async getSmsSettings(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.getSmsSettings(organizationId);
+  }
+
+  /**
+   * Update SMS enabled status and notification parameters
+   */
+  @Put('sms')
+  @ApiOperation({ summary: 'Update SMS settings (enable/disable and parameters)' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Updated SMS notification settings',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async updateSmsSettings(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+    @Body() dto: UpdateSmsSettingsDto,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.updateSmsSettings(organizationId, dto);
+  }
+
+  /**
+   * Connect custom Verimor credentials
+   */
+  @Post('sms/connect')
+  @ApiOperation({ summary: 'Connect custom Verimor credentials' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Verimor credentials connected successfully',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async connectSms(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+    @Body() dto: ConnectSmsDto,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.connectSms(organizationId, dto);
+  }
+
+  /**
+   * Disconnect custom Verimor credentials (revert to global)
+   */
+  @Post('sms/disconnect')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Disconnect custom Verimor credentials' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Verimor credentials disconnected',
+    type: SmsNotificationSettingsResponseDto,
+  })
+  async disconnectSms(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+  ): Promise<SmsNotificationSettingsResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.disconnectSms(organizationId);
+  }
+
+  // ==================== SMS Templates ====================
+
+  /**
+   * Get all SMS templates for an organization
+   */
+  @Get('sms/templates')
+  @ApiOperation({ summary: 'Get all SMS templates' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'List of SMS templates',
+    type: SmsTemplatesListResponseDto,
+  })
+  async getSmsTemplates(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+  ): Promise<SmsTemplatesListResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    const templates = await this.smsSettingsService.getTemplates(organizationId);
+    return { templates };
+  }
+
+  /**
+   * Create a new SMS template
+   */
+  @Post('sms/templates')
+  @ApiOperation({ summary: 'Create SMS template' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 201,
+    description: 'Template created successfully',
+    type: SmsTemplateResponseDto,
+  })
+  async createSmsTemplate(
+    @Param('orgId') orgId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+    @Body() dto: CreateSmsTemplateDto,
+  ): Promise<SmsTemplateResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.createTemplate(organizationId, dto);
+  }
+
+  /**
+   * Update an SMS template
+   */
+  @Put('sms/templates/:templateId')
+  @ApiOperation({ summary: 'Update SMS template' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'templateId', description: 'Template ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Template updated successfully',
+    type: SmsTemplateResponseDto,
+  })
+  async updateSmsTemplate(
+    @Param('orgId') orgId: string,
+    @Param('templateId') templateId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+    @Body() dto: UpdateSmsTemplateDto,
+  ): Promise<SmsTemplateResponseDto> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.updateTemplate(organizationId, templateId, dto);
+  }
+
+  /**
+   * Delete an SMS template
+   */
+  @Delete('sms/templates/:templateId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete SMS template' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'templateId', description: 'Template ID' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  @ApiResponse({
+    status: 204,
+    description: 'Template deleted successfully',
+  })
+  async deleteSmsTemplate(
+    @Param('orgId') orgId: string,
+    @Param('templateId') templateId: string,
+    @Headers('x-organization-id') headerOrgId: string,
+  ): Promise<void> {
+    const organizationId = orgId || headerOrgId;
+    return this.smsSettingsService.deleteTemplate(organizationId, templateId);
   }
 }
