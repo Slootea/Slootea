@@ -1468,6 +1468,18 @@ export class AppointmentsService {
 
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const organizationName = organizationId ? await this.getOrganizationName(organizationId) : '';
+    
+    // Get timezone from organization settings for notification formatting
+    let timezone = 'UTC';
+    if (organizationId) {
+      try {
+        const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+        timezone = settings.timezone || 'UTC';
+      } catch (e) {
+        this.logger.warn(`Failed to get timezone for organization ${organizationId}, using UTC`);
+      }
+    }
+    
     await this.notificationService.sendAppointmentCreatedNotification({
       organizationId: organizationId || "",
       organizationName,
@@ -1476,6 +1488,7 @@ export class AppointmentsService {
       clientEmail: createDto.clientEmail || undefined,
       serviceName: serviceOption.title,
       appointmentDate: startTime,
+      timezone,
       confirmationLink: `${baseUrl}/confirm/${confirmationToken}`,
       appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
     }).catch((error) => {
