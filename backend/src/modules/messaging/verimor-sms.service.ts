@@ -14,6 +14,10 @@ import {
 import {
   OrganizationSettings,
 } from '../settings/entities/organization-settings.entity';
+import {
+  formatDateInTimezone,
+  formatTimeInTimezone,
+} from '../../common/utils/timezone.util';
 
 /**
  * SMS notification event types
@@ -45,6 +49,8 @@ export interface SmsNotificationData {
   clientPhone: string;
   serviceName: string;
   appointmentDate: Date;
+  /** Organization timezone for formatting dates (IANA format, e.g., 'Europe/Istanbul') */
+  timezone?: string;
   providerName?: string;
   organizationName?: string;
   confirmationLink?: string;
@@ -289,17 +295,13 @@ export class VerimorSmsService {
 
   /**
    * Replace template variables with actual values
+   * Uses organization timezone for date/time formatting
    */
   private replaceVariables(template: string, data: SmsNotificationData): string {
-    const formattedDate = data.appointmentDate.toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    const formattedTime = data.appointmentDate.toLocaleTimeString('tr-TR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    // Use organization timezone for formatting, fallback to UTC
+    const timezone = data.timezone || 'UTC';
+    const formattedDate = formatDateInTimezone(data.appointmentDate, timezone, 'tr-TR');
+    const formattedTime = formatTimeInTimezone(data.appointmentDate, timezone, 'tr-TR');
 
     return template
       .replace(/\{\{clientName\}\}/g, data.clientName)

@@ -588,6 +588,9 @@ export class AppointmentsService {
 
         if (fullAppointment) {
           const organizationName = await this.getOrganizationName(organizationId);
+          // Get timezone from organization settings
+          const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+          const timezone = settings.timezone || 'UTC';
           const notificationData: NotificationData = {
             organizationId,
             organizationName,
@@ -596,6 +599,7 @@ export class AppointmentsService {
             clientEmail: fullAppointment.clientEmail || undefined,
             serviceName: fullAppointment.serviceOption?.title || 'Appointment',
             appointmentDate: fullAppointment.startTime,
+            timezone,
           };
 
           const result = await this.notificationService.sendAppointmentRescheduledNotification(notificationData);
@@ -642,6 +646,9 @@ export class AppointmentsService {
 
               if (fullAppointment) {
                 const organizationName = await this.getOrganizationName(organizationId);
+                // Get timezone from organization settings
+                const cancelSettings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+                const cancelTimezone = cancelSettings.timezone || 'UTC';
                 const notificationData: NotificationData = {
                   organizationId,
                   organizationName,
@@ -650,6 +657,7 @@ export class AppointmentsService {
                   clientEmail: fullAppointment.clientEmail || undefined,
                   serviceName: fullAppointment.serviceOption?.title || 'Appointment',
                   appointmentDate: fullAppointment.startTime,
+                  timezone: cancelTimezone,
                 };
 
                 const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
@@ -696,6 +704,9 @@ export class AppointmentsService {
 
         if (fullAppointment) {
           const organizationName = await this.getOrganizationName(organizationId);
+          // Get timezone from organization settings
+          const cancelSettings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+          const cancelTimezone = cancelSettings.timezone || 'UTC';
           const notificationData: NotificationData = {
             organizationId,
             organizationName,
@@ -704,6 +715,7 @@ export class AppointmentsService {
             clientEmail: fullAppointment.clientEmail || undefined,
             serviceName: fullAppointment.serviceOption?.title || 'Appointment',
             appointmentDate: fullAppointment.startTime,
+            timezone: cancelTimezone,
           };
 
           const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
@@ -1381,6 +1393,7 @@ export class AppointmentsService {
           clientEmail: createDto.clientEmail || undefined,
           serviceName: fullAppointment.serviceOption?.title || 'Appointment',
           appointmentDate: startTime,
+          timezone,
           providerName: providerUser?.firstName
             ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
             : undefined,
@@ -1998,6 +2011,9 @@ export class AppointmentsService {
 
         if (fullAppointment) {
           const organizationName = await this.getOrganizationName(organizationId);
+          // Get timezone from organization settings
+          const rescheduleSettings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+          const rescheduleTimezone = rescheduleSettings.timezone || 'UTC';
           const notificationData: NotificationData = {
             organizationId,
             organizationName,
@@ -2006,6 +2022,7 @@ export class AppointmentsService {
             clientEmail: fullAppointment.clientEmail || undefined,
             serviceName: fullAppointment.serviceOption?.title || 'Appointment',
             appointmentDate: fullAppointment.startTime,
+            timezone: rescheduleTimezone,
             providerName: fullAppointment.user?.firstName
               ? `${fullAppointment.user.firstName} ${fullAppointment.user.lastName || ''}`.trim()
               : undefined,
@@ -2074,6 +2091,9 @@ export class AppointmentsService {
 
         if (fullAppointment && organizationId) {
           const organizationName = await this.getOrganizationName(organizationId);
+          // Get timezone from organization settings
+          const tokenCancelSettings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+          const tokenCancelTimezone = tokenCancelSettings.timezone || 'UTC';
           const notificationData: NotificationData = {
             organizationId,
             organizationName,
@@ -2082,6 +2102,7 @@ export class AppointmentsService {
             clientEmail: fullAppointment.clientEmail || undefined,
             serviceName: fullAppointment.serviceOption?.title || 'Appointment',
             appointmentDate: fullAppointment.startTime,
+            timezone: tokenCancelTimezone,
             cancellationReason: reason,
           };
 

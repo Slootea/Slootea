@@ -22,6 +22,8 @@ export interface NotificationData {
   clientEmail?: string;
   serviceName: string;
   appointmentDate: Date;
+  /** Organization timezone for formatting dates (IANA format, e.g., 'Europe/Istanbul') */
+  timezone?: string;
   providerName?: string;
   organizationName?: string;
   confirmationLink?: string;
@@ -123,6 +125,7 @@ export class NotificationService {
       clientPhone: data.clientPhone,
       serviceName: data.serviceName,
       appointmentDate: data.appointmentDate,
+      timezone: data.timezone,
       providerName: data.providerName,
       organizationName: data.organizationName,
       confirmationLink: data.confirmationLink,
@@ -144,6 +147,7 @@ export class NotificationService {
       clientPhone: data.clientPhone,
       serviceName: data.serviceName,
       appointmentDate: data.appointmentDate,
+      timezone: data.timezone,
       providerName: data.providerName,
       organizationName: data.organizationName,
       confirmationLink: data.confirmationLink,

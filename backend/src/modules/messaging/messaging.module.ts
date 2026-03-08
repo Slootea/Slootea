@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { WhatsAppService } from './whatsapp.service';
@@ -21,6 +21,7 @@ import {
   OrganizationSettings,
 } from '../settings/entities/organization-settings.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { Appointment } from '../appointments/entities/appointment.entity';
       Appointment,
     ]),
     ConfigModule,
+    forwardRef(() => SettingsModule),
   ],
   providers: [
     WhatsAppService,

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Appointment, AppointmentStatus } from '../appointments/entities/appointment.entity';
 import { NotificationService, NotificationEventType, NotificationData } from './notification.service';
+import { OrganizationSettingsService } from '../settings/organization-settings.service';
 
 /**
  * Service responsible for scheduling and sending reminder notifications across all channels.
@@ -26,6 +27,7 @@ export class NotificationReminderService {
     @InjectRepository(Appointment)
     private readonly appointmentRepository: Repository<Appointment>,
     private readonly notificationService: NotificationService,
+    private readonly organizationSettingsService: OrganizationSettingsService,
   ) {}
 
   /**
@@ -135,6 +137,15 @@ export class NotificationReminderService {
           }
         }
 
+        // Get organization settings for timezone
+        let timezone = 'UTC';
+        try {
+          const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
+          timezone = settings.timezone || 'UTC';
+        } catch (e) {
+          this.logger.debug(`Could not fetch timezone for organization ${organizationId}, using UTC`);
+        }
+
         // Build notification data
         const notificationData: NotificationData = {
           organizationId,
@@ -143,6 +154,7 @@ export class NotificationReminderService {
           clientEmail: appointment.clientEmail || undefined,
           serviceName: appointment.serviceOption?.title || 'Appointment',
           appointmentDate: appointment.startTime,
+          timezone,
           providerName: appointment.user?.firstName
             ? `${appointment.user.firstName} ${appointment.user.lastName || ''}`.trim()
             : undefined,

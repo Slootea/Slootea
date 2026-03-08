@@ -9,6 +9,10 @@ import {
   OrganizationNotificationParameters,
 } from '../notification-settings/entities/organization-notification-parameters.entity';
 import * as crypto from 'crypto';
+import {
+  formatDateInTimezone,
+  formatTimeInTimezone,
+} from '../../common/utils/timezone.util';
 
 /**
  * WhatsApp notification event types
@@ -80,6 +84,8 @@ export interface AppointmentNotificationData {
   clientPhone: string;
   serviceName: string;
   appointmentDate: Date;
+  /** Organization timezone for formatting dates (IANA format, e.g., 'Europe/Istanbul') */
+  timezone?: string;
   providerName?: string;
   organizationName?: string;
   confirmationLink?: string;
@@ -460,16 +466,10 @@ export class WhatsAppService {
     const templateName = this.getTemplateNameForEvent(eventType);
     const language = settings.templateLanguage || 'en_US';
 
-    // Format date and time for template parameters
-    const formattedDate = data.appointmentDate.toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    const formattedTime = data.appointmentDate.toLocaleTimeString('tr-TR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    // Format date and time for template parameters using organization timezone
+    const timezone = data.timezone || 'UTC';
+    const formattedDate = formatDateInTimezone(data.appointmentDate, timezone, 'tr-TR');
+    const formattedTime = formatTimeInTimezone(data.appointmentDate, timezone, 'tr-TR');
 
     // Build template components with standard parameters
     // All templates receive the same 8 parameters in order
