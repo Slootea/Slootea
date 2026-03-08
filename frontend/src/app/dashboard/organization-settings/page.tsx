@@ -265,72 +265,71 @@ export default function OrganizationSettingsPage() {
             />
           </div>
 
-          {/* Show attendance reminder settings only when auto-confirm is ON */}
-          {settings.autoConfirmAppointments !== false && (
-            <>
-              <div className="space-y-2 pt-4 border-t">
-                <Label htmlFor="confirmationRequiredHours">
-                  {t('confirmation.sendReminder') || 'Send attendance reminder (hours before)'}
-                </Label>
-                <NumberInput
-                  id="confirmationRequiredHours"
-                  min={1}
-                  max={168}
-                  value={settings.confirmationRequiredHours || 24}
-                  defaultValue={24}
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      confirmationRequiredHours: value,
-                    })
-                  }
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('confirmation.sendReminderHint') || 'For auto-confirmed appointments only. Send a reminder asking clients to confirm they will attend.'}
-                </p>
-              </div>
+          {/* Attendance reminder settings - always visible */}
+          <div className="space-y-2 pt-4 border-t">
+            <Label htmlFor="confirmationRequiredHours">
+              {t('confirmation.sendReminder') || 'Send attendance reminder (hours before)'}
+            </Label>
+            <NumberInput
+              id="confirmationRequiredHours"
+              min={1}
+              max={168}
+              value={settings.confirmationRequiredHours || 24}
+              defaultValue={24}
+              onChange={(value) =>
+                setSettings({
+                  ...settings,
+                  confirmationRequiredHours: value,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {settings.autoConfirmAppointments !== false 
+                ? (t('confirmation.sendReminderHint') || 'For auto-confirmed appointments only. Send a reminder asking clients to confirm they will attend.')
+                : (t('confirmation.sendReminderHintPending') || 'Send a reminder to pending appointments asking clients to confirm their booking.')
+              }
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmationDeadlineHours">
-                  {t('confirmation.deadline') || 'Attendance confirmation deadline (hours before)'}
-                </Label>
-                <NumberInput
-                  id="confirmationDeadlineHours"
-                  min={1}
-                  max={72}
-                  value={settings.confirmationDeadlineHours || 3}
-                  defaultValue={3}
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      confirmationDeadlineHours: value,
-                    })
-                  }
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('confirmation.deadlineHint') || 'Client must confirm attendance by this deadline or the appointment may be cancelled'}
-                </p>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmationDeadlineHours">
+              {t('confirmation.deadline') || 'Attendance confirmation deadline (hours before)'}
+            </Label>
+            <NumberInput
+              id="confirmationDeadlineHours"
+              min={1}
+              max={72}
+              value={settings.confirmationDeadlineHours || 3}
+              defaultValue={3}
+              onChange={(value) =>
+                setSettings({
+                  ...settings,
+                  confirmationDeadlineHours: value,
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('confirmation.deadlineHint') || 'Client must confirm attendance by this deadline or the appointment may be cancelled'}
+            </p>
+          </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="autoCancelUnconfirmed">
-                    {t('confirmation.autoCancel') || 'Auto-cancel unconfirmed appointments'}
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    {t('confirmation.autoCancelHint') || 'Automatically cancel and free up slots if not confirmed by deadline'}
-                  </p>
-                </div>
-                <Switch
-                  id="autoCancelUnconfirmed"
-                  checked={settings.autoCancelUnconfirmed || false}
-                  onCheckedChange={(checked) =>
-                    setSettings({ ...settings, autoCancelUnconfirmed: checked })
-                  }
-                />
-              </div>
-            </>
-          )}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="autoCancelUnconfirmed">
+                {t('confirmation.autoCancel') || 'Auto-cancel unconfirmed appointments'}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('confirmation.autoCancelHint') || 'Automatically cancel and free up slots if not confirmed by deadline'}
+              </p>
+            </div>
+            <Switch
+              id="autoCancelUnconfirmed"
+              checked={settings.autoCancelUnconfirmed || false}
+              onCheckedChange={(checked) =>
+                setSettings({ ...settings, autoCancelUnconfirmed: checked })
+              }
+            />
+          </div>
         </CardContent>
       </Card>
 

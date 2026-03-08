@@ -1097,6 +1097,7 @@
       "autoConfirmHint": "Automatically confirm appointments when booked. When disabled, clients must confirm their booking before the appointment is secured.",
       "sendReminder": "Send attendance reminder (hours before)",
       "sendReminderHint": "For auto-confirmed appointments only. Send a reminder asking clients to confirm they will attend.",
+      "sendReminderHintPending": "Send a reminder to pending appointments asking clients to confirm their booking.",
       "deadline": "Attendance confirmation deadline (hours before)",
       "deadlineHint": "Client must confirm attendance by this deadline or the appointment may be cancelled",
       "autoCancel": "Auto-cancel unconfirmed appointments",

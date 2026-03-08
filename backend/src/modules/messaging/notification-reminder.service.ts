@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 import { Appointment, AppointmentStatus } from '../appointments/entities/appointment.entity';
 import { NotificationService, NotificationEventType, NotificationData } from './notification.service';
 import { OrganizationSettingsService } from '../settings/organization-settings.service';
@@ -72,13 +72,13 @@ export class NotificationReminderService {
     reminderType: string,
   ): Promise<void> {
     try {
-      // Get confirmed appointments in the time window
-      // Only send reminders to CONFIRMED appointments (auto-confirmed by organization)
-      // PENDING_CONFIRMATION appointments already received a confirmation request when created
+      // Get confirmed and pending_confirmation appointments in the time window
+      // CONFIRMED: Standard reminders
+      // PENDING_CONFIRMATION: Remind them to confirm (they have a confirmation link)
       const appointments = await this.appointmentRepository.find({
         where: {
           startTime: Between(windowStart, windowEnd),
-          status: AppointmentStatus.CONFIRMED,
+          status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
         },
         relations: ['serviceOption', 'user'],
       });
@@ -147,6 +147,7 @@ export class NotificationReminderService {
         }
 
         // Build notification data
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         const notificationData: NotificationData = {
           organizationId,
           clientName: appointment.clientName,
@@ -157,6 +158,13 @@ export class NotificationReminderService {
           timezone,
           providerName: appointment.user?.firstName
             ? `${appointment.user.firstName} ${appointment.user.lastName || ''}`.trim()
+            : undefined,
+          // Include confirmation link for pending appointments so clients can confirm
+          confirmationLink: appointment.status === AppointmentStatus.PENDING_CONFIRMATION && appointment.confirmationToken
+            ? `${baseUrl}/confirm/${appointment.confirmationToken}`
+            : undefined,
+          appointmentLink: appointment.confirmationToken
+            ? `${baseUrl}/appointment/${appointment.confirmationToken}`
             : undefined,
         };
 

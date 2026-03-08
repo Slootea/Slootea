@@ -1097,6 +1097,7 @@
       "autoConfirmHint": "Rezerve edildiğinde randevuları otomatik olarak onayla. Devre dışı bırakıldığında, müşteriler randevu güvence altına alınmadan önce rezervasyonlarını onaylamalıdır.",
       "sendReminder": "Katılım hatırlatması gönder (kaç saat önce)",
       "sendReminderHint": "Sadece otomatik onaylanan randevular için. Müşterilere katılacaklarını onaylamalarını isteyen bir hatırlatma gönderir.",
+      "sendReminderHintPending": "Bekleyen randevulara rezervasyonlarını onaylamalarını isteyen bir hatırlatma gönder.",
       "deadline": "Katılım onayı son tarihi (kaç saat önce)",
       "deadlineHint": "Müşteri bu son tarihe kadar katılımı onaylamalı yoksa randevu iptal edilebilir",
       "autoCancel": "Onaylanmamış randevuları otomatik iptal et",
