@@ -27,7 +27,13 @@ export function FeatureVideo({ src, className }: FeatureVideoProps) {
             slot="media"
             playsInline
             preload="metadata"
+            poster="/Logo_whitebg.png"
             className="w-full aspect-[4/3] object-cover"
+            style={{
+              // @ts-expect-error media-chrome poster styling
+              "--media-object-fit": "contain",
+              "--media-object-position": "center",
+            }}
           />
           <VideoPlayerControlBar>
             <VideoPlayerPlayButton />

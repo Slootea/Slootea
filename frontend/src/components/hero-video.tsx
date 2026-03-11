@@ -4,6 +4,7 @@ import {
   VideoPlayer,
   VideoPlayerContent,
   VideoPlayerControlBar,
+  VideoPlayerFullscreenButton,
   VideoPlayerMuteButton,
   VideoPlayerPlayButton,
   VideoPlayerTimeDisplay,
@@ -19,7 +20,13 @@ export function HeroVideo() {
         slot="media"
         playsInline
         preload="metadata"
-        className="w-full aspect-video object-cover"
+        poster="/Thumbnail_Hero_Video.png"
+        className="w-full aspect-video object-cover [&::--poster]:[object-fit:cover] [&::--poster]:[object-position:center]"
+        style={{
+          // @ts-expect-error media-chrome poster styling
+          "--media-poster-image-object-fit": "cover",
+          "--media-poster-image-object-position": "center",
+        }}
       />
       <VideoPlayerControlBar>
         <VideoPlayerPlayButton />
@@ -27,6 +34,7 @@ export function HeroVideo() {
         <VideoPlayerTimeRange />
         <VideoPlayerTimeDisplay showDuration />
         <VideoPlayerVolumeRange />
+        <VideoPlayerFullscreenButton />
       </VideoPlayerControlBar>
     </VideoPlayer>
   )
