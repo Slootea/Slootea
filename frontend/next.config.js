@@ -13,10 +13,8 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    outputFileTracingIncludes: {
-      '/': ['./src/middleware.ts'],
-    },
+  outputFileTracingIncludes: {
+    '/': ['./src/middleware.ts'],
   },
 };
 
