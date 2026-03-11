@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { HeroVideo } from "@/components/hero-video";
+import { FeatureVideo } from "@/components/feature-video";
 import { getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { 
@@ -117,18 +119,16 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
-                    <Play className="mr-2 h-4 w-4" />
-                    {t('watchDemo')}
-                  </Button>
+                  <a href="#hero-video">
+                    <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
+                      <Play className="mr-2 h-4 w-4" />
+                      {t('watchDemo')}
+                    </Button>
+                  </a>
                 </div>
                 
                 {/* Trust indicators */}
                 <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    {t('noCreditCard')}
-                  </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
                     {t('freeTrial')}
@@ -140,18 +140,11 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               
-              {/* Hero Image Placeholder */}
-              <div className="relative mt-16">
+              {/* Hero Video */}
+              <div id="hero-video" className="relative mt-16 scroll-mt-24">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-2xl opacity-40" />
                 <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 shadow-2xl overflow-hidden">
-                  <div className="aspect-[16/9] flex items-center justify-center bg-muted/30">
-                    <div className="text-center p-8">
-                      <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <Calendar className="h-10 w-10 text-primary" />
-                      </div>
-                      <p className="text-muted-foreground font-medium">{t('hero.imagePlaceholder')}</p>
-                    </div>
-                  </div>
+                  <HeroVideo />
                 </div>
               </div>
             </div>
@@ -235,14 +228,22 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </ul>
               </div>
               <div className="order-1 lg:order-2">
-                <FeatureImagePlaceholder icon={<Bot className="h-8 w-8" />} label={t('features.aiAssistant.imageAlt')} />
+                <FeatureVideo src="/AI_Assistant_Slootea.mp4" />
               </div>
             </div>
 
             {/* Feature 2 - WhatsApp Confirmation */}
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
-              <div>
-                <FeatureImagePlaceholder icon={<MessageCircle className="h-8 w-8" />} label={t('features.whatsappConfirmation.imageAlt')} />
+              <div className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3]">
+                  <Image 
+                    src="/Phone_Notification.png" 
+                    alt={t('features.whatsappConfirmation.imageAlt')}
+                    fill
+                    className="object-cover object-center"
+                  />
+                </div>
               </div>
               <div>
                 <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
@@ -286,14 +287,32 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </ul>
               </div>
               <div className="order-1 lg:order-2">
-                <FeatureImagePlaceholder icon={<ClipboardList className="h-8 w-8" />} label={t('features.clientTracking.imageAlt')} />
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+                  <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3]">
+                    <Image 
+                      src="/Calendar_Demo.png" 
+                      alt={t('features.clientTracking.imageAlt')}
+                      fill
+                      className="object-cover object-center"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Feature 4 - Mobile App */}
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              <div>
-                <FeatureImagePlaceholder icon={<Smartphone className="h-8 w-8" />} label={t('features.mobileApp.imageAlt')} />
+              <div className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3]">
+                  <Image 
+                    src="/Phone_App.jpeg" 
+                    alt={t('features.mobileApp.imageAlt')}
+                    fill
+                    className="object-cover object-center"
+                  />
+                </div>
               </div>
               <div>
                 <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
@@ -352,16 +371,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 title={t('moreFeatures.analytics.title')}
                 description={t('moreFeatures.analytics.description')}
               />
-              <FeatureCard 
-                icon={<Clock className="h-5 w-5" />}
-                title={t('moreFeatures.bufferTime.title')}
-                description={t('moreFeatures.bufferTime.description')}
-              />
-              <FeatureCard 
-                icon={<Shield className="h-5 w-5" />}
-                title={t('moreFeatures.security.title')}
-                description={t('moreFeatures.security.description')}
-              />
+              <div className="sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/20 p-6 hover:border-primary/40 hover:shadow-lg transition-all duration-300">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 text-primary mb-4">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <h3 className="font-semibold mb-2">{t('moreFeatures.dataIntegration.title')}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t('moreFeatures.dataIntegration.description')}</p>
+              </div>
             </div>
           </div>
         </section>
@@ -457,9 +473,6 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                     </Button>
                   </Link>
                 </div>
-                <p className="mt-6 text-sm text-muted-foreground">
-                  {t('cta.note')}
-                </p>
               </div>
             </div>
           </div>

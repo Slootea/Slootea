@@ -143,13 +143,9 @@
         "title": "Reports & Analytics",
         "description": "Track no-show rates, busiest hours, and team performance in one dashboard."
       },
-      "bufferTime": {
-        "title": "Smart Buffer Times",
-        "description": "Automatically add break time between appointments to avoid back-to-back stress."
-      },
-      "security": {
-        "title": "Enterprise Security",
-        "description": "Your data is protected with enterprise-grade encryption and security."
+      "dataIntegration": {
+        "title": "Data Integration Support",
+        "description": "We help you migrate your existing client data and integrate with your current systems seamlessly."
       }
     },
     "howItWorks": {

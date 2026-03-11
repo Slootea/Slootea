@@ -143,13 +143,9 @@
         "title": "Raporlar ve Analiz",
         "description": "Gelmeme oranlarını, en yoğun saatleri ve ekip performansını tek panelde takip edin."
       },
-      "bufferTime": {
-        "title": "Akıllı Ara Süreleri",
-        "description": "Arka arkaya stres yaşamamak için randevular arasına otomatik ara süresi ekleyin."
-      },
-      "security": {
-        "title": "Kurumsal Güvenlik",
-        "description": "Verileriniz kurumsal düzeyde şifreleme ve güvenlikle korunur."
+      "dataIntegration": {
+        "title": "Veri Entegrasyon Desteği",
+        "description": "Mevcut müşteri verilerinizi taşımanıza ve sistemlerinizle sorunsuz entegre olmanıza yardımcı oluyoruz."
       }
     },
     "howItWorks": {
