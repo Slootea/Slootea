@@ -35,6 +35,15 @@ export function FeatureVideo({ src, className }: FeatureVideoProps) {
               "--media-object-position": "center",
             }}
           />
+          {/* Big centered play button */}
+          <VideoPlayerPlayButton 
+            slot="centered-chrome"
+            className="p-4 rounded-md bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors"
+            style={{
+              "--media-button-icon-width": "48px",
+              "--media-button-icon-height": "48px",
+            }}
+          />
           <VideoPlayerControlBar>
             <VideoPlayerPlayButton />
             <VideoPlayerMuteButton />
