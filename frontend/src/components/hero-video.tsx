@@ -28,6 +28,16 @@ export function HeroVideo() {
           "--media-poster-image-object-position": "center",
         }}
       />
+      {/* Big centered play button */}
+      <VideoPlayerPlayButton 
+        slot="centered-chrome"
+        className="p-4 rounded-full bg-primary/80 hover:bg-primary transition-colors"
+        style={{
+          // @ts-expect-error media-chrome styling
+          "--media-button-icon-width": "48px",
+          "--media-button-icon-height": "48px",
+        }}
+      />
       <VideoPlayerControlBar>
         <VideoPlayerPlayButton />
         <VideoPlayerMuteButton />
