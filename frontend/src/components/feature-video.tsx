@@ -36,10 +36,11 @@ export function FeatureVideo({ src, className }: FeatureVideoProps) {
             }}
           />
           {/* Big centered play button */}
-          <VideoPlayerPlayButton 
+          <VideoPlayerPlayButton
             slot="centered-chrome"
             className="p-4 rounded-md bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors"
             style={{
+              // @ts-expect-error media-chrome styling
               "--media-button-icon-width": "48px",
               "--media-button-icon-height": "48px",
             }}
