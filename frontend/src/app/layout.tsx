@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { OrganizationProvider } from "@/components/providers/organization-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { GoogleAnalytics } from '@next/third-parties/google'
+
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -47,6 +49,7 @@ export default async function RootLayout({
             <Toaster />
           </ThemeProvider>
         </body>
+        <GoogleAnalytics gaId="G-8KB1ZXW003" />
       </html>
     </ClerkProvider>
   );
