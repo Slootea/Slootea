@@ -48,8 +48,9 @@ export default async function RootLayout({
             </NextIntlClientProvider>
             <Toaster />
           </ThemeProvider>
+          <GoogleAnalytics gaId="G-8KB1ZXW003" />
         </body>
-        <GoogleAnalytics gaId="G-8KB1ZXW003" />
+        
       </html>
     </ClerkProvider>
   );
