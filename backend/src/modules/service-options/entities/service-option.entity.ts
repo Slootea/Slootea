@@ -31,6 +31,12 @@ export class ServiceOption {
   @Column({ type: 'int', comment: 'Duration in minutes' })
   duration: number;
 
+  @Column({ default: false, comment: 'Whether to display price on booking page' })
+  showPrice: boolean;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, comment: 'Service price (0 = free)' })
+  price: number;
+
   @Column({ default: true })
   isActive: boolean;
 

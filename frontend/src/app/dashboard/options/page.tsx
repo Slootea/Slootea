@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { serviceOptionsApi, userServiceOptionsApi, organizationsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { serviceOptionsApi, userServiceOptionsApi, organizationsApi, organizationSettingsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import { ServiceOption, OrganizationMember, UserServiceOption } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +61,8 @@ export default function ServiceOptionsPage() {
     description: "",
     imageBase64: "" as string | undefined,
     duration: 30,
+    showPrice: false,
+    price: 0,
   });
 
   // Member assignment state
@@ -69,6 +71,7 @@ export default function ServiceOptionsPage() {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [currency, setCurrency] = useState<string>("TL");
 
   const isAdmin = userRole === 'owner' || userRole === 'admin';
 
@@ -81,6 +84,15 @@ export default function ServiceOptionsPage() {
       if (currentOrganization) {
         setOrganizationContext(currentOrganization.id);
         res = await serviceOptionsApi.getAllForOrganization();
+        // Fetch organization settings to get currency
+        try {
+          const settingsRes = await organizationSettingsApi.get();
+          if (settingsRes.data?.currency) {
+            setCurrency(settingsRes.data.currency);
+          }
+        } catch (e) {
+          // Ignore settings fetch error, use default currency
+        }
       } else {
         res = await serviceOptionsApi.getAll();
       }
@@ -154,7 +166,7 @@ export default function ServiceOptionsPage() {
 
   const openCreateDialog = async () => {
     setEditingOption(null);
-    setFormData({ title: "", description: "", imageBase64: undefined, duration: 30 });
+    setFormData({ title: "", description: "", imageBase64: undefined, duration: 30, showPrice: false, price: 0 });
     setServiceProviders([]);
     setActiveTab("details");
     setDialogOpen(true);
@@ -172,6 +184,8 @@ export default function ServiceOptionsPage() {
       description: option.description || "",
       imageBase64: option.imageBase64 || undefined,
       duration: option.duration,
+      showPrice: option.showPrice || false,
+      price: option.price || 0,
     });
     setActiveTab("details");
     setDialogOpen(true);
@@ -577,6 +591,7 @@ export default function ServiceOptionsPage() {
                 <TableHead className="w-[50px]"></TableHead>
                 <TableHead>{t("table.service")}</TableHead>
                 <TableHead className="hidden md:table-cell">{t("table.duration")}</TableHead>
+                <TableHead className="hidden md:table-cell">{tCommon("price")}</TableHead>
                 <TableHead className="hidden lg:table-cell">{t("table.description")}</TableHead>
                 <TableHead className="w-[100px] text-center">{t("table.status")}</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
@@ -613,6 +628,11 @@ export default function ServiceOptionsPage() {
                       <Clock className="h-4 w-4 mr-1" />
                       {option.duration} {tCommon("minutes")}
                     </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <span className="text-muted-foreground">
+                      {option.showPrice ? (option.price > 0 ? `${option.price} ${currency}` : tCommon("free")) : "-"}
+                    </span>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
                     <p className="text-sm text-muted-foreground line-clamp-1 max-w-[300px]">
@@ -689,9 +709,16 @@ export default function ServiceOptionsPage() {
                   {option.description || t("noDescription")}
                 </p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {option.duration} {tCommon("minutes")}
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      {option.duration} {tCommon("minutes")}
+                    </div>
+                    {option.showPrice && (
+                      <span className="font-medium text-foreground">
+                        {option.price > 0 ? `${option.price} ${currency}` : tCommon("free")}
+                      </span>
+                    )}
                   </div>
                   <div onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
@@ -796,6 +823,35 @@ export default function ServiceOptionsPage() {
                     }
                   />
                 </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="showPrice">{t("dialog.showPrice")}</Label>
+                      <p className="text-xs text-muted-foreground">{t("dialog.showPriceHint")}</p>
+                    </div>
+                    <Switch
+                      id="showPrice"
+                      checked={formData.showPrice}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, showPrice: checked })
+                      }
+                    />
+                  </div>
+                </div>
+                {formData.showPrice && (
+                  <div className="space-y-2">
+                    <Label htmlFor="price">{t("dialog.price")} ({currency})</Label>
+                    <NumberInput
+                      id="price"
+                      min={0}
+                      value={formData.price}
+                      defaultValue={0}
+                      onChange={(value) =>
+                        setFormData({ ...formData, price: value })
+                      }
+                    />
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="members" className="mt-4">
@@ -855,6 +911,35 @@ export default function ServiceOptionsPage() {
                   }
                 />
               </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="showPrice2">{t("dialog.showPrice")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("dialog.showPriceHint")}</p>
+                  </div>
+                  <Switch
+                    id="showPrice2"
+                    checked={formData.showPrice}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, showPrice: checked })
+                    }
+                  />
+                </div>
+              </div>
+              {formData.showPrice && (
+                <div className="space-y-2">
+                  <Label htmlFor="price2">{t("dialog.price")} ({currency})</Label>
+                  <NumberInput
+                    id="price2"
+                    min={0}
+                    value={formData.price}
+                    defaultValue={0}
+                    onChange={(value) =>
+                      setFormData({ ...formData, price: value })
+                    }
+                  />
+                </div>
+              )}
             </div>
           )}
 

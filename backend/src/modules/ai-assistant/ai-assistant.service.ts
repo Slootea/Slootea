@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { ServiceOption } from '../service-options/entities/service-option.entity';
+import { OrganizationSettings } from '../settings/entities/organization-settings.entity';
 import { AiAssistantChatDto, ChatMessageDto, ServiceSuggestionDto } from './dto/ai-assistant.dto';
 
 @Injectable()
@@ -18,6 +19,8 @@ export class AiAssistantService {
     private configService: ConfigService,
     @InjectRepository(ServiceOption)
     private serviceOptionRepository: Repository<ServiceOption>,
+    @InjectRepository(OrganizationSettings)
+    private organizationSettingsRepository: Repository<OrganizationSettings>,
   ) {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
     if (!apiKey) {
@@ -91,6 +94,12 @@ export class AiAssistantService {
       return;
     }
 
+    // Get organization settings for currency
+    const orgSettings = await this.organizationSettingsRepository.findOne({
+      where: { organizationId },
+    });
+    const currency = orgSettings?.currency || 'TL';
+
     // Create the search services tool
     const searchServicesTool = tool(
       async ({ keywords }: { keywords: string[] }) => {
@@ -115,7 +124,13 @@ export class AiAssistantService {
     const systemPrompt = `You are a booking help assistant. You cannot do booking but you can suggest service or ask questions. Your job is to help clients find the right service by asking directed questions based on available options.
 
 Available services:
-${allServices.map(s => `- ID: ${s.id} | ${s.title}${s.description ? ` - ${s.description}` : ''} (${s.duration} min)`).join('\n')}
+${allServices.map(s => {
+  let serviceInfo = `- ID: ${s.id} | ${s.title}${s.description ? ` - ${s.description}` : ''} (${s.duration} min)`;
+  if (s.showPrice) {
+    serviceInfo += ` | Price: ${s.price > 0 ? `${s.price} ${currency}` : 'Free'}`;
+  }
+  return serviceInfo;
+}).join('\n')}
 
 Rules:
 1. You MUST respond with a valid JSON object - no other text before or after
@@ -126,6 +141,7 @@ Rules:
 6. Keep questions short and helpful - maximum 1-2 sentences
 7. DO NOT ask generic questions like "What are you looking for?" - always reference specific services or categories to guide the client towards a choice or get more information
 8. DO NOT ask for date and time details - focus on understanding the service need and suggestion
+9. If a service has pricing information, you may mention it when relevant (e.g., "This service is free" or mention the price if asked)
 
 Output format - respond with ONLY valid JSON:
 For service matches:

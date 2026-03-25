@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 import {
   organizationsApi,
   organizationSettingsApi,
@@ -27,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NumberInput } from "@/components/ui/number-input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImageCropUpload } from "@/components/ui/image-crop-upload";
 import {
@@ -423,6 +425,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { getToken, isLoaded, isSignedIn, userId } = useAuth();
   const { currentOrganization, isAdmin, isLoading: orgLoading } = useOrganizationContext();
+  const { locale } = useLocale();
   const t = useTranslations("onboarding");
   const tOptions = useTranslations("optionsPage");
   const tCommon = useTranslations("common");
@@ -434,6 +437,9 @@ export default function OnboardingPage() {
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const hasTrackedStart = useRef(false);
 
+  // Default currency based on locale
+  const defaultCurrency = locale === "tr" ? "TL" : "USD";
+
   // Settings state
   const [settings, setSettings] = useState<Partial<OrganizationSettings>>({
     timezone: "UTC",
@@ -441,6 +447,7 @@ export default function OnboardingPage() {
     bufferTimeMinutes: 15,
     minAdvanceBookingHours: 24,
     maxAdvanceBookingDays: 30,
+    currency: defaultCurrency,
   });
 
   // Services state
@@ -452,6 +459,8 @@ export default function OnboardingPage() {
     description: "",
     imageBase64: "" as string | undefined,
     duration: 30,
+    showPrice: false,
+    price: 0,
   });
 
   // Availability state
@@ -586,7 +595,7 @@ export default function OnboardingPage() {
   // Open service dialog for adding
   const openAddServiceDialog = () => {
     setEditingService(null);
-    setServiceFormData({ title: "", description: "", imageBase64: undefined, duration: 30 });
+    setServiceFormData({ title: "", description: "", imageBase64: undefined, duration: 30, showPrice: false, price: 0 });
     setServiceDialogOpen(true);
   };
 
@@ -598,6 +607,8 @@ export default function OnboardingPage() {
       description: service.description || "",
       imageBase64: service.imageBase64 || undefined,
       duration: service.duration,
+      showPrice: service.showPrice || false,
+      price: service.price || 0,
     });
     setServiceDialogOpen(true);
   };
@@ -628,6 +639,8 @@ export default function OnboardingPage() {
           description: serviceFormData.description || undefined,
           imageBase64: serviceFormData.imageBase64 || undefined,
           duration: serviceFormData.duration,
+          showPrice: serviceFormData.showPrice,
+          price: serviceFormData.price,
         });
 
         const newServiceId = response.data.id;
@@ -946,6 +959,24 @@ export default function OnboardingPage() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">{t("settingsStep.timezoneHint")}</p>
+                </div>
+
+                {/* Currency */}
+                <div className="space-y-2">
+                  <Label>{t("settingsStep.currency")}</Label>
+                  <Select
+                    value={settings.currency || defaultCurrency}
+                    onValueChange={(value) => setSettings({ ...settings, currency: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TL">₺ TL (Turkish Lira)</SelectItem>
+                      <SelectItem value="USD">$ USD (US Dollar)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">{t("settingsStep.currencyHint")}</p>
                 </div>
 
                 {/* Provider Mode */}
@@ -1353,6 +1384,35 @@ export default function OnboardingPage() {
                 }
               />
             </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="showPrice">{tOptions("dialog.showPrice")}</Label>
+                  <p className="text-xs text-muted-foreground">{tOptions("dialog.showPriceHint")}</p>
+                </div>
+                <Switch
+                  id="showPrice"
+                  checked={serviceFormData.showPrice}
+                  onCheckedChange={(checked) =>
+                    setServiceFormData({ ...serviceFormData, showPrice: checked })
+                  }
+                />
+              </div>
+            </div>
+            {serviceFormData.showPrice && (
+              <div className="space-y-2">
+                <Label htmlFor="price">{tOptions("dialog.price")}</Label>
+                <NumberInput
+                  id="price"
+                  min={0}
+                  value={serviceFormData.price}
+                  defaultValue={0}
+                  onChange={(value) =>
+                    setServiceFormData({ ...serviceFormData, price: value })
+                  }
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setServiceDialogOpen(false)}>

@@ -134,6 +134,12 @@ export class UpdateOrganizationSettingsDto {
   @IsString()
   timezone?: string;
 
+  // Currency Settings
+  @ApiPropertyOptional({ description: 'Organization currency (TL, USD)', enum: ['TL', 'USD'] })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
   // AI Assistant Settings
   @ApiPropertyOptional({ description: 'Enable AI assistant for service selection on booking page' })
   @IsOptional()

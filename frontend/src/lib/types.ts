@@ -20,6 +20,8 @@ export interface ServiceOption {
   description?: string;
   imageBase64?: string;
   duration: number;
+  showPrice: boolean;
+  price: number;
   isActive: boolean;
   sortOrder: number;
   userId?: string;
@@ -107,6 +109,8 @@ export interface OrganizationSettings {
   reminderHoursBefore: number;
   // Timezone
   timezone: string;
+  // Currency
+  currency: string;
   // AI Assistant
   aiAssistantEnabled: boolean;
   createdAt: string;
@@ -306,6 +310,7 @@ export interface PublicBookingSettings {
   showProviderPhotos: boolean;
   minAdvanceBookingHours: number;
   maxAdvanceBookingDays: number;
+  currency?: string;
   aiAssistantEnabled?: boolean;
 }
 

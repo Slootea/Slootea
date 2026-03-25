@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2, Bot } from "lucide-react";
+import { Save, Users, Building2, Shield, AlertCircle, Clock, Calendar, Bell, Globe2, Bot, Banknote } from "lucide-react";
 import { WhatsAppChannelSettings, SmsChannelSettings } from "@/components/notification-settings";
 
 export default function OrganizationSettingsPage() {
@@ -80,6 +80,7 @@ export default function OrganizationSettingsPage() {
         autoConfirmAppointments: settings.autoConfirmAppointments,
         timezone: settings.timezone,
         aiAssistantEnabled: settings.aiAssistantEnabled,
+        currency: settings.currency,
       });
       toast({ title: t('messages.saved') });
     } catch (error) {
@@ -531,6 +532,43 @@ export default function OrganizationSettingsPage() {
             </Select>
             <p className="text-xs text-muted-foreground">
               {t('timezone.hint') || 'This timezone will be used for calculating available appointment slots and displaying times.'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Currency Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Banknote className="h-5 w-5" />
+            {t('currency.title') || 'Currency'}
+          </CardTitle>
+          <CardDescription>
+            {t('currency.description') || 'Set the currency for displaying service prices.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currency">
+              {t('currency.label') || 'Organization Currency'}
+            </Label>
+            <Select
+              value={settings.currency || 'TL'}
+              onValueChange={(value) =>
+                setSettings({ ...settings, currency: value })
+              }
+            >
+              <SelectTrigger id="currency" className="w-full">
+                <SelectValue placeholder={t('currency.placeholder') || 'Select currency'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TL">₺ TL (Turkish Lira)</SelectItem>
+                <SelectItem value="USD">$ USD (US Dollar)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {t('currency.hint') || 'Currency used for displaying service prices.'}
             </p>
           </div>
         </CardContent>

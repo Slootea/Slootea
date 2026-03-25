@@ -46,6 +46,8 @@
     "days": "gün",
     "noDescription": "Açıklama yok",
     "service": "Hizmet",
+    "free": "Ücretsiz",
+    "price": "Fiyat",
     "status": {
       "pending": "Beklemede",
       "confirmed": "Onaylandı",
@@ -599,6 +601,7 @@
     "importantNote": "Önemli:",
     "confirmationReminder": "Randevunuzdan önce bir onay talebi alabilirsiniz. Lütfen yerinizi korumak için katılımınızı onaylayın.",
     "minutes": "dakika",
+    "free": "Ücretsiz",
     "getAppointment": "Randevu Al",
     "failedToLoad": "Rezervasyon bilgileri yüklenemedi",
     "failedToLoadSlots": "Uygun saatler yüklenemedi",
@@ -857,6 +860,10 @@
       "image": "Resim",
       "imagePlaceholder": "Resim yüklemek için tıklayın",
       "duration": "Süre (dakika)",
+      "showPrice": "Fiyatı Göster",
+      "showPriceHint": "Rezervasyon sayfasında fiyatı görüntüle",
+      "price": "Fiyat",
+      "pricePlaceholder": "0.00",
       "assignMembersOnCreate": "Oluşturduktan sonra bu hizmete ekip üyelerini atayın"
     },
     "assignDialog": {
@@ -1385,6 +1392,15 @@
       "label": "Organizasyon Saat Dilimi",
       "hint": "Bu saat dilimi, mevcut randevu slotlarını hesaplamak ve zamanları göstermek için kullanılacaktır."
     },
+    "currency": {
+      "title": "Para Birimi",
+      "description": "Hizmet fiyatlarını görüntülemek için para birimini ayarlayın.",
+      "label": "Organizasyon Para Birimi",
+      "placeholder": "Para birimi seçin",
+      "hint": "Bu para birimi, rezervasyon sayfasında hizmet fiyatlarını görüntülerken kullanılacaktır.",
+      "TL": "Türk Lirası (₺)",
+      "USD": "ABD Doları ($)"
+    },
     "aiAssistant": {
       "title": "AI Hizmet Asistanı",
       "description": "Müşterilerin rezervasyon yaparken doğru hizmeti bulmasına yardımcı olan AI destekli bir asistan etkinleştirin.",
@@ -1541,6 +1557,8 @@
       "description": "Rezervasyon tercihlerinizi ve saat diliminizi ayarlayın. Bu ayarlar tüm ekip üyeleri için geçerli olacaktır.",
       "timezone": "Saat Dilimi",
       "timezoneHint": "Tüm randevu saatleri bu saat dilimine göre olacaktır",
+      "currency": "Para Birimi",
+      "currencyHint": "Hizmet fiyatlarını görüntülemek için kullanılan para birimi",
       "providerMode": "Sağlayıcı Seçimi",
       "providerModeHint": "Müşteriler sağlayıcılara nasıl atanmalı?",
       "autoAssign": "Müsaitliğe göre otomatik ata",
@@ -1559,7 +1577,7 @@
       "serviceName": "Hizmet Adı",
       "serviceNamePlaceholder": "örn. Saç Kesimi, Danışmanlık, Masaj",
       "duration": "Süre (dakika)",
-      "description": "Açıklama (isteğe bağlı)",
+      "descriptionLabel": "Açıklama (isteğe bağlı)",
       "descriptionPlaceholder": "Bu hizmetin kısa açıklaması",
       "noServices": "Henüz hizmet eklenmedi",
       "noServicesHint": "Devam etmek için en az bir hizmet ekleyin"

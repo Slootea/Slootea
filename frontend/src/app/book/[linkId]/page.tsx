@@ -205,9 +205,18 @@ export default function BookingPage() {
                             {option.description}
                           </p>
                         )}
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {option.duration} {t('minutes')}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4 mr-1" />
+                            {option.duration} {t('minutes')}
+                          </div>
+                          {option.showPrice && (
+                            <span className="font-semibold text-primary">
+                              {option.price > 0 
+                                ? `${option.price} ${bookingLink?.settings?.currency || 'TL'}` 
+                                : t('free')}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </CardContent>

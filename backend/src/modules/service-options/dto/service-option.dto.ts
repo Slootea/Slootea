@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsInt,
   IsBoolean,
+  IsNumber,
   Min,
   Max,
   Matches,
@@ -34,6 +35,17 @@ export class CreateServiceOptionDto {
   @Min(5)
   @Max(480)
   duration: number;
+
+  @ApiPropertyOptional({ description: 'Whether to show price on booking page' })
+  @IsOptional()
+  @IsBoolean()
+  showPrice?: boolean;
+
+  @ApiPropertyOptional({ description: 'Service price (0 = free)', minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  price?: number;
 
   @ApiPropertyOptional({ description: 'Sort order for display' })
   @IsOptional()
@@ -72,6 +84,17 @@ export class UpdateServiceOptionDto {
   @Min(5)
   @Max(480)
   duration?: number;
+
+  @ApiPropertyOptional({ description: 'Whether to show price on booking page' })
+  @IsOptional()
+  @IsBoolean()
+  showPrice?: boolean;
+
+  @ApiPropertyOptional({ description: 'Service price (0 = free)', minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  price?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

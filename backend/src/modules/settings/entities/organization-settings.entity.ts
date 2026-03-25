@@ -137,6 +137,15 @@ export class OrganizationSettings {
   })
   timezone: string;
 
+  // Currency Settings
+  @Column({
+    type: 'varchar',
+    length: 10,
+    default: 'TL',
+    comment: 'Organization currency (TL, USD)',
+  })
+  currency: string;
+
   // AI Assistant Settings
   @Column({
     default: false,

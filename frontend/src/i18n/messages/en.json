@@ -46,6 +46,8 @@
     "days": "days",
     "noDescription": "No description",
     "service": "Service",
+    "free": "Free",
+    "price": "Price",
     "status": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -599,6 +601,7 @@
     "importantNote": "Important:",
     "confirmationReminder": "You may receive a confirmation request before your appointment. Please confirm your attendance to keep your slot.",
     "minutes": "minutes",
+    "free": "Free",
     "getAppointment": "Get Appointment",
     "failedToLoad": "Failed to load booking information",
     "failedToLoadSlots": "Failed to load available slots",
@@ -857,6 +860,10 @@
       "image": "Image",
       "imagePlaceholder": "Click to upload image",
       "duration": "Duration (minutes)",
+      "showPrice": "Show Price",
+      "showPriceHint": "Display price on booking page",
+      "price": "Price",
+      "pricePlaceholder": "0.00",
       "assignMembersOnCreate": "Assign team members to this service after creation"
     },
     "assignDialog": {
@@ -1385,6 +1392,15 @@
       "label": "Organization Timezone",
       "hint": "This timezone will be used for calculating available appointment slots and displaying times."
     },
+    "currency": {
+      "title": "Currency",
+      "description": "Set the currency for displaying service prices.",
+      "label": "Organization Currency",
+      "placeholder": "Select currency",
+      "hint": "This currency will be used when displaying service prices on the booking page.",
+      "TL": "Turkish Lira (₺)",
+      "USD": "US Dollar ($)"
+    },
     "aiAssistant": {
       "title": "AI Service Assistant",
       "description": "Enable an AI-powered assistant to help clients find the right service when booking.",
@@ -1554,6 +1570,8 @@
       "description": "Set up your booking preferences and timezone. These settings will apply to all team members.",
       "timezone": "Timezone",
       "timezoneHint": "All appointment times will be based on this timezone",
+      "currency": "Currency",
+      "currencyHint": "Currency used for displaying service prices",
       "providerMode": "Provider Selection",
       "providerModeHint": "How should clients be assigned to providers?",
       "autoAssign": "Auto-assign based on availability",
@@ -1572,7 +1590,7 @@
       "serviceName": "Service Name",
       "serviceNamePlaceholder": "e.g., Haircut, Consultation, Massage",
       "duration": "Duration (minutes)",
-      "description": "Description (optional)",
+      "descriptionLabel": "Description (optional)",
       "descriptionPlaceholder": "Brief description of this service",
       "noServices": "No services added yet",
       "noServicesHint": "Add at least one service to continue"
