@@ -14,6 +14,11 @@ import {
   setAuthToken,
   setOrganizationContext,
 } from "@/lib/api";
+import { 
+  trackOnboardingStarted, 
+  trackOnboardingStepCompleted, 
+  trackOnboardingCompleted 
+} from "@/lib/analytics";
 import { OrganizationSettings, ServiceOption, Availability, DayOfWeek } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -427,6 +432,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const hasTrackedStart = useRef(false);
 
   // Settings state
   const [settings, setSettings] = useState<Partial<OrganizationSettings>>({
@@ -541,8 +547,18 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!checkingOnboarding && currentOrganization && isAdmin) {
       fetchExistingData();
+      
+      // Track onboarding started (only once)
+      if (!hasTrackedStart.current) {
+        hasTrackedStart.current = true;
+        trackOnboardingStarted({
+          userClerkId: userId || undefined,
+          organizationId: currentOrganization.id,
+          organizationName: currentOrganization.name,
+        });
+      }
     }
-  }, [checkingOnboarding, currentOrganization, isAdmin, fetchExistingData]);
+  }, [checkingOnboarding, currentOrganization, isAdmin, fetchExistingData, userId]);
 
   // Save settings
   const saveSettings = async () => {
@@ -716,6 +732,13 @@ export default function OnboardingPage() {
         setBookingLink(response.data.bookingLink);
       }
 
+      // Track onboarding completed
+      trackOnboardingCompleted({
+        userClerkId: userId || undefined,
+        organizationId: currentOrganization?.id,
+        organizationName: currentOrganization?.name,
+      });
+
       setCurrentStep("complete");
     } catch (error) {
       toast({
@@ -732,16 +755,44 @@ export default function OnboardingPage() {
     if (currentStep === "settings") {
       const success = await saveSettings();
       if (success) {
+        trackOnboardingStepCompleted({
+          stepName: 'settings',
+          stepNumber: 1,
+          userClerkId: userId || undefined,
+          organizationId: currentOrganization?.id,
+          organizationName: currentOrganization?.name,
+        });
         setCurrentStep("services");
       }
     } else if (currentStep === "services") {
+      trackOnboardingStepCompleted({
+        stepName: 'services',
+        stepNumber: 2,
+        userClerkId: userId || undefined,
+        organizationId: currentOrganization?.id,
+        organizationName: currentOrganization?.name,
+      });
       setCurrentStep("availability");
     } else if (currentStep === "availability") {
       const success = await saveAvailability();
       if (success) {
+        trackOnboardingStepCompleted({
+          stepName: 'availability',
+          stepNumber: 3,
+          userClerkId: userId || undefined,
+          organizationId: currentOrganization?.id,
+          organizationName: currentOrganization?.name,
+        });
         setCurrentStep("notifications");
       }
     } else if (currentStep === "notifications") {
+      trackOnboardingStepCompleted({
+        stepName: 'notifications',
+        stepNumber: 4,
+        userClerkId: userId || undefined,
+        organizationId: currentOrganization?.id,
+        organizationName: currentOrganization?.name,
+      });
       await completeOnboarding();
     }
   };

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { appointmentsApi, bookingLinksApi, setAuthToken } from "@/lib/api";
+import { trackDashboardView, trackBookingLinkCopied } from "@/lib/analytics";
+import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { DashboardStats, Appointment, BookingLink, AppointmentStatus } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,8 +33,9 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 export default function DashboardPage() {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
   const { toast } = useToast();
+  const { currentOrganization } = useOrganizationContext();
   const t = useTranslations("dashboard");
   const tCommon = useTranslations("common");
   const tAppointments = useTranslations("appointments");
@@ -40,6 +43,7 @@ export default function DashboardPage() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [bookingLinks, setBookingLinks] = useState<BookingLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasTrackedView = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,9 +68,30 @@ export default function DashboardPage() {
     fetchData();
   }, [getToken]);
 
+  // Track dashboard view (separate effect to track once)
+  useEffect(() => {
+    if (!loading && !hasTrackedView.current) {
+      hasTrackedView.current = true;
+      trackDashboardView({
+        userClerkId: userId || undefined,
+        organizationId: currentOrganization?.id,
+        organizationName: currentOrganization?.name,
+      });
+    }
+  }, [loading, userId, currentOrganization]);
+
   const copyLinkToClipboard = (slug: string) => {
     const url = `${window.location.origin}/book/${slug}`;
     navigator.clipboard.writeText(url);
+    
+    // Track booking link copied
+    trackBookingLinkCopied({
+      bookingLinkSlug: slug,
+      userClerkId: userId || undefined,
+      organizationId: currentOrganization?.id,
+      organizationName: currentOrganization?.name,
+    });
+    
     toast({
       title: t("quickShare.linkCopied"),
       description: t("quickShare.linkCopiedDesc"),

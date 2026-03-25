@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
+import { trackConfirmationPageView, trackAppointmentConfirmed } from "@/lib/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +49,7 @@ export default function ConfirmPage() {
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasTrackedView = useRef(false);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -55,6 +57,16 @@ export default function ConfirmPage() {
         const res = await publicApi.getAppointmentByToken(token);
         setAppointment(res.data);
         setConfirmed(res.data.confirmed);
+        
+        // Track confirmation page view (only once)
+        if (!hasTrackedView.current) {
+          hasTrackedView.current = true;
+          trackConfirmationPageView({
+            appointmentId: res.data.id,
+            businessName: res.data.user?.businessName,
+            serviceName: res.data.serviceOption?.title,
+          });
+        }
       } catch (err: unknown) {
         const error = err as { response?: { data?: { message?: string } } };
         setError(
@@ -72,6 +84,14 @@ export default function ConfirmPage() {
     try {
       await publicApi.confirmAppointment(token);
       setConfirmed(true);
+      
+      // Track appointment confirmation
+      trackAppointmentConfirmed({
+        appointmentId: appointment?.id || '',
+        businessName: appointment?.user?.businessName,
+        serviceName: appointment?.serviceOption?.title,
+      });
+      
       toast({
         title: t('confirmed'),
         description: t('confirmSuccess'),

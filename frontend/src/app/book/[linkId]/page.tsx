@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
+import { trackBookingLinkView, trackServiceSelected } from "@/lib/analytics";
 import { PublicBookingLink, ServiceOption } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,24 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('ai-assistant');
+  const hasTrackedView = useRef(false);
 
   useEffect(() => {
     const fetchBookingLink = async () => {
       try {
         const linkRes = await publicApi.getBookingLink(slug);
         setBookingLink(linkRes.data);
+        
+        // Track booking link view (only once)
+        if (!hasTrackedView.current) {
+          hasTrackedView.current = true;
+          trackBookingLinkView({
+            bookingLinkSlug: slug,
+            organizationId: linkRes.data.organizationId,
+            organizationName: linkRes.data.user?.businessName,
+            businessName: linkRes.data.user?.businessName,
+          });
+        }
         
         // Check if AI assistant is enabled, if not show services directly
         if (!linkRes.data.settings?.aiAssistantEnabled) {
@@ -47,6 +60,15 @@ export default function BookingPage() {
   }, [slug, router]);
 
   const handleSelectService = (serviceOption: ServiceOption) => {
+    // Track service selection
+    trackServiceSelected({
+      serviceId: serviceOption.id,
+      serviceName: serviceOption.title,
+      organizationId: bookingLink?.organizationId,
+      organizationName: bookingLink?.user?.businessName,
+      bookingLinkSlug: slug,
+    });
+    
     router.push(`/book/${slug}/schedule?service=${serviceOption.id}`);
   };
 

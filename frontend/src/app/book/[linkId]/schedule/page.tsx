@@ -7,6 +7,7 @@ import { enUS, tr } from "date-fns/locale";
 import { useTranslations } from "next-intl";
 import { useLocale } from "@/components/providers/locale-provider";
 import { publicApi } from "@/lib/api";
+import { trackSlotSelected, trackProviderSelected, trackAppointmentBooked } from "@/lib/analytics";
 import { PublicBookingLink, AvailableSlot, ServiceOption, Provider } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,17 @@ export default function SchedulePage() {
         description: t('bookingSuccess'),
       });
 
+      // Track successful appointment booking
+      trackAppointmentBooked({
+        serviceId: selectedService.id,
+        serviceName: selectedService.title,
+        organizationId: bookingLink?.organizationId,
+        organizationName: bookingLink?.user?.businessName,
+        bookingLinkSlug: slug,
+        providerId: selectedProvider?.id,
+        appointmentDate: format(parseISO(selectedSlot.startTime), "yyyy-MM-dd"),
+      });
+
       // Redirect to success or back to service selection
       router.push(`/book/${slug}/success`);
     } catch (err: unknown) {
@@ -323,6 +335,15 @@ export default function SchedulePage() {
                       onClick={() => {
                         setSelectedProvider(provider);
                         setSelectedSlot(null); // Reset slot when provider changes
+                        // Track provider selection
+                        trackProviderSelected({
+                          providerId: provider.id,
+                          providerName: provider.firstName || provider.lastName 
+                            ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
+                            : undefined,
+                          organizationId: bookingLink?.organizationId,
+                          organizationName: bookingLink?.user?.businessName,
+                        });
                       }}
                       className={`relative p-4 rounded-lg border-2 transition-all ${
                         selectedProvider?.id === provider.id
@@ -446,7 +467,17 @@ export default function SchedulePage() {
                         key={index}
                         variant={selectedSlot === slot ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setSelectedSlot(slot)}
+                        onClick={() => {
+                          setSelectedSlot(slot);
+                          // Track slot selection
+                          trackSlotSelected({
+                            date: format(parseISO(slot.startTime), "yyyy-MM-dd"),
+                            time: format(parseISO(slot.startTime), "HH:mm"),
+                            serviceId: selectedService?.id || '',
+                            organizationId: bookingLink?.organizationId,
+                            organizationName: bookingLink?.user?.businessName,
+                          });
+                        }}
                       >
                         {format(parseISO(slot.startTime), "HH:mm")}
                       </Button>

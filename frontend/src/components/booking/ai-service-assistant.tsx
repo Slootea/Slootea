@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { publicApi } from "@/lib/api";
+import { trackAiAssistantUsed } from "@/lib/analytics";
 import { ServiceOption, AiChatMessage, AiSuggestedService, AiStreamChunk } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ export function AiServiceAssistant({
   const [suggestedServices, setSuggestedServices] = useState<AiSuggestedService[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hasTrackedUsage = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -80,6 +82,15 @@ export function AiServiceAssistant({
       { role: 'user' as const, content: userMessage },
     ];
     setMessages(newMessages);
+    
+    // Track AI assistant usage (only on first message)
+    if (!hasTrackedUsage.current) {
+      hasTrackedUsage.current = true;
+      trackAiAssistantUsed({
+        organizationId,
+        organizationName: businessName,
+      });
+    }
     
     // Add loading assistant message
     setMessages([...newMessages, { role: 'assistant' as const, content: '', isLoading: true }]);

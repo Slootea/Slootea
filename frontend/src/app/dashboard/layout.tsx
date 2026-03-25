@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
 import { setAuthToken, setOrganizationContext, organizationsApi } from "@/lib/api";
+import { trackSignIn } from "@/lib/analytics";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import {
   SidebarProvider,
@@ -28,6 +29,7 @@ export default function DashboardLayout({
   const { currentOrganization, isAdmin, isLoading: orgLoading } = useOrganizationContext();
   
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const hasTrackedSignIn = useRef(false);
 
   const navItems = [
     { href: "/dashboard", label: tLayout("overview") },
@@ -51,10 +53,19 @@ export default function DashboardLayout({
       if (isSignedIn) {
         const token = await getToken();
         setAuthToken(token);
+        
+        // Track sign-in (only once per session)
+        if (!hasTrackedSignIn.current && user?.id) {
+          hasTrackedSignIn.current = true;
+          trackSignIn(user.id, {
+            organization_id: currentOrganization?.id,
+            organization_name: currentOrganization?.name,
+          });
+        }
       }
     };
     setupAuth();
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, getToken, user?.id, currentOrganization]);
 
   // Check onboarding status for org admins
   const checkOnboardingStatus = useCallback(async () => {

@@ -1,16 +1,29 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Calendar } from "lucide-react";
+import { trackBookingCompleted } from "@/lib/analytics";
 
 export default function BookingSuccessPage() {
   const params = useParams();
   const slug = params.linkId as string;
   const t = useTranslations('booking');
+  const hasTracked = useRef(false);
+
+  // Track booking completed
+  useEffect(() => {
+    if (!hasTracked.current) {
+      hasTracked.current = true;
+      trackBookingCompleted({
+        bookingLinkSlug: slug,
+      });
+    }
+  }, [slug]);
 
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
