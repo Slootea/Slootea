@@ -151,41 +151,38 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
-        {/* Social Proof / Logos */}
-        <section className="py-16 border-y border-border/50 bg-muted/20">
-          <div className="container px-6 mx-auto">
-            <p className="text-center text-sm font-medium text-muted-foreground mb-8">{t('trustedBy')}</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-8 w-24 bg-muted rounded-md flex items-center justify-center">
-                  <span className="text-xs text-muted-foreground">Logo {i}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Problem/Solution Section */}
+        {/* Why Slootea Section */}
         <section className="py-24 lg:py-32">
           <div className="container px-6 mx-auto">
-            <div className="max-w-3xl mx-auto text-center mb-20">
-              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+            <div className="max-w-3xl mx-auto text-center mb-16">
+              <Badge variant="outline" className="px-4 py-1.5 text-sm font-medium rounded-full">
                 {t('problem.badge')}
               </Badge>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-                {t('problem.title')}
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {t('problem.description')}
-              </p>
             </div>
             
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-4xl mx-auto">
-              <StatCard value="30%" label={t('stats.noShowReduction')} />
-              <StatCard value="24/7" label={t('stats.automatedBooking')} />
-              <StatCard value="5min" label={t('stats.setupTime')} />
-              <StatCard value="100%" label={t('stats.recoveryRate')} />
+            {/* Benefits Grid */}
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <div className="bg-background rounded-2xl border border-border/50 p-8 text-center hover:border-primary/30 hover:shadow-lg transition-all">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{t('problem.benefit1.title')}</h3>
+                <p className="text-muted-foreground">{t('problem.benefit1.description')}</p>
+              </div>
+              <div className="bg-background rounded-2xl border border-border/50 p-8 text-center hover:border-primary/30 hover:shadow-lg transition-all">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <Bot className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{t('problem.benefit2.title')}</h3>
+                <p className="text-muted-foreground">{t('problem.benefit2.description')}</p>
+              </div>
+              <div className="bg-background rounded-2xl border border-border/50 p-8 text-center hover:border-primary/30 hover:shadow-lg transition-all">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{t('problem.benefit3.title')}</h3>
+                <p className="text-muted-foreground">{t('problem.benefit3.description')}</p>
+              </div>
             </div>
           </div>
         </section>
@@ -338,86 +335,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
-        {/* Additional Features Grid */}
-        <section className="py-24 lg:py-32">
-          <div className="container px-6 mx-auto">
-            <div className="max-w-3xl mx-auto text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">
-                {t('moreFeatures.title')}
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                {t('moreFeatures.subtitle')}
-              </p>
-            </div>
-            
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
-              <FeatureCard 
-                icon={<Link2 className="h-5 w-5" />}
-                title={t('moreFeatures.bookingLinks.title')}
-                description={t('moreFeatures.bookingLinks.description')}
-              />
-              <FeatureCard 
-                icon={<Calendar className="h-5 w-5" />}
-                title={t('moreFeatures.scheduling.title')}
-                description={t('moreFeatures.scheduling.description')}
-              />
-              <FeatureCard 
-                icon={<Users className="h-5 w-5" />}
-                title={t('moreFeatures.teamManagement.title')}
-                description={t('moreFeatures.teamManagement.description')}
-              />
-              <FeatureCard 
-                icon={<BarChart3 className="h-5 w-5" />}
-                title={t('moreFeatures.analytics.title')}
-                description={t('moreFeatures.analytics.description')}
-              />
-              <div className="sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/20 p-6 hover:border-primary/40 hover:shadow-lg transition-all duration-300">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 text-primary mb-4">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <h3 className="font-semibold mb-2">{t('moreFeatures.dataIntegration.title')}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{t('moreFeatures.dataIntegration.description')}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30">
-          <div className="container px-6 mx-auto">
-            <div className="max-w-3xl mx-auto text-center mb-20">
-              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
-                {t('howItWorks.badge')}
-              </Badge>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-                {t('howItWorks.title')}
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {t('howItWorks.subtitle')}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-5xl mx-auto">
-              <StepCard 
-                number="01"
-                title={t('howItWorks.step1.title')}
-                description={t('howItWorks.step1.description')}
-              />
-              <StepCard 
-                number="02"
-                title={t('howItWorks.step2.title')}
-                description={t('howItWorks.step2.description')}
-              />
-              <StepCard 
-                number="03"
-                title={t('howItWorks.step3.title')}
-                description={t('howItWorks.step3.description')}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
+        {/* Testimonials - Commented out
         <section id="testimonials" className="py-24 lg:py-32">
           <div className="container px-6 mx-auto">
             <div className="max-w-3xl mx-auto text-center mb-20">
@@ -449,6 +367,59 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 role={t('testimonials.testimonial3.role')}
                 className="md:col-span-2 lg:col-span-1"
               />
+            </div>
+          </div>
+        </section>
+        */}
+
+        {/* Client Stories Section */}
+        <section className="py-24 lg:py-32 border-y border-border/50 bg-muted/20">
+          <div className="container px-6 mx-auto">
+            <div className="max-w-3xl mx-auto text-center mb-16">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+                {t('clientStories.title')}
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+                {t('trustedBy')}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {t('clientStories.subtitle')}
+              </p>
+            </div>
+            
+            {/* Client Logo */}
+            <div className="flex items-center justify-center mb-16">
+              <Image 
+                src="/TurkanDurmazGuzellikLogo.png" 
+                alt="Türkan Dönmez Güzellik"
+                width={280}
+                height={120}
+                className="object-contain"
+              />
+            </div>
+            
+            {/* Client Videos */}
+            <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
+              {/* TODO: Replace with actual client reference video 1 */}
+              <div className="relative">
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[9/16] flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <Play className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
+                    <span className="text-xs text-muted-foreground">Video 1</span>
+                  </div>
+                </div>
+              </div>
+              {/* TODO: Replace with actual client reference video 2 */}
+              <div className="relative">
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[9/16] flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <Play className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
+                    <span className="text-xs text-muted-foreground">Video 2</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

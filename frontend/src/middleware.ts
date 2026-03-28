@@ -62,6 +62,29 @@ export default clerkMiddleware(async (auth, request) => {
     return response;
   }
 
+  // Check if path starts with a locale and sync the cookie
+  const pathLocale = pathname.split('/')[1] as Locale;
+  if (locales.includes(pathLocale)) {
+    const currentCookie = request.cookies.get("NEXT_LOCALE")?.value;
+    
+    // If cookie doesn't match URL locale, update it
+    if (currentCookie !== pathLocale) {
+      const response = NextResponse.next();
+      response.cookies.set("NEXT_LOCALE", pathLocale, {
+        path: "/",
+        maxAge: 31536000, // 1 year
+        sameSite: "lax",
+      });
+      
+      // Protect non-public routes before returning
+      if (!isPublicRoute(request)) {
+        await auth.protect();
+      }
+      
+      return response;
+    }
+  }
+
   // Protect non-public routes
   if (!isPublicRoute(request)) {
     await auth.protect();

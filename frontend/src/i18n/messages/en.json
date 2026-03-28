@@ -66,7 +66,11 @@
     "noCreditCard": "No credit card required",
     "freeTrial": "14-day free trial",
     "setupMinutes": "Setup in 5 minutes",
-    "trustedBy": "Trusted by service businesses worldwide",
+    "trustedBy": "Trusted by businesses",
+    "clientStories": {
+      "title": "Client Stories",
+      "subtitle": "See how businesses use Slootea"
+    },
     "nav": {
       "features": "Features",
       "howItWorks": "How It Works",
@@ -76,9 +80,20 @@
       "imagePlaceholder": "Dashboard Preview Image"
     },
     "problem": {
-      "badge": "The Problem",
-      "title": "Stop wasting time on phone calls and no-shows",
-      "description": "Endless phone calls to explain services, clients who don't show up, and scattered notes across different apps. Slootea brings everything together and automates the busy work."
+      "badge": "Why Slootea?",
+      "title": "3 key benefits",
+      "benefit1": {
+        "title": "Fewer no-shows",
+        "description": "Customers confirm appointments, no-show rates drop."
+      },
+      "benefit2": {
+        "title": "24/7 service suggestions",
+        "description": "AI assistant helps customers find the right service."
+      },
+      "benefit3": {
+        "title": "All customers in one place",
+        "description": "Customer info isn't scattered, everything together."
+      }
     },
     "stats": {
       "noShowReduction": "Reduction in No-Shows",

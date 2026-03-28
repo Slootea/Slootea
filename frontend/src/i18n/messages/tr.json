@@ -66,7 +66,11 @@
     "noCreditCard": "Kredi kartı gerekmez",
     "freeTrial": "14 gün ücretsiz deneme",
     "setupMinutes": "5 dakikada kurulum",
-    "trustedBy": "Dünya genelinde hizmet işletmeleri tarafından tercih ediliyor",
+    "trustedBy": "İşletmeler tarafından tercih ediliyor",
+    "clientStories": {
+      "title": "Müşteri Hikayeleri",
+      "subtitle": "İşletmelerin Slootea'yı nasıl kullandığını görün"
+    },
     "nav": {
       "features": "Özellikler",
       "howItWorks": "Nasıl Çalışır",
@@ -76,9 +80,20 @@
       "imagePlaceholder": "Panel Önizleme Görseli"
     },
     "problem": {
-      "badge": "Problem",
-      "title": "Telefon görüşmeleri ve gelmeyenlerle zaman kaybetmeyin",
-      "description": "Hizmetleri açıklamak için sonsuz telefon görüşmeleri, gelmeyen müşteriler ve farklı uygulamalara dağılmış notlar. Slootea her şeyi bir araya getirir ve meşgul işleri otomatikleştirir."
+      "badge": "Neden Slootea?",
+      "title": "3 temel fayda",
+      "benefit1": {
+        "title": "Daha az boş randevu",
+        "description": "Müşteriler randevularını onaylar, gelmeme oranı düşer."
+      },
+      "benefit2": {
+        "title": "7/24 hizmet önerisi",
+        "description": "AI asistan müşterilere doğru hizmeti bulsun."
+      },
+      "benefit3": {
+        "title": "Tek yerde tüm müşteriler",
+        "description": "Müşteri bilgileri dağınık değil, hepsi bir arada."
+      }
     },
     "stats": {
       "noShowReduction": "Gelmeme Oranında Azalma",
