@@ -15,8 +15,18 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Appointment Slot Recovery",
-  description: "Recover empty appointment slots and reduce no-shows",
+  title: {
+    default: "Slootea - Appointment Scheduling Software",
+    template: "%s | Slootea",
+  },
+  description: "AI-powered appointment scheduling. Reduce no-shows with WhatsApp confirmations, client tracking, and mobile app management.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com'),
+  applicationName: 'Slootea',
+  icons: {
+    icon: '/Slootea_logo.png',
+    apple: '/Slootea_logo.png',
+  },
+  manifest: '/manifest.json',
 };
 
 export default async function RootLayout({

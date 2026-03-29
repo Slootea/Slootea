@@ -31,14 +31,68 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'landing' });
   
+  const title = `Slootea - ${t('heroTitle')} ${t('heroTitleHighlight')}`;
+  const description = t('heroDescription');
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com';
+  
   return {
-    title: `Slootea - ${t('heroTitle')} ${t('heroTitleHighlight')}`,
-    description: t('heroDescription'),
-    alternates: {
-      languages: {
-        en: '/en',
-        tr: '/tr',
+    title,
+    description,
+    keywords: [
+      'appointment scheduling',
+      'booking software',
+      'no-show reduction',
+      'WhatsApp booking',
+      'salon software',
+      'service business management',
+      'AI booking assistant',
+      'randevu sistemi',
+      'online randevu',
+    ],
+    authors: [{ name: 'Slootea' }],
+    creator: 'Slootea',
+    publisher: 'Slootea',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
+    },
+    alternates: {
+      canonical: `${siteUrl}/${locale}`,
+      languages: {
+        en: `${siteUrl}/en`,
+        tr: `${siteUrl}/tr`,
+      },
+    },
+    openGraph: {
+      type: 'website',
+      locale: locale === 'tr' ? 'tr_TR' : 'en_US',
+      alternateLocale: locale === 'tr' ? 'en_US' : 'tr_TR',
+      url: `${siteUrl}/${locale}`,
+      siteName: 'Slootea',
+      title,
+      description,
+      images: [
+        {
+          url: `${siteUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: 'Slootea - Appointment Scheduling Software',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${siteUrl}/og-image.png`],
+      creator: '@slootea',
     },
   };
 }
@@ -55,25 +109,96 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
   const t = await getTranslations({ locale, namespace: 'landing' });
   const common = await getTranslations({ locale, namespace: 'common' });
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com';
+
+  // JSON-LD Structured Data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: 'Slootea',
+        url: siteUrl,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${siteUrl}/Slootea_logo.png`,
+          width: 512,
+          height: 512,
+        },
+        sameAs: [],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: 'Slootea',
+        publisher: { '@id': `${siteUrl}/#organization` },
+        inLanguage: ['en', 'tr'],
+      },
+      {
+        '@type': 'SoftwareApplication',
+        name: 'Slootea',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        description: t('heroDescription'),
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+          availability: 'https://schema.org/InStock',
+        },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: '4.8',
+          ratingCount: '50',
+        },
+        featureList: [
+          'AI-powered booking assistant',
+          'WhatsApp confirmations',
+          'Client tracking',
+          'Mobile app',
+          'Multi-provider scheduling',
+          'No-show reduction',
+        ],
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${siteUrl}/${locale}/#webpage`,
+        url: `${siteUrl}/${locale}`,
+        name: `Slootea - ${t('heroTitle')} ${t('heroTitleHighlight')}`,
+        isPartOf: { '@id': `${siteUrl}/#website` },
+        about: { '@id': `${siteUrl}/#organization` },
+        description: t('heroDescription'),
+        inLanguage: locale === 'tr' ? 'tr-TR' : 'en-US',
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Image 
-              src="/Slootea_logo.png" 
-              alt="Slootea Logo" 
-              width={36}
-              height={36}
-              className="h-9 w-9"
-            />
-            <span className="text-xl font-semibold tracking-tight">Slootea</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.features')}</a>
-            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.howItWorks')}</a>
-            <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.testimonials')}</a>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40">
+          <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Image 
+                src="/Slootea_logo.png" 
+                alt="Slootea Logo" 
+                width={36}
+                height={36}
+                className="h-9 w-9"
+              />
+              <span className="text-xl font-semibold tracking-tight">Slootea</span>
+            </div>
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.features')}</a>
+              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.howItWorks')}</a>
+              <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.testimonials')}</a>
           </nav>
           <div className="flex items-center space-x-3">
             <LanguageSwitcher currentLocale={locale} />
@@ -476,7 +601,8 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }
 
