@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HeroVideo } from "@/components/hero-video";
 import { FeatureVideo } from "@/components/feature-video";
+import { ClientStoriesCarousel } from "@/components/client-stories-carousel";
 import { getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { 
@@ -387,40 +388,15 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
               </p>
             </div>
             
-            {/* Client Logo */}
-            <div className="flex items-center justify-center mb-16">
-              <Image 
-                src="/TurkanDurmazGuzellikLogo.png" 
-                alt="Türkan Dönmez Güzellik"
-                width={280}
-                height={120}
-                className="object-contain"
-              />
-            </div>
+         
             
-            {/* Client Videos */}
-            <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
-              {/* TODO: Replace with actual client reference video 1 */}
-              <div className="relative">
-                <div className="absolute -inset-2 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[9/16] flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <Play className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
-                    <span className="text-xs text-muted-foreground">Video 1</span>
-                  </div>
-                </div>
-              </div>
-              {/* TODO: Replace with actual client reference video 2 */}
-              <div className="relative">
-                <div className="absolute -inset-2 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[9/16] flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <Play className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
-                    <span className="text-xs text-muted-foreground">Video 2</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Client Videos Carousel */}
+            <ClientStoriesCarousel 
+              videos={[
+                { src: "/TurkanGuzellik_1.mp4", logoSrc: "/TurkanDurmazGuzellikLogo.png" },
+                { src: "/TurkanGuzellik_2.mp4", logoSrc: "/TurkanDurmazGuzellikLogo.png" },
+              ]}
+            />
           </div>
         </section>
 
