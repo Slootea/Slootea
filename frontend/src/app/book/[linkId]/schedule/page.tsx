@@ -161,6 +161,17 @@ export default function SchedulePage() {
     }
   }, [selectedService, bookingLink, selectedProvider, currentMonth, providerSelectionEnabled, fetchAvailableDates]);
 
+  // Auto-select today's date if it's available
+  useEffect(() => {
+    if (availableDates.size > 0 && !selectedDate && !availableDatesLoading) {
+      const todayDate = startOfDay(new Date());
+      const todayStr = format(todayDate, "yyyy-MM-dd");
+      if (availableDates.has(todayStr)) {
+        setSelectedDate(todayDate);
+      }
+    }
+  }, [availableDates, availableDatesLoading]);
+
   useEffect(() => {
     if (!selectedDate || !selectedService || !bookingLink) return;
     // If provider selection is enabled but no provider selected, don't fetch slots yet
