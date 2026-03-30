@@ -20,6 +20,17 @@ export enum DayOfWeek {
   SUNDAY = 6,
 }
 
+// Transformer to ensure HH:mm format (strips seconds from PostgreSQL time type)
+const timeTransformer = {
+  from: (value: string | null): string | null => {
+    if (!value) return value;
+    // PostgreSQL returns time as HH:MM:SS, strip seconds
+    const parts = value.split(':');
+    return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : value;
+  },
+  to: (value: string | null): string | null => value,
+};
+
 @Entity('availabilities')
 export class Availability {
   @PrimaryGeneratedColumn('uuid')
@@ -31,10 +42,10 @@ export class Availability {
   })
   dayOfWeek: DayOfWeek;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', transformer: timeTransformer })
   startTime: string;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', transformer: timeTransformer })
   endTime: string;
 
   @Column({ default: true })

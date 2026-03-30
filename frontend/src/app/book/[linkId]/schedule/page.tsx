@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { format, addDays, startOfDay, isSameDay, parseISO, isBefore, isAfter } from "date-fns";
+import { format, addDays, addMonths, startOfDay, isSameDay, parseISO, isBefore, isAfter } from "date-fns";
 import { enUS, tr } from "date-fns/locale";
 import { useTranslations } from "next-intl";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -111,6 +111,7 @@ export default function SchedulePage() {
   }, [slug, serviceId]);
 
   // Fetch available dates when month, provider or service changes
+  // Fetches both current month and next month to cover calendar overflow days
   const fetchAvailableDates = useCallback(async (month: Date) => {
     if (!selectedService || !bookingLink) return;
     // If provider selection is enabled but no provider selected, don't fetch yet
@@ -118,14 +119,31 @@ export default function SchedulePage() {
 
     setAvailableDatesLoading(true);
     try {
-      const monthStr = format(month, "yyyy-MM");
-      const res = await publicApi.getAvailableDates(
-        slug,
-        selectedService.id,
-        monthStr,
-        selectedProvider?.id
-      );
-      setAvailableDates(new Set(res.data.availableDates || []));
+      const currentMonthStr = format(month, "yyyy-MM");
+      const nextMonthStr = format(addMonths(month, 1), "yyyy-MM");
+      
+      // Fetch both current and next month in parallel for calendar overflow days
+      const [currentRes, nextRes] = await Promise.all([
+        publicApi.getAvailableDates(
+          slug,
+          selectedService.id,
+          currentMonthStr,
+          selectedProvider?.id
+        ),
+        publicApi.getAvailableDates(
+          slug,
+          selectedService.id,
+          nextMonthStr,
+          selectedProvider?.id
+        ),
+      ]);
+      
+      // Merge both months' available dates
+      const allDates = new Set([
+        ...(currentRes.data.availableDates || []),
+        ...(nextRes.data.availableDates || []),
+      ]);
+      setAvailableDates(allDates);
     } catch (err) {
       console.error("Failed to fetch available dates", err);
       setAvailableDates(new Set());

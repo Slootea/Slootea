@@ -9,6 +9,17 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
+// Transformer to ensure HH:mm format (strips seconds from PostgreSQL time type)
+const timeTransformer = {
+  from: (value: string | null): string | null => {
+    if (!value) return value;
+    // PostgreSQL returns time as HH:MM:SS, strip seconds
+    const parts = value.split(':');
+    return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : value;
+  },
+  to: (value: string | null): string | null => value,
+};
+
 @Entity('blocked_times')
 export class BlockedTime {
   @PrimaryGeneratedColumn('uuid')
@@ -17,10 +28,10 @@ export class BlockedTime {
   @Column({ type: 'date' })
   date: string;
 
-  @Column({ type: 'time', nullable: true })
+  @Column({ type: 'time', nullable: true, transformer: timeTransformer })
   startTime: string;
 
-  @Column({ type: 'time', nullable: true })
+  @Column({ type: 'time', nullable: true, transformer: timeTransformer })
   endTime: string;
 
   @Column({ default: false, comment: 'If true, blocks the entire day' })

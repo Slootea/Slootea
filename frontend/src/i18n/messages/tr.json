@@ -62,10 +62,10 @@
     "heroTitleHighlight": "Gelir Kaybetmeyin",
     "heroDescription": "Randevularınızı kolayca oluşturmanızı, onaylamanızı ve takip etmenizi sağlayan bir randevu yönetim uygulaması.",
     "ctaButton": "Ücretsiz Deneyin",
-    "watchDemo": "Demo İzle",
+    "meetTheTeam": "Ekiple Tanışın",
     "noCreditCard": "Kredi kartı gerekmez",
-    "freeTrial": "14 gün ücretsiz deneme",
-    "setupMinutes": "5 dakikada kurulum",
+    "freeTrial": "2 ay ücretsiz deneme",
+    "setupMinutes": "Kurulum ve veri aktarımına ücretsiz yardım",
     "trustedBy": "İşletmeler tarafından tercih ediliyor",
     "clientStories": {
       "title": "Müşteri Hikayeleri",
@@ -74,7 +74,8 @@
     "nav": {
       "features": "Özellikler",
       "howItWorks": "Nasıl Çalışır",
-      "testimonials": "Referanslar"
+      "testimonials": "Referanslar",
+      "pricing": "Fiyatlandırma"
     },
     "hero": {
       "imagePlaceholder": "Panel Önizleme Görseli"
@@ -206,7 +207,41 @@
       "title": "Rezervasyon deneyiminizi dönüştürmeye hazır mısınız?",
       "subtitle": "Planlamayı otomatikleştiren ve gelmeyenleri azaltan binlerce profesyonele katılın. Bugün ücretsiz denemenize başlayın.",
       "button": "Ücretsiz Başla",
+      "meetTheTeam": "Ekiple Tanışın",
       "note": "Kredi kartı gerekmez. İstediğiniz zaman iptal edin."
+    },
+    "pricing": {
+      "badge": "Fiyatlandırma",
+      "title": "Basit, şeffaf fiyatlandırma",
+      "subtitle": "İşletmeniz için en uygun planı seçin",
+      "monthly": "Aylık",
+      "yearly": "Yıllık",
+      "perMonth": "/ay",
+      "perYear": "/yıl",
+      "save": "2 ay tasarruf edin",
+      "standard": {
+        "name": "Standart",
+        "price": "₺980",
+        "yearlyPrice": "₺9.800",
+        "description": "Küçük işletmeler için ideal",
+        "feature1": "5 personele kadar",
+        "feature2": "Ayda 160 randevu saatine kadar",
+        "feature3": "WhatsApp onayları",
+        "feature4": "AI Hizmet Asistanı",
+        "feature5": "Müşteri takibi ve notlar",
+        "cta": "Ücretsiz Deneyin"
+      },
+      "enterprise": {
+        "name": "Özel Teklif",
+        "price": "Özel",
+        "description": "Özel ihtiyaçları olan büyük ekipler için",
+        "feature1": "Sınırsız personel",
+        "feature2": "Sınırsız randevu saati",
+        "feature3": "Standart'taki her şey",
+        "feature4": "Öncelikli destek",
+        "feature5": "Özel entegrasyonlar",
+        "cta": "Bize Ulaşın"
+      }
     },
     "footer": {
       "description": "Hizmet işletmeleri için akıllı randevu yönetim platformu.",
@@ -1640,6 +1675,227 @@
     "errors": {
       "saveFailed": "Kaydetme başarısız. Lütfen tekrar deneyin.",
       "completeOnboardingFailed": "Kurulum tamamlanamadı. Lütfen tekrar deneyin."
+    }
+  },
+  "legal": {
+    "backToHome": "Ana Sayfaya Dön",
+    "lastUpdated": "Son güncelleme: {date}",
+    "terms": {
+      "title": "Kullanım Şartları",
+      "metaDescription": "Slootea randevu planlama platformu Kullanım Şartları",
+      "sections": {
+        "acceptance": {
+          "title": "1. Şartların Kabulü",
+          "content": "Slootea'ya (\"Hizmet\") erişerek veya kullanarak, bu Kullanım Şartları'na (\"Şartlar\") bağlı olmayı kabul etmiş olursunuz. Bu Şartları kabul etmiyorsanız, Hizmete erişemez veya kullanamazsınız. Bu Şartlar, siz ve Slootea arasında yasal olarak bağlayıcı bir anlaşma oluşturur."
+        },
+        "description": {
+          "title": "2. Hizmet Tanımı",
+          "content": "Slootea, işletmelerin müsaitlik durumlarını yönetmelerini, paylaşılabilir rezervasyon bağlantıları oluşturmalarını ve müşterilerin randevu almalarını sağlayan bir randevu planlama platformudur. Hizmet, randevu onayları, hatırlatıcılar ve gelmeme oranını azaltma özellikleri içerir."
+        },
+        "account": {
+          "title": "3. Hesap Kaydı",
+          "intro": "Hizmetin belirli özelliklerini kullanmak için bir hesap oluşturmanız gerekir. Hesap oluştururken şunları kabul edersiniz:",
+          "items": [
+            "Doğru, güncel ve eksiksiz bilgi sağlamak",
+            "Hesap bilgilerinizi güncel tutmak",
+            "Şifrenizi güvenli ve gizli tutmak",
+            "Hesabınız altındaki tüm faaliyetlerden sorumlu olmak",
+            "Yetkisiz erişim veya güvenlik ihlali durumunda bizi derhal bilgilendirmek"
+          ]
+        },
+        "userTypes": {
+          "title": "4. Kullanıcı Türleri ve Sorumlulukları",
+          "business": {
+            "title": "4.1 İşletme Kullanıcıları",
+            "intro": "Randevu yönetimi için hesap oluşturan işletme kullanıcıları şunları kabul eder:",
+            "items": [
+              "Doğru hizmet bilgisi, müsaitlik ve fiyatlandırma sağlamak",
+              "Platform üzerinden yapılan randevulara uymak",
+              "Müşterilerle uygun iletişim kurmak",
+              "İşletmeleri için geçerli tüm yasa ve düzenlemelere uymak",
+              "Müşteri verilerinin toplanması ve iletişim için gerekli izinleri almak"
+            ]
+          },
+          "clients": {
+            "title": "4.2 Müşteriler",
+            "intro": "Randevu alan müşteriler şunları kabul eder:",
+            "items": [
+              "Doğru iletişim bilgisi sağlamak",
+              "Planlanan randevulara katılmak veya önceden iptal etmek",
+              "Onay taleplerine zamanında yanıt vermek",
+              "İşletmenin politika ve prosedürlerine uymak"
+            ]
+          }
+        },
+        "acceptableUse": {
+          "title": "5. Kabul Edilebilir Kullanım",
+          "intro": "Hizmeti şu amaçlarla kullanmamayı kabul edersiniz:",
+          "items": [
+            "Geçerli yasaları, düzenlemeleri veya üçüncü taraf haklarını ihlal etmek",
+            "Spam, istenmeyen mesajlar veya dolandırıcılık amaçlı iletişimler göndermek",
+            "Herhangi bir kişi veya kuruluşu taklit etmek",
+            "Hizmeti veya altyapısını bozmak veya müdahale etmek",
+            "Sistemlere veya verilere yetkisiz erişim elde etmeye çalışmak",
+            "Zararlı kod, virüs veya zararlı içerik yüklemek",
+            "Yetkisiz veri kazımak, toplamak veya çıkarmak",
+            "Hizmeti yasadışı veya yetkisiz amaçlarla kullanmak"
+          ]
+        },
+        "appointments": {
+          "title": "6. Randevu Politikaları",
+          "booking": {
+            "title": "6.1 Rezervasyon ve Onay",
+            "content": "Slootea üzerinden yapılan randevular onaya tabidir. Müşteriler, katılımlarını onaylamalarını isteyen hatırlatma mesajları alabilir. Belirtilen süre içinde onay verilmemesi otomatik iptal ile sonuçlanabilir."
+          },
+          "cancellations": {
+            "title": "6.2 İptaller",
+            "content": "İptal politikaları bireysel işletmeler tarafından belirlenir. Lütfen rezervasyon yaptığınız işletmenin özel iptal politikasını inceleyin. Slootea, iptallerden kaynaklanan ücret veya cezalardan sorumlu değildir."
+          }
+        },
+        "intellectualProperty": {
+          "title": "7. Fikri Mülkiyet",
+          "intro": "Hizmet ve orijinal içeriği, özellikleri ve işlevselliği Slootea'ya aittir ve uluslararası telif hakkı, ticari marka ve diğer fikri mülkiyet yasaları ile korunmaktadır. Şunları yapamazsınız:",
+          "items": [
+            "İzin almadan Hizmetin herhangi bir bölümünü kopyalamak, değiştirmek veya dağıtmak",
+            "Yetki almadan ticari markalarımızı, logolarımızı veya markamızı kullanmak",
+            "Hizmeti tersine mühendislik yapmak, kaynak kodunu çıkarmak veya sökmek",
+            "Telif hakkı veya mülkiyet bildirilerini kaldırmak"
+          ]
+        },
+        "userContent": {
+          "title": "8. Kullanıcı İçeriği",
+          "content": "Hizmete gönderdiğiniz içeriğin (hizmet açıklamaları, görseller ve işletme bilgileri gibi) mülkiyetini elinizde tutarsınız. İçerik göndererek, Slootea'ya Hizmeti sağlamak için bu içeriği kullanma, görüntüleme ve dağıtma konusunda münhasır olmayan, dünya çapında, telifsiz bir lisans verirsiniz. Bu içeriği gönderme hakkına sahip olduğunuzu ve üçüncü taraf haklarını ihlal etmediğini beyan edersiniz."
+        },
+        "disclaimer": {
+          "title": "9. Garanti Reddi",
+          "content": "HİZMET, AÇIK VEYA ZIMNİ HERHANGİ BİR GARANTİ OLMAKSIZIN \"OLDUĞU GİBİ\" VE \"MEVCUT OLDUĞU ŞEKİLDE\" SUNULMAKTADIR. SLOOTEA, TİCARİ ELVERİŞLİLİK, BELİRLİ BİR AMACA UYGUNLUK VE İHLAL ETMEME DAHİL TÜM ZIMNİ GARANTİLERİ REDDEDER. HİZMETİN KESİNTİSİZ, HATASIZ VEYA GÜVENLİ OLACAĞINI GARANTİ ETMİYORUZ."
+        },
+        "liability": {
+          "title": "10. Sorumluluğun Sınırlandırılması",
+          "content": "YASALARIN İZİN VERDİĞİ AZAMİ ÖLÇÜDE, SLOOTEA, HİZMETİ KULLANMANIZDAN KAYNAKLANAN KÂR, VERİ VEYA İŞ FIRSATI KAYBI DAHİL, DOLAYLI, ARIZİ, ÖZEL, SONUÇSAL VEYA CEZAİ ZARARLARDAN SORUMLU OLMAYACAKTIR."
+        },
+        "termination": {
+          "title": "11. Fesih",
+          "content": "Hesabınızı ve Hizmete erişiminizi herhangi bir zamanda, sebep veya bildirim ile veya olmaksızın askıya alma veya feshetme hakkını saklı tutarız. Fesih üzerine, Hizmeti kullanma hakkınız derhal sona erecektir. Bu Şartların doğası gereği fesihten sonra da geçerli olması gereken tüm hükümleri geçerliliğini koruyacaktır."
+        },
+        "changes": {
+          "title": "12. Şartlardaki Değişiklikler",
+          "content": "Bu Şartları istediğimiz zaman değiştirebiliriz. Önemli değişiklikleri web sitemizde güncellenmiş Şartları yayınlayarak veya diğer iletişim kanalları aracılığıyla size bildireceğiz. Değişiklikler yürürlüğe girdikten sonra Hizmeti kullanmaya devam etmeniz, değiştirilmiş Şartları kabul ettiğiniz anlamına gelir."
+        },
+        "governing": {
+          "title": "13. Geçerli Hukuk",
+          "content": "Bu Şartlar, Slootea'nın faaliyet gösterdiği yargı bölgesinin yasalarına göre yönetilecek ve yorumlanacaktır."
+        },
+        "contact": {
+          "title": "14. İletişim",
+          "content": "Bu Şartlar hakkında sorularınız varsa, lütfen legal@slootea.com adresinden bizimle iletişime geçin."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Gizlilik Politikası",
+      "metaDescription": "Slootea randevu planlama platformu Gizlilik Politikası",
+      "sections": {
+        "introduction": {
+          "title": "1. Giriş",
+          "content": "Slootea'ya (\"biz,\" \"bizim\" veya \"bize\") hoş geldiniz. Gizliliğinizi korumaya ve kişisel bilgilerinizin güvenliğini sağlamaya kararlıyız. Bu Gizlilik Politikası, randevu planlama platformumuzu ve ilgili hizmetlerimizi kullandığınızda bilgilerinizi nasıl topladığımızı, kullandığımızı, açıkladığımızı ve koruduğumuzu açıklar."
+        },
+        "informationCollected": {
+          "title": "2. Topladığımız Bilgiler",
+          "provided": {
+            "title": "2.1 Sağladığınız Bilgiler",
+            "items": [
+              "Hesap Bilgileri: Hesap oluştururken ad, e-posta adresi, telefon numarası ve şifre.",
+              "İşletme Bilgileri: İşletme hesapları için işletme adı, adresi, çalışma saatleri ve hizmet detayları.",
+              "Rezervasyon Bilgileri: Randevu detayları, hizmet tercihleri ve planlama verileri.",
+              "İletişim Verileri: Bize gönderdiğiniz mesajlar, geri bildirimler ve destek talepleri."
+            ]
+          },
+          "automatic": {
+            "title": "2.2 Otomatik Olarak Toplanan Bilgiler",
+            "items": [
+              "Cihaz Bilgileri: IP adresi, tarayıcı türü, işletim sistemi ve cihaz tanımlayıcıları.",
+              "Kullanım Verileri: Ziyaret edilen sayfalar, kullanılan özellikler, randevu geçmişi ve etkileşim kalıpları.",
+              "Çerezler ve İzleme: Deneyiminizi geliştirmek ve kullanımı analiz etmek için çerezler ve benzer teknolojiler kullanıyoruz."
+            ]
+          }
+        },
+        "howWeUse": {
+          "title": "3. Bilgilerinizi Nasıl Kullanıyoruz",
+          "intro": "Toplanan bilgileri aşağıdaki amaçlar için kullanıyoruz:",
+          "items": [
+            "Randevu planlama hizmetlerimizi sağlamak, sürdürmek ve geliştirmek",
+            "Rezervasyonları, onayları ve iptalleri işlemek ve yönetmek",
+            "Randevu hatırlatıcıları, onaylar ve hizmet bildirimleri göndermek",
+            "Güncellemeler, güvenlik uyarıları ve destek hakkında sizinle iletişim kurmak",
+            "Platformumuzu ve kullanıcı deneyimini iyileştirmek için kullanım kalıplarını analiz etmek",
+            "Dolandırıcılığı, kötüye kullanımı önlemek ve hizmetlerimizin güvenliğini sağlamak",
+            "Yasal yükümlülüklere uymak ve kullanım şartlarımızı uygulamak"
+          ]
+        },
+        "sharing": {
+          "title": "4. Bilgi Paylaşımı ve Açıklama",
+          "intro": "Kişisel bilgilerinizi satmıyoruz. Bilgilerinizi aşağıdaki durumlarda paylaşabiliriz:",
+          "items": [
+            "Hizmet Sağlayıcılarla: Platformumuzu işletmemize yardımcı olan üçüncü taraf satıcılar (barındırma, analitik, iletişim hizmetleri).",
+            "Kullanıcılar Arasında: Randevu detayları, rezervasyonları kolaylaştırmak için müşteriler ve işletmeler arasında paylaşılır.",
+            "Yasal Uyumluluk İçin: Yasa, mahkeme emri gerektirdiğinde veya haklarımızı ve güvenliğimizi korumak için.",
+            "İş Transferleri: Birleşme, devralma veya varlık satışı ile bağlantılı olarak."
+          ]
+        },
+        "security": {
+          "title": "5. Veri Güvenliği",
+          "content": "Kişisel bilgilerinizi korumak için aktarım ve beklemede şifreleme, güvenli kimlik doğrulama protokolleri ve düzenli güvenlik denetimleri dahil endüstri standardı güvenlik önlemleri uyguluyoruz. Ancak, İnternet üzerinden hiçbir iletim yöntemi %100 güvenli değildir ve mutlak güvenliği garanti edemeyiz."
+        },
+        "retention": {
+          "title": "6. Veri Saklama",
+          "content": "Kişisel bilgilerinizi hizmetlerimizi sağlamak, yasal yükümlülüklere uymak, anlaşmazlıkları çözmek ve anlaşmalarımızı uygulamak için gerekli olduğu sürece saklıyoruz. Veriye artık ihtiyaç duyulmadığında, güvenli bir şekilde siliyoruz veya anonimleştiriyoruz."
+        },
+        "rights": {
+          "title": "7. Haklarınız ve Tercihleriniz",
+          "intro": "Bulunduğunuz yere bağlı olarak, aşağıdaki haklara sahip olabilirsiniz:",
+          "items": [
+            "Erişim: Kişisel bilgilerinizin bir kopyasını talep edin.",
+            "Düzeltme: Yanlış veya eksik verilerin düzeltilmesini talep edin.",
+            "Silme: Yasal gerekliliklere bağlı olarak kişisel bilgilerinizin silinmesini talep edin.",
+            "Taşınabilirlik: Verilerinizi taşınabilir bir formatta talep edin.",
+            "Devre Dışı Bırakma: Pazarlama iletişimlerinden istediğiniz zaman çıkın.",
+            "Onayı Geri Çekme: İşleme onaya dayalı olduğunda, istediğiniz zaman geri çekebilirsiniz."
+          ],
+          "dataDeletionLink": "Silme talebi göndermek için Veri Silme sayfamızı ziyaret edin."
+        },
+        "cookies": {
+          "title": "8. Çerezler ve İzleme Teknolojileri",
+          "intro": "Çerezleri ve benzer teknolojileri şu amaçlarla kullanıyoruz:",
+          "items": [
+            "Oturumunuzu açık tutmak ve tercihlerinizi hatırlamak",
+            "Hizmetlerimizle nasıl etkileşim kurduğunuzu anlamak",
+            "Performansı ve kullanıcı deneyimini iyileştirmek",
+            "İlgili içerik ve özellikler sunmak"
+          ],
+          "note": "Çerez tercihlerini tarayıcı ayarlarınızdan yönetebilirsiniz. Çerezleri devre dışı bırakmanın hizmetlerimizin işlevselliğini etkileyebileceğini unutmayın."
+        },
+        "thirdParty": {
+          "title": "9. Üçüncü Taraf Hizmetleri",
+          "content": "Platformumuz üçüncü taraf hizmetlerle (kimlik doğrulama sağlayıcıları, ödeme işlemcileri ve iletişim hizmetleri gibi) entegre olabilir. Bu hizmetlerin kendi gizlilik politikaları vardır ve bunları incelemenizi öneririz. Üçüncü taraf hizmetlerin gizlilik uygulamalarından sorumlu değiliz."
+        },
+        "children": {
+          "title": "10. Çocukların Gizliliği",
+          "content": "Hizmetimiz 16 yaşın altındaki çocuklara yönelik değildir. Çocuklardan bilerek kişisel bilgi toplamıyoruz. Bir çocuktan bilgi topladığımıza inanıyorsanız, lütfen derhal bizimle iletişime geçin."
+        },
+        "international": {
+          "title": "11. Uluslararası Veri Transferleri",
+          "content": "Bilgileriniz, ikamet ettiğiniz ülkeden farklı ülkelere aktarılabilir ve orada işlenebilir. Bilgilerinizi geçerli veri koruma yasalarına uygun olarak korumak için uygun güvencelerin mevcut olduğundan emin oluyoruz."
+        },
+        "changes": {
+          "title": "12. Bu Politikadaki Değişiklikler",
+          "content": "Bu Gizlilik Politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikleri web sitemizde güncellenmiş politikayı yayınlayarak veya diğer iletişim kanalları aracılığıyla size bildireceğiz. Değişiklikler yürürlüğe girdikten sonra Hizmeti kullanmaya devam etmeniz, değiştirilmiş politikayı kabul ettiğiniz anlamına gelir."
+        },
+        "contact": {
+          "title": "13. İletişim",
+          "content": "Bu Gizlilik Politikası veya veri uygulamalarımız hakkında sorularınız varsa, lütfen privacy@slootea.com adresinden bizimle iletişime geçin."
+        }
+      }
     }
   }
 }

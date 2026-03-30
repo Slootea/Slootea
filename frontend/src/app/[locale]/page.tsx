@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { HeroVideo } from "@/components/hero-video";
 import { FeatureVideo } from "@/components/feature-video";
 import { ClientStoriesCarousel } from "@/components/client-stories-carousel";
+import { PricingSection } from "@/components/pricing-section";
 import { getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { 
@@ -199,6 +200,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
               <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.features')}</a>
               <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.howItWorks')}</a>
               <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.testimonials')}</a>
+              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.pricing')}</a>
           </nav>
           <div className="flex items-center space-x-3">
             <LanguageSwitcher currentLocale={locale} />
@@ -245,10 +247,10 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <a href="#hero-video">
+                  <a href="https://www.slootea.com/book/2sAltvrDKj" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
-                      <Play className="mr-2 h-4 w-4" />
-                      {t('watchDemo')}
+                      <Users className="mr-2 h-4 w-4" />
+                      {t('meetTheTeam')}
                     </Button>
                   </a>
                 </div>
@@ -525,6 +527,9 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
+        {/* Pricing Section */}
+        <PricingSection />
+
         {/* Final CTA */}
         <section className="py-24 lg:py-32">
           <div className="container px-6 mx-auto">
@@ -544,6 +549,12 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
+                  <a href="https://www.slootea.com/book/2sAltvrDKj" target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
+                      <Users className="mr-2 h-4 w-4" />
+                      {t('cta.meetTheTeam')}
+                    </Button>
+                  </a>
                 </div>
               </div>
             </div>
@@ -575,7 +586,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors">{t('nav.features')}</a></li>
                 <li><a href="#how-it-works" className="hover:text-foreground transition-colors">{t('nav.howItWorks')}</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.pricing')}</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">{t('footer.pricing')}</a></li>
               </ul>
             </div>
             <div>
@@ -589,8 +600,8 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
             <div>
               <h4 className="font-semibold mb-4">{t('footer.legal')}</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
-                <li><Link href="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
+                <li><Link href={`/${locale}/privacy`} className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
+                <li><Link href={`/${locale}/terms`} className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
               </ul>
             </div>
           </div>

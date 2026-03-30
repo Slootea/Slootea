@@ -62,10 +62,10 @@
     "heroTitleHighlight": "Empty Appointments",
     "heroDescription": "An appointment management application that helps you book, confirm, and track appointments with ease.",
     "ctaButton": "Start Free Trial",
-    "watchDemo": "Watch Demo",
+    "meetTheTeam": "Meet the Team",
     "noCreditCard": "No credit card required",
-    "freeTrial": "14-day free trial",
-    "setupMinutes": "Setup in 5 minutes",
+    "freeTrial": "2-month free trial",
+    "setupMinutes": "Free setup & data migration help",
     "trustedBy": "Trusted by businesses",
     "clientStories": {
       "title": "Client Stories",
@@ -74,7 +74,8 @@
     "nav": {
       "features": "Features",
       "howItWorks": "How It Works",
-      "testimonials": "Testimonials"
+      "testimonials": "Testimonials",
+      "pricing": "Pricing"
     },
     "hero": {
       "imagePlaceholder": "Dashboard Preview Image"
@@ -206,7 +207,41 @@
       "title": "Ready to transform your booking experience?",
       "subtitle": "Join thousands of professionals who have automated their scheduling and reduced no-shows. Start your free trial today.",
       "button": "Get Started for Free",
+      "meetTheTeam": "Meet the Team",
       "note": "No credit card required. Cancel anytime."
+    },
+    "pricing": {
+      "badge": "Pricing",
+      "title": "Simple, transparent pricing",
+      "subtitle": "Choose the plan that works best for your business",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "perMonth": "/month",
+      "perYear": "/year",
+      "save": "Save 2 months",
+      "standard": {
+        "name": "Standard",
+        "price": "$22",
+        "yearlyPrice": "$220",
+        "description": "Perfect for small businesses",
+        "feature1": "Up to 5 staff members",
+        "feature2": "Up to 160 appointment hours/month",
+        "feature3": "WhatsApp confirmations",
+        "feature4": "AI Service Assistant",
+        "feature5": "Client tracking & notes",
+        "cta": "Start Free Trial"
+      },
+      "enterprise": {
+        "name": "Special Offer",
+        "price": "Custom",
+        "description": "For larger teams with custom needs",
+        "feature1": "Unlimited staff members",
+        "feature2": "Unlimited appointment hours",
+        "feature3": "Everything in Standard",
+        "feature4": "Priority support",
+        "feature5": "Custom integrations",
+        "cta": "Contact Us"
+      }
     },
     "footer": {
       "description": "The smart appointment management platform for service businesses.",
@@ -1653,6 +1688,227 @@
     "errors": {
       "saveFailed": "Failed to save. Please try again.",
       "completeOnboardingFailed": "Failed to complete setup. Please try again."
+    }
+  },
+  "legal": {
+    "backToHome": "Back to Home",
+    "lastUpdated": "Last updated: {date}",
+    "terms": {
+      "title": "Terms of Service",
+      "metaDescription": "Terms of Service for Slootea appointment scheduling platform",
+      "sections": {
+        "acceptance": {
+          "title": "1. Acceptance of Terms",
+          "content": "By accessing or using Slootea (\"the Service\"), you agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, you may not access or use the Service. These Terms constitute a legally binding agreement between you and Slootea."
+        },
+        "description": {
+          "title": "2. Description of Service",
+          "content": "Slootea is an appointment scheduling platform that enables businesses to manage their availability, create shareable booking links, and allow clients to book appointments. The Service includes features for appointment confirmations, reminders, and no-show reduction."
+        },
+        "account": {
+          "title": "3. Account Registration",
+          "intro": "To use certain features of the Service, you must register for an account. When creating an account, you agree to:",
+          "items": [
+            "Provide accurate, current, and complete information",
+            "Maintain and promptly update your account information",
+            "Keep your password secure and confidential",
+            "Accept responsibility for all activities under your account",
+            "Notify us immediately of any unauthorized access or security breach"
+          ]
+        },
+        "userTypes": {
+          "title": "4. User Types and Responsibilities",
+          "business": {
+            "title": "4.1 Business Users",
+            "intro": "Business users who create accounts to manage appointments agree to:",
+            "items": [
+              "Provide accurate service information, availability, and pricing",
+              "Honor appointments booked through the platform",
+              "Maintain appropriate communication with clients",
+              "Comply with all applicable laws and regulations for their business",
+              "Obtain necessary consents for client data collection and communications"
+            ]
+          },
+          "clients": {
+            "title": "4.2 Clients",
+            "intro": "Clients who book appointments agree to:",
+            "items": [
+              "Provide accurate contact information",
+              "Attend scheduled appointments or cancel in advance",
+              "Respond to confirmation requests in a timely manner",
+              "Respect the business's policies and procedures"
+            ]
+          }
+        },
+        "acceptableUse": {
+          "title": "5. Acceptable Use",
+          "intro": "You agree not to use the Service to:",
+          "items": [
+            "Violate any applicable laws, regulations, or third-party rights",
+            "Send spam, unsolicited messages, or fraudulent communications",
+            "Impersonate any person or entity",
+            "Interfere with or disrupt the Service or its infrastructure",
+            "Attempt to gain unauthorized access to any systems or data",
+            "Upload malicious code, viruses, or harmful content",
+            "Scrape, harvest, or collect data without authorization",
+            "Use the Service for any illegal or unauthorized purpose"
+          ]
+        },
+        "appointments": {
+          "title": "6. Appointment Policies",
+          "booking": {
+            "title": "6.1 Booking and Confirmation",
+            "content": "Appointments booked through Slootea are subject to confirmation. Clients may receive reminder messages requesting confirmation of their attendance. Failure to confirm within the specified timeframe may result in automatic cancellation."
+          },
+          "cancellations": {
+            "title": "6.2 Cancellations",
+            "content": "Cancellation policies are set by individual businesses. Please review the specific cancellation policy of the business you are booking with. Slootea is not responsible for any fees or penalties arising from cancellations."
+          }
+        },
+        "intellectualProperty": {
+          "title": "7. Intellectual Property",
+          "intro": "The Service and its original content, features, and functionality are owned by Slootea and are protected by international copyright, trademark, and other intellectual property laws. You may not:",
+          "items": [
+            "Copy, modify, or distribute any part of the Service without permission",
+            "Use our trademarks, logos, or branding without authorization",
+            "Reverse engineer, decompile, or disassemble the Service",
+            "Remove any copyright or proprietary notices"
+          ]
+        },
+        "userContent": {
+          "title": "8. User Content",
+          "content": "You retain ownership of content you submit to the Service (such as service descriptions, images, and business information). By submitting content, you grant Slootea a non-exclusive, worldwide, royalty-free license to use, display, and distribute such content in connection with providing the Service. You represent that you have the right to submit such content and that it does not violate any third-party rights."
+        },
+        "disclaimer": {
+          "title": "9. Disclaimer of Warranties",
+          "content": "THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. SLOOTEA DISCLAIMS ALL WARRANTIES, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE."
+        },
+        "liability": {
+          "title": "10. Limitation of Liability",
+          "content": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, SLOOTEA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING OUT OF YOUR USE OF THE SERVICE."
+        },
+        "termination": {
+          "title": "11. Termination",
+          "content": "We reserve the right to suspend or terminate your account and access to the Service at any time, with or without cause or notice. Upon termination, your right to use the Service will immediately cease. All provisions of these Terms which by their nature should survive termination shall survive."
+        },
+        "changes": {
+          "title": "12. Changes to Terms",
+          "content": "We may modify these Terms at any time. We will notify you of material changes by posting the updated Terms on our website or through other communication channels. Your continued use of the Service after changes become effective constitutes acceptance of the modified Terms."
+        },
+        "governing": {
+          "title": "13. Governing Law",
+          "content": "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Slootea operates, without regard to conflict of law principles."
+        },
+        "contact": {
+          "title": "14. Contact Us",
+          "content": "If you have any questions about these Terms, please contact us at legal@slootea.com."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "metaDescription": "Privacy Policy for Slootea appointment scheduling platform",
+      "sections": {
+        "introduction": {
+          "title": "1. Introduction",
+          "content": "Welcome to Slootea (\"we,\" \"our,\" or \"us\"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our appointment scheduling platform and related services."
+        },
+        "informationCollected": {
+          "title": "2. Information We Collect",
+          "provided": {
+            "title": "2.1 Information You Provide",
+            "items": [
+              "Account Information: Name, email address, phone number, and password when you create an account.",
+              "Business Information: Business name, address, operating hours, and service details for business accounts.",
+              "Booking Information: Appointment details, service preferences, and scheduling data.",
+              "Communication Data: Messages, feedback, and support requests you send to us."
+            ]
+          },
+          "automatic": {
+            "title": "2.2 Information Collected Automatically",
+            "items": [
+              "Device Information: IP address, browser type, operating system, and device identifiers.",
+              "Usage Data: Pages visited, features used, appointment history, and interaction patterns.",
+              "Cookies and Tracking: We use cookies and similar technologies to enhance your experience and analyze usage."
+            ]
+          }
+        },
+        "howWeUse": {
+          "title": "3. How We Use Your Information",
+          "intro": "We use the collected information for the following purposes:",
+          "items": [
+            "Provide, maintain, and improve our appointment scheduling services",
+            "Process and manage bookings, confirmations, and cancellations",
+            "Send appointment reminders, confirmations, and service notifications",
+            "Communicate with you about updates, security alerts, and support",
+            "Analyze usage patterns to improve our platform and user experience",
+            "Prevent fraud, abuse, and ensure the security of our services",
+            "Comply with legal obligations and enforce our terms of service"
+          ]
+        },
+        "sharing": {
+          "title": "4. Information Sharing and Disclosure",
+          "intro": "We do not sell your personal information. We may share your information in the following circumstances:",
+          "items": [
+            "With Service Providers: Third-party vendors who assist in operating our platform (hosting, analytics, communication services).",
+            "Between Users: Appointment details are shared between clients and businesses as necessary to facilitate bookings.",
+            "For Legal Compliance: When required by law, court order, or to protect our rights and safety.",
+            "Business Transfers: In connection with a merger, acquisition, or sale of assets."
+          ]
+        },
+        "security": {
+          "title": "5. Data Security",
+          "content": "We implement industry-standard security measures to protect your personal information, including encryption in transit and at rest, secure authentication protocols, and regular security audits. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security."
+        },
+        "retention": {
+          "title": "6. Data Retention",
+          "content": "We retain your personal information for as long as necessary to provide our services, comply with legal obligations, resolve disputes, and enforce our agreements. When data is no longer needed, we securely delete or anonymize it."
+        },
+        "rights": {
+          "title": "7. Your Rights and Choices",
+          "intro": "Depending on your location, you may have the following rights:",
+          "items": [
+            "Access: Request a copy of your personal information.",
+            "Correction: Request correction of inaccurate or incomplete data.",
+            "Deletion: Request deletion of your personal information, subject to legal requirements.",
+            "Portability: Request your data in a portable format.",
+            "Opt-out: Unsubscribe from marketing communications at any time.",
+            "Withdraw Consent: Where processing is based on consent, you may withdraw it at any time."
+          ],
+          "dataDeletionLink": "Visit our Data Deletion page to submit a deletion request."
+        },
+        "cookies": {
+          "title": "8. Cookies and Tracking Technologies",
+          "intro": "We use cookies and similar technologies to:",
+          "items": [
+            "Keep you signed in and remember your preferences",
+            "Understand how you interact with our services",
+            "Improve performance and user experience",
+            "Provide relevant content and features"
+          ],
+          "note": "You can manage cookie preferences through your browser settings. Note that disabling cookies may affect the functionality of our services."
+        },
+        "thirdParty": {
+          "title": "9. Third-Party Services",
+          "content": "Our platform may integrate with third-party services (such as authentication providers, payment processors, and communication services). These services have their own privacy policies, and we encourage you to review them. We are not responsible for the privacy practices of third-party services."
+        },
+        "children": {
+          "title": "10. Children's Privacy",
+          "content": "Our Service is not intended for children under 16 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately."
+        },
+        "international": {
+          "title": "11. International Data Transfers",
+          "content": "Your information may be transferred to and processed in countries other than your country of residence. We ensure appropriate safeguards are in place to protect your information in accordance with applicable data protection laws."
+        },
+        "changes": {
+          "title": "12. Changes to This Policy",
+          "content": "We may update this Privacy Policy from time to time. We will notify you of material changes by posting the updated policy on our website or through other communication channels. Your continued use of the Service after changes become effective constitutes acceptance of the modified policy."
+        },
+        "contact": {
+          "title": "13. Contact Us",
+          "content": "If you have questions about this Privacy Policy or our data practices, please contact us at privacy@slootea.com."
+        }
+      }
     }
   }
 }

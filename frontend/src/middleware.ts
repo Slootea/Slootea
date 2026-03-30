@@ -6,7 +6,9 @@ import { locales, defaultLocale, Locale } from "@/i18n/config";
 const isPublicRoute = createRouteMatcher([
   "/",
   "/en",
+  "/en/(.*)",
   "/tr",
+  "/tr/(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/book(.*)",
@@ -60,6 +62,13 @@ export default clerkMiddleware(async (auth, request) => {
       sameSite: "lax",
     });
     return response;
+  }
+
+  // Redirect old /terms and /privacy to localized versions
+  if (pathname === "/terms" || pathname === "/privacy") {
+    const localeCookie = request.cookies.get("NEXT_LOCALE")?.value as Locale | undefined;
+    const targetLocale = localeCookie && locales.includes(localeCookie) ? localeCookie : defaultLocale;
+    return NextResponse.redirect(new URL(`/${targetLocale}${pathname}`, request.url), 301);
   }
 
   // Check if path starts with a locale and sync the cookie
