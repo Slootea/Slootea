@@ -75,7 +75,8 @@
       "features": "Özellikler",
       "howItWorks": "Nasıl Çalışır",
       "testimonials": "Referanslar",
-      "pricing": "Fiyatlandırma"
+      "pricing": "Fiyatlandırma",
+      "blog": "Blog"
     },
     "hero": {
       "imagePlaceholder": "Panel Önizleme Görseli"
@@ -1897,5 +1898,14 @@
         }
       }
     }
+  },
+  "blog": {
+    "title": "Blog",
+    "description": "Randevu tabanlı işletmenizi yönetmek için ipuçları, içgörüler ve en iyi uygulamalar.",
+    "backToHome": "Ana Sayfaya Dön",
+    "backToBlog": "Bloga Dön",
+    "readMore": "Devamını oku",
+    "noPosts": "Henüz blog yazısı yok. Yakında tekrar kontrol edin!",
+    "relatedPosts": "İlgili Yazılar"
   }
 }

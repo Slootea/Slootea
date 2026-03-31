@@ -75,7 +75,8 @@
       "features": "Features",
       "howItWorks": "How It Works",
       "testimonials": "Testimonials",
-      "pricing": "Pricing"
+      "pricing": "Pricing",
+      "blog": "Blog"
     },
     "hero": {
       "imagePlaceholder": "Dashboard Preview Image"
@@ -1910,5 +1911,14 @@
         }
       }
     }
+  },
+  "blog": {
+    "title": "Blog",
+    "description": "Tips, insights, and best practices for managing your appointment-based business.",
+    "backToHome": "Back to Home",
+    "backToBlog": "Back to Blog",
+    "readMore": "Read more",
+    "noPosts": "No blog posts available yet. Check back soon!",
+    "relatedPosts": "Related Posts"
   }
 }
