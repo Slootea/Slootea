@@ -1070,8 +1070,9 @@ export class AppointmentsService {
     }
 
     // Filter to specific provider if requested
+    // Support both clerkId (string) and internal id (UUID) for filtering
     const providerIds = providerId 
-      ? providers.filter(p => p.id === providerId).map(p => p.id)
+      ? providers.filter(p => p.clerkId === providerId || p.id === providerId).map(p => p.id)
       : providers.map(p => p.id);
 
     if (providerIds.length === 0) {

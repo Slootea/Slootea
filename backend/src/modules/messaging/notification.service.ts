@@ -128,6 +128,7 @@ export class NotificationService {
       timezone: data.timezone,
       providerName: data.providerName,
       organizationName: data.organizationName,
+      appointmentLink: data.appointmentLink,
       confirmationLink: data.confirmationLink,
       cancellationReason: data.cancellationReason,
     };

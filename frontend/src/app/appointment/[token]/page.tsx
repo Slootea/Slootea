@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { format, parseISO, addMonths, startOfMonth } from "date-fns";
+import { format, parseISO, addMonths, startOfDay, isBefore, isAfter, addDays } from "date-fns";
 import { enUS, tr } from "date-fns/locale";
 import { useTranslations } from "next-intl";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -81,8 +81,9 @@ export default function AppointmentManagementPage() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
   const [loadingDates, setLoadingDates] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   const fetchAppointment = useCallback(async () => {
     try {
@@ -104,39 +105,57 @@ export default function AppointmentManagementPage() {
     fetchAppointment();
   }, [fetchAppointment]);
 
-  // Load available dates when reschedule dialog opens
-  useEffect(() => {
-    const loadAvailableDates = async () => {
-      if (!showRescheduleDialog || !appointment) return;
-      
-      setLoadingDates(true);
-      try {
-        const currentMonth = format(new Date(), "yyyy-MM");
-        const nextMonth = format(addMonths(new Date(), 1), "yyyy-MM");
-        
-        const [currentRes, nextRes] = await Promise.all([
-          publicApi.getAvailableDatesForReschedule(token, currentMonth),
-          publicApi.getAvailableDatesForReschedule(token, nextMonth),
-        ]);
-        
-        setAvailableDates([
-          ...currentRes.data.availableDates,
-          ...nextRes.data.availableDates,
-        ]);
-      } catch (err) {
-        console.error("Failed to load available dates", err);
-      } finally {
-        setLoadingDates(false);
-      }
-    };
+  // Fetch available dates for a given month
+  const fetchAvailableDates = useCallback(async (month: Date) => {
+    if (!appointment) return;
     
-    loadAvailableDates();
-  }, [showRescheduleDialog, appointment, token]);
+    setLoadingDates(true);
+    try {
+      const currentMonthStr = format(month, "yyyy-MM");
+      const nextMonthStr = format(addMonths(month, 1), "yyyy-MM");
+      
+      // Fetch both current and next month in parallel for calendar overflow days
+      const [currentRes, nextRes] = await Promise.all([
+        publicApi.getAvailableDatesForReschedule(token, currentMonthStr),
+        publicApi.getAvailableDatesForReschedule(token, nextMonthStr),
+      ]);
+      
+      // Merge both months' available dates
+      const allDates = new Set([
+        ...(currentRes.data.availableDates || []),
+        ...(nextRes.data.availableDates || []),
+      ]);
+      setAvailableDates(allDates);
+    } catch (err) {
+      console.error("Failed to load available dates", err);
+      setAvailableDates(new Set());
+    } finally {
+      setLoadingDates(false);
+    }
+  }, [token, appointment]);
+
+  // Load available dates when reschedule dialog opens or month changes
+  useEffect(() => {
+    if (showRescheduleDialog && appointment) {
+      fetchAvailableDates(currentMonth);
+    }
+  }, [showRescheduleDialog, appointment, currentMonth, fetchAvailableDates]);
+
+  // Reset reschedule state when dialog closes
+  useEffect(() => {
+    if (!showRescheduleDialog) {
+      setSelectedDate(undefined);
+      setSelectedSlot(null);
+      setAvailableSlots([]);
+      setAvailableDates(new Set());
+      setCurrentMonth(new Date());
+    }
+  }, [showRescheduleDialog]);
 
   // Load slots when date is selected
   useEffect(() => {
     const loadSlots = async () => {
-      if (!selectedDate) return;
+      if (!selectedDate || !showRescheduleDialog) return;
       
       setLoadingSlots(true);
       setSelectedSlot(null);
@@ -147,7 +166,7 @@ export default function AppointmentManagementPage() {
       } catch (err) {
         console.error("Failed to load slots", err);
         toast({
-          title: "Failed to load time slots",
+          title: t('failedToLoadSlots'),
           variant: "destructive",
         });
       } finally {
@@ -165,15 +184,15 @@ export default function AppointmentManagementPage() {
       setConfirmed(true);
       setShowConfirmDialog(false);
       toast({
-        title: t('confirmed') || "Attendance Confirmed",
-        description: t('confirmSuccess') || "Thank you for confirming your appointment!",
+        title: t('confirmed'),
+        description: t('confirmSuccess'),
       });
       await fetchAppointment();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast({
-        title: common('error') || "Error",
-        description: error.response?.data?.message || "Failed to confirm appointment",
+        title: common('error'),
+        description: error.response?.data?.message || t('confirmSuccess'),
         variant: "destructive",
       });
     } finally {
@@ -186,16 +205,16 @@ export default function AppointmentManagementPage() {
     try {
       await publicApi.cancelAppointmentByToken(token, cancelReason || undefined);
       toast({
-        title: "Appointment Cancelled",
-        description: "Your appointment has been cancelled.",
+        title: t('cancelled'),
+        description: t('cancelledSuccess'),
       });
       setShowCancelDialog(false);
       await fetchAppointment();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to cancel appointment",
+        title: common('error'),
+        description: error.response?.data?.message || t('failedToCancel'),
         variant: "destructive",
       });
     } finally {
@@ -212,18 +231,16 @@ export default function AppointmentManagementPage() {
         startTime: selectedSlot,
       });
       toast({
-        title: "Appointment Rescheduled",
-        description: "Your appointment has been updated to the new time.",
+        title: t('rescheduled'),
+        description: t('rescheduledDescription'),
       });
       setShowRescheduleDialog(false);
-      setSelectedDate(undefined);
-      setSelectedSlot(null);
       await fetchAppointment();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to reschedule appointment",
+        title: common('error'),
+        description: error.response?.data?.message || t('failedToReschedule'),
         variant: "destructive",
       });
     } finally {
@@ -231,10 +248,9 @@ export default function AppointmentManagementPage() {
     }
   };
 
-  const isDateAvailable = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    return availableDates.includes(dateStr);
-  };
+  // Calculate date range for calendar
+  const today = startOfDay(new Date());
+  const maxDate = addDays(today, 60); // Allow booking up to 60 days ahead
 
   if (loading) {
     return (
@@ -257,7 +273,7 @@ export default function AppointmentManagementPage() {
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Invalid Link</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('invalidLink')}</h1>
             <p className="text-muted-foreground">{error}</p>
           </CardContent>
         </Card>
@@ -280,20 +296,20 @@ export default function AppointmentManagementPage() {
           {isCancelled ? (
             <>
               <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Appointment Cancelled</CardTitle>
-              <CardDescription>This appointment has been cancelled.</CardDescription>
+              <CardTitle className="text-2xl">{t('cancelled')}</CardTitle>
+              <CardDescription>{t('cancelledDescription')}</CardDescription>
             </>
           ) : isCompleted ? (
             <>
               <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Appointment Completed</CardTitle>
-              <CardDescription>Thank you for your visit!</CardDescription>
+              <CardTitle className="text-2xl">{t('completed')}</CardTitle>
+              <CardDescription>{t('completedDescription')}</CardDescription>
             </>
           ) : (
             <>
               <CalendarIcon className="h-16 w-16 text-blue-500 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Your Appointment</CardTitle>
-              <CardDescription>View and manage your appointment details</CardDescription>
+              <CardTitle className="text-2xl">{t('pageTitle')}</CardTitle>
+              <CardDescription>{t('pageDescription')}</CardDescription>
             </>
           )}
         </CardHeader>
@@ -373,10 +389,10 @@ export default function AppointmentManagementPage() {
                 <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
-                    Confirmation Required
+                    {t('confirmationRequired')}
                   </p>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                    Please confirm that you will attend this appointment.
+                    {t('pleaseConfirm')}
                   </p>
                   <Button
                     className="mt-3"
@@ -384,7 +400,7 @@ export default function AppointmentManagementPage() {
                     onClick={() => setShowConfirmDialog(true)}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Confirm Attendance
+                    {t('confirmAttendance')}
                   </Button>
                 </div>
               </div>
@@ -401,7 +417,7 @@ export default function AppointmentManagementPage() {
                   onClick={() => setShowRescheduleDialog(true)}
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
-                  Reschedule Appointment
+                  {t('reschedule')}
                 </Button>
               )}
               
@@ -412,13 +428,13 @@ export default function AppointmentManagementPage() {
                   onClick={() => setShowCancelDialog(true)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Cancel Appointment
+                  {t('cancel')}
                 </Button>
               )}
 
               {!appointment.canModify && appointment.canCancel && (
                 <p className="text-xs text-center text-muted-foreground">
-                  Appointments can only be rescheduled at least {appointment.cancellationPolicy || '24 hours'} in advance.
+                  {t('modificationPolicy', { hours: '24' })}
                 </p>
               )}
             </div>
@@ -427,7 +443,7 @@ export default function AppointmentManagementPage() {
           {/* Cancellation Policy */}
           {appointment.cancellationPolicy && !isCancelled && !isCompleted && (
             <div className="text-xs text-center text-muted-foreground border-t pt-4">
-              <p className="font-medium">Cancellation Policy</p>
+              <p className="font-medium">{t('cancellationPolicy')}</p>
               <p>{appointment.cancellationPolicy}</p>
             </div>
           )}
@@ -438,27 +454,27 @@ export default function AppointmentManagementPage() {
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Your Attendance</AlertDialogTitle>
+            <AlertDialogTitle>{t('confirmAttendanceTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Please confirm that you will attend your appointment on{" "}
+              {t('confirmAttendanceDescription')}{" "}
               <strong>
-                {appointment && format(parseISO(appointment.startTime), "EEEE, MMMM d 'at' h:mm a")}
+                {appointment && format(parseISO(appointment.startTime), "EEEE, MMMM d 'at' h:mm a", { locale: dateLocale })}
               </strong>
               .
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{common('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmAttendance} disabled={confirming}>
               {confirming ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Confirming...
+                  {t('confirming')}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Yes, I&apos;ll Attend
+                  {t('yesAttend')}
                 </>
               )}
             </AlertDialogAction>
@@ -468,40 +484,70 @@ export default function AppointmentManagementPage() {
 
       {/* Reschedule Dialog */}
       <Dialog open={showRescheduleDialog} onOpenChange={setShowRescheduleDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Reschedule Appointment</DialogTitle>
+            <DialogTitle>{t('rescheduleTitle')}</DialogTitle>
             <DialogDescription>
-              Select a new date and time for your appointment.
+              {t('rescheduleDescription')}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            {loadingDates ? (
-              <div className="flex justify-center p-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
+            {/* Date Selection */}
+            <div>
+              <Label className="mb-2 block">{t('selectDate') || 'Select Date'}</Label>
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
-                disabled={(date) => !isDateAvailable(date)}
+                onSelect={(date) => {
+                  setSelectedDate(date);
+                  setSelectedSlot(null);
+                }}
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
                 locale={dateLocale}
-                className="rounded-md border mx-auto"
+                disabled={(date) => {
+                  // Disable past dates and dates beyond max booking window
+                  if (isBefore(date, today) || isAfter(date, maxDate)) {
+                    return true;
+                  }
+                  // Disable dates that have no available slots
+                  const dateStr = format(date, "yyyy-MM-dd");
+                  return !availableDates.has(dateStr);
+                }}
+                modifiers={{
+                  available: (date) => {
+                    if (isBefore(date, today) || isAfter(date, maxDate)) return false;
+                    const dateStr = format(date, "yyyy-MM-dd");
+                    return availableDates.has(dateStr);
+                  },
+                }}
+                modifiersClassNames={{
+                  available: "bg-primary/10 font-semibold text-primary hover:bg-primary/20",
+                }}
+                className="rounded-md border w-full"
               />
-            )}
+              {loadingDates && (
+                <div className="flex items-center justify-center text-sm text-muted-foreground mt-2">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('loadingAvailability') || 'Loading availability...'}
+                </div>
+              )}
+            </div>
             
+            {/* Time Slots */}
             {selectedDate && (
               <div className="space-y-2">
-                <Label>Available Times</Label>
+                <Label>
+                  {t('availableTimes')} - {format(selectedDate, "d MMM yyyy", { locale: dateLocale })}
+                </Label>
                 {loadingSlots ? (
                   <div className="flex justify-center p-4">
                     <Loader2 className="h-6 w-6 animate-spin" />
                   </div>
                 ) : availableSlots.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    No available slots for this date.
+                    {t('noSlotsAvailable')}
                   </p>
                 ) : (
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
@@ -513,7 +559,7 @@ export default function AppointmentManagementPage() {
                         onClick={() => setSelectedSlot(slot.startTime)}
                         className="text-xs"
                       >
-                        {format(parseISO(slot.startTime), "h:mm a")}
+                        {format(parseISO(slot.startTime), "HH:mm", { locale: dateLocale })}
                       </Button>
                     ))}
                   </div>
@@ -524,7 +570,7 @@ export default function AppointmentManagementPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRescheduleDialog(false)}>
-              Cancel
+              {common('cancel')}
             </Button>
             <Button
               onClick={handleReschedule}
@@ -533,10 +579,10 @@ export default function AppointmentManagementPage() {
               {rescheduling ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Rescheduling...
+                  {t('rescheduling')}
                 </>
               ) : (
-                "Confirm New Time"
+                t('confirmNewTime')
               )}
             </Button>
           </DialogFooter>
@@ -547,17 +593,17 @@ export default function AppointmentManagementPage() {
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+            <AlertDialogTitle>{t('cancelTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel your appointment? This action cannot be undone.
+              {t('cancelDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
           <div className="space-y-2">
-            <Label htmlFor="cancelReason">Reason (optional)</Label>
+            <Label htmlFor="cancelReason">{t('cancelReasonLabel')}</Label>
             <Textarea
               id="cancelReason"
-              placeholder="Please let us know why you're cancelling..."
+              placeholder={t('cancelReasonPlaceholder')}
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               rows={3}
@@ -565,7 +611,7 @@ export default function AppointmentManagementPage() {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep Appointment</AlertDialogCancel>
+            <AlertDialogCancel>{t('keepAppointment')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancel}
               disabled={cancelling}
@@ -574,10 +620,10 @@ export default function AppointmentManagementPage() {
               {cancelling ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Cancelling...
+                  {t('cancelling')}
                 </>
               ) : (
-                "Cancel Appointment"
+                t('cancel')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

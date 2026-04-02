@@ -88,6 +88,9 @@ export interface AppointmentNotificationData {
   timezone?: string;
   providerName?: string;
   organizationName?: string;
+  /** Link to manage/view the appointment */
+  appointmentLink?: string;
+  /** Link to confirm the appointment */
   confirmationLink?: string;
   cancellationReason?: string;
 }
@@ -483,7 +486,7 @@ export class WhatsAppService {
           { type: 'text', text: formattedTime },
           { type: 'text', text: data.providerName || '-' },
           { type: 'text', text: data.organizationName || '-' },
-          { type: 'text', text: data.confirmationLink || '-' },
+          { type: 'text', text: data.appointmentLink || '-' },
           { type: 'text', text: data.confirmationLink || '-' },
         ],
       },

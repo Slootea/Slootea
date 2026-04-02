@@ -395,7 +395,7 @@ export class PublicController {
 
     // Get available slots for the same service and provider
     const slots = await this.appointmentsService.getAvailableSlotsForOrganization(
-      appointment.serviceOption?.organizationId || '',
+      appointment.organizationId,
       appointment.serviceOptionId,
       date,
       appointment.user?.clerkId, // Keep same provider
@@ -425,7 +425,7 @@ export class PublicController {
 
     // Get available dates for the same service and provider
     const availableDates = await this.appointmentsService.getAvailableDatesForOrganization(
-      appointment.serviceOption?.organizationId || '',
+      appointment.organizationId,
       appointment.serviceOptionId,
       month,
       appointment.user?.clerkId, // Keep same provider
