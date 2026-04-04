@@ -1,68 +1,77 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 import { getBlogPosts, getAllBlogSlugs } from '@/lib/blog';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com';
+
+export async function generateSitemaps() {
+  // Generate sitemap IDs: 0 = static pages, 1 = blog posts
+  return [{ id: 0 }, { id: 1 }];
+}
+
+export default async function sitemap(props: {
+  id: Promise<string>;
+}): Promise<MetadataRoute.Sitemap> {
+  const id = Number(await props.id);
   const lastModified = new Date();
 
-  // Static pages
-  const staticPages = [
-    {
-      url: siteUrl,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 1,
-    },
-    {
-      url: `${siteUrl}/en`,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 1,
-    },
-    {
-      url: `${siteUrl}/tr`,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 1,
-    },
-    {
-      url: `${siteUrl}/en/blog`,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${siteUrl}/tr/blog`,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${siteUrl}/privacy`,
-      lastModified,
-      changeFrequency: 'monthly' as const,
-      priority: 0.3,
-    },
-    {
-      url: `${siteUrl}/terms`,
-      lastModified,
-      changeFrequency: 'monthly' as const,
-      priority: 0.3,
-    },
-  ];
+  // Sitemap 0: Static pages
+  if (id === 0) {
+    return [
+      {
+        url: siteUrl,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 1,
+      },
+      {
+        url: `${siteUrl}/en`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 1,
+      },
+      {
+        url: `${siteUrl}/tr`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 1,
+      },
+      {
+        url: `${siteUrl}/en/blog`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      },
+      {
+        url: `${siteUrl}/tr/blog`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      },
+      {
+        url: `${siteUrl}/privacy`,
+        lastModified,
+        changeFrequency: 'monthly',
+        priority: 0.3,
+      },
+      {
+        url: `${siteUrl}/terms`,
+        lastModified,
+        changeFrequency: 'monthly',
+        priority: 0.3,
+      },
+    ];
+  }
 
-  // Blog posts
+  // Sitemap 1: Blog posts
   const blogSlugs = getAllBlogSlugs();
-  const blogPages = blogSlugs.map(({ slug, locale }) => {
+  return blogSlugs.map(({ slug, locale }) => {
     const posts = getBlogPosts(locale);
-    const post = posts.find(p => p.slug === slug);
+    const post = posts.find((p) => p.slug === slug);
     return {
       url: `${siteUrl}/${locale}/blog/${slug}`,
       lastModified: post ? new Date(post.date) : lastModified,
-      changeFrequency: 'monthly' as const,
+      changeFrequency: 'monthly',
       priority: 0.7,
     };
   });
-
-  return [...staticPages, ...blogPages];
 }
