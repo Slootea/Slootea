@@ -20,7 +20,8 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+  // No border - use background shift for header
+  <thead ref={ref} className={cn("bg-surface-container-low", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -30,7 +31,7 @@ const TableBody = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
-    className={cn("[&_tr:last-child]:border-0", className)}
+    className={cn("", className)}
     {...props}
   />
 ))
@@ -43,7 +44,8 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      // Use surface tonal layer instead of border
+      "bg-surface-container font-medium",
       className
     )}
     {...props}
@@ -58,7 +60,8 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      // No border - use hover background shift per design spec "breathable list"
+      "transition-colors hover:bg-surface-container-low data-[state=selected]:bg-surface-container",
       className
     )}
     {...props}

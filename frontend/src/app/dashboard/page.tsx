@@ -227,8 +227,8 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {bookingLinks.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground mb-4">
                     {t("quickShare.noLinks")}
                   </p>
                   <Link href="/dashboard/links">
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                   {bookingLinks.slice(0, 4).map((link) => (
                     <div
                       key={link.id}
-                      className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      className="group flex items-center justify-between p-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm truncate">
@@ -262,8 +262,8 @@ export default function DashboardPage() {
                       </Button>
                     </div>
                   ))}
-                  <Link href="/dashboard/links" className="block pt-2">
-                    <Button variant="outline" className="w-full" size="sm">
+                  <Link href="/dashboard/links" className="block pt-3">
+                    <Button variant="ghost" className="w-full" size="sm">
                       {t("quickShare.manageLinks")}
                     </Button>
                   </Link>
@@ -401,8 +401,8 @@ function NextClientCard({ appointment, t, tAppointments }: { appointment: Appoin
 
         {/* Notes Section */}
         {appointment.notes && (
-          <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-dashed">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <div className="mt-6 p-4 rounded-xl bg-surface-container-low">
+            <p className="label-category mb-2">
               {t("nextClient.notes")}
             </p>
             <p className="text-sm">{appointment.notes}</p>
@@ -416,15 +416,15 @@ function NextClientCard({ appointment, t, tAppointments }: { appointment: Appoin
 // No Upcoming Appointments Card
 function NoUpcomingCard({ hasAppointments, t }: { hasAppointments: boolean; t: TranslationFunction }) {
   return (
-    <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <Card className="overflow-hidden bg-gradient-to-br from-surface to-surface-container-low">
       <CardContent className="p-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-container mb-4">
           <Calendar className="h-8 w-8 text-primary" />
         </div>
-        <h3 className="text-xl font-semibold mb-2">
+        <h3 className="text-xl font-display font-semibold mb-2">
           {hasAppointments ? t("noUpcoming.allDone") : t("noUpcoming.noAppointments")}
         </h3>
-        <p className="text-muted-foreground mb-4">
+        <p className="text-muted-foreground mb-6">
           {hasAppointments
             ? t("noUpcoming.allDoneDesc")
             : t("noUpcoming.noAppointmentsDesc")}
@@ -440,7 +440,7 @@ function NoUpcomingCard({ hasAppointments, t }: { hasAppointments: boolean; t: T
   );
 }
 
-// Schedule Item Component
+// Schedule Item Component - No divider lines per design spec
 function ScheduleItem({ appointment, tAppointments }: { appointment: Appointment; tAppointments: TranslationFunction }) {
   const startTime = parseISO(appointment.startTime);
   const isPast = new Date() > parseISO(appointment.endTime);
@@ -449,10 +449,10 @@ function ScheduleItem({ appointment, tAppointments }: { appointment: Appointment
 
   return (
     <div
-      className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
+      className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
         isPast || isCompleted || isCancelled
-          ? "bg-muted/30 opacity-60"
-          : "bg-muted/50 hover:bg-muted"
+          ? "bg-surface-container-low/50 opacity-60"
+          : "bg-surface-container-low hover:bg-surface-container"
       }`}
     >
       {/* Time Column */}
@@ -461,8 +461,8 @@ function ScheduleItem({ appointment, tAppointments }: { appointment: Appointment
         <p className="text-xs text-muted-foreground">{format(startTime, "a")}</p>
       </div>
 
-      {/* Divider */}
-      <div className="flex-shrink-0 w-px h-10 bg-border" />
+      {/* Visual separator - subtle background shift instead of line */}
+      <div className="flex-shrink-0 w-1 h-10 rounded-full bg-surface-variant/30" />
 
       {/* Client Info */}
       <div className="flex-1 min-w-0">
@@ -480,7 +480,7 @@ function ScheduleItem({ appointment, tAppointments }: { appointment: Appointment
   );
 }
 
-// Enhanced Stat Card
+// Enhanced Stat Card - Following design system
 function StatCard({
   title,
   value,
@@ -495,21 +495,21 @@ function StatCard({
   gradient: string;
 }) {
   return (
-    <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
+    <Card className="relative overflow-hidden group hover:shadow-ambient transition-all duration-300">
       <div
         className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity`}
       />
-      <CardContent className="p-4 lg:p-6">
+      <CardContent className="p-5 lg:p-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="label-category">
               {title}
             </p>
-            <p className="text-2xl lg:text-3xl font-bold mt-1">{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+            <p className="text-2xl lg:text-3xl font-display font-bold mt-2 tracking-tight">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
           </div>
           <div
-            className={`p-2 rounded-lg bg-gradient-to-br ${gradient} text-white`}
+            className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-ambient-sm`}
           >
             {icon}
           </div>
@@ -519,20 +519,20 @@ function StatCard({
   );
 }
 
-// Enhanced Status Badge
+// Enhanced Status Badge - Using design system badge variants
 function StatusBadge({ status, size = "default", tAppointments }: { status: string; size?: "sm" | "default"; tAppointments: TranslationFunction }) {
   const config: Record<
     string,
-    { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }
+    { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "warning" | "success"; icon: React.ReactNode }
   > = {
     pending_confirmation: {
       label: tAppointments("status.pending"),
-      variant: "outline",
+      variant: "warning",
       icon: <AlertCircle className="h-3 w-3" />,
     },
     confirmed: {
       label: tAppointments("status.confirmed"),
-      variant: "default",
+      variant: "success",
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     cancelled: {
@@ -557,9 +557,9 @@ function StatusBadge({ status, size = "default", tAppointments }: { status: stri
   return (
     <Badge
       variant={variant}
-      className={size === "sm" ? "text-xs px-2 py-0.5" : ""}
+      className={size === "sm" ? "text-xs px-2.5 py-1" : ""}
     >
-      <span className="flex items-center gap-1">
+      <span className="flex items-center gap-1.5">
         {icon}
         {label}
       </span>

@@ -13,13 +13,13 @@ export function PricingSection() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <section id="pricing" className="py-24 lg:py-32 bg-muted/30">
+    <section id="pricing" className="py-24 lg:py-32 bg-surface-container-lowest">
       <div className="container px-6 mx-auto">
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+          <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full bg-surface-container-low">
             {t("badge")}
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6">
             {t("title")}
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed mb-8">
@@ -27,13 +27,13 @@ export function PricingSection() {
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-4 p-1.5 bg-muted rounded-full">
+          <div className="inline-flex items-center gap-4 p-1.5 bg-surface-container-low rounded-full">
             <button
               onClick={() => setIsYearly(false)}
               className={cn(
                 "px-6 py-2 rounded-full text-sm font-medium transition-all",
                 !isYearly
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-surface text-foreground shadow-ambient-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -44,7 +44,7 @@ export function PricingSection() {
               className={cn(
                 "px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
                 isYearly
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-surface text-foreground shadow-ambient-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -59,15 +59,15 @@ export function PricingSection() {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Standard Plan */}
-          <div className="relative bg-background rounded-2xl border border-border/50 p-8 hover:border-primary/30 hover:shadow-lg transition-all">
+          <div className="relative bg-surface rounded-2xl shadow-ambient-sm p-8 hover:shadow-ambient transition-all">
             <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-2">{t("standard.name")}</h3>
+              <h3 className="text-xl font-display font-semibold mb-2">{t("standard.name")}</h3>
               <p className="text-muted-foreground text-sm">{t("standard.description")}</p>
             </div>
             
             <div className="mb-8">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">
+                <span className="text-4xl font-display font-bold">
                   {isYearly ? t("standard.yearlyPrice") : t("standard.price")}
                 </span>
                 <span className="text-muted-foreground">
@@ -94,21 +94,21 @@ export function PricingSection() {
           </div>
 
           {/* Enterprise Plan */}
-          <div className="relative bg-background rounded-2xl border-2 border-primary/50 p-8 hover:shadow-lg transition-all">
+          <div className="relative bg-surface rounded-2xl shadow-ambient p-8 ring-2 ring-primary/30 hover:ring-primary/50 transition-all">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="px-4 py-1 text-xs font-medium bg-primary text-primary-foreground">
+              <Badge className="px-4 py-1 text-xs font-medium gradient-primary text-primary-foreground">
                 {t("enterprise.name")}
               </Badge>
             </div>
             
             <div className="mb-6 pt-2">
-              <h3 className="text-xl font-semibold mb-2">{t("enterprise.name")}</h3>
+              <h3 className="text-xl font-display font-semibold mb-2">{t("enterprise.name")}</h3>
               <p className="text-muted-foreground text-sm">{t("enterprise.description")}</p>
             </div>
             
             <div className="mb-8">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{t("enterprise.price")}</span>
+                <span className="text-4xl font-display font-bold">{t("enterprise.price")}</span>
               </div>
             </div>
 
@@ -122,7 +122,7 @@ export function PricingSection() {
             </ul>
 
             <a href="mailto:info@slootea.com" className="block">
-              <Button variant="outline" className="w-full h-12 text-base font-medium border-primary/50 hover:bg-primary/5">
+              <Button variant="tertiary" className="w-full h-12 text-base font-medium">
                 <Mail className="mr-2 h-4 w-4" />
                 {t("enterprise.cta")}
               </Button>

@@ -82,14 +82,14 @@ export default function BookingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30 p-4 md:p-6">
+      <div className="min-h-screen bg-background p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           <Skeleton className="h-12 w-64 mb-6" />
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
                 <CardContent className="p-4 md:p-6">
-                  <Skeleton className="aspect-video mb-4" />
+                  <Skeleton className="aspect-video mb-4 rounded-xl" />
                   <Skeleton className="h-6 w-32 mb-2" />
                   <Skeleton className="h-4 w-full" />
                 </CardContent>
@@ -103,13 +103,13 @@ export default function BookingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4 md:p-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-6">
         <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center">
-            <div className="text-red-500 mb-4">
-              <Calendar className="h-12 w-12 mx-auto" />
+          <CardContent className="p-8 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-destructive-container mb-4">
+              <Calendar className="h-8 w-8 text-destructive" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">{t('linkNotAvailable')}</h2>
+            <h2 className="text-xl font-display font-semibold mb-2">{t('linkNotAvailable')}</h2>
             <p className="text-muted-foreground">{error}</p>
           </CardContent>
         </Card>
@@ -121,15 +121,15 @@ export default function BookingPage() {
   const organizationId = bookingLink?.organizationId;
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-3">
             {bookingLink?.user?.businessName || t('title')}
           </h1>
           {viewMode === 'services' && (
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               {t('selectServiceToContinue')}
             </p>
           )}
@@ -138,7 +138,7 @@ export default function BookingPage() {
         {/* AI Assistant View */}
         {viewMode === 'ai-assistant' && aiAssistantEnabled && organizationId && (
           <Card className="max-w-2xl mx-auto">
-            <CardContent className="p-4 md:p-6">
+            <CardContent className="p-5 md:p-8">
               <AiServiceAssistant
                 organizationId={organizationId}
                 services={bookingLink?.serviceOptions || []}
@@ -155,7 +155,7 @@ export default function BookingPage() {
           <>
             {/* Back to AI Assistant button */}
             {aiAssistantEnabled && (
-              <div className="mb-4 md:mb-6">
+              <div className="mb-6 md:mb-8">
                 <Button
                   variant="ghost"
                   onClick={handleBackToAssistant}
@@ -170,44 +170,44 @@ export default function BookingPage() {
             {/* Service Options Grid */}
             {bookingLink?.serviceOptions.length === 0 ? (
               <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">
+                <CardContent className="py-16 text-center">
+                  <p className="text-muted-foreground text-lg">
                     {t('noServicesAvailable')}
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                 {bookingLink?.serviceOptions.map((option) => (
                   <Card
                     key={option.id}
-                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    className="cursor-pointer group hover:shadow-ambient transition-all duration-300 overflow-hidden"
                     onClick={() => handleSelectService(option)}
                   >
                     <CardContent className="p-0">
                       {option.imageBase64 ? (
-                        <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+                        <div className="aspect-video bg-surface-container-low rounded-t-xl overflow-hidden">
                           <img
                             src={option.imageBase64}
                             alt={option.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
                       ) : (
-                        <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
-                          <Image className="h-12 w-12 text-muted-foreground/50" />
+                        <div className="aspect-video bg-surface-container-low rounded-t-xl flex items-center justify-center">
+                          <Image className="h-12 w-12 text-muted-foreground/30" />
                         </div>
                       )}
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg mb-1">{option.title}</h3>
+                      <div className="p-5">
+                        <h3 className="font-display font-semibold text-lg mb-1.5">{option.title}</h3>
                         {option.description && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                             {option.description}
                           </p>
                         )}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4 mr-1" />
+                          <div className="flex items-center text-sm text-muted-foreground bg-surface-container-low px-3 py-1.5 rounded-lg">
+                            <Clock className="h-4 w-4 mr-1.5" />
                             {option.duration} {t('minutes')}
                           </div>
                           {option.showPrice && (
@@ -227,11 +227,12 @@ export default function BookingPage() {
 
             {/* Use AI Assistant button at bottom */}
             {aiAssistantEnabled && (
-              <div className="mt-6 md:mt-8 text-center">
+              <div className="mt-8 md:mt-10 text-center">
                 <Button
                   variant="outline"
                   onClick={handleBackToAssistant}
                   className="gap-2"
+                  size="lg"
                 >
                   <Sparkles className="h-4 w-4" />
                   {t('aiAssistant.needHelp') || 'Need help choosing? Ask our AI Assistant'}

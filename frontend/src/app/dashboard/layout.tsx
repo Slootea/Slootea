@@ -120,11 +120,11 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        {/* Header */}
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-50 bg-background">
+        {/* Header - Glass morphism effect per design spec */}
+        <header className="flex h-16 shrink-0 items-center gap-3 px-6 sticky top-0 z-50 glass">
           <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <h1 className="text-xl font-semibold">
+          <div className="h-6 w-px bg-surface-variant/50" />
+          <h1 className="text-lg font-display font-semibold tracking-tight">
             {navItems.find((item) => item.href === pathname)?.label || t("dashboard")}
           </h1>
           <div className="ml-auto">
@@ -133,18 +133,18 @@ export default function DashboardLayout({
               showName
               appearance={{
                 elements: {
-                  userButtonTrigger: "flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 hover:bg-[var(--muted)] transition-colors",
+                  userButtonTrigger: "flex items-center gap-2 rounded-lg bg-surface-container-low px-3 py-2 hover:bg-surface-container transition-colors",
                   userButtonBox: "flex-row-reverse",
-                  userButtonOuterIdentifier: "text-sm font-medium text-[var(--foreground)]",
-                  avatarBox: "h-6 w-6",
+                  userButtonOuterIdentifier: "text-sm font-medium text-foreground",
+                  avatarBox: "h-7 w-7",
                 }
               }}
             />
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-6">{children}</main>
+        {/* Page content with breathing room */}
+        <main className="flex-1 p-6 lg:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

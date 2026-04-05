@@ -372,11 +372,11 @@ export default function AppointmentsPage() {
       )}
 
       {/* Main Appointments List */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-4 border-b bg-muted/30">
+      <Card>
+        <CardHeader className="pb-4 bg-surface-container-low">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <CardTitle className="text-xl font-display font-semibold flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-primary" />
                 {t('allAppointments')}
               </CardTitle>
@@ -397,7 +397,7 @@ export default function AppointmentsPage() {
                 {t('addAppointment')}
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => fetchData(true)}
                 disabled={refreshing}

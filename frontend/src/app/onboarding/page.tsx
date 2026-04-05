@@ -843,7 +843,7 @@ export default function OnboardingPage() {
 
   if (loading || checkingOnboarding || orgLoading || !isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">{tCommon("loading")}</p>
@@ -854,11 +854,11 @@ export default function OnboardingPage() {
 
   if (!currentOrganization) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
             <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-semibold mb-2">No Organization Selected</h2>
+            <h2 className="text-xl font-display font-semibold mb-2">No Organization Selected</h2>
             <p className="text-muted-foreground mb-4">
               Please select or create an organization to continue.
             </p>
@@ -872,7 +872,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen bg-background">
       <div className="container max-w-3xl mx-auto py-12 px-4">
         {/* Header */}
         {currentStep !== "complete" && (
@@ -881,7 +881,7 @@ export default function OnboardingPage() {
               <Sparkles className="h-4 w-4" />
               {t("progress.step", { current: currentStepIndex + 1, total: STEPS.length - 1 })}
             </div>
-            <h1 className="text-3xl font-bold mb-2">{t("title")}</h1>
+            <h1 className="text-3xl font-display font-bold mb-2">{t("title")}</h1>
             <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
         )}
@@ -893,12 +893,12 @@ export default function OnboardingPage() {
               <div key={step} className="flex items-center">
                 <div
                   className={`
-                    flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all
+                    flex items-center justify-center w-10 h-10 rounded-full transition-all
                     ${index < currentStepIndex
-                      ? "bg-primary border-primary text-primary-foreground"
+                      ? "gradient-primary text-primary-foreground"
                       : index === currentStepIndex
-                      ? "border-primary text-primary"
-                      : "border-muted-foreground/30 text-muted-foreground/50"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-surface-container-low text-muted-foreground/50"
                     }
                   `}
                 >
@@ -911,7 +911,7 @@ export default function OnboardingPage() {
                 {index < STEPS.length - 2 && (
                   <div
                     className={`w-12 h-0.5 mx-1 transition-colors ${
-                      index < currentStepIndex ? "bg-primary" : "bg-muted-foreground/30"
+                      index < currentStepIndex ? "bg-primary" : "bg-surface-container-highest"
                     }`}
                   />
                 )}
@@ -921,11 +921,11 @@ export default function OnboardingPage() {
         )}
 
         {/* Step Content */}
-        <Card className="shadow-lg">
+        <Card className="shadow-ambient-lg">
           {/* Settings Step */}
           {currentStep === "settings" && (
             <>
-              <CardHeader className="border-b">
+              <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-lg bg-primary/10">
                     <Settings className="h-5 w-5 text-primary" />
@@ -1050,7 +1050,7 @@ export default function OnboardingPage() {
           {/* Services Step - Using Service Options Page UI */}
           {currentStep === "services" && (
             <>
-              <CardHeader className="border-b">
+              <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-lg bg-primary/10">
@@ -1145,7 +1145,7 @@ export default function OnboardingPage() {
           {/* Availability Step - Using Availability Page UI */}
           {currentStep === "availability" && (
             <>
-              <CardHeader className="border-b">
+              <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-lg bg-primary/10">
                     <Calendar className="h-5 w-5 text-primary" />
@@ -1217,7 +1217,7 @@ export default function OnboardingPage() {
           {/* Notifications Step - WhatsApp/Meta Connection */}
           {currentStep === "notifications" && (
             <>
-              <CardHeader className="border-b">
+              <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-lg bg-green-100 dark:bg-green-950">
                     <MessageSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -1229,7 +1229,7 @@ export default function OnboardingPage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
-                <div className="p-4 rounded-lg border bg-muted/30">
+                <div className="p-4 rounded-lg bg-surface-container-low">
                   <p className="text-sm text-muted-foreground mb-4">
                     {t("notificationsStep.whatsappHint")}
                   </p>
@@ -1262,21 +1262,21 @@ export default function OnboardingPage() {
               <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center mb-6">
                 <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">{t("completion.title")}</h2>
+              <h2 className="text-2xl font-display font-bold mb-2">{t("completion.title")}</h2>
               <p className="text-muted-foreground mb-8">{t("completion.description")}</p>
 
               {bookingLink && (
                 <div className="max-w-md mx-auto mb-8">
                   <Label className="text-sm font-medium">{t("completion.bookingLinkLabel")}</Label>
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="flex-1 p-3 rounded-lg bg-muted border font-mono text-sm truncate">
+                    <div className="flex-1 p-3 rounded-lg bg-surface-container-highest font-mono text-sm truncate">
                       {window.location.origin}/book/{bookingLink.slug}
                     </div>
-                    <Button variant="outline" size="icon" onClick={copyBookingLink}>
+                    <Button variant="tertiary" size="icon" onClick={copyBookingLink}>
                       <Copy className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="tertiary"
                       size="icon"
                       onClick={() => window.open(`/book/${bookingLink.slug}`, "_blank")}
                     >
@@ -1290,7 +1290,7 @@ export default function OnboardingPage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {bookingLink && (
                   <Button
-                    variant="outline"
+                    variant="tertiary"
                     onClick={() => window.open(`/book/${bookingLink.slug}`, "_blank")}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -1307,7 +1307,7 @@ export default function OnboardingPage() {
 
           {/* Navigation */}
           {currentStep !== "complete" && (
-            <div className="flex items-center justify-between p-6 border-t bg-muted/30">
+            <div className="flex items-center justify-between p-6 bg-surface-container-low rounded-b-xl">
               <Button
                 variant="ghost"
                 onClick={handleBack}

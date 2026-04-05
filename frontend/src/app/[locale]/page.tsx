@@ -184,7 +184,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
       />
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40">
+        <header className="sticky top-0 z-50 w-full glass shadow-ambient-sm">
           <div className="container mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Image 
@@ -194,14 +194,14 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 height={36}
                 className="h-9 w-9"
               />
-              <span className="text-xl font-semibold tracking-tight">Slootea</span>
+              <span className="text-xl font-display font-bold tracking-tight">Slootea</span>
             </div>
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.features')}</a>
-              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.howItWorks')}</a>
-              <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.testimonials')}</a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.pricing')}</a>
-              <Link href={`/${locale}/blog`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('nav.blog')}</Link>
+              <a href="#features" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.features')}</a>
+              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.howItWorks')}</a>
+              <a href="#testimonials" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.testimonials')}</a>
+              <a href="#pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.pricing')}</a>
+              <Link href={`/${locale}/blog`} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.blog')}</Link>
           </nav>
           <div className="flex items-center space-x-3">
             <LanguageSwitcher currentLocale={locale} />
@@ -225,12 +225,12 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
           <div className="container px-6 mx-auto relative z-10">
             <div className="max-w-5xl mx-auto">
               <div className="text-center mb-12">
-                <Badge variant="secondary" className="mb-8 px-4 py-2 text-sm font-medium rounded-full border border-border/50 bg-background/50 backdrop-blur-sm">
+                <Badge variant="secondary" className="mb-8 px-4 py-2 text-sm font-medium rounded-full bg-surface-container-low">
                   <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
                   {t('badge')}
                 </Badge>
                 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[1.1] mb-8">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display font-bold tracking-tight leading-[1.1] mb-8">
                   {t('heroTitle')}{' '}
                   <span className="text-primary">
                     {t('heroTitleHighlight')}
@@ -243,13 +243,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
                   <Link href="/sign-up">
-                    <Button size="lg" className="h-12 px-8 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all">
+                    <Button size="lg" className="h-12 px-8 text-base font-medium">
                       {t('ctaButton')}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <a href="https://www.slootea.com/book/2sAltvrDKj" target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
+                    <Button variant="tertiary" size="lg" className="h-12 px-8 text-base font-medium">
                       <Users className="mr-2 h-4 w-4" />
                       {t('meetTheTeam')}
                     </Button>
@@ -272,7 +272,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
               {/* Hero Video */}
               <div id="hero-video" className="relative mt-16 scroll-mt-24">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-2xl opacity-40" />
-                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 shadow-2xl overflow-hidden">
+                <div className="relative bg-surface-container-low rounded-2xl shadow-ambient-lg overflow-hidden">
                   <HeroVideo />
                 </div>
               </div>
@@ -284,32 +284,32 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
         <section className="py-24 lg:py-32">
           <div className="container px-6 mx-auto">
             <div className="max-w-3xl mx-auto text-center mb-16">
-              <Badge variant="outline" className="px-4 py-1.5 text-sm font-medium rounded-full">
+              <Badge variant="outline" className="px-4 py-1.5 text-sm font-medium rounded-full bg-surface-container-low">
                 {t('problem.badge')}
               </Badge>
             </div>
             
             {/* Benefits Grid */}
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <div className="bg-background rounded-2xl border border-border/50 p-8 text-center hover:border-primary/30 hover:shadow-lg transition-all">
+              <div className="bg-surface rounded-2xl p-8 text-center shadow-ambient-sm hover:shadow-ambient transition-all">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{t('problem.benefit1.title')}</h3>
+                <h3 className="text-xl font-display font-semibold mb-3">{t('problem.benefit1.title')}</h3>
                 <p className="text-muted-foreground">{t('problem.benefit1.description')}</p>
               </div>
-              <div className="bg-background rounded-2xl border border-border/50 p-8 text-center hover:border-primary/30 hover:shadow-lg transition-all">
+              <div className="bg-surface rounded-2xl p-8 text-center shadow-ambient-sm hover:shadow-ambient transition-all">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <Bot className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{t('problem.benefit2.title')}</h3>
+                <h3 className="text-xl font-display font-semibold mb-3">{t('problem.benefit2.title')}</h3>
                 <p className="text-muted-foreground">{t('problem.benefit2.description')}</p>
               </div>
-              <div className="bg-background rounded-2xl border border-border/50 p-8 text-center hover:border-primary/30 hover:shadow-lg transition-all">
+              <div className="bg-surface rounded-2xl p-8 text-center shadow-ambient-sm hover:shadow-ambient transition-all">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <Users className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{t('problem.benefit3.title')}</h3>
+                <h3 className="text-xl font-display font-semibold mb-3">{t('problem.benefit3.title')}</h3>
                 <p className="text-muted-foreground">{t('problem.benefit3.description')}</p>
               </div>
             </div>
@@ -317,13 +317,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-24 lg:py-32 bg-muted/30">
+        <section id="features" className="py-24 lg:py-32 bg-surface-container-lowest">
           <div className="container px-6 mx-auto">
             <div className="max-w-3xl mx-auto text-center mb-20">
-              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full bg-surface-container-low">
                 {t('features.badge')}
               </Badge>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6">
                 {t('features.title')}
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -334,13 +334,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
             {/* Feature 1 - AI Assistant */}
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
               <div className="order-2 lg:order-1">
-                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full bg-surface-container-low">
                   {t('features.aiAssistant.badge')}
                 </Badge>
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <Bot className="h-6 w-6" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.aiAssistant.title')}</h3>
+                <h3 className="text-2xl sm:text-3xl font-display font-bold mb-4">{t('features.aiAssistant.title')}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                   {t('features.aiAssistant.description')}
                 </p>
@@ -362,7 +362,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3]">
+                <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3]">
                   <Image 
                     src="/Phone_Notification.png" 
                     alt={t('features.whatsappConfirmation.imageAlt')}
@@ -372,13 +372,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               <div>
-                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full bg-surface-container-low">
                   {t('features.whatsappConfirmation.badge')}
                 </Badge>
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <MessageCircle className="h-6 w-6" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.whatsappConfirmation.title')}</h3>
+                <h3 className="text-2xl sm:text-3xl font-display font-bold mb-4">{t('features.whatsappConfirmation.title')}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                   {t('features.whatsappConfirmation.description')}
                 </p>
@@ -399,7 +399,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <ClipboardList className="h-6 w-6" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.clientTracking.title')}</h3>
+                <h3 className="text-2xl sm:text-3xl font-display font-bold mb-4">{t('features.clientTracking.title')}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                   {t('features.clientTracking.description')}
                 </p>
@@ -415,7 +415,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
               <div className="order-1 lg:order-2">
                 <div className="relative">
                   <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                  <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3]">
+                  <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3]">
                     <Image 
                       src="/Calendar_Demo.png" 
                       alt={t('features.clientTracking.imageAlt')}
@@ -431,7 +431,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3]">
+                <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3]">
                   <Image 
                     src="/Phone_App.jpeg" 
                     alt={t('features.mobileApp.imageAlt')}
@@ -441,13 +441,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               <div>
-                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full">
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full bg-surface-container-low">
                   {t('features.mobileApp.badge')}
                 </Badge>
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <Smartphone className="h-6 w-6" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t('features.mobileApp.title')}</h3>
+                <h3 className="text-2xl sm:text-3xl font-display font-bold mb-4">{t('features.mobileApp.title')}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                   {t('features.mobileApp.description')}
                 </p>
@@ -502,13 +502,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
         */}
 
         {/* Client Stories Section */}
-        <section className="py-24 lg:py-32 border-y border-border/50 bg-muted/20">
+        <section className="py-24 lg:py-32 bg-surface-container-lowest">
           <div className="container px-6 mx-auto">
             <div className="max-w-3xl mx-auto text-center mb-16">
-              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full">
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm font-medium rounded-full bg-surface-container-low">
                 {t('clientStories.title')}
               </Badge>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6">
                 {t('trustedBy')}
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -536,8 +536,8 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
           <div className="container px-6 mx-auto">
             <div className="relative max-w-4xl mx-auto">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-3xl blur-2xl" />
-              <div className="relative bg-gradient-to-b from-background to-muted/50 rounded-3xl border border-border/50 p-12 lg:p-16 text-center">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+              <div className="relative bg-surface rounded-3xl shadow-ambient-lg p-12 lg:p-16 text-center">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6">
                   {t('cta.title')}
                 </h2>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
@@ -545,13 +545,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link href="/sign-up">
-                    <Button size="lg" className="h-12 px-8 text-base font-medium shadow-lg shadow-primary/20">
+                    <Button size="lg" className="h-12 px-8 text-base font-medium">
                       {t('cta.button')}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <a href="https://www.slootea.com/book/2sAltvrDKj" target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="lg" className="h-12 px-8 text-base font-medium">
+                    <Button variant="tertiary" size="lg" className="h-12 px-8 text-base font-medium">
                       <Users className="mr-2 h-4 w-4" />
                       {t('cta.meetTheTeam')}
                     </Button>
@@ -564,7 +564,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 bg-muted/20">
+      <footer className="bg-surface-container-lowest">
         <div className="container px-6 py-12 lg:py-16 mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 mb-12">
             <div className="col-span-2 md:col-span-1">
@@ -576,37 +576,37 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                   height={32}
                   className="h-8 w-8"
                 />
-                <span className="text-lg font-semibold">Slootea</span>
+                <span className="text-lg font-display font-semibold">Slootea</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {t('footer.description')}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.product')}</h4>
+              <h4 className="font-display font-semibold mb-4">{t('footer.product')}</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground transition-colors">{t('nav.features')}</a></li>
-                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">{t('nav.howItWorks')}</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors">{t('footer.pricing')}</a></li>
+                <li><a href="#features" className="hover:text-primary transition-colors">{t('nav.features')}</a></li>
+                <li><a href="#how-it-works" className="hover:text-primary transition-colors">{t('nav.howItWorks')}</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">{t('footer.pricing')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.company')}</h4>
+              <h4 className="font-display font-semibold mb-4">{t('footer.company')}</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.about')}</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.blog')}</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">{t('footer.contact')}</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">{t('footer.about')}</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">{t('footer.blog')}</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">{t('footer.contact')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.legal')}</h4>
+              <h4 className="font-display font-semibold mb-4">{t('footer.legal')}</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href={`/${locale}/privacy`} className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
-                <li><Link href={`/${locale}/terms`} className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
+                <li><Link href={`/${locale}/privacy`} className="hover:text-primary transition-colors">{t('footer.privacy')}</Link></li>
+                <li><Link href={`/${locale}/terms`} className="hover:text-primary transition-colors">{t('footer.terms')}</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-border/50 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="border-t border-surface-variant/30 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} Slootea. {t('footer.copyright')}
             </p>
@@ -620,8 +620,8 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
 
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
-    <div className="bg-background rounded-2xl border border-border/50 p-6 text-center">
-      <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">{value}</div>
+    <div className="bg-surface rounded-2xl shadow-ambient-sm p-6 text-center">
+      <div className="text-3xl lg:text-4xl font-display font-bold text-primary mb-2">{value}</div>
       <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   );
@@ -637,11 +637,11 @@ function FeatureCard({
   description: string; 
 }) {
   return (
-    <div className="bg-background rounded-2xl border border-border/50 p-6 hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+    <div className="bg-surface rounded-2xl p-6 shadow-ambient-sm hover:shadow-ambient transition-all duration-300">
       <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary mb-4">
         {icon}
       </div>
-      <h3 className="font-semibold mb-2">{title}</h3>
+      <h3 className="font-display font-semibold mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
     </div>
   );
@@ -651,7 +651,7 @@ function FeatureImagePlaceholder({ icon, label }: { icon: React.ReactNode; label
   return (
     <div className="relative">
       <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-      <div className="relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden aspect-[4/3] flex items-center justify-center">
+      <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3] flex items-center justify-center">
         <div className="text-center p-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             {icon}
@@ -666,10 +666,10 @@ function FeatureImagePlaceholder({ icon, label }: { icon: React.ReactNode; label
 function StepCard({ number, title, description }: { number: string; title: string; description: string }) {
   return (
     <div className="text-center">
-      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground text-xl font-bold mb-6">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full gradient-primary text-primary-foreground text-xl font-bold mb-6">
         {number}
       </div>
-      <h3 className="text-xl font-semibold mb-3">{title}</h3>
+      <h3 className="text-xl font-display font-semibold mb-3">{title}</h3>
       <p className="text-muted-foreground leading-relaxed">{description}</p>
     </div>
   );
@@ -687,11 +687,11 @@ function TestimonialCard({
   className?: string;
 }) {
   return (
-    <div className={`bg-background rounded-2xl border border-border/50 p-6 lg:p-8 ${className}`}>
+    <div className={`bg-surface rounded-2xl shadow-ambient-sm p-6 lg:p-8 ${className}`}>
       <Quote className="h-8 w-8 text-primary/20 mb-4" />
       <p className="text-muted-foreground leading-relaxed mb-6">{quote}</p>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
           <span className="text-sm font-semibold text-muted-foreground">{author.charAt(0)}</span>
         </div>
         <div>
