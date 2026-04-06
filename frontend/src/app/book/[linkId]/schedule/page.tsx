@@ -1,34 +1,29 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { format, addDays, addMonths, startOfDay, isSameDay, parseISO, isBefore, isAfter } from "date-fns";
+import { format, addDays, addMonths, startOfDay, parseISO } from "date-fns";
 import { enUS, tr } from "date-fns/locale";
 import { useTranslations } from "next-intl";
 import { useLocale } from "@/components/providers/locale-provider";
 import { publicApi } from "@/lib/api";
-import { trackSlotSelected, trackProviderSelected, trackAppointmentBooked } from "@/lib/analytics";
+import { trackAppointmentBooked } from "@/lib/analytics";
 import { PublicBookingLink, AvailableSlot, ServiceOption, Provider } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { ArrowLeft } from "lucide-react";
 import {
-  ArrowLeft,
-  Calendar as CalendarIcon,
-  Clock,
-  User,
-  Mail,
-  Loader2,
-  Users,
-  Check,
-} from "lucide-react";
+  BookingStep,
+  StepConfig,
+  AnimatedStep,
+  StepIndicator,
+  ProviderSelectionStep,
+  DateTimeSelectionStep,
+  ClientInfoStep,
+  ServiceHeader,
+} from "@/components/booking/schedule";
 
 export default function SchedulePage() {
   const params = useParams();
@@ -45,32 +40,107 @@ export default function SchedulePage() {
   const slug = params.linkId as string;
   const serviceId = searchParams.get("service");
 
+  // Booking link and service state
   const [bookingLink, setBookingLink] = useState<PublicBookingLink | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceOption | null>(null);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [booking, setBooking] = useState(false);
 
+  // Date and slot state
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
 
-  // Provider selection
+  // Provider selection state
   const [providers, setProviders] = useState<Provider[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providerSelectionEnabled, setProviderSelectionEnabled] = useState(false);
 
-  // Available dates
+  // Available dates state
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
   const [availableDatesLoading, setAvailableDatesLoading] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-  // Client form
+  // Client form state
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
 
+  // Step management state
+  const [currentStep, setCurrentStep] = useState<BookingStep>('provider');
+  const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
+
+  // Calculate date range for calendar
+  const today = startOfDay(new Date());
+  const maxDate = bookingLink?.user?.settings?.maxAdvanceBookingDays
+    ? addDays(today, bookingLink.user.settings.maxAdvanceBookingDays)
+    : addDays(today, 30);
+
+  // Determine which steps are needed based on settings
+  const bookingSteps = useMemo((): StepConfig[] => {
+    const steps: StepConfig[] = [];
+    
+    if (providerSelectionEnabled && providers.length > 0) {
+      steps.push({ 
+        key: 'provider', 
+        label: t('selectProvider') || 'Select Provider',
+        completed: !!selectedProvider 
+      });
+    }
+    
+    steps.push({ 
+      key: 'datetime', 
+      label: t('selectDateTime') || 'Select Date & Time',
+      completed: !!selectedSlot 
+    });
+    
+    steps.push({ 
+      key: 'info', 
+      label: t('yourInformation') || 'Your Information',
+      completed: false 
+    });
+    
+    return steps;
+  }, [providerSelectionEnabled, providers.length, selectedProvider, selectedSlot, t]);
+
+  // Set initial step based on whether provider selection is needed
+  useEffect(() => {
+    if (!loading && !providersLoading) {
+      if (providerSelectionEnabled && providers.length > 0) {
+        setCurrentStep('provider');
+      } else {
+        setCurrentStep('datetime');
+      }
+    }
+  }, [loading, providersLoading, providerSelectionEnabled, providers.length]);
+
+  // Step navigation functions
+  const goToStep = (step: BookingStep) => {
+    const currentIndex = bookingSteps.findIndex(s => s.key === currentStep);
+    const targetIndex = bookingSteps.findIndex(s => s.key === step);
+    setStepDirection(targetIndex > currentIndex ? 'forward' : 'backward');
+    setCurrentStep(step);
+  };
+
+  const goToNextStep = () => {
+    const currentIndex = bookingSteps.findIndex(s => s.key === currentStep);
+    if (currentIndex < bookingSteps.length - 1) {
+      setStepDirection('forward');
+      setCurrentStep(bookingSteps[currentIndex + 1].key);
+    }
+  };
+
+  const goToPreviousStep = () => {
+    const currentIndex = bookingSteps.findIndex(s => s.key === currentStep);
+    if (currentIndex > 0) {
+      setStepDirection('backward');
+      setCurrentStep(bookingSteps[currentIndex - 1].key);
+    }
+  };
+
+  // Fetch booking link and providers
   useEffect(() => {
     const fetchBookingLink = async () => {
       try {
@@ -108,13 +178,11 @@ export default function SchedulePage() {
       }
     };
     fetchBookingLink();
-  }, [slug, serviceId]);
+  }, [slug, serviceId, toast, common, t]);
 
   // Fetch available dates when month, provider or service changes
-  // Fetches both current month and next month to cover calendar overflow days
   const fetchAvailableDates = useCallback(async (month: Date) => {
     if (!selectedService || !bookingLink) return;
-    // If provider selection is enabled but no provider selected, don't fetch yet
     if (providerSelectionEnabled && !selectedProvider) return;
 
     setAvailableDatesLoading(true);
@@ -122,7 +190,6 @@ export default function SchedulePage() {
       const currentMonthStr = format(month, "yyyy-MM");
       const nextMonthStr = format(addMonths(month, 1), "yyyy-MM");
       
-      // Fetch both current and next month in parallel for calendar overflow days
       const [currentRes, nextRes] = await Promise.all([
         publicApi.getAvailableDates(
           slug,
@@ -138,7 +205,6 @@ export default function SchedulePage() {
         ),
       ]);
       
-      // Merge both months' available dates
       const allDates = new Set([
         ...(currentRes.data.availableDates || []),
         ...(nextRes.data.availableDates || []),
@@ -154,14 +220,13 @@ export default function SchedulePage() {
 
   useEffect(() => {
     if (selectedService && bookingLink) {
-      // Only fetch if provider selection is not required, or provider is selected
       if (!providerSelectionEnabled || selectedProvider) {
         fetchAvailableDates(currentMonth);
       }
     }
   }, [selectedService, bookingLink, selectedProvider, currentMonth, providerSelectionEnabled, fetchAvailableDates]);
 
-  // Auto-select today's date if it's available
+  // Auto-select today's date if available
   useEffect(() => {
     if (availableDates.size > 0 && !selectedDate && !availableDatesLoading) {
       const todayDate = startOfDay(new Date());
@@ -170,11 +235,11 @@ export default function SchedulePage() {
         setSelectedDate(todayDate);
       }
     }
-  }, [availableDates, availableDatesLoading]);
+  }, [availableDates, availableDatesLoading, selectedDate]);
 
+  // Fetch slots when date changes
   useEffect(() => {
     if (!selectedDate || !selectedService || !bookingLink) return;
-    // If provider selection is enabled but no provider selected, don't fetch slots yet
     if (providerSelectionEnabled && !selectedProvider) return;
 
     const fetchSlots = async () => {
@@ -201,8 +266,15 @@ export default function SchedulePage() {
       }
     };
     fetchSlots();
-  }, [selectedDate, selectedService, selectedProvider, bookingLink, slug, providerSelectionEnabled]);
+  }, [selectedDate, selectedService, selectedProvider, bookingLink, slug, providerSelectionEnabled, toast, common, t]);
 
+  // Handle provider selection
+  const handleSelectProvider = (provider: Provider) => {
+    setSelectedProvider(provider);
+    setSelectedSlot(null);
+  };
+
+  // Handle booking submission
   const handleBook = async () => {
     if (!selectedSlot || !selectedService) return;
 
@@ -241,7 +313,6 @@ export default function SchedulePage() {
         description: t('bookingSuccess'),
       });
 
-      // Track successful appointment booking
       trackAppointmentBooked({
         serviceId: selectedService.id,
         serviceName: selectedService.title,
@@ -252,7 +323,6 @@ export default function SchedulePage() {
         appointmentDate: format(parseISO(selectedSlot.startTime), "yyyy-MM-dd"),
       });
 
-      // Redirect to success or back to service selection
       router.push(`/book/${slug}/success`);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -266,12 +336,7 @@ export default function SchedulePage() {
     }
   };
 
-  // Calculate date range for calendar
-  const today = startOfDay(new Date());
-  const maxDate = bookingLink?.user?.settings?.maxAdvanceBookingDays
-    ? addDays(today, bookingLink.user.settings.maxAdvanceBookingDays)
-    : addDays(today, 30);
-
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 p-6">
@@ -286,10 +351,11 @@ export default function SchedulePage() {
     );
   }
 
+  // No service selected state
   if (!selectedService) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4 md:p-6">
+        <Card className="max-w-md w-full animate-in fade-in-0 zoom-in-95 duration-300">
           <CardContent className="p-6 text-center">
             <p className="text-muted-foreground mb-4">
               {t('selectServiceFirst')}
@@ -305,298 +371,83 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Back button */}
-        <Button
-          variant="ghost"
-          className="mb-6"
-          onClick={() => router.push(`/book/${slug}`)}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {t('backToServices')}
-        </Button>
-
-        {/* Selected service info */}
-        <Card className="mb-6">
-          <CardContent className="p-4 flex items-center gap-4">
-            {selectedService.imageBase64 ? (
-              <img
-                src={selectedService.imageBase64}
-                alt={selectedService.title}
-                className="w-16 h-16 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-            )}
-            <div>
-              <h2 className="font-semibold">{selectedService.title}</h2>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 mr-1" />
-                {selectedService.duration} {t('minutes')}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Provider Selection - shown when providerSelectionEnabled */}
-        {providerSelectionEnabled && providers.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {t('selectProvider') || 'Select Your Provider'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {providersLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-20" />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {providers.map((provider) => (
-                    <button
-                      key={provider.id}
-                      onClick={() => {
-                        setSelectedProvider(provider);
-                        setSelectedSlot(null); // Reset slot when provider changes
-                        // Track provider selection
-                        trackProviderSelected({
-                          providerId: provider.id,
-                          providerName: provider.firstName || provider.lastName 
-                            ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
-                            : undefined,
-                          organizationId: bookingLink?.organizationId,
-                          organizationName: bookingLink?.user?.businessName,
-                        });
-                      }}
-                      className={`relative p-4 rounded-lg border-2 transition-all ${
-                        selectedProvider?.id === provider.id
-                          ? "border-primary bg-primary/5"
-                          : "border-muted hover:border-primary/50"
-                      }`}
-                    >
-                      {selectedProvider?.id === provider.id && (
-                        <div className="absolute top-2 right-2">
-                          <Check className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
-                      <Avatar className="h-12 w-12 mx-auto mb-2">
-                        <AvatarImage src={provider.imageUrl} />
-                        <AvatarFallback>
-                          {provider.firstName?.[0] || ''}{provider.lastName?.[0] || ''}
-                          {!provider.firstName && !provider.lastName && <User className="h-5 w-5" />}
-                        </AvatarFallback>
-                      </Avatar>
-                      <p className="text-sm font-medium text-center truncate">
-                        {provider.firstName || provider.lastName 
-                          ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
-                          : t('provider') || 'Provider'}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {!selectedProvider && (
-                <p className="text-sm text-muted-foreground text-center mt-4">
-                  {t('pleaseSelectProvider') || 'Please select a provider to continue'}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+      <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8">
+        {/* Back button - only on first step */}
+        {currentStep === bookingSteps[0]?.key && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4 animate-in fade-in-0 slide-in-from-left-4 duration-300"
+            onClick={() => router.push(`/book/${slug}`)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t('backToServices')}
+          </Button>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Date Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('selectDate')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                month={currentMonth}
-                onMonthChange={setCurrentMonth}
-                locale={dateLocale}
-                disabled={(date) => {
-                  // Disable past dates and dates beyond max booking window
-                  if (isBefore(date, today) || isAfter(date, maxDate)) {
-                    return true;
-                  }
-                  // If provider selection is enabled but no provider selected, disable all
-                  if (providerSelectionEnabled && !selectedProvider) {
-                    return true;
-                  }
-                  // Disable dates that have no available slots
-                  const dateStr = format(date, "yyyy-MM-dd");
-                  return !availableDates.has(dateStr);
-                }}
-                modifiers={{
-                  available: (date) => {
-                    if (isBefore(date, today) || isAfter(date, maxDate)) return false;
-                    if (providerSelectionEnabled && !selectedProvider) return false;
-                    const dateStr = format(date, "yyyy-MM-dd");
-                    return availableDates.has(dateStr);
-                  },
-                }}
-                modifiersClassNames={{
-                  available: "bg-primary/10 font-semibold text-primary hover:bg-primary/20",
-                }}
-                className="rounded-md border w-full"
-              />
-              {availableDatesLoading && (
-                <div className="flex items-center justify-center text-sm text-muted-foreground mt-2">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {t('loadingAvailability') || 'Loading availability...'}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Selected service header */}
+        <ServiceHeader service={selectedService} />
 
-          {/* Time Slots & Form */}
-          <div className="space-y-6">
-            {/* Time Slots */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {selectedDate
-                    ? `${t('availableTimes')} - ${format(selectedDate, "d MMM yyyy", { locale: dateLocale })}`
-                    : t('selectDate')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {providerSelectionEnabled && !selectedProvider ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('selectProviderFirst') || 'Please select a provider first'}
-                  </p>
-                ) : !selectedDate ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('selectDateFirst')}
-                  </p>
-                ) : slotsLoading ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <Skeleton key={i} className="h-10" />
-                    ))}
-                  </div>
-                ) : slots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('noAvailableTimes')}
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                    {slots.map((slot, index) => (
-                      <Button
-                        key={index}
-                        variant={selectedSlot === slot ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                          setSelectedSlot(slot);
-                          // Track slot selection
-                          trackSlotSelected({
-                            date: format(parseISO(slot.startTime), "yyyy-MM-dd"),
-                            time: format(parseISO(slot.startTime), "HH:mm"),
-                            serviceId: selectedService?.id || '',
-                            organizationId: bookingLink?.organizationId,
-                            organizationName: bookingLink?.user?.businessName,
-                          });
-                        }}
-                      >
-                        {format(parseISO(slot.startTime), "HH:mm")}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+      
+        {/* Step Content Container */}
+        <div className="flex flex-col items-center justify-center min-h-[400px] md:min-h-[500px]">
+          
+          {/* Provider Selection Step */}
+          <AnimatedStep isActive={currentStep === 'provider'} direction={stepDirection}>
+            <ProviderSelectionStep
+              providers={providers}
+              selectedProvider={selectedProvider}
+              providersLoading={providersLoading}
+              onSelectProvider={handleSelectProvider}
+              onContinue={goToNextStep}
+              bookingLink={bookingLink}
+            />
+          </AnimatedStep>
 
-            {/* Client Info Form */}
-            {selectedSlot && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('yourInformation')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">{t('name')} *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                        placeholder={t('namePlaceholder')}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
+          {/* Date & Time Selection Step */}
+          <AnimatedStep isActive={currentStep === 'datetime'} direction={stepDirection}>
+            <DateTimeSelectionStep
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              currentMonth={currentMonth}
+              setCurrentMonth={setCurrentMonth}
+              slots={slots}
+              selectedSlot={selectedSlot}
+              setSelectedSlot={setSelectedSlot}
+              slotsLoading={slotsLoading}
+              availableDates={availableDates}
+              availableDatesLoading={availableDatesLoading}
+              providerSelectionEnabled={providerSelectionEnabled}
+              selectedProvider={selectedProvider}
+              selectedService={selectedService}
+              bookingLink={bookingLink}
+              today={today}
+              maxDate={maxDate}
+              dateLocale={dateLocale}
+              showBackButton={bookingSteps[0]?.key === 'provider'}
+              onBack={goToPreviousStep}
+              onContinue={goToNextStep}
+            />
+          </AnimatedStep>
 
-                  <div>
-                    <Label htmlFor="phone">{t('phone')} *</Label>
-                    <PhoneInput
-                      id="phone"
-                      value={clientPhone}
-                      onChange={(value) => setClientPhone(value || "")}
-                      placeholder={t('phonePlaceholder')}
-                      defaultCountry="TR"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">{t('emailOptional')}</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        value={clientEmail}
-                        onChange={(e) => setClientEmail(e.target.value)}
-                        placeholder={t('emailPlaceholder')}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                    <p className="font-medium">{t('appointmentSummary')}</p>
-                    <p className="text-muted-foreground">
-                      {selectedService.title}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {format(parseISO(selectedSlot.startTime), "EEEE, d MMMM yyyy", { locale: dateLocale })}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {format(parseISO(selectedSlot.startTime), "HH:mm", { locale: dateLocale })} -{" "}
-                      {format(parseISO(selectedSlot.endTime), "HH:mm", { locale: dateLocale })}
-                    </p>
-                  </div>
-
-                  <Button
-                    className="w-full"
-                    onClick={handleBook}
-                    disabled={booking}
-                  >
-                    {booking ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {t('bookingInProgress')}
-                      </>
-                    ) : (
-                      t('confirmBooking')
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Client Information Step */}
+          <AnimatedStep isActive={currentStep === 'info'} direction={stepDirection}>
+            <ClientInfoStep
+              clientName={clientName}
+              setClientName={setClientName}
+              clientPhone={clientPhone}
+              setClientPhone={setClientPhone}
+              clientEmail={clientEmail}
+              setClientEmail={setClientEmail}
+              selectedService={selectedService}
+              selectedProvider={selectedProvider}
+              selectedSlot={selectedSlot}
+              dateLocale={dateLocale}
+              booking={booking}
+              onBack={goToPreviousStep}
+              onSubmit={handleBook}
+            />
+          </AnimatedStep>
         </div>
       </div>
     </div>
