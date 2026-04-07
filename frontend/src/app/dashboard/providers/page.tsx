@@ -1720,7 +1720,7 @@ export default function ProvidersPage() {
                         service.description?.toLowerCase().includes(serviceSearch.toLowerCase())
                       ).length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-4">
-                          No services match "{serviceSearch}"
+                          No services match &quot;{serviceSearch}&quot;
                         </p>
                       )}
                     </div>
