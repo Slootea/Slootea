@@ -69,9 +69,48 @@ export const userServiceOptionsApi = {
     api.delete(`/user-services/members/${memberId}/${serviceOptionId}`),
   getProvidersForService: (serviceOptionId: string) =>
     api.get(`/user-services/service/${serviceOptionId}/providers`),
-  // Bulk assign multiple members to a service (admin only)
+  // Bulk assign multiple members to a service (admin only) - deprecated
   bulkAssignMembersToService: (serviceOptionId: string, memberIds: string[]) =>
     api.put(`/user-services/service/${serviceOptionId}/members`, { memberIds }),
+  // Bulk assign all providers (members + external) to a service (admin only)
+  bulkAssignProvidersToService: (serviceOptionId: string, data: { memberIds: string[]; externalProviderIds: string[] }) =>
+    api.put(`/user-services/service/${serviceOptionId}/providers`, data),
+};
+
+// External Providers API (admin only)
+export const externalProvidersApi = {
+  // CRUD
+  getAll: () => api.get('/external-providers'),
+  getOne: (id: string) => api.get(`/external-providers/${id}`),
+  create: (data: { name: string; imageBase64?: string; isActive?: boolean }) =>
+    api.post('/external-providers', data),
+  update: (id: string, data: Partial<{ name: string; imageBase64: string; isActive: boolean }>) =>
+    api.put(`/external-providers/${id}`, data),
+  delete: (id: string) => api.delete(`/external-providers/${id}`),
+  
+  // Service assignment
+  getAssignedServices: (id: string) => api.get(`/external-providers/${id}/services`),
+  assignServices: (id: string, serviceOptionIds: string[]) =>
+    api.put(`/external-providers/${id}/services`, { serviceOptionIds }),
+  
+  // Availability management
+  getAvailability: (id: string) => api.get(`/external-providers/${id}/availability`),
+  createAvailability: (id: string, data: { dayOfWeek: number; startTime: string; endTime: string; serviceOptionId?: string }) =>
+    api.post(`/external-providers/${id}/availability`, data),
+  createBulkAvailability: (id: string, data: { availabilities: Array<{ dayOfWeek: number; startTime: string; endTime: string; serviceOptionId?: string }> }) =>
+    api.post(`/external-providers/${id}/availability/bulk`, data),
+  updateAvailability: (id: string, availabilityId: string, data: Partial<{ dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }>) =>
+    api.put(`/external-providers/${id}/availability/${availabilityId}`, data),
+  deleteAvailability: (id: string, availabilityId: string) =>
+    api.delete(`/external-providers/${id}/availability/${availabilityId}`),
+  clearAllAvailability: (id: string) => api.delete(`/external-providers/${id}/availability`),
+  
+  // Blocked times management
+  getBlockedTimes: (id: string) => api.get(`/external-providers/${id}/blocked-times`),
+  createBlockedTime: (id: string, data: { date: string; startTime?: string; endTime?: string; isFullDay?: boolean; reason?: string }) =>
+    api.post(`/external-providers/${id}/blocked-times`, data),
+  deleteBlockedTime: (id: string, blockedTimeId: string) =>
+    api.delete(`/external-providers/${id}/blocked-times/${blockedTimeId}`),
 };
 
 // Availability API

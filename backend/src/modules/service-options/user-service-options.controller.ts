@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { UserServiceOptionsService } from './user-service-options.service';
-import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto, BulkAssignMembersToServiceDto } from './dto/user-service-option.dto';
+import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto, BulkAssignMembersToServiceDto, BulkAssignProvidersToServiceDto } from './dto/user-service-option.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgMemberOrAdmin, OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
@@ -187,16 +187,16 @@ export class UserServiceOptionsController {
   }
 
   /**
-   * Get all providers for a specific service
+   * Get all providers (members + external) for a specific service
    */
   @Get('service/:serviceOptionId/providers')
-  @ApiOperation({ summary: 'Get all providers for a service' })
+  @ApiOperation({ summary: 'Get all providers for a service (unified: members + external)' })
   @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   async getProvidersForService(
     @Param('serviceOptionId') serviceOptionId: string,
     @Headers('x-organization-id') organizationId: string,
   ) {
-    return this.userServiceOptionsService.getProvidersForService(
+    return this.userServiceOptionsService.getUnifiedProvidersForService(
       serviceOptionId,
       organizationId,
     );
@@ -204,11 +204,12 @@ export class UserServiceOptionsController {
 
   /**
    * Admin bulk assigns multiple members to a service
+   * @deprecated Use PUT /service/:serviceOptionId/providers instead
    */
   @Put('service/:serviceOptionId/members')
   @UseGuards(OrgRolesGuard)
   @OrgAdminOnly()
-  @ApiOperation({ summary: 'Admin: Bulk assign members to a service' })
+  @ApiOperation({ summary: 'Admin: Bulk assign members to a service (deprecated)' })
   @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
   async bulkAssignMembersToService(
     @Param('serviceOptionId') serviceOptionId: string,
@@ -218,6 +219,27 @@ export class UserServiceOptionsController {
     return this.userServiceOptionsService.bulkAssignMembersToService(
       serviceOptionId,
       dto,
+      organizationId,
+    );
+  }
+
+  /**
+   * Admin bulk assigns providers (members + external) to a service
+   */
+  @Put('service/:serviceOptionId/providers')
+  @UseGuards(OrgRolesGuard)
+  @OrgAdminOnly()
+  @ApiOperation({ summary: 'Admin: Bulk assign providers (members + external) to a service' })
+  @ApiHeader({ name: 'x-organization-id', description: 'Organization ID', required: true })
+  async bulkAssignProvidersToService(
+    @Param('serviceOptionId') serviceOptionId: string,
+    @Headers('x-organization-id') organizationId: string,
+    @Body() dto: BulkAssignProvidersToServiceDto,
+  ) {
+    return this.userServiceOptionsService.bulkAssignProvidersToService(
+      serviceOptionId,
+      dto.memberIds,
+      dto.externalProviderIds,
       organizationId,
     );
   }

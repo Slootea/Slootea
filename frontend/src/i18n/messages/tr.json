@@ -315,6 +315,7 @@
     "blockedTimes": "Engelli Zamanlar",
     "bookingLinks": "Rezervasyon Linkleri",
     "serviceOptions": "Hizmet Seçenekleri",
+    "serviceProviders": "Hizmet Sağlayıcılar",
     "reports": "Raporlar",
     "settings": "Ayarlar",
     "main": "Ana Menü",
@@ -594,6 +595,104 @@
     "clientNotFound": "Müşteri bulunamadı",
     "clientNotFoundDesc": "İstenen müşteri bulunamadı",
     "validationError": "Doğrulama Hatası"
+  },
+  "providersPage": {
+    "title": "Hizmet Sağlayıcılar",
+    "description": "Organizasyonunuzun üyesi olmayan harici hizmet sağlayıcıları yönetin",
+    "addProvider": "Sağlayıcı Ekle",
+    "empty": {
+      "title": "Henüz harici sağlayıcı yok",
+      "description": "Rezervasyon sisteminiz aracılığıyla hizmet sunmak için harici hizmet sağlayıcıları ekleyin."
+    },
+    "status": {
+      "active": "Aktif",
+      "inactive": "Pasif"
+    },
+    "type": {
+      "external": "Harici Sağlayıcı"
+    },
+    "card": {
+      "added": "Eklendi"
+    },
+    "actions": {
+      "edit": "Düzenle",
+      "delete": "Sil"
+    },
+    "dialog": {
+      "createTitle": "Hizmet Sağlayıcı Ekle",
+      "createDescription": "Organizasyonunuza yeni bir harici hizmet sağlayıcı ekleyin",
+      "editTitle": "Hizmet Sağlayıcıyı Düzenle",
+      "editDescription": "Sağlayıcı bilgilerini, hizmetleri ve müsaitliği güncelleyin",
+      "uploadImage": "Fotoğraf Yükle",
+      "imageHint": "JPG, PNG veya WEBP. Maks 5MB.",
+      "removeImage": "Fotoğrafı kaldır",
+      "name": "İsim",
+      "namePlaceholder": "Sağlayıcı adını girin",
+      "activeLabel": "Sağlayıcı aktif ve rezervasyon alabilir"
+    },
+    "tabs": {
+      "details": "Detaylar",
+      "services": "Hizmetler",
+      "availability": "Müsaitlik",
+      "blockedTimes": "Engelli Zamanlar"
+    },
+    "services": {
+      "noServices": "Henüz hizmet oluşturulmamış. Sağlayıcılara atamak için önce hizmet oluşturun.",
+      "selectDescription": "Bu sağlayıcının sunabileceği hizmetleri seçin."
+    },
+    "availability": {
+      "description": "Bu sağlayıcı için haftalık çalışma saatlerini ayarlayın.",
+      "unavailable": "Müsait değil",
+      "addTitle": "Müsaitlik Ekle",
+      "addDescription": "{day} için çalışma saatleri ekleyin",
+      "startTime": "Başlangıç Saati",
+      "endTime": "Bitiş Saati",
+      "addButton": "Saat Ekle",
+      "added": "Müsaitlik eklendi",
+      "addFailed": "Müsaitlik eklenemedi",
+      "deleted": "Müsaitlik kaldırıldı",
+      "deleteFailed": "Müsaitlik kaldırılamadı"
+    },
+    "blockedTime": {
+      "description": "Bu sağlayıcının müsait olmadığı belirli tarihleri veya zamanları engelleyin.",
+      "add": "Engelli Zaman Ekle",
+      "empty": "Zamanlanmış engelli zaman yok",
+      "addTitle": "Zaman Engelle",
+      "addDescription": "Bu sağlayıcının müsait olmadığı bir tarih veya zaman aralığı engelleyin",
+      "date": "Tarih",
+      "fullDay": "Tüm Gün",
+      "fullDayLabel": "Tüm günü engelle",
+      "startTime": "Başlangıç Saati",
+      "endTime": "Bitiş Saati",
+      "reason": "Sebep",
+      "reasonPlaceholder": "ör. Tatil, Kişisel randevu...",
+      "addButton": "Zamanı Engelle",
+      "added": "Engelli zaman eklendi",
+      "addFailed": "Engelli zaman eklenemedi",
+      "deleted": "Engelli zaman kaldırıldı",
+      "deleteFailed": "Engelli zaman kaldırılamadı"
+    },
+    "delete": {
+      "title": "Sağlayıcıyı Sil",
+      "description": "{name} sağlayıcısını silmek istediğinizden emin misiniz? Bu işlem tüm müsaitlik, engelli zaman ve hizmet atamalarını da kaldıracaktır. Bu işlem geri alınamaz."
+    },
+    "success": {
+      "title": "Başarılı",
+      "created": "Sağlayıcı başarıyla oluşturuldu",
+      "updated": "Sağlayıcı başarıyla güncellendi",
+      "deleted": "Sağlayıcı başarıyla silindi"
+    },
+    "error": {
+      "title": "Hata",
+      "loadFailed": "Sağlayıcılar yüklenemedi",
+      "saveFailed": "Sağlayıcı kaydedilemedi",
+      "deleteFailed": "Sağlayıcı silinemedi",
+      "nameRequired": "Sağlayıcı adı gerekli",
+      "imageTooLarge": "Görsel 5MB'dan küçük olmalıdır",
+      "serviceFailed": "Hizmet ataması güncellenemedi",
+      "adminOnly": "Sadece organizasyon yöneticileri hizmet sağlayıcıları yönetebilir.",
+      "noOrganization": "Hizmet sağlayıcıları yönetmek için lütfen bir organizasyon seçin."
+    }
   },
   "appointments": {
     "title": "Randevular",
@@ -909,6 +1008,7 @@
       "createTitle": "Hizmet Seçeneği Oluştur",
       "detailsTab": "Detaylar",
       "membersTab": "Üye Ata",
+      "providersTab": "Sağlayıcı Ata",
       "title": "Başlık",
       "titlePlaceholder": "örn., Saç Kesimi, Danışmanlık",
       "description": "Açıklama",
@@ -923,14 +1023,17 @@
       "assignMembersOnCreate": "Oluşturduktan sonra bu hizmete ekip üyelerini atayın"
     },
     "assignDialog": {
-      "title": "Üye Ata",
+      "title": "Sağlayıcı Ata",
       "description": "Bu hizmeti sunabilecek ekip üyelerini seçin",
+      "providersDescription": "Bu hizmeti sunabilecek sağlayıcıları seçin",
       "noMembers": "Ekip üyesi bulunamadı",
+      "noProviders": "Sağlayıcı bulunamadı",
       "saving": "Kaydediliyor...",
       "save": "Atamaları Kaydet",
       "selectAll": "Tümünü Seç",
       "deselectAll": "Tümünü Kaldır",
-      "membersSelected": "{count} üye seçildi"
+      "membersSelected": "{count} üye seçildi",
+      "providersSelected": "{count} sağlayıcı seçildi"
     },
     "confirmDelete": "Bu hizmet seçeneğini silmek istediğinizden emin misiniz?",
     "messages": {
@@ -942,6 +1045,7 @@
       "deleteFailed": "Hizmet seçeneği silinemedi",
       "updateFailed": "Hizmet seçeneği güncellenemedi",
       "loadMembersFailed": "Üyeler yüklenemedi",
+      "loadProvidersFailed": "Sağlayıcılar yüklenemedi",
       "assignmentsUpdated": "Atamalar güncellendi",
       "assignmentsUpdatedDesc": "Üye atamaları kaydedildi",
       "assignmentsFailed": "Atamalar güncellenemedi"

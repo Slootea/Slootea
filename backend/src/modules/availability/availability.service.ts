@@ -127,6 +127,26 @@ export class AvailabilityService {
     });
   }
 
+  /**
+   * Find availability by external provider ID and day of week
+   */
+  async findByExternalProviderAndDay(
+    externalProviderId: string,
+    dayOfWeek: DayOfWeek,
+    serviceOptionId?: string,
+  ): Promise<Availability[]> {
+    const whereClause: any = { externalProviderId, dayOfWeek, isActive: true };
+    
+    // Get general availability (no specific service option) or specific to the service
+    return this.availabilityRepository.find({
+      where: [
+        { ...whereClause, serviceOptionId: null },
+        ...(serviceOptionId ? [{ ...whereClause, serviceOptionId }] : []),
+      ],
+      order: { startTime: 'ASC' },
+    });
+  }
+
   async findOne(id: string, userId: string): Promise<Availability> {
     const availability = await this.availabilityRepository.findOne({
       where: { id, userId },

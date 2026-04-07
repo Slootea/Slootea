@@ -43,6 +43,42 @@ export interface UserServiceOption {
   createdAt: string;
 }
 
+// External Provider (non-member service providers)
+export interface ExternalProvider {
+  id: string;
+  organizationId: string;
+  name: string;
+  imageBase64?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// External Provider Service Assignment
+export interface ExternalProviderServiceOption {
+  id: string;
+  externalProviderId: string;
+  serviceOptionId: string;
+  isActive: boolean;
+  customDuration?: number;
+  customDescription?: string;
+  serviceOption?: ServiceOption;
+  externalProvider?: ExternalProvider;
+  createdAt: string;
+}
+
+// Unified provider type for booking
+export interface UnifiedProvider {
+  id: string;
+  type: 'member' | 'external';
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+  email?: string;
+  clerkId?: string;
+}
+
 // Organization types
 export interface Organization {
   id: string;
@@ -196,7 +232,8 @@ export interface Appointment {
   confirmedAt?: string;
   reminderSentAt?: string;
   notes?: string;
-  userId: string;
+  userId?: string;
+  externalProviderId?: string;
   serviceOptionId: string;
   serviceOption?: ServiceOption;
   bookingLinkId?: string;
@@ -207,6 +244,7 @@ export interface Appointment {
     firstName?: string;
     lastName?: string;
   };
+  externalProvider?: ExternalProvider;
   createdAt: string;
   updatedAt: string;
 }
@@ -293,7 +331,9 @@ export interface AvailabilityCheckResult {
 
 export interface Provider {
   id: string;
-  clerkId: string;
+  clerkId?: string;
+  type?: 'member' | 'external';
+  name?: string;
   firstName?: string;
   lastName?: string;
   imageUrl?: string;

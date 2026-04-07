@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServiceOption } from './entities/service-option.entity';
 import { UserServiceOption } from './entities/user-service-option.entity';
@@ -8,10 +8,12 @@ import { ServiceOptionsController } from './service-options.controller';
 import { UserServiceOptionsController } from './user-service-options.controller';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { ExternalProviderServiceOption } from '../external-providers/entities/external-provider-service-option.entity';
+import { ExternalProvider } from '../external-providers/entities/external-provider.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ServiceOption, UserServiceOption]),
+    TypeOrmModule.forFeature([ServiceOption, UserServiceOption, ExternalProviderServiceOption, ExternalProvider]),
     AuthModule,
     UsersModule,
   ],

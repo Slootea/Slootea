@@ -315,6 +315,7 @@
     "blockedTimes": "Blocked Times",
     "bookingLinks": "Booking Links",
     "serviceOptions": "Service Options",
+    "serviceProviders": "Service Providers",
     "reports": "Reports",
     "settings": "Settings",
     "main": "Main",
@@ -594,6 +595,104 @@
     "clientNotFound": "Client not found",
     "clientNotFoundDesc": "The requested client could not be found",
     "validationError": "Validation Error"
+  },
+  "providersPage": {
+    "title": "Service Providers",
+    "description": "Manage external service providers who are not members of your organization",
+    "addProvider": "Add Provider",
+    "empty": {
+      "title": "No external providers yet",
+      "description": "Add external service providers to offer their services through your booking system."
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "type": {
+      "external": "External Provider"
+    },
+    "card": {
+      "added": "Added"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "dialog": {
+      "createTitle": "Add Service Provider",
+      "createDescription": "Add a new external service provider to your organization",
+      "editTitle": "Edit Service Provider",
+      "editDescription": "Update provider information, services, and availability",
+      "uploadImage": "Upload Photo",
+      "imageHint": "JPG, PNG or WEBP. Max 5MB.",
+      "removeImage": "Remove photo",
+      "name": "Name",
+      "namePlaceholder": "Enter provider name",
+      "activeLabel": "Provider is active and can receive bookings"
+    },
+    "tabs": {
+      "details": "Details",
+      "services": "Services",
+      "availability": "Availability",
+      "blockedTimes": "Blocked Times"
+    },
+    "services": {
+      "noServices": "No services have been created yet. Create services first to assign them to providers.",
+      "selectDescription": "Select the services this provider can offer."
+    },
+    "availability": {
+      "description": "Set weekly working hours for this provider.",
+      "unavailable": "Unavailable",
+      "addTitle": "Add Availability",
+      "addDescription": "Add working hours for {day}",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "addButton": "Add Hours",
+      "added": "Availability added",
+      "addFailed": "Failed to add availability",
+      "deleted": "Availability removed",
+      "deleteFailed": "Failed to remove availability"
+    },
+    "blockedTime": {
+      "description": "Block specific dates or times when this provider is unavailable.",
+      "add": "Add Blocked Time",
+      "empty": "No blocked times scheduled",
+      "addTitle": "Block Time",
+      "addDescription": "Block a date or time range when this provider is unavailable",
+      "date": "Date",
+      "fullDay": "Full Day",
+      "fullDayLabel": "Block entire day",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "reason": "Reason",
+      "reasonPlaceholder": "e.g., Vacation, Personal appointment...",
+      "addButton": "Block Time",
+      "added": "Blocked time added",
+      "addFailed": "Failed to add blocked time",
+      "deleted": "Blocked time removed",
+      "deleteFailed": "Failed to remove blocked time"
+    },
+    "delete": {
+      "title": "Delete Provider",
+      "description": "Are you sure you want to delete {name}? This will also remove all their availability, blocked times, and service assignments. This action cannot be undone."
+    },
+    "success": {
+      "title": "Success",
+      "created": "Provider created successfully",
+      "updated": "Provider updated successfully",
+      "deleted": "Provider deleted successfully"
+    },
+    "error": {
+      "title": "Error",
+      "loadFailed": "Failed to load providers",
+      "saveFailed": "Failed to save provider",
+      "deleteFailed": "Failed to delete provider",
+      "nameRequired": "Provider name is required",
+      "imageTooLarge": "Image must be less than 5MB",
+      "serviceFailed": "Failed to update service assignment",
+      "adminOnly": "Only organization admins can manage service providers.",
+      "noOrganization": "Please select an organization to manage service providers."
+    }
   },
   "appointments": {
     "title": "Appointments",
@@ -909,6 +1008,7 @@
       "createTitle": "Create Service Option",
       "detailsTab": "Details",
       "membersTab": "Assign Members",
+      "providersTab": "Assign Providers",
       "title": "Title",
       "titlePlaceholder": "e.g., Haircut, Consultation",
       "description": "Description",
@@ -923,14 +1023,17 @@
       "assignMembersOnCreate": "Assign team members to this service after creation"
     },
     "assignDialog": {
-      "title": "Assign Members",
+      "title": "Assign Providers",
       "description": "Select which team members can provide this service",
+      "providersDescription": "Select which providers can offer this service",
       "noMembers": "No team members found",
+      "noProviders": "No providers found",
       "saving": "Saving...",
       "save": "Save Assignments",
       "selectAll": "Select All",
       "deselectAll": "Deselect All",
-      "membersSelected": "{count} member(s) selected"
+      "membersSelected": "{count} member(s) selected",
+      "providersSelected": "{count} provider(s) selected"
     },
     "confirmDelete": "Are you sure you want to delete this service option?",
     "messages": {
@@ -942,6 +1045,7 @@
       "deleteFailed": "Failed to delete service option",
       "updateFailed": "Failed to update service option",
       "loadMembersFailed": "Failed to load members",
+      "loadProvidersFailed": "Failed to load providers",
       "assignmentsUpdated": "Assignments updated",
       "assignmentsUpdatedDesc": "Member assignments have been saved",
       "assignmentsFailed": "Failed to update assignments"

@@ -60,7 +60,7 @@ export default function SchedulePage() {
 
   // Available dates state
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
-  const [availableDatesLoading, setAvailableDatesLoading] = useState(false);
+  const [availableDatesLoading, setAvailableDatesLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   // Client form state
@@ -272,6 +272,8 @@ export default function SchedulePage() {
   const handleSelectProvider = (provider: Provider) => {
     setSelectedProvider(provider);
     setSelectedSlot(null);
+    setSelectedDate(undefined);
+    setAvailableDatesLoading(true);
   };
 
   // Handle booking submission

@@ -12,6 +12,7 @@ import { User } from '../../users/entities/user.entity';
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
 import { BookingLink } from '../../booking-links/entities/booking-link.entity';
 import { Client } from '../../clients/entities/client.entity';
+import { ExternalProvider } from '../../external-providers/entities/external-provider.entity';
 
 export enum AppointmentStatus {
   PENDING_CONFIRMATION = 'pending_confirmation',
@@ -75,12 +76,19 @@ export class Appointment {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   userId: string;
 
-  @ManyToOne(() => User, (user) => user.appointments, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.appointments, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true, comment: 'External provider ID (if appointment is with external provider)' })
+  externalProviderId: string;
+
+  @ManyToOne(() => ExternalProvider, (ep) => ep.appointments, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'externalProviderId' })
+  externalProvider: ExternalProvider;
 
   @Column()
   serviceOptionId: string;

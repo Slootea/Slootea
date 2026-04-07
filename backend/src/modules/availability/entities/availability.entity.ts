@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Check,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ServiceOption } from '../../service-options/entities/service-option.entity';
+import { ExternalProvider } from '../../external-providers/entities/external-provider.entity';
 
 export enum DayOfWeek {
   MONDAY = 0,
@@ -32,6 +34,7 @@ const timeTransformer = {
 };
 
 @Entity('availabilities')
+@Check(`"userId" IS NOT NULL OR "externalProviderId" IS NOT NULL`)
 export class Availability {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -57,12 +60,19 @@ export class Availability {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   userId: string;
 
   @ManyToOne(() => User, (user) => user.availabilities, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true })
+  externalProviderId: string;
+
+  @ManyToOne(() => ExternalProvider, (ep) => ep.availabilities, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'externalProviderId' })
+  externalProvider: ExternalProvider;
 
   @Column({ nullable: true })
   serviceOptionId: string;

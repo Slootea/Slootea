@@ -21,14 +21,37 @@ export function ProviderSelectionStep({
 
   const handleSelectProvider = (provider: typeof providers[0]) => {
     onSelectProvider(provider);
+    // Get display name - use name for external providers, firstName/lastName for members
+    const displayName = provider.name 
+      || (provider.firstName || provider.lastName 
+          ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
+          : undefined);
     trackProviderSelected({
       providerId: provider.id,
-      providerName: provider.firstName || provider.lastName 
-        ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
-        : undefined,
+      providerName: displayName,
       organizationId: bookingLink?.organizationId,
       organizationName: bookingLink?.user?.businessName,
     });
+  };
+
+  // Helper to get provider display name
+  const getProviderDisplayName = (provider: typeof providers[0]) => {
+    if (provider.name) return provider.name;
+    if (provider.firstName || provider.lastName) {
+      return `${provider.firstName || ''} ${provider.lastName || ''}`.trim();
+    }
+    return t('provider') || 'Provider';
+  };
+
+  // Helper to get provider initials
+  const getProviderInitials = (provider: typeof providers[0]) => {
+    if (provider.name) {
+      const parts = provider.name.split(' ');
+      return parts.length > 1 
+        ? `${parts[0][0]}${parts[parts.length - 1][0]}`
+        : provider.name[0];
+    }
+    return `${provider.firstName?.[0] || ''}${provider.lastName?.[0] || ''}`;
   };
 
   return (
@@ -78,14 +101,11 @@ export function ProviderSelectionStep({
                 <Avatar className="h-14 w-14 mx-auto mb-2">
                   <AvatarImage src={provider.imageUrl} />
                   <AvatarFallback className="text-lg">
-                    {provider.firstName?.[0] || ''}{provider.lastName?.[0] || ''}
-                    {!provider.firstName && !provider.lastName && <User className="h-6 w-6" />}
+                    {getProviderInitials(provider) || <User className="h-6 w-6" />}
                   </AvatarFallback>
                 </Avatar>
                 <p className="text-sm font-medium text-center truncate">
-                  {provider.firstName || provider.lastName 
-                    ? `${provider.firstName || ''} ${provider.lastName || ''}`.trim()
-                    : t('provider') || 'Provider'}
+                  {getProviderDisplayName(provider)}
                 </p>
               </button>
             ))}

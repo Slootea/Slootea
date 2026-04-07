@@ -181,20 +181,28 @@ export class PublicController {
       return { providers: [], providerSelectionEnabled: false };
     }
 
-    // Get providers assigned to this service
-    const providers = await this.userServiceOptionsService.getProvidersForService(
+    // Get unified providers (both members and external) assigned to this service
+    const providers = await this.userServiceOptionsService.getUnifiedProvidersForService(
       serviceOptionId,
       bookingLink.organizationId,
     );
 
-    // The providers already have Clerk profile data
-    const filteredProviders = providers.map((p) => ({
-      id: p.id,
-      clerkId: p.clerkId,
-      firstName: settings.showProviderNames ? p.firstName : undefined,
-      lastName: settings.showProviderNames ? p.lastName : undefined,
-      imageUrl: settings.showProviderPhotos ? p.imageUrl : undefined,
-    }));
+    // Map providers to response format with visibility settings applied
+    const filteredProviders = providers.map((p) => {
+      const displayName = p.type === 'external' 
+        ? p.name 
+        : `${p.firstName || ''} ${p.lastName || ''}`.trim();
+      
+      return {
+        id: p.id,
+        type: p.type,
+        clerkId: p.clerkId,
+        name: settings.showProviderNames ? displayName : undefined,
+        firstName: p.type === 'member' && settings.showProviderNames ? p.firstName : undefined,
+        lastName: p.type === 'member' && settings.showProviderNames ? p.lastName : undefined,
+        imageUrl: settings.showProviderPhotos ? p.imageUrl : undefined,
+      };
+    });
 
     return {
       providers: filteredProviders,

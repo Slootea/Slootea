@@ -12,6 +12,7 @@ import { BookingLinksModule } from '../booking-links/booking-links.module';
 import { ClientsModule } from '../clients/clients.module';
 import { UsersModule } from '../users/users.module';
 import { MessagingModule } from '../messaging/messaging.module';
+import { ExternalProvidersModule } from '../external-providers/external-providers.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MessagingModule } from '../messaging/messaging.module';
     forwardRef(() => ClientsModule),
     UsersModule,
     MessagingModule,
+    ExternalProvidersModule,
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],

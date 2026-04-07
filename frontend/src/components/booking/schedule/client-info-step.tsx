@@ -97,9 +97,10 @@ export function ClientInfoStep({
                 <span className="w-4 h-4 rounded bg-primary/20 flex items-center justify-center flex-shrink-0">
                   <Check className="h-2.5 w-2.5 text-primary" />
                 </span>
-                {selectedProvider.firstName || selectedProvider.lastName 
-                  ? `${selectedProvider.firstName || ''} ${selectedProvider.lastName || ''}`.trim()
-                  : t('provider') || 'Provider'}
+                {selectedProvider.name 
+                  || (selectedProvider.firstName || selectedProvider.lastName 
+                    ? `${selectedProvider.firstName || ''} ${selectedProvider.lastName || ''}`.trim()
+                    : t('provider') || 'Provider')}
               </p>
             )}
             {selectedSlot && (

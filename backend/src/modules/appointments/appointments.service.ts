@@ -25,9 +25,11 @@ import { BlockedTimesService } from '../blocked-times/blocked-times.service';
 import { OrganizationSettingsService } from '../settings/organization-settings.service';
 import { BookingLinksService } from '../booking-links/booking-links.service';
 import { ClientsService } from '../clients/clients.service';
-import { UserServiceOptionsService } from '../service-options/user-service-options.service';
+import { UserServiceOptionsService, UnifiedProvider } from '../service-options/user-service-options.service';
 import { NotificationService, NotificationData } from '../messaging/notification.service';
-import { DayOfWeek } from '../availability/entities/availability.entity';
+import { DayOfWeek, Availability } from '../availability/entities/availability.entity';
+import { BlockedTime } from '../blocked-times/entities/blocked-time.entity';
+import { ExternalProvidersService } from '../external-providers/external-providers.service';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface TimeSlot {
@@ -158,6 +160,7 @@ export class AppointmentsService {
     @Inject(forwardRef(() => UserServiceOptionsService))
     private readonly userServiceOptionsService: UserServiceOptionsService,
     private readonly notificationService: NotificationService,
+    private readonly externalProvidersService: ExternalProvidersService,
   ) {}
 
   /**
@@ -1029,7 +1032,7 @@ export class AppointmentsService {
 
   /**
    * Get available time slots for an organization-based booking
-   * Aggregates availability from all providers assigned to the service
+   * Aggregates availability from all providers (members + external) assigned to the service
    */
   async getAvailableSlotsForOrganization(
     organizationId: string,
@@ -1059,23 +1062,22 @@ export class AppointmentsService {
     // Get day of week using timezone-aware function
     const dayOfWeek = getDayOfWeekInTimezone(requestedDate, timezone);
 
-    // Get providers assigned to this service
-    const providers = await this.userServiceOptionsService.getProvidersForService(
+    // Get all providers (members + external) assigned to this service
+    const unifiedProviders = await this.userServiceOptionsService.getUnifiedProvidersForService(
       serviceOptionId,
       organizationId,
     );
 
-    if (providers.length === 0) {
+    if (unifiedProviders.length === 0) {
       return [];
     }
 
     // Filter to specific provider if requested
-    // Support both clerkId (string) and internal id (UUID) for filtering
-    const providerIds = providerId 
-      ? providers.filter(p => p.clerkId === providerId || p.id === providerId).map(p => p.id)
-      : providers.map(p => p.id);
+    const filteredProviders = providerId 
+      ? unifiedProviders.filter(p => p.id === providerId || (p.clerkId && p.clerkId === providerId))
+      : unifiedProviders;
 
-    if (providerIds.length === 0) {
+    if (filteredProviders.length === 0) {
       return [];
     }
 
@@ -1084,36 +1086,61 @@ export class AppointmentsService {
     const duration = serviceOption.duration;
     const buffer = settings.bufferTimeMinutes;
 
-    for (const providerUserId of providerIds) {
-      // Get availability for this provider on this day
-      const availabilities = await this.availabilityService.findByUserAndDay(
-        providerUserId,
-        dayOfWeek,
-        serviceOptionId,
-      );
+    for (const provider of filteredProviders) {
+      // Get availability based on provider type
+      let availabilities: Availability[];
+      let blockedTimes: BlockedTime[];
+      let existingAppointments: Appointment[];
 
-      if (availabilities.length === 0) continue;
-
-      // Get blocked times for this provider
-      const blockedTimes = await this.blockedTimesService.findByUserAndDate(
-        providerUserId,
-        date,
-      );
-
-      // Skip if full day is blocked
-      if (blockedTimes.some((bt) => bt.isFullDay)) continue;
-
-      // Get existing appointments for this provider in the organization's timezone
       const dayStartInTz = createDateInTimezone(date, '00:00', timezone);
       const dayEndInTz = createDateInTimezone(date, '23:59', timezone);
 
-      const existingAppointments = await this.appointmentRepository.find({
-        where: {
-          userId: providerUserId,
-          startTime: Between(dayStartInTz, dayEndInTz),
-          status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
-        },
-      });
+      if (provider.type === 'member') {
+        // Member provider - use userId
+        availabilities = await this.availabilityService.findByUserAndDay(
+          provider.id,
+          dayOfWeek,
+          serviceOptionId,
+        );
+
+        blockedTimes = await this.blockedTimesService.findByUserAndDate(
+          provider.id,
+          date,
+        );
+
+        existingAppointments = await this.appointmentRepository.find({
+          where: {
+            userId: provider.id,
+            startTime: Between(dayStartInTz, dayEndInTz),
+            status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+          },
+        });
+      } else {
+        // External provider - use externalProviderId
+        availabilities = await this.availabilityService.findByExternalProviderAndDay(
+          provider.id,
+          dayOfWeek,
+          serviceOptionId,
+        );
+
+        blockedTimes = await this.blockedTimesService.findByExternalProviderAndDate(
+          provider.id,
+          date,
+        );
+
+        existingAppointments = await this.appointmentRepository.find({
+          where: {
+            externalProviderId: provider.id,
+            startTime: Between(dayStartInTz, dayEndInTz),
+            status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+          },
+        });
+      }
+
+      if (availabilities.length === 0) continue;
+
+      // Skip if full day is blocked
+      if (blockedTimes.some((bt) => bt.isFullDay)) continue;
 
       // Generate time slots for this provider
       for (const availability of availabilities) {
@@ -1136,8 +1163,6 @@ export class AppointmentsService {
             });
 
             // Check if slot overlaps with existing appointments (considering buffer time before AND after)
-            // For a slot to be available, there must be no overlap between
-            // [slotStart, slotEnd+buffer] and [aptStart-buffer, aptEnd+buffer]
             const isBooked = existingAppointments.some((apt) => {
               const aptStart = new Date(apt.startTime);
               const aptEnd = new Date(apt.endTime);
@@ -1161,7 +1186,6 @@ export class AppointmentsService {
           }
 
           // Move to next slot - use 15 minute increments to catch gaps between appointments
-          // (e.g., when an appointment in between was cancelled)
           const SLOT_INCREMENT_MINUTES = 15;
           slotStart = new Date(slotStart.getTime() + SLOT_INCREMENT_MINUTES * 60000);
         }
@@ -1267,49 +1291,97 @@ export class AppointmentsService {
     const dayStartInTz = createDateInTimezone(dateStr, '00:00', timezone);
     const dayEndInTz = createDateInTimezone(dateStr, '23:59', timezone);
 
+    // Get unified providers (both members and external)
+    const unifiedProviders = await this.userServiceOptionsService.getUnifiedProvidersForService(
+      createDto.serviceOptionId,
+      organizationId,
+    );
+
+    if (unifiedProviders.length === 0) {
+      throw new BadRequestException('No providers available for this service');
+    }
+
     // Collect all available providers with their appointment counts
-    const availableProviders: Array<{ userId: string; appointmentCount: number }> = [];
+    const availableProviders: Array<{ 
+      id: string; 
+      type: 'member' | 'external';
+      appointmentCount: number;
+      name?: string;
+    }> = [];
 
-    for (const provider of providers) {
-      const providerUserId = provider.id;
-
-      // Check availability
-      const availabilities = await this.availabilityService.findByUserAndDay(
-        providerUserId,
-        dayOfWeek,
-        createDto.serviceOptionId,
-      );
-
-      const hasAvailability = availabilities.some((av) => {
-        const avStart = createDateInTimezone(dateStr, av.startTime, timezone);
-        const avEnd = createDateInTimezone(dateStr, av.endTime, timezone);
-        return startTime >= avStart && endTime <= avEnd;
-      });
+    for (const provider of unifiedProviders) {
+      // Check availability based on provider type
+      let hasAvailability = false;
+      if (provider.type === 'member') {
+        const availabilities = await this.availabilityService.findByUserAndDay(
+          provider.id,
+          dayOfWeek,
+          createDto.serviceOptionId,
+        );
+        hasAvailability = availabilities.some((av) => {
+          const avStart = createDateInTimezone(dateStr, av.startTime, timezone);
+          const avEnd = createDateInTimezone(dateStr, av.endTime, timezone);
+          return startTime >= avStart && endTime <= avEnd;
+        });
+      } else {
+        // External provider
+        const availabilities = await this.externalProvidersService.findByProviderAndDay(
+          provider.id,
+          dayOfWeek,
+          createDto.serviceOptionId,
+        );
+        hasAvailability = availabilities.some((av) => {
+          const avStart = createDateInTimezone(dateStr, av.startTime, timezone);
+          const avEnd = createDateInTimezone(dateStr, av.endTime, timezone);
+          return startTime >= avStart && endTime <= avEnd;
+        });
+      }
 
       if (!hasAvailability) continue;
 
-      // Check blocked times
-      const blockedTimes = await this.blockedTimesService.findByUserAndDate(
-        providerUserId,
-        dateStr,
-      );
-
-      const isBlocked = blockedTimes.some((bt) => {
-        if (bt.isFullDay) return true;
-        const blockStart = createDateInTimezone(dateStr, bt.startTime, timezone);
-        const blockEnd = createDateInTimezone(dateStr, bt.endTime, timezone);
-        return startTime < blockEnd && endTime > blockStart;
-      });
+      // Check blocked times based on provider type
+      let isBlocked = false;
+      if (provider.type === 'member') {
+        const blockedTimes = await this.blockedTimesService.findByUserAndDate(
+          provider.id,
+          dateStr,
+        );
+        isBlocked = blockedTimes.some((bt) => {
+          if (bt.isFullDay) return true;
+          const blockStart = createDateInTimezone(dateStr, bt.startTime, timezone);
+          const blockEnd = createDateInTimezone(dateStr, bt.endTime, timezone);
+          return startTime < blockEnd && endTime > blockStart;
+        });
+      } else {
+        // External provider
+        const blockedTimes = await this.externalProvidersService.findBlockedTimesByDate(
+          provider.id,
+          dateStr,
+        );
+        isBlocked = blockedTimes.some((bt) => {
+          if (bt.isFullDay) return true;
+          const blockStart = createDateInTimezone(dateStr, bt.startTime, timezone);
+          const blockEnd = createDateInTimezone(dateStr, bt.endTime, timezone);
+          return startTime < blockEnd && endTime > blockStart;
+        });
+      }
 
       if (isBlocked) continue;
 
       // Get existing appointments for this provider
+      const whereClause: any = {
+        startTime: Between(dayStartInTz, dayEndInTz),
+        status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+      };
+      
+      if (provider.type === 'member') {
+        whereClause.userId = provider.id;
+      } else {
+        whereClause.externalProviderId = provider.id;
+      }
+
       const existingAppointments = await this.appointmentRepository.find({
-        where: {
-          userId: providerUserId,
-          startTime: Between(dayStartInTz, dayEndInTz),
-          status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
-        },
+        where: whereClause,
       });
 
       // Check if the specific slot has a conflict
@@ -1326,8 +1398,10 @@ export class AppointmentsService {
       if (!hasConflict) {
         // This provider is available - add with their appointment count for load balancing
         availableProviders.push({
-          userId: providerUserId,
+          id: provider.id,
+          type: provider.type,
           appointmentCount: existingAppointments.length,
+          name: provider.type === 'external' ? provider.name : `${provider.firstName || ''} ${provider.lastName || ''}`.trim(),
         });
       }
     }
@@ -1338,7 +1412,7 @@ export class AppointmentsService {
 
     // Pick the provider with the least appointments (load balancing)
     availableProviders.sort((a, b) => a.appointmentCount - b.appointmentCount);
-    const assignedUserId = availableProviders[0].userId;
+    const assignedProvider = availableProviders[0];
 
     // Create or find client by phone number (clients belong to organization)
     let clientId: string | undefined;
@@ -1359,31 +1433,49 @@ export class AppointmentsService {
       ? AppointmentStatus.CONFIRMED
       : AppointmentStatus.PENDING_CONFIRMATION;
 
-    // Create appointment
+    // Create appointment with appropriate provider reference
     const confirmationToken = uuidv4();
-    const appointment = this.appointmentRepository.create({
-      ...createDto,
+    
+    // Create appointment with appropriate provider reference
+    const appointmentData = {
+      serviceOptionId: createDto.serviceOptionId,
       startTime,
       endTime,
-      userId: assignedUserId,
+      clientName: createDto.clientName,
+      clientEmail: createDto.clientEmail,
+      clientPhone: createDto.clientPhone,
+      notes: createDto.notes,
+      bookingLinkId: createDto.bookingLinkId,
       clientId,
       organizationId,
       confirmationToken,
       status: appointmentStatus,
       confirmedAt: autoConfirm ? new Date() : undefined,
-    });
+      userId: assignedProvider.type === 'member' ? assignedProvider.id : undefined,
+      externalProviderId: assignedProvider.type === 'external' ? assignedProvider.id : undefined,
+    };
 
+    const appointment = this.appointmentRepository.create(appointmentData);
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
     const fullAppointment = await this.appointmentRepository.findOneOrFail({
       where: { id: savedAppointment.id },
-      relations: ['serviceOption', 'user'],
+      relations: ['serviceOption', 'user', 'externalProvider'],
     });
 
     // Send notification for appointment created to all channels
     if (createDto.clientPhone || createDto.clientEmail) {
       try {
-        const providerUser = await this.userServiceOptionsService.getUserById(assignedUserId);
+        let providerName: string | undefined;
+        if (assignedProvider.type === 'member') {
+          const providerUser = await this.userServiceOptionsService.getUserById(assignedProvider.id);
+          providerName = providerUser?.firstName
+            ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
+            : undefined;
+        } else {
+          providerName = assignedProvider.name;
+        }
+        
         const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         const organizationName = await this.getOrganizationName(organizationId);
         const notificationData: NotificationData = {
@@ -1395,9 +1487,7 @@ export class AppointmentsService {
           serviceName: fullAppointment.serviceOption?.title || 'Appointment',
           appointmentDate: startTime,
           timezone,
-          providerName: providerUser?.firstName
-            ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
-            : undefined,
+          providerName,
           confirmationLink: `${baseUrl}/confirm/${confirmationToken}`,
           appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
         };

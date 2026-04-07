@@ -6,6 +6,22 @@ import { ServiceOption } from './entities/service-option.entity';
 import { AssignServiceDto, UpdateUserServiceDto, BulkAssignServicesDto, BulkAssignMembersToServiceDto } from './dto/user-service-option.dto';
 import { UsersService } from '../users/users.service';
 import { ClerkService } from '../auth/clerk.service';
+import { ExternalProviderServiceOption } from '../external-providers/entities/external-provider-service-option.entity';
+import { ExternalProvider } from '../external-providers/entities/external-provider.entity';
+
+/**
+ * Unified provider interface for booking flow
+ */
+export interface UnifiedProvider {
+  id: string;
+  type: 'member' | 'external';
+  firstName?: string;
+  lastName?: string;
+  name?: string; // For external providers
+  imageUrl?: string;
+  email?: string;
+  clerkId?: string; // Only for members
+}
 
 @Injectable()
 export class UserServiceOptionsService {
@@ -14,6 +30,10 @@ export class UserServiceOptionsService {
     private readonly userServiceOptionRepository: Repository<UserServiceOption>,
     @InjectRepository(ServiceOption)
     private readonly serviceOptionRepository: Repository<ServiceOption>,
+    @InjectRepository(ExternalProviderServiceOption)
+    private readonly externalProviderServiceOptionRepository: Repository<ExternalProviderServiceOption>,
+    @InjectRepository(ExternalProvider)
+    private readonly externalProviderRepository: Repository<ExternalProvider>,
     private readonly usersService: UsersService,
     private readonly clerkService: ClerkService,
   ) {}
@@ -234,6 +254,7 @@ export class UserServiceOptionsService {
   /**
    * Get providers for a service in an organization (for booking/dashboard)
    * Returns enhanced provider data with Clerk profile info
+   * @deprecated Use getUnifiedProvidersForService for booking flow
    */
   async getProvidersForService(
     serviceOptionId: string,
@@ -298,6 +319,89 @@ export class UserServiceOptionsService {
   }
 
   /**
+   * Get all providers (members + external) for a service in unified format
+   * Used in booking flow and provider selection
+   */
+  async getUnifiedProvidersForService(
+    serviceOptionId: string,
+    organizationId: string,
+  ): Promise<UnifiedProvider[]> {
+    // Verify the service belongs to the organization
+    const service = await this.serviceOptionRepository.findOne({
+      where: { id: serviceOptionId, organizationId },
+    });
+
+    if (!service) {
+      return [];
+    }
+
+    // Get member providers
+    const memberAssignments = await this.userServiceOptionRepository.find({
+      where: { serviceOptionId, isActive: true },
+      relations: ['user'],
+    });
+
+    const memberProvidersRaw = await Promise.all(
+      memberAssignments.map(async (assignment) => {
+        const user = assignment.user;
+        if (!user) return null;
+
+        try {
+          const clerkUser = await this.clerkService.getUserById(user.clerkId);
+          return {
+            id: user.id,
+            type: 'member' as const,
+            firstName: clerkUser.firstName || user.firstName,
+            lastName: clerkUser.lastName || user.lastName,
+            imageUrl: clerkUser.imageUrl,
+            email: clerkUser.email || user.email,
+            clerkId: user.clerkId,
+          };
+        } catch (error) {
+          console.error(`Failed to fetch Clerk data for user ${user.clerkId}:`, error);
+          return {
+            id: user.id,
+            type: 'member' as const,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            imageUrl: undefined,
+            email: user.email,
+            clerkId: user.clerkId,
+          };
+        }
+      }),
+    );
+
+    // Filter out nulls
+    const memberProviders: UnifiedProvider[] = memberProvidersRaw.filter(
+      (p): p is NonNullable<typeof p> => p !== null
+    );
+
+    // Get external providers
+    const externalAssignments = await this.externalProviderServiceOptionRepository.find({
+      where: { serviceOptionId, isActive: true },
+      relations: ['externalProvider'],
+    });
+
+    const externalProviders: UnifiedProvider[] = externalAssignments
+      .filter((a) => a.externalProvider && a.externalProvider.organizationId === organizationId && a.externalProvider.isActive)
+      .map((a) => ({
+        id: a.externalProvider.id,
+        type: 'external' as const,
+        name: a.externalProvider.name,
+        imageUrl: a.externalProvider.imageBase64 || undefined,
+      }));
+
+    // Combine and return
+    const allProviders = [
+      ...memberProviders,
+      ...externalProviders,
+    ];
+
+    return allProviders;
+  }
+
+  /**
    * Bulk assign multiple members to a service (admin only)
    * This replaces all existing assignments with the provided member list
    */
@@ -356,6 +460,132 @@ export class UserServiceOptionsService {
       added: toAdd.length,
       removed: toRemove.length,
       total: resolvedUserIds.length,
+    };
+  }
+
+  /**
+   * Bulk assign both members and external providers to a service (admin only)
+   * This replaces all existing assignments with the provided provider lists
+   */
+  async bulkAssignProvidersToService(
+    serviceOptionId: string,
+    memberIds: string[],
+    externalProviderIds: string[],
+    organizationId: string,
+  ): Promise<{ 
+    members: { added: number; removed: number; total: number };
+    externalProviders: { added: number; removed: number; total: number };
+  }> {
+    // Verify service exists in the organization
+    const service = await this.serviceOptionRepository.findOne({
+      where: { id: serviceOptionId, organizationId },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found in this organization');
+    }
+
+    // ========== Handle Members ==========
+    const resolvedUserIds: string[] = [];
+    for (const memberId of memberIds) {
+      try {
+        const userId = await this.resolveUserId(memberId);
+        resolvedUserIds.push(userId);
+      } catch (error) {
+        // Skip invalid member IDs
+        console.warn(`Could not resolve member ID: ${memberId}`, error);
+      }
+    }
+
+    // Get current member assignments for this service
+    const currentMemberAssignments = await this.userServiceOptionRepository.find({
+      where: { serviceOptionId },
+    });
+    const currentUserIds = currentMemberAssignments.map(a => a.userId);
+
+    // Determine who to add and who to remove (members)
+    const membersToAdd = resolvedUserIds.filter(id => !currentUserIds.includes(id));
+    const membersToRemove = currentUserIds.filter(id => !resolvedUserIds.includes(id));
+
+    // Remove member assignments
+    if (membersToRemove.length > 0) {
+      await this.userServiceOptionRepository.delete({
+        serviceOptionId,
+        userId: In(membersToRemove),
+      });
+    }
+
+    // Add new member assignments
+    if (membersToAdd.length > 0) {
+      const newMemberAssignments = membersToAdd.map(userId =>
+        this.userServiceOptionRepository.create({
+          userId,
+          serviceOptionId,
+          isActive: true,
+        }),
+      );
+      await this.userServiceOptionRepository.save(newMemberAssignments);
+    }
+
+    // ========== Handle External Providers ==========
+    // Verify all external provider IDs belong to this organization
+    const validExternalProviderIds: string[] = [];
+    for (const epId of externalProviderIds) {
+      const provider = await this.externalProviderRepository.findOne({
+        where: { id: epId, organizationId },
+      });
+      if (provider) {
+        validExternalProviderIds.push(epId);
+      } else {
+        console.warn(`External provider ${epId} not found in organization ${organizationId}`);
+      }
+    }
+
+    // Get current external provider assignments for this service
+    const currentExternalAssignments = await this.externalProviderServiceOptionRepository.find({
+      where: { serviceOptionId },
+      relations: ['externalProvider'],
+    });
+    // Filter to only assignments belonging to this organization
+    const currentExternalIds = currentExternalAssignments
+      .filter(a => a.externalProvider?.organizationId === organizationId)
+      .map(a => a.externalProviderId);
+
+    // Determine who to add and who to remove (external providers)
+    const externalToAdd = validExternalProviderIds.filter(id => !currentExternalIds.includes(id));
+    const externalToRemove = currentExternalIds.filter(id => !validExternalProviderIds.includes(id));
+
+    // Remove external provider assignments
+    if (externalToRemove.length > 0) {
+      await this.externalProviderServiceOptionRepository.delete({
+        serviceOptionId,
+        externalProviderId: In(externalToRemove),
+      });
+    }
+
+    // Add new external provider assignments
+    if (externalToAdd.length > 0) {
+      const newExternalAssignments = externalToAdd.map(externalProviderId =>
+        this.externalProviderServiceOptionRepository.create({
+          externalProviderId,
+          serviceOptionId,
+          isActive: true,
+        }),
+      );
+      await this.externalProviderServiceOptionRepository.save(newExternalAssignments);
+    }
+
+    return {
+      members: {
+        added: membersToAdd.length,
+        removed: membersToRemove.length,
+        total: resolvedUserIds.length,
+      },
+      externalProviders: {
+        added: externalToAdd.length,
+        removed: externalToRemove.length,
+        total: validExternalProviderIds.length,
+      },
     };
   }
 

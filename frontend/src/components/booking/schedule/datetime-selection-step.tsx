@@ -56,47 +56,50 @@ export function DateTimeSelectionStep({
           <CardTitle className="text-xl">{t('selectDate')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            locale={dateLocale}
-            disabled={(date) => {
-              if (isBefore(date, today) || isAfter(date, maxDate)) {
-                return true;
-              }
-              if (providerSelectionEnabled && !selectedProvider) {
-                return true;
-              }
-              const dateStr = format(date, "yyyy-MM-dd");
-              return !availableDates.has(dateStr);
-            }}
-            modifiers={{
-              available: (date) => {
-                if (isBefore(date, today) || isAfter(date, maxDate)) return false;
-                if (providerSelectionEnabled && !selectedProvider) return false;
+          {availableDatesLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">
+                {t('loadingAvailability') || 'Loading availability...'}
+              </p>
+            </div>
+          ) : (
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+              locale={dateLocale}
+              disabled={(date) => {
+                if (isBefore(date, today) || isAfter(date, maxDate)) {
+                  return true;
+                }
+                if (providerSelectionEnabled && !selectedProvider) {
+                  return true;
+                }
                 const dateStr = format(date, "yyyy-MM-dd");
-                return availableDates.has(dateStr);
-              },
-            }}
-            modifiersClassNames={{
-              available: "bg-primary/10 font-semibold text-primary hover:bg-primary/20",
-            }}
-            className="rounded-md border"
-          />
+                return !availableDates.has(dateStr);
+              }}
+              modifiers={{
+                available: (date) => {
+                  if (isBefore(date, today) || isAfter(date, maxDate)) return false;
+                  if (providerSelectionEnabled && !selectedProvider) return false;
+                  const dateStr = format(date, "yyyy-MM-dd");
+                  return availableDates.has(dateStr);
+                },
+              }}
+              modifiersClassNames={{
+                available: "bg-primary/10 font-semibold text-primary hover:bg-primary/20",
+              }}
+              className="rounded-md border"
+            />
+          )}
         </CardContent>
-        {availableDatesLoading && (
-          <div className="flex items-center justify-center text-sm text-muted-foreground pb-4">
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            {t('loadingAvailability') || 'Loading availability...'}
-          </div>
-        )}
       </Card>
 
-      {/* Time Slots - only show when date is selected */}
-      {selectedDate && (
+      {/* Time Slots - only show when date is selected and dates are loaded */}
+      {selectedDate && !availableDatesLoading && (
         <Card className="animate-in fade-in-0 slide-in-from-bottom-4 duration-300">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg text-center">

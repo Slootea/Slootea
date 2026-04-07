@@ -89,6 +89,16 @@ export class BlockedTimesService {
     });
   }
 
+  /**
+   * Find blocked times by external provider ID and date
+   */
+  async findByExternalProviderAndDate(externalProviderId: string, date: string): Promise<BlockedTime[]> {
+    return this.blockedTimeRepository.find({
+      where: { externalProviderId, date },
+      order: { startTime: 'ASC' },
+    });
+  }
+
   async findOne(id: string, userId: string): Promise<BlockedTime> {
     const blockedTime = await this.blockedTimeRepository.findOne({
       where: { id, userId },

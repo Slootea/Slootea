@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { serviceOptionsApi, userServiceOptionsApi, organizationsApi, organizationSettingsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
-import { ServiceOption, OrganizationMember, UserServiceOption } from "@/lib/types";
+import { serviceOptionsApi, userServiceOptionsApi, organizationsApi, organizationSettingsApi, externalProvidersApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { ServiceOption, OrganizationMember, UserServiceOption, ExternalProvider, UnifiedProvider } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,13 +65,18 @@ export default function ServiceOptionsPage() {
     price: 0,
   });
 
-  // Member assignment state
+  // Provider assignment state (unified: members + external providers)
   const [members, setMembers] = useState<OrganizationMember[]>([]);
-  const [serviceProviders, setServiceProviders] = useState<string[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
+  const [externalProviders, setExternalProviders] = useState<ExternalProvider[]>([]);
+  const [assignedMemberIds, setAssignedMemberIds] = useState<string[]>([]); // Clerk IDs
+  const [assignedExternalProviderIds, setAssignedExternalProviderIds] = useState<string[]>([]); // UUIDs
+  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [savingProviderId, setSavingProviderId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [currency, setCurrency] = useState<string>("TL");
+
+  // Computed: total selected providers count
+  const totalSelectedProviders = assignedMemberIds.length + assignedExternalProviderIds.length;
 
   const isAdmin = userRole === 'owner' || userRole === 'admin';
 
@@ -108,72 +113,85 @@ export default function ServiceOptionsPage() {
     fetchOptions();
   }, [getToken, currentOrganization]);
 
-  const loadMembers = async () => {
+  const loadProviders = async () => {
     if (!currentOrganization || !isAdmin) return;
     
-    setLoadingMembers(true);
+    setLoadingProviders(true);
     try {
       const token = await getToken();
       setAuthToken(token);
       setOrganizationContext(currentOrganization.id);
 
-      const membersRes = await organizationsApi.getMembers(currentOrganization.id);
+      const [membersRes, externalRes] = await Promise.all([
+        organizationsApi.getMembers(currentOrganization.id),
+        externalProvidersApi.getAll(),
+      ]);
       setMembers(membersRes.data);
+      setExternalProviders(externalRes.data.filter((ep: ExternalProvider) => ep.isActive));
     } catch (error) {
-      console.error("Failed to load members", error);
+      console.error("Failed to load providers", error);
       toast({
         title: tCommon("error"),
-        description: t("messages.loadMembersFailed"),
+        description: t("messages.loadProvidersFailed"),
         variant: "destructive",
       });
     } finally {
-      setLoadingMembers(false);
+      setLoadingProviders(false);
     }
   };
 
-  const loadMembersAndAssignments = async (serviceId: string) => {
+  const loadProvidersAndAssignments = async (serviceId: string) => {
     if (!currentOrganization || !isAdmin) return;
     
-    setLoadingMembers(true);
+    setLoadingProviders(true);
     try {
       const token = await getToken();
       setAuthToken(token);
       setOrganizationContext(currentOrganization.id);
 
-      const [membersRes, providersRes] = await Promise.all([
+      const [membersRes, externalRes, assignedProvidersRes] = await Promise.all([
         organizationsApi.getMembers(currentOrganization.id),
+        externalProvidersApi.getAll(),
         userServiceOptionsApi.getProvidersForService(serviceId),
       ]);
 
       setMembers(membersRes.data);
-      // Map provider's clerkId to match with member's userId (which is Clerk ID)
-      // The API returns a flat array with clerkId directly on each provider object
-      const assignedClerkIds = providersRes.data
-        .filter((p: { clerkId?: string }) => p.clerkId)
-        .map((p: { clerkId: string }) => p.clerkId);
-      setServiceProviders(assignedClerkIds);
+      setExternalProviders(externalRes.data.filter((ep: ExternalProvider) => ep.isActive));
+      
+      // Parse unified providers response - separate member and external assignments
+      const assignedProviders = assignedProvidersRes.data as UnifiedProvider[];
+      const memberClerkIds = assignedProviders
+        .filter((p) => p.type === 'member' && p.clerkId)
+        .map((p) => p.clerkId as string);
+      const externalIds = assignedProviders
+        .filter((p) => p.type === 'external')
+        .map((p) => p.id);
+      
+      setAssignedMemberIds(memberClerkIds);
+      setAssignedExternalProviderIds(externalIds);
     } catch (error) {
-      console.error("Failed to load members", error);
+      console.error("Failed to load providers", error);
       toast({
         title: tCommon("error"),
-        description: t("messages.loadMembersFailed"),
+        description: t("messages.loadProvidersFailed"),
         variant: "destructive",
       });
     } finally {
-      setLoadingMembers(false);
+      setLoadingProviders(false);
     }
   };
 
   const openCreateDialog = async () => {
     setEditingOption(null);
     setFormData({ title: "", description: "", imageBase64: undefined, duration: 30, showPrice: false, price: 0 });
-    setServiceProviders([]);
+    setAssignedMemberIds([]);
+    setAssignedExternalProviderIds([]);
     setActiveTab("details");
     setDialogOpen(true);
 
-    // Load members for assignment if in organization context
+    // Load providers for assignment if in organization context
     if (currentOrganization && isAdmin) {
-      await loadMembers();
+      await loadProviders();
     }
   };
 
@@ -190,9 +208,9 @@ export default function ServiceOptionsPage() {
     setActiveTab("details");
     setDialogOpen(true);
 
-    // Load members and assignments if in organization context
+    // Load providers and assignments if in organization context
     if (currentOrganization && isAdmin) {
-      await loadMembersAndAssignments(option.id);
+      await loadProvidersAndAssignments(option.id);
     }
   };
 
@@ -223,13 +241,16 @@ export default function ServiceOptionsPage() {
           await serviceOptionsApi.create(formData);
         }
 
-        // If we created a service in an organization and have selected members, assign them
-        if (createdServiceId && currentOrganization && isAdmin && serviceProviders.length > 0) {
+        // If we created a service in an organization and have selected providers, assign them
+        if (createdServiceId && currentOrganization && isAdmin && (assignedMemberIds.length > 0 || assignedExternalProviderIds.length > 0)) {
           try {
-            await userServiceOptionsApi.bulkAssignMembersToService(createdServiceId, serviceProviders);
+            await userServiceOptionsApi.bulkAssignProvidersToService(createdServiceId, {
+              memberIds: assignedMemberIds,
+              externalProviderIds: assignedExternalProviderIds,
+            });
             toast({ title: t("messages.createdWithAssignments") });
           } catch (assignError) {
-            console.error("Failed to assign members", assignError);
+            console.error("Failed to assign providers", assignError);
             toast({ 
               title: t("messages.created"),
               description: t("messages.assignmentsFailed"),
@@ -291,82 +312,121 @@ export default function ServiceOptionsPage() {
     }
   };
 
-  // Member assignment functions
-  const handleToggleMemberAssignment = async (memberId: string) => {
-    const newProviders = serviceProviders.includes(memberId)
-      ? serviceProviders.filter((id) => id !== memberId)
-      : [...serviceProviders, memberId];
+  // Provider assignment functions (unified: members + external)
+  const saveProviderAssignments = async (newMemberIds: string[], newExternalIds: string[]) => {
+    if (!editingOption || !currentOrganization) return;
     
-    setServiceProviders(newProviders);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      await userServiceOptionsApi.bulkAssignProvidersToService(editingOption.id, {
+        memberIds: newMemberIds,
+        externalProviderIds: newExternalIds,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleToggleMemberAssignment = async (memberId: string) => {
+    const newMemberIds = assignedMemberIds.includes(memberId)
+      ? assignedMemberIds.filter((id) => id !== memberId)
+      : [...assignedMemberIds, memberId];
+    
+    setAssignedMemberIds(newMemberIds);
 
     // Auto-save when editing an existing service
     if (editingOption && currentOrganization) {
-      setSavingMemberId(memberId);
+      setSavingProviderId(memberId);
       try {
-        const token = await getToken();
-        setAuthToken(token);
-        setOrganizationContext(currentOrganization.id);
-        await userServiceOptionsApi.bulkAssignMembersToService(editingOption.id, newProviders);
+        await saveProviderAssignments(newMemberIds, assignedExternalProviderIds);
       } catch (error) {
         // Revert on error
-        setServiceProviders(serviceProviders);
+        setAssignedMemberIds(assignedMemberIds);
         toast({
           title: tCommon("error"),
           description: t("messages.assignmentsFailed"),
           variant: "destructive",
         });
       } finally {
-        setSavingMemberId(null);
+        setSavingProviderId(null);
       }
     }
   };
 
-  const handleSelectAllMembers = async () => {
+  const handleToggleExternalProviderAssignment = async (providerId: string) => {
+    const newExternalIds = assignedExternalProviderIds.includes(providerId)
+      ? assignedExternalProviderIds.filter((id) => id !== providerId)
+      : [...assignedExternalProviderIds, providerId];
+    
+    setAssignedExternalProviderIds(newExternalIds);
+
+    // Auto-save when editing an existing service
+    if (editingOption && currentOrganization) {
+      setSavingProviderId(providerId);
+      try {
+        await saveProviderAssignments(assignedMemberIds, newExternalIds);
+      } catch (error) {
+        // Revert on error
+        setAssignedExternalProviderIds(assignedExternalProviderIds);
+        toast({
+          title: tCommon("error"),
+          description: t("messages.assignmentsFailed"),
+          variant: "destructive",
+        });
+      } finally {
+        setSavingProviderId(null);
+      }
+    }
+  };
+
+  const handleSelectAllProviders = async () => {
     const allMemberIds = members.map((m) => m.userId);
-    setServiceProviders(allMemberIds);
+    const allExternalIds = externalProviders.map((ep) => ep.id);
+    setAssignedMemberIds(allMemberIds);
+    setAssignedExternalProviderIds(allExternalIds);
 
     // Auto-save when editing an existing service
     if (editingOption && currentOrganization) {
-      setSavingMemberId('all');
+      setSavingProviderId('all');
       try {
-        const token = await getToken();
-        setAuthToken(token);
-        setOrganizationContext(currentOrganization.id);
-        await userServiceOptionsApi.bulkAssignMembersToService(editingOption.id, allMemberIds);
+        await saveProviderAssignments(allMemberIds, allExternalIds);
       } catch (error) {
-        setServiceProviders(serviceProviders);
+        setAssignedMemberIds(assignedMemberIds);
+        setAssignedExternalProviderIds(assignedExternalProviderIds);
         toast({
           title: tCommon("error"),
           description: t("messages.assignmentsFailed"),
           variant: "destructive",
         });
       } finally {
-        setSavingMemberId(null);
+        setSavingProviderId(null);
       }
     }
   };
 
-  const handleDeselectAllMembers = async () => {
-    const previousProviders = [...serviceProviders];
-    setServiceProviders([]);
+  const handleDeselectAllProviders = async () => {
+    const previousMemberIds = [...assignedMemberIds];
+    const previousExternalIds = [...assignedExternalProviderIds];
+    setAssignedMemberIds([]);
+    setAssignedExternalProviderIds([]);
 
     // Auto-save when editing an existing service
     if (editingOption && currentOrganization) {
-      setSavingMemberId('none');
+      setSavingProviderId('none');
       try {
-        const token = await getToken();
-        setAuthToken(token);
-        setOrganizationContext(currentOrganization.id);
-        await userServiceOptionsApi.bulkAssignMembersToService(editingOption.id, []);
+        await saveProviderAssignments([], []);
       } catch (error) {
-        setServiceProviders(previousProviders);
+        setAssignedMemberIds(previousMemberIds);
+        setAssignedExternalProviderIds(previousExternalIds);
         toast({
           title: tCommon("error"),
           description: t("messages.assignmentsFailed"),
           variant: "destructive",
         });
       } finally {
-        setSavingMemberId(null);
+        setSavingProviderId(null);
       }
     }
   };
@@ -387,9 +447,17 @@ export default function ServiceOptionsPage() {
     return member.user?.email || "Unknown";
   };
 
-  // Render member list component (reusable for both create and edit)
-  const renderMembersList = () => {
-    if (loadingMembers) {
+  const getProviderInitials = (name: string) => {
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+    }
+    return name.charAt(0).toUpperCase() || "?";
+  };
+
+  // Render unified provider list (members + external providers)
+  const renderProvidersList = () => {
+    if (loadingProviders) {
       return (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -397,10 +465,12 @@ export default function ServiceOptionsPage() {
       );
     }
 
-    if (members.length === 0) {
+    const totalProviders = members.length + externalProviders.length;
+    
+    if (totalProviders === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground">
-          {t("assignDialog.noMembers")}
+          {t("assignDialog.noProviders")}
         </div>
       );
     }
@@ -410,17 +480,17 @@ export default function ServiceOptionsPage() {
         {/* Select All / Deselect All buttons */}
         <div className="flex justify-between items-center mb-3">
           <span className="text-sm text-muted-foreground">
-            {t("assignDialog.membersSelected", { count: serviceProviders.length })}
+            {t("assignDialog.providersSelected", { count: totalSelectedProviders })}
           </span>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleSelectAllMembers}
-              disabled={serviceProviders.length === members.length || savingMemberId !== null}
+              onClick={handleSelectAllProviders}
+              disabled={totalSelectedProviders === totalProviders || savingProviderId !== null}
             >
-              {savingMemberId === 'all' ? (
+              {savingProviderId === 'all' ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               ) : (
                 <CheckSquare className="h-4 w-4 mr-1" />
@@ -431,10 +501,10 @@ export default function ServiceOptionsPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleDeselectAllMembers}
-              disabled={serviceProviders.length === 0 || savingMemberId !== null}
+              onClick={handleDeselectAllProviders}
+              disabled={totalSelectedProviders === 0 || savingProviderId !== null}
             >
-              {savingMemberId === 'none' ? (
+              {savingProviderId === 'none' ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               ) : (
                 <Square className="h-4 w-4 mr-1" />
@@ -445,19 +515,20 @@ export default function ServiceOptionsPage() {
         </div>
 
         <div className="space-y-2 max-h-[250px] overflow-y-auto">
+          {/* Render members */}
           {members.map((member) => (
             <div
-              key={member.userId}
-              className={`flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer ${savingMemberId !== null ? 'pointer-events-none' : ''}`}
+              key={`member-${member.userId}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer ${savingProviderId !== null ? 'pointer-events-none' : ''}`}
               onClick={() => handleToggleMemberAssignment(member.userId)}
             >
-              {savingMemberId === member.userId ? (
+              {savingProviderId === member.userId ? (
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
               ) : (
                 <Checkbox
-                  checked={serviceProviders.includes(member.userId)}
+                  checked={assignedMemberIds.includes(member.userId)}
                   onCheckedChange={() => handleToggleMemberAssignment(member.userId)}
-                  disabled={savingMemberId !== null}
+                  disabled={savingProviderId !== null}
                 />
               )}
               <Avatar className="h-8 w-8">
@@ -476,9 +547,38 @@ export default function ServiceOptionsPage() {
                   {member.user?.email}
                 </p>
               </div>
-              <Badge variant="outline" className="text-xs capitalize">
-                {member.role}
-              </Badge>
+            </div>
+          ))}
+
+          {/* Render external providers */}
+          {externalProviders.map((provider) => (
+            <div
+              key={`external-${provider.id}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer ${savingProviderId !== null ? 'pointer-events-none' : ''}`}
+              onClick={() => handleToggleExternalProviderAssignment(provider.id)}
+            >
+              {savingProviderId === provider.id ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <Checkbox
+                  checked={assignedExternalProviderIds.includes(provider.id)}
+                  onCheckedChange={() => handleToggleExternalProviderAssignment(provider.id)}
+                  disabled={savingProviderId !== null}
+                />
+              )}
+              <Avatar className="h-8 w-8">
+                {provider.imageBase64 && (
+                  <AvatarImage src={provider.imageBase64} alt={provider.name} />
+                )}
+                <AvatarFallback className="text-xs">
+                  {getProviderInitials(provider.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {provider.name}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -764,12 +864,12 @@ export default function ServiceOptionsPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="details">{t("dialog.detailsTab")}</TabsTrigger>
-                <TabsTrigger value="members" className="flex items-center gap-1">
+                <TabsTrigger value="providers" className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
-                  {t("dialog.membersTab")}
-                  {serviceProviders.length > 0 && (
+                  {t("dialog.providersTab")}
+                  {totalSelectedProviders > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 justify-center">
-                      {serviceProviders.length}
+                      {totalSelectedProviders}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -854,11 +954,11 @@ export default function ServiceOptionsPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="members" className="mt-4">
+              <TabsContent value="providers" className="mt-4">
                 <p className="text-sm text-muted-foreground mb-4">
-                  {t("assignDialog.description")}
+                  {t("assignDialog.providersDescription")}
                 </p>
-                {renderMembersList()}
+                {renderProvidersList()}
               </TabsContent>
             </Tabs>
           ) : (

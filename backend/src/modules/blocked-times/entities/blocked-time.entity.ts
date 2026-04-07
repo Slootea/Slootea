@@ -6,8 +6,10 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Check,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { ExternalProvider } from '../../external-providers/entities/external-provider.entity';
 
 // Transformer to ensure HH:mm format (strips seconds from PostgreSQL time type)
 const timeTransformer = {
@@ -21,6 +23,7 @@ const timeTransformer = {
 };
 
 @Entity('blocked_times')
+@Check(`"userId" IS NOT NULL OR "externalProviderId" IS NOT NULL`)
 export class BlockedTime {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -46,10 +49,17 @@ export class BlockedTime {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   userId: string;
 
   @ManyToOne(() => User, (user) => user.blockedTimes, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true })
+  externalProviderId: string;
+
+  @ManyToOne(() => ExternalProvider, (ep) => ep.blockedTimes, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'externalProviderId' })
+  externalProvider: ExternalProvider;
 }
