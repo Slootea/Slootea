@@ -1,6 +1,6 @@
 FROM node:22-alpine AS builder
 
-# Force rebuild v2
+# Force rebuild v4
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
@@ -13,10 +13,19 @@ COPY . .
 # Increase Node memory for build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Debug: show files and try build 
-RUN echo "=== Files in /app ===" && ls -la && \
-    echo "=== Checking nest CLI ===" && ./node_modules/.bin/nest --version && \
-    echo "=== Starting build ===" && pnpm run build
+# Debug with semicolons - runs all commands regardless of exit status
+RUN echo "=== Files in /app ===" ; \
+    ls -la ; \
+    echo "=== node version ===" ; \
+    node -v ; \
+    echo "=== pnpm version ===" ; \
+    pnpm -v ; \
+    echo "=== node_modules ===" ; \
+    ls -la node_modules || echo "node_modules missing" ; \
+    echo "=== checking nest ===" ; \
+    ./node_modules/.bin/nest --version || echo "nest NOT FOUND" ; \
+    echo "=== starting build ===" ; \
+    pnpm run build || echo "BUILD FAILED"
 
 FROM node:22-alpine AS runner
 
