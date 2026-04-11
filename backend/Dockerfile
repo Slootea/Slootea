@@ -25,7 +25,7 @@ RUN echo "=== Files in /app ===" ; \
     echo "=== checking nest ===" ; \
     ./node_modules/.bin/nest --version || echo "nest NOT FOUND" ; \
     echo "=== starting build ===" ; \
-    pnpm run build || echo "BUILD FAILED"
+    pnpm run build --reporter=ndjson || echo "BUILD FAILED"
 
 FROM node:22-alpine AS runner
 
