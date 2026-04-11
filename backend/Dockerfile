@@ -9,7 +9,10 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm run build 2>&1 || (cat /app/node_modules/.pnpm/debug.log 2>/dev/null; exit 1)
+
+# Increase Node memory for build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN pnpm run build
 
 FROM node:22-alpine AS runner
 
