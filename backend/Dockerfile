@@ -25,7 +25,13 @@ RUN echo "=== Files in /app ===" ; \
     echo "=== checking nest ===" ; \
     ./node_modules/.bin/nest --version || echo "nest NOT FOUND" ; \
     echo "=== starting build ===" ; \
-    pnpm run build --reporter=ndjson || echo "BUILD FAILED"
+    pnpm run build --reporter=ndjson ; \
+    echo "=== AFTER BUILD - finding dist ===" ; \
+    find /app -type d -name dist ; \
+    echo "=== ls /app after build ===" ; \
+    ls -la /app ; \
+    echo "=== ls /app/dist ===" ; \
+    ls -la /app/dist || echo "dist NOT FOUND"
 
 FROM node:22-alpine AS runner
 
