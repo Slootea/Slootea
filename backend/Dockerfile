@@ -20,4 +20,5 @@ COPY --from=builder /app/package.json ./
 
 EXPOSE 3001
 
-CMD ["node", "dist/main"]
+# Run migrations then start the app
+CMD ["sh", "-c", "node node_modules/typeorm/cli.js migration:run -d dist/config/data-source.js && node dist/main"]

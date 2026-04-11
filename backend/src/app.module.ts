@@ -37,7 +37,7 @@ import { ExternalProvidersModule } from './modules/external-providers/external-p
         password: configService.get('DATABASE_PASSWORD', 'appointment_pass'),
         database: configService.get('DATABASE_NAME', 'appointment_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        synchronize: configService.get('TYPEORM_SYNCHRONIZE') === 'true' || configService.get('NODE_ENV') !== 'production',
         logging: configService.get('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
