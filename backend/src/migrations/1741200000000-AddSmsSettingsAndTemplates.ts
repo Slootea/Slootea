@@ -4,9 +4,9 @@ export class AddSmsSettingsAndTemplates1741200000000 implements MigrationInterfa
   name = 'AddSmsSettingsAndTemplates1741200000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create organization_sms_settings table
+    // Create organization_sms_settings table (if not exists - may be created by InitialSchema)
     await queryRunner.query(`
-      CREATE TABLE "organization_sms_settings" (
+      CREATE TABLE IF NOT EXISTS "organization_sms_settings" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "organizationId" character varying NOT NULL,
         "enabled" boolean NOT NULL DEFAULT false,
@@ -23,21 +23,24 @@ export class AddSmsSettingsAndTemplates1741200000000 implements MigrationInterfa
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_sms_settings_org_id" ON "organization_sms_settings" ("organizationId")
+      CREATE INDEX IF NOT EXISTS "idx_sms_settings_org_id" ON "organization_sms_settings" ("organizationId")
     `);
 
-    // Create sms_templates table
+    // Create sms_templates table (enum and table may already exist from InitialSchema)
     await queryRunner.query(`
-      CREATE TYPE "sms_event_type_enum" AS ENUM (
-        'APPOINTMENT_CREATED',
-        'APPOINTMENT_REMINDER',
-        'APPOINTMENT_CANCELED',
-        'APPOINTMENT_RESCHEDULED'
-      )
+      DO $$ BEGIN
+        CREATE TYPE "sms_event_type_enum" AS ENUM (
+          'APPOINTMENT_CREATED',
+          'APPOINTMENT_REMINDER',
+          'APPOINTMENT_CANCELED',
+          'APPOINTMENT_RESCHEDULED'
+        );
+      EXCEPTION WHEN duplicate_object THEN null;
+      END $$;
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "sms_templates" (
+      CREATE TABLE IF NOT EXISTS "sms_templates" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "organizationId" character varying(255),
         "eventType" "sms_event_type_enum" NOT NULL,
@@ -53,15 +56,15 @@ export class AddSmsSettingsAndTemplates1741200000000 implements MigrationInterfa
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_sms_template_org_id" ON "sms_templates" ("organizationId")
+      CREATE INDEX IF NOT EXISTS "idx_sms_template_org_id" ON "sms_templates" ("organizationId")
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_sms_template_event_type" ON "sms_templates" ("eventType")
+      CREATE INDEX IF NOT EXISTS "idx_sms_template_event_type" ON "sms_templates" ("eventType")
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_sms_template_language" ON "sms_templates" ("language")
+      CREATE INDEX IF NOT EXISTS "idx_sms_template_language" ON "sms_templates" ("language")
     `);
 
     // Insert default SMS templates - Turkish
