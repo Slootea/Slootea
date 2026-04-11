@@ -26,6 +26,7 @@
   "dependencies": {
     "@clerk/backend": "^2.18.3",
     "@clerk/clerk-sdk-node": "^5.1.0",
+    "@langchain/core": "^1.1.39",
     "@langchain/openai": "^1.2.7",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",

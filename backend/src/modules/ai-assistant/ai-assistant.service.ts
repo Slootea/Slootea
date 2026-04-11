@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from '@langchain/core/messages';
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -157,7 +157,7 @@ Examples of good directed questions:
 
 Use exact service IDs from above. ALWAYS respond with valid JSON only - no markdown, no explanations outside the JSON.`;
 
-    const messages = [
+    const messages: BaseMessage[] = [
       new SystemMessage(systemPrompt),
       ...history.map((msg: ChatMessageDto) => 
         msg.role === 'user' 
