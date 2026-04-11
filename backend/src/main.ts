@@ -7,18 +7,13 @@ import * as bodyParser from 'body-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global prefix for all routes
-  app.setGlobalPrefix('api');
-
-  // Increase body parser limits for image uploads (base64 encoded)
-  app.use(bodyParser.json({ limit: '10mb' }));
-  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-
   // Enable CORS
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:3000',
-      'https://slootea.com','https://www.slootea.com','http://www.slootea.com/','http://slootea.com/'
+      'https://slootea.com',
+      'https://www.slootea.com',
+      'https://api.slootea.com',
     ],
     credentials: true,
   });
@@ -43,7 +38,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   const port = process.env.PORT || 3001;
   await app.listen(port);

@@ -1,15 +1,24 @@
 # Production Caddyfile for slootea.com
 
-slootea.com, www.slootea.com {
-    # API routes (must come before frontend catch-all)
-    handle /api/* {
-        reverse_proxy backend:3001
-    }
+# API subdomain
+api.slootea.com {
+    reverse_proxy backend:3001
 
-    # Frontend routes
-    handle /* {
-        reverse_proxy frontend:3000
+    # Enable compression
+    encode gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
     }
+}
+
+# Frontend
+slootea.com, www.slootea.com {
+    reverse_proxy frontend:3000
 
     # Enable compression
     encode gzip

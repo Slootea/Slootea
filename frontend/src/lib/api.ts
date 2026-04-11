@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const api = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -317,7 +317,7 @@ export const publicApi = {
     api.post('/public/ai-assistant/chat', data),
   aiAssistantChatStream: (data: { message: string; history?: { role: 'user' | 'assistant'; content: string }[]; organizationId: string }) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    return fetch(`${API_URL}/api/public/ai-assistant/chat/stream`, {
+    return fetch(`${API_URL}/public/ai-assistant/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

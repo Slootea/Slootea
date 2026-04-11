@@ -69,7 +69,8 @@ This will start:
 ### 4. Access the Application
 
 - Frontend: http://localhost:3000
-- API: http://localhost:3001/api
+- API: http://localhost:3001
+- Swagger Docs: http://localhost:3001/docs
 - Via Caddy: http://localhost
 
 ## Development Setup
@@ -131,37 +132,37 @@ AppointmentApp/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/service-options | List all service options |
-| POST | /api/service-options | Create service option |
-| PUT | /api/service-options/:id | Update service option |
-| DELETE | /api/service-options/:id | Delete service option |
-| GET | /api/availability | List availability slots |
-| POST | /api/availability | Create availability |
-| POST | /api/availability/bulk | Bulk create availability |
-| DELETE | /api/availability/:id | Delete availability |
-| GET | /api/blocked-times | List blocked times |
-| POST | /api/blocked-times | Create blocked time |
-| DELETE | /api/blocked-times/:id | Delete blocked time |
-| GET | /api/booking-links | List booking links |
-| POST | /api/booking-links | Create booking link |
-| PUT | /api/booking-links/:id | Update booking link |
-| DELETE | /api/booking-links/:id | Delete booking link |
-| GET | /api/appointments | List appointments |
-| GET | /api/appointments/stats | Get dashboard stats |
-| PUT | /api/appointments/:id | Update appointment |
-| PUT | /api/appointments/:id/cancel | Cancel appointment |
-| GET | /api/settings | Get business settings |
-| PUT | /api/settings | Update business settings |
+| GET | /service-options | List all service options |
+| POST | /service-options | Create service option |
+| PUT | /service-options/:id | Update service option |
+| DELETE | /service-options/:id | Delete service option |
+| GET | /availability | List availability slots |
+| POST | /availability | Create availability |
+| POST | /availability/bulk | Bulk create availability |
+| DELETE | /availability/:id | Delete availability |
+| GET | /blocked-times | List blocked times |
+| POST | /blocked-times | Create blocked time |
+| DELETE | /blocked-times/:id | Delete blocked time |
+| GET | /booking-links | List booking links |
+| POST | /booking-links | Create booking link |
+| PUT | /booking-links/:id | Update booking link |
+| DELETE | /booking-links/:id | Delete booking link |
+| GET | /appointments | List appointments |
+| GET | /appointments/stats | Get dashboard stats |
+| PUT | /appointments/:id | Update appointment |
+| PUT | /appointments/:id/cancel | Cancel appointment |
+| GET | /settings | Get business settings |
+| PUT | /settings | Update business settings |
 
 ### Public Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/public/book/:slug | Get booking link details |
-| GET | /api/public/book/:slug/slots | Get available time slots |
-| POST | /api/public/book/:slug | Book an appointment |
-| GET | /api/public/confirm/:token | Get appointment for confirmation |
-| POST | /api/public/confirm/:token | Confirm attendance |
+| GET | /public/book/:slug | Get booking link details |
+| GET | /public/book/:slug/slots | Get available time slots |
+| POST | /public/book/:slug | Book an appointment |
+| GET | /public/confirm/:token | Get appointment for confirmation |
+| POST | /public/confirm/:token | Confirm attendance |
 
 ## Database Schema
 
@@ -203,8 +204,11 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
 Update `Caddyfile` with your domain:
 
 ```
+api.yourdomain.com {
+    reverse_proxy backend:3001
+}
+
 yourdomain.com {
-    reverse_proxy /api/* backend:3001
     reverse_proxy frontend:3000
 }
 ```

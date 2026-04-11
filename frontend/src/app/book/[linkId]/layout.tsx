@@ -13,7 +13,7 @@ interface BookingLinkData {
 async function getBookingLink(slug: string): Promise<BookingLinkData | null> {
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${API_URL}/api/public/book/${slug}`, {
+    const response = await fetch(`${API_URL}/public/book/${slug}`, {
       cache: 'no-store',
     });
     

@@ -6,7 +6,7 @@ Appointment slot recovery SaaS: businesses publish shareable booking links, clie
 ## Architecture
 
 ### Monorepo Structure
-- **backend/** - NestJS 11 REST API (port 3001, prefix `/api`)
+- **backend/** - NestJS 11 REST API (port 3001, hosted at `api.slootea.com`)
 - **frontend/** - Next.js 15 + React 19 App Router (port 3000)
 - **Docker Compose** orchestrates: PostgreSQL, backend, frontend, Caddy reverse proxy
 
@@ -124,7 +124,7 @@ npm run migration:run
 ```
 
 ### API Docs
-Swagger available at `http://localhost:3001/api/docs` when backend running.
+Swagger available at `http://localhost:3001/docs` when backend running (or `https://api.slootea.com/docs` in production).
 
 ## Critical Conventions
 
