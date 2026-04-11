@@ -1,5 +1,6 @@
 FROM node:22-alpine AS builder
 
+# Force rebuild v2
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
