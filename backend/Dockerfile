@@ -12,7 +12,11 @@ COPY . .
 
 # Increase Node memory for build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN pnpm run build
+
+# Debug: show files and try build 
+RUN echo "=== Files in /app ===" && ls -la && \
+    echo "=== Checking nest CLI ===" && ./node_modules/.bin/nest --version && \
+    echo "=== Starting build ===" && pnpm run build
 
 FROM node:22-alpine AS runner
 
