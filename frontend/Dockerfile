@@ -2,12 +2,9 @@ FROM node:22-alpine AS base
 
 WORKDIR /app
 
-# Enable pnpm via corepack
-RUN corepack enable
-
 # Install dependencies first (cache-friendly)
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Copy source
 COPY . .
@@ -15,7 +12,7 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-RUN pnpm build
+RUN npm run build
 
 FROM node:22-alpine AS runner
 
