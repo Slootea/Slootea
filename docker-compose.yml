@@ -42,11 +42,9 @@ services:
       NODE_ENV: production
     expose:
       - "3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - slootea_network
+      - coolify
 
   frontend:
     build:
@@ -63,6 +61,7 @@ services:
       - backend
     networks:
       - slootea_network
+      - coolify
 
 volumes:
   postgres_data:
@@ -70,3 +69,5 @@ volumes:
 networks:
   slootea_network:
     driver: bridge
+  coolify:
+    external: true
