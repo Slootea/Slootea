@@ -61,6 +61,11 @@ services:
       - "traefik.http.middlewares.slootea-redirect.redirectregex.regex=^(http|https)://www\\.(.+)"
       - "traefik.http.middlewares.slootea-redirect.redirectregex.replacement=$${1}://$${2}"
       - "traefik.http.middlewares.slootea-redirect.redirectregex.permanent=true"
+
+      - "traefik.https.middlewares.slootea-redirect.redirectregex.regex=^(http|https)://www\\.(.+)"
+      - "traefik.https.middlewares.slootea-redirect.redirectregex.replacement=$${1}://$${2}"
+      - "traefik.https.middlewares.slootea-redirect.redirectregex.permanent=true"
+      
       - "coolify.traefik.middlewares=slootea-redirect"
     depends_on:
       - backend
