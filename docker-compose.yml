@@ -58,10 +58,17 @@ services:
     expose:
       - "3000"
     labels:
-      - "traefik.http.middlewares.example-redirect.redirectregex.regex=^(http|https)://www\\.(.+)"
-      - "traefik.http.middlewares.example-redirect.redirectregex.replacement=$${1}://$${2}"
-      - "traefik.http.middlewares.example-redirect.redirectregex.permanent=true"
-      - "coolify.traefik.middlewares=example-redirect"
+      # www -> non-www redirection
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`www.slootea.com`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.middlewares=redirect-to-non-www"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.regex=^https?://www\\.(.*)"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.replacement=http://$$1"
+      # Traefik routing for frontend
+      - "traefik.http.routers.frontend.rule=Host(`slootea.com`)"
+      - "traefik.http.routers.frontend.entrypoints=web" 
+
     depends_on:
       - backend
     networks:
