@@ -58,10 +58,14 @@ services:
     expose:
       - "3000"
     labels:
+      # Define the redirect logic
       - "traefik.http.middlewares.slootea-redirect.redirectregex.regex=^(http|https)://www\\.(.+)"
       - "traefik.http.middlewares.slootea-redirect.redirectregex.replacement=$${1}://$${2}"
       - "traefik.http.middlewares.slootea-redirect.redirectregex.permanent=true"
-      - "coolify.traefik.middlewares=slootea-redirect"
+          
+      # Apply to your unique router
+      # Note: Coolify usually appends these, but explicitly defining it ensures the link
+      - "traefik.http.routers.http-1-osii2xdoapusa91nawhiyrct-frontend.middlewares=gzip,slootea-redirect"
     depends_on:
       - backend
     networks:
