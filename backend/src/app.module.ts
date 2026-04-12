@@ -19,6 +19,7 @@ import { NotificationSettingsModule } from './modules/notification-settings/noti
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ExternalProvidersModule } from './modules/external-providers/external-providers.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ExternalProvidersModule } from './modules/external-providers/external-p
     AiAssistantModule,
     AdminModule,
     ExternalProvidersModule,
+    MonitoringModule,
   ],
 })
 export class AppModule {}

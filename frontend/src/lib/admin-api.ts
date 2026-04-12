@@ -261,6 +261,24 @@ export const adminApi = {
     api.post<WhatsAppSettings>(`/admin/organizations/${organizationId}/whatsapp/connect`, data),
   disconnectWhatsApp: (organizationId: string) =>
     api.post<WhatsAppSettings>(`/admin/organizations/${organizationId}/whatsapp/disconnect`),
+
+  // Monitoring
+  getSystemMetrics: () =>
+    api.get<SystemMetrics>('/monitoring/metrics'),
+  getLogs: (params?: LogsQueryParams) =>
+    api.get<LogEntry[]>('/monitoring/logs', { params }),
+  getLogStats: () =>
+    api.get<LogStats>('/monitoring/logs/stats'),
+  clearLogs: () =>
+    api.delete('/monitoring/logs'),
+  getActiveUsers: () =>
+    api.get<ActiveUser[]>('/monitoring/active-users'),
+  getActiveUsersStats: () =>
+    api.get<ActiveUsersStats>('/monitoring/active-users/stats'),
+  submitFrontendLog: (data: { level: string; context: string; message: string; metadata?: Record<string, unknown> }) =>
+    api.post<LogEntry>('/monitoring/logs/frontend', data),
+  getHealthCheck: () =>
+    api.get<HealthCheckResponse>('/monitoring/health'),
 };
 
 // WhatsApp Types
@@ -291,4 +309,123 @@ export interface ConnectWhatsAppData {
   accessToken: string;
   tokenExpiresAt?: string;
   displayPhoneNumber?: string;
+}
+
+// Monitoring Types
+export interface SystemMetrics {
+  cpu: {
+    usage: number;
+    cores: number;
+    model: string;
+    speed: number;
+    temperature?: number;
+  };
+  memory: {
+    total: number;
+    used: number;
+    free: number;
+    usagePercent: number;
+  };
+  disk: {
+    total: number;
+    used: number;
+    free: number;
+    usagePercent: number;
+    devices: Array<{
+      mount: string;
+      type: string;
+      size: number;
+      used: number;
+      usagePercent: number;
+    }>;
+  };
+  network: {
+    interfaces: Array<{
+      name: string;
+      ip4: string;
+      ip6: string;
+      rx_sec: number;
+      tx_sec: number;
+    }>;
+  };
+  os: {
+    platform: string;
+    distro: string;
+    release: string;
+    kernel: string;
+    arch: string;
+    hostname: string;
+    uptime: number;
+  };
+  process: {
+    uptime: number;
+    memoryUsage: {
+      heapUsed: number;
+      heapTotal: number;
+      rss: number;
+      external: number;
+    };
+    cpuUsage: {
+      user: number;
+      system: number;
+    };
+    pid: number;
+    nodeVersion: string;
+  };
+  timestamp: string;
+}
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: 'log' | 'error' | 'warn' | 'debug' | 'verbose';
+  context: string;
+  message: string;
+  source: 'backend' | 'frontend' | 'database';
+  metadata?: Record<string, unknown>;
+}
+
+export interface LogsQueryParams {
+  limit?: number;
+  source?: 'backend' | 'frontend' | 'database';
+  level?: 'log' | 'error' | 'warn' | 'debug' | 'verbose';
+  search?: string;
+}
+
+export interface LogStats {
+  total: number;
+  bySource: Record<string, number>;
+  byLevel: Record<string, number>;
+}
+
+export interface ActiveUser {
+  id: string;
+  clerkUserId?: string;
+  email?: string;
+  name?: string;
+  organizationId?: string;
+  organizationName?: string;
+  lastActivity: string;
+  currentPath?: string;
+  userAgent?: string;
+  ip?: string;
+  isAnonymous: boolean;
+}
+
+export interface ActiveUsersStats {
+  total: number;
+  authenticated: number;
+  anonymous: number;
+  byOrganization: Record<string, number>;
+  byPath: Record<string, number>;
+}
+
+export interface HealthCheckResponse {
+  status: 'healthy' | 'unhealthy';
+  timestamp: string;
+  uptime: number;
+  memory: {
+    used: string;
+    total: string;
+  };
 }

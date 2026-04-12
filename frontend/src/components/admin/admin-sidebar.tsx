@@ -7,6 +7,7 @@ import {
   Settings,
   Shield,
   ArrowLeft,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -35,6 +36,7 @@ export function AdminSidebar() {
   ];
 
   const systemItems = [
+    { href: "/admin/monitoring", label: "Monitoring", icon: Activity },
     { href: "/admin/system-admins", label: "System Admins", icon: Shield },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
