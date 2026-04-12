@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { appointmentsApi, bookingLinksApi, setAuthToken } from "@/lib/api";
+import { appointmentsApi, bookingLinksApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import { trackDashboardView, trackBookingLinkCopied } from "@/lib/analytics";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { DashboardStats, Appointment, BookingLink, AppointmentStatus } from "@/lib/types";
@@ -47,8 +47,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!currentOrganization) return;
+      
       const token = await getToken();
       setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
 
       try {
         const [statsRes, todayRes, linksRes] = await Promise.all([
@@ -66,7 +69,7 @@ export default function DashboardPage() {
       }
     };
     fetchData();
-  }, [getToken]);
+  }, [getToken, currentOrganization]);
 
   // Track dashboard view (separate effect to track once)
   useEffect(() => {

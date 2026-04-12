@@ -363,29 +363,44 @@ export class AppointmentsService {
     };
   }
 
-  async findUpcoming(userId: string): Promise<Appointment[]> {
+  async findUpcoming(userId: string, organizationId?: string): Promise<Appointment[]> {
+    const whereClause: any = {
+      startTime: MoreThanOrEqual(new Date()),
+      status: AppointmentStatus.CONFIRMED,
+    };
+    
+    if (organizationId) {
+      whereClause.organizationId = organizationId;
+    } else {
+      whereClause.userId = userId;
+    }
+
     return this.appointmentRepository.find({
-      where: {
-        userId,
-        startTime: MoreThanOrEqual(new Date()),
-        status: AppointmentStatus.CONFIRMED,
-      },
+      where: whereClause,
       relations: ['serviceOption'],
       order: { startTime: 'ASC' },
     });
   }
 
-  async findNextAppointment(userId: string): Promise<Appointment | null> {
+  async findNextAppointment(userId: string, organizationId?: string): Promise<Appointment | null> {
+    const baseWhere: any = {
+      startTime: MoreThanOrEqual(new Date()),
+    };
+    
+    if (organizationId) {
+      baseWhere.organizationId = organizationId;
+    } else {
+      baseWhere.userId = userId;
+    }
+
     return this.appointmentRepository.findOne({
       where: [
         {
-          userId,
-          startTime: MoreThanOrEqual(new Date()),
+          ...baseWhere,
           status: AppointmentStatus.CONFIRMED,
         },
         {
-          userId,
-          startTime: MoreThanOrEqual(new Date()),
+          ...baseWhere,
           status: AppointmentStatus.PENDING_CONFIRMATION,
         },
       ],
@@ -394,29 +409,43 @@ export class AppointmentsService {
     });
   }
 
-  async findTodayAppointments(userId: string): Promise<Appointment[]> {
+  async findTodayAppointments(userId: string, organizationId?: string): Promise<Appointment[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    const whereClause: any = {
+      startTime: Between(today, tomorrow),
+    };
+    
+    if (organizationId) {
+      whereClause.organizationId = organizationId;
+    } else {
+      whereClause.userId = userId;
+    }
+
     return this.appointmentRepository.find({
-      where: {
-        userId,
-        startTime: Between(today, tomorrow),
-      },
+      where: whereClause,
       relations: ['serviceOption'],
       order: { startTime: 'ASC' },
     });
   }
 
-  async findPendingConfirmation(userId: string): Promise<Appointment[]> {
+  async findPendingConfirmation(userId: string, organizationId?: string): Promise<Appointment[]> {
+    const whereClause: any = {
+      status: AppointmentStatus.PENDING_CONFIRMATION,
+      startTime: MoreThanOrEqual(new Date()),
+    };
+    
+    if (organizationId) {
+      whereClause.organizationId = organizationId;
+    } else {
+      whereClause.userId = userId;
+    }
+
     return this.appointmentRepository.find({
-      where: {
-        userId,
-        status: AppointmentStatus.PENDING_CONFIRMATION,
-        startTime: MoreThanOrEqual(new Date()),
-      },
+      where: whereClause,
       relations: ['serviceOption'],
       order: { startTime: 'ASC' },
     });
@@ -920,26 +949,33 @@ export class AppointmentsService {
     );
   }
 
-  async getDashboardStats(userId: string): Promise<{
+  async getDashboardStats(userId: string, organizationId?: string): Promise<{
     todayAppointments: number;
     pendingConfirmations: number;
     upcomingAppointments: number;
     noShowRate: number;
     fillRate: number;
   }> {
-    const today = await this.findTodayAppointments(userId);
-    const pending = await this.findPendingConfirmation(userId);
-    const upcoming = await this.findUpcoming(userId);
+    const today = await this.findTodayAppointments(userId, organizationId);
+    const pending = await this.findPendingConfirmation(userId, organizationId);
+    const upcoming = await this.findUpcoming(userId, organizationId);
 
     // Calculate no-show rate (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    const whereClause: any = {
+      startTime: Between(thirtyDaysAgo, new Date()),
+    };
+    
+    if (organizationId) {
+      whereClause.organizationId = organizationId;
+    } else {
+      whereClause.userId = userId;
+    }
+
     const pastAppointments = await this.appointmentRepository.find({
-      where: {
-        userId,
-        startTime: Between(thirtyDaysAgo, new Date()),
-      },
+      where: whereClause,
     });
 
     const noShows = pastAppointments.filter(

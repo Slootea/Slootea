@@ -74,41 +74,61 @@ export class AppointmentsController {
   @Get('today')
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get today\'s appointments' })
-  async findToday(@Request() req: any) {
-    return this.appointmentsService.findTodayAppointments(req.user.dbUserId);
+  async findToday(
+    @Request() req: any,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.findTodayAppointments(req.user.dbUserId, organizationId);
   }
 
   @Get('upcoming')
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get upcoming confirmed appointments' })
-  async findUpcoming(@Request() req: any) {
-    return this.appointmentsService.findUpcoming(req.user.dbUserId);
+  async findUpcoming(
+    @Request() req: any,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.findUpcoming(req.user.dbUserId, organizationId);
   }
 
   @Get('next')
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get the next upcoming appointment' })
-  async findNext(@Request() req: any) {
-    return this.appointmentsService.findNextAppointment(req.user.dbUserId);
+  async findNext(
+    @Request() req: any,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.findNextAppointment(req.user.dbUserId, organizationId);
   }
 
   @Get('pending')
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get appointments pending confirmation' })
-  async findPending(@Request() req: any) {
-    return this.appointmentsService.findPendingConfirmation(req.user.dbUserId);
+  async findPending(
+    @Request() req: any,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.findPendingConfirmation(req.user.dbUserId, organizationId);
   }
 
   @Get('stats')
   @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
+  @ApiHeader({ name: 'x-organization-id', required: false, description: 'Organization ID' })
   @ApiOperation({ summary: 'Get dashboard statistics' })
-  async getStats(@Request() req: any) {
-    return this.appointmentsService.getDashboardStats(req.user.dbUserId);
+  async getStats(
+    @Request() req: any,
+    @Headers('x-organization-id') organizationId?: string,
+  ) {
+    return this.appointmentsService.getDashboardStats(req.user.dbUserId, organizationId);
   }
 
   @Get('next-available')
