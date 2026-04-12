@@ -57,6 +57,18 @@ services:
       CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
     expose:
       - "3000"
+    labels:
+      # www -> non-www redirection
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`www.slootea.com`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.middlewares=redirect-to-non-www"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.regex=^https?://www\\.(.*)"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.replacement=http://$$1"
+      # Traefik routing for frontend
+      - "traefik.http.routers.frontend.rule=Host(`slootea.com`)"
+      - "traefik.http.routers.frontend.entrypoints=web" 
+
     depends_on:
       - backend
     networks:
