@@ -58,9 +58,10 @@ services:
     expose:
       - "3000"
     labels:
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https?://www\\.(.+)"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://$${1}"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
+      - "traefik.enable=true"
+      # Just reference the middleware from your dynamic file
+      - "traefik.http.routers.http-0.middlewares=global-www-to-non-www@file"
+      - "traefik.http.routers.https-0.middlewares=global-www-to-non-www@file"
     depends_on:
       - backend
     networks:
