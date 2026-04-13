@@ -69,7 +69,7 @@ services:
       - "traefik.http.routers.http-0.middlewares=global-www-to-non-www@file"
       - "traefik.http.routers.https-0.middlewares=global-www-to-non-www@file"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
