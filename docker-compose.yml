@@ -22,7 +22,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_HOST: postgres
+      DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: 5432
       DATABASE_USER: ${POSTGRES_USER:-appointment_user}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-appointment_pass}
