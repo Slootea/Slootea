@@ -68,9 +68,6 @@ services:
       # Just reference the middleware from your dynamic file
       - "traefik.http.routers.http-0.middlewares=global-www-to-non-www@file"
       - "traefik.http.routers.https-0.middlewares=global-www-to-non-www@file"
-    depends_on:
-      backend:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
       interval: 30s
