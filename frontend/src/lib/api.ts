@@ -569,3 +569,154 @@ export const metaOAuthApi = {
   cancelSession: (orgId: string) =>
     api.post(`/auth/meta/organizations/${orgId}/cancel-session`),
 };
+
+// ==================== Inventory Types ====================
+
+export type InventoryCategory = 'consumable' | 'retail';
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  sku?: string;
+  description?: string;
+  category: InventoryCategory;
+  unit: string;
+  currentStock: number;
+  minStockAlert: number;
+  costPerUnit?: number;
+  retailPrice?: number;
+  imageBase64?: string;
+  isActive: boolean;
+  isLowStock: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedInventoryResponse {
+  items: InventoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface LowStockSummary {
+  totalLowStockItems: number;
+  items: InventoryItem[];
+}
+
+export interface StockAdjustment {
+  id: string;
+  inventoryItemId: string;
+  type: 'manual' | 'appointment' | 'purchase' | 'correction';
+  quantity: number;
+  stockAfter: number;
+  reason?: string;
+  appointmentId?: string;
+  adjustedBy?: string;
+  createdAt: string;
+}
+
+export interface ServiceInventoryUsage {
+  id: string;
+  serviceOptionId: string;
+  inventoryItemId: string;
+  quantityUsed: number;
+  inventoryItem?: InventoryItem;
+}
+
+export interface DailyUsageData {
+  date: string;
+  used: number;
+  added: number;
+  netChange: number;
+}
+
+export interface ItemUsageReport {
+  itemId: string;
+  itemName: string;
+  unit: string;
+  dailyData: DailyUsageData[];
+  totalUsed: number;
+  totalAdded: number;
+}
+
+export interface DailyUsageReport {
+  items: ItemUsageReport[];
+  startDate: string;
+  endDate: string;
+}
+
+// ==================== Inventory API ====================
+
+export const inventoryApi = {
+  // CRUD
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: InventoryCategory;
+    isActive?: boolean;
+    lowStock?: boolean;
+  }) => api.get<PaginatedInventoryResponse>('/inventory', { params }),
+  
+  getOne: (id: string) => api.get<InventoryItem>(`/inventory/${id}`),
+  
+  create: (data: {
+    name: string;
+    sku?: string;
+    description?: string;
+    category?: InventoryCategory;
+    unit?: string;
+    currentStock?: number;
+    minStockAlert?: number;
+    costPerUnit?: number;
+    retailPrice?: number;
+    imageBase64?: string;
+    isActive?: boolean;
+  }) => api.post<InventoryItem>('/inventory', data),
+  
+  update: (id: string, data: Partial<{
+    name: string;
+    sku: string;
+    description: string;
+    category: InventoryCategory;
+    unit: string;
+    minStockAlert: number;
+    costPerUnit: number;
+    retailPrice: number;
+    imageBase64: string;
+    isActive: boolean;
+  }>) => api.put<InventoryItem>(`/inventory/${id}`, data),
+  
+  delete: (id: string) => api.delete(`/inventory/${id}`),
+  
+  // Stock management
+  getLowStock: () => api.get<LowStockSummary>('/inventory/low-stock'),
+  
+  adjustStock: (id: string, data: {
+    quantity: number;
+    type?: 'manual' | 'purchase' | 'correction';
+    reason?: string;
+  }) => api.post<InventoryItem>(`/inventory/${id}/adjust`, data),
+  
+  getStockHistory: (id: string, limit?: number) =>
+    api.get<StockAdjustment[]>(`/inventory/${id}/history`, { params: { limit } }),
+  
+  // Service inventory usage
+  getServiceUsage: (serviceOptionId: string) =>
+    api.get<ServiceInventoryUsage[]>(`/inventory/service/${serviceOptionId}/usage`),
+  
+  updateServiceUsage: (serviceOptionId: string, items: Array<{
+    inventoryItemId: string;
+    quantityUsed: number;
+  }>) => api.put<ServiceInventoryUsage[]>(`/inventory/service/${serviceOptionId}/usage`, { items }),
+  
+  // Reports
+  getDailyUsageReport: (params: {
+    startDate: string;
+    endDate: string;
+    itemId?: string;
+    category?: InventoryCategory;
+  }) => api.get<DailyUsageReport>('/inventory/reports/daily-usage', { params }),
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3, Shield, UserCog } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3, Shield, UserCog, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -47,6 +47,7 @@ export function AppSidebar() {
   const adminConfigItems = [
     { href: "/dashboard/options", label: t('serviceOptions'), icon: List },
     { href: "/dashboard/providers", label: t('serviceProviders') || 'Service Providers', icon: UserCog },
+    { href: "/dashboard/inventory", label: t('inventory') || 'Inventory', icon: Package },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
     { href: "/dashboard/reports", label: t('reports') || 'Reports', icon: BarChart3 },
     { href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 },
