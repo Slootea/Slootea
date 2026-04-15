@@ -1,14 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Globe } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import { locales, localeNames, localeFlags, Locale } from "@/i18n/config";
 
 interface LanguageSwitcherProps {
@@ -43,22 +42,26 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">
-            {localeFlags[currentLocale as Locale]} {localeNames[currentLocale as Locale]}
-          </span>
-        </Button>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50">
+          <span>{localeFlags[currentLocale as Locale]}</span>
+          <span className="hidden sm:inline">{localeNames[currentLocale as Locale]}</span>
+          <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="min-w-[140px]">
         {locales.map((locale) => (
           <DropdownMenuItem 
             key={locale} 
             onClick={() => switchLocale(locale)}
-            className={`cursor-pointer ${currentLocale === locale ? "font-semibold bg-accent" : ""}`}
+            className="cursor-pointer flex items-center justify-between"
           >
-            <span className="mr-2">{localeFlags[locale]}</span>
-            {localeNames[locale]}
+            <span className="flex items-center gap-2">
+              <span>{localeFlags[locale]}</span>
+              <span className={currentLocale === locale ? "font-medium" : ""}>{localeNames[locale]}</span>
+            </span>
+            {currentLocale === locale && (
+              <Check className="h-4 w-4 text-muted-foreground" />
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

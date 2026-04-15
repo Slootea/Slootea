@@ -57,10 +57,10 @@
     }
   },
   "landing": {
-    "badge": "Modern işletmeler için akıllı randevu yönetimi",
-    "heroTitle": "Boş Randevulardan",
-    "heroTitleHighlight": "Gelir Kaybetmeyin",
-    "heroDescription": "Randevularınızı kolayca oluşturmanızı, onaylamanızı ve takip etmenizi sağlayan bir randevu yönetim uygulaması.",
+    "badge": "Hizmet işletmeleri için üstün araç kutusu",
+    "heroTitle": "İşletmenizi",
+    "heroTitleHighlight": "Üst Düzey Hassasiyetle Yönetin",
+    "heroDescription": "Randevuları, envanteri ve müşteri ilişkilerini bir araya getiren hepsi bir arada yönetim platformu—böylece en iyi yaptığınız işe odaklanabilirsiniz.",
     "ctaButton": "Ücretsiz Deneyin",
     "meetTheTeam": "Ekiple Tanışın",
     "noCreditCard": "Kredi kartı gerekmez",
@@ -83,7 +83,7 @@
     },
     "problem": {
       "badge": "Neden Slootea?",
-      "title": "3 temel fayda",
+      "title": "4 temel fayda",
       "benefit1": {
         "title": "Daha az boş randevu",
         "description": "Müşteriler randevularını onaylar, gelmeme oranı düşer."
@@ -95,6 +95,10 @@
       "benefit3": {
         "title": "Tek yerde tüm müşteriler",
         "description": "Müşteri bilgileri dağınık değil, hepsi bir arada."
+      },
+      "benefit4": {
+        "title": "Elit deneyim",
+        "description": "İşletmenizi zahmetsizce yönetmenizi sağlayan son teknoloji."
       }
     },
     "stats": {
@@ -118,10 +122,10 @@
       },
       "whatsappConfirmation": {
         "badge": "Sıfır Gelmeme",
-        "title": "WhatsApp Onay Sistemi",
-        "description": "Müşteriler WhatsApp üzerinden geleceklerini onaylamalı - yoksa slotları otomatik olarak başka birine açılır. Artık boş koltuklar yok.",
-        "imageAlt": "WhatsApp Onay Mesajları",
-        "feature1": "WhatsApp üzerinden otomatik onay talepleri",
+        "title": "Bildirim Onay Sistemi",
+        "description": "Müşteriler geleceklerini onaylamalı - yoksa slotları otomatik olarak başka birine açılır. Artık boş koltuklar yok.",
+        "imageAlt": "Onay Mesajları",
+        "feature1": "Otomatik onay talepleri",
         "feature2": "Onaylanmayan slotlar bekleme listesine otomatik açılır",
         "feature3": "Onaylar için özelleştirilebilir son tarih"
       },
@@ -227,9 +231,8 @@
         "description": "Küçük işletmeler için ideal",
         "feature1": "5 personele kadar",
         "feature2": "Ayda 160 randevu saatine kadar",
-        "feature3": "WhatsApp onayları",
-        "feature4": "AI Hizmet Asistanı",
-        "feature5": "Müşteri takibi ve notlar",
+        "feature3": "AI Hizmet Asistanı",
+        "feature4": "Müşteri takibi ve notlar",
         "cta": "Ücretsiz Deneyin"
       },
       "enterprise": {
@@ -256,6 +259,101 @@
       "terms": "Kullanım Şartları",
       "contact": "İletişim",
       "copyright": "Tüm hakları saklıdır."
+    },
+    "showcase": {
+      "annotations": {
+        "intro": {
+          "title": "Slootea, hizmet işletmelerini yönetmek için bir araç kutusudur",
+          "subtitle": "Randevu yönetimi ve envanter yönetimi"
+        },
+        "bookingIntro": {
+          "title": "Akıllı Rezervasyon Akışı",
+          "subtitle": "Müşterileriniz kolayca hizmet rezervasyonu yapsın"
+        },
+        "calendarIntro": {
+          "title": "Görsel Takvim",
+          "subtitle": "Programınızı bir bakışta görün"
+        },
+        "inventoryIntro": {
+          "title": "Envanter Yönetimi",
+          "subtitle": "Stok seviyelerini gerçek zamanlı takip edin"
+        }
+      },
+      "slideLabels": {
+        "ai": "AI",
+        "services": "Hizmetler",
+        "providers": "Personel",
+        "datetime": "Tarih",
+        "userinfo": "Bilgiler",
+        "calendar": "Takvim",
+        "inventory": "Envanter"
+      },
+      "ai": {
+        "title": "AI Asistan",
+        "subtitle": "Neye ihtiyacınız olduğunu açıklayın",
+        "welcome": "Merhaba! 👋 Size nasıl yardımcı olabilirim?",
+        "userMessage": "Rahatlatıcı bir masaj istiyorum",
+        "aiResponse": "Mükemmel! İşte önerim:",
+        "inputPlaceholder": "Neye ihtiyacınız olduğunu açıklayın...",
+        "serviceName": "İsveç Masajı",
+        "book": "Rezerve Et"
+      },
+      "services": {
+        "salonName": "Bella Güzellik Salonu",
+        "selectService": "Hizmet seçin",
+        "needHelp": "Yardıma mı ihtiyacınız var? AI'a sorun",
+        "hair": "Saç",
+        "facial": "Cilt Bakımı",
+        "nails": "Tırnak",
+        "massage": "Masaj",
+        "makeup": "Makyaj",
+        "waxing": "Ağda"
+      },
+      "providers": {
+        "title": "Personel Seçin",
+        "subtitle": "Kimi tercih edersiniz",
+        "continue": "Devam"
+      },
+      "datetime": {
+        "title": "Tarih ve Saat Seçin",
+        "back": "Geri",
+        "continue": "Devam"
+      },
+      "userinfo": {
+        "title": "Bilgileriniz",
+        "name": "Ad",
+        "phone": "Telefon",
+        "email": "E-posta",
+        "optional": "İsteğe bağlı",
+        "yourName": "Adınız",
+        "summary": "Özet",
+        "back": "Geri",
+        "confirm": "Onayla"
+      },
+      "calendar": {
+        "week": "Hafta",
+        "day": "Gün",
+        "today": "Bugün",
+        "thisWeek": "Bu Hafta",
+        "confirmed": "Onaylı",
+        "month": "Nisan 2026",
+        "days": {
+          "mon": "Pzt",
+          "tue": "Sal",
+          "wed": "Çar",
+          "thu": "Per",
+          "fri": "Cum"
+        }
+      },
+      "inventory": {
+        "selectItem": "Ürün Seçin",
+        "search": "Ara...",
+        "adjustStock": "Stok Ayarla",
+        "currentStock": "Mevcut Stok",
+        "newStock": "Yeni Stok",
+        "units": "adet",
+        "addStock": "Stok Ekle"
+      }
     }
   },
   "settings": {

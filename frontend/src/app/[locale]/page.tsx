@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HeroVideo } from "@/components/hero-video";
-import { FeatureVideo } from "@/components/feature-video";
+import { HeroShowcase } from "@/components/hero-showcase";
+import { AIAssistantShowcase } from "@/components/ai-assistant-showcase";
+import { CalendarShowcase } from "@/components/calendar-showcase";
 import { ClientStoriesCarousel } from "@/components/client-stories-carousel";
 import { PricingSection } from "@/components/pricing-section";
 import { getTranslations } from "next-intl/server";
@@ -43,12 +44,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       'appointment scheduling',
       'booking software',
       'no-show reduction',
-      'WhatsApp booking',
-      'salon software',
       'service business management',
+      'salon software',
       'AI booking assistant',
+      'inventory management',
+      'client management',
       'randevu sistemi',
       'online randevu',
+      'işletme yönetimi',
     ],
     authors: [{ name: 'Slootea' }],
     creator: 'Slootea',
@@ -84,7 +87,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
           url: `${siteUrl}/og-image.png`,
           width: 1200,
           height: 630,
-          alt: 'Slootea - Appointment Scheduling Software',
+          alt: 'Slootea - Service Business Management Software',
         },
       ],
     },
@@ -156,8 +159,9 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
         },
         featureList: [
           'AI-powered booking assistant',
-          'WhatsApp confirmations',
+          'Notification confirmations',
           'Client tracking',
+          'Inventory management',
           'Mobile app',
           'Multi-provider scheduling',
           'No-show reduction',
@@ -269,11 +273,11 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               
-              {/* Hero Video */}
+              {/* Hero Showcase */}
               <div id="hero-video" className="relative mt-16 scroll-mt-24">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-2xl opacity-40" />
                 <div className="relative bg-surface-container-low rounded-2xl shadow-ambient-lg overflow-hidden">
-                  <HeroVideo />
+                  <HeroShowcase />
                 </div>
               </div>
             </div>
@@ -290,7 +294,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
             </div>
             
             {/* Benefits Grid */}
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
               <div className="bg-surface rounded-2xl p-8 text-center shadow-ambient-sm hover:shadow-ambient transition-all">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
                   <CheckCircle2 className="h-6 w-6" />
@@ -311,6 +315,13 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </div>
                 <h3 className="text-xl font-display font-semibold mb-3">{t('problem.benefit3.title')}</h3>
                 <p className="text-muted-foreground">{t('problem.benefit3.description')}</p>
+              </div>
+              <div className="bg-surface rounded-2xl p-8 text-center shadow-ambient-sm hover:shadow-ambient transition-all">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-display font-semibold mb-3">{t('problem.benefit4.title')}</h3>
+                <p className="text-muted-foreground">{t('problem.benefit4.description')}</p>
               </div>
             </div>
           </div>
@@ -354,11 +365,11 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </ul>
               </div>
               <div className="order-1 lg:order-2">
-                <FeatureVideo src="/AI_Assistant_Slootea.mp4" />
+                <AIAssistantShowcase />
               </div>
             </div>
 
-            {/* Feature 2 - WhatsApp Confirmation */}
+            {/* Feature 2 - Notification Confirmation */}
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
@@ -413,17 +424,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                 </ul>
               </div>
               <div className="order-1 lg:order-2">
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                  <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3]">
-                    <Image 
-                      src="/Calendar_Demo.png" 
-                      alt={t('features.clientTracking.imageAlt')}
-                      fill
-                      className="object-cover object-center"
-                    />
-                  </div>
-                </div>
+                <CalendarShowcase />
               </div>
             </div>
 

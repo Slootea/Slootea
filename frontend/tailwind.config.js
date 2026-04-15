@@ -135,12 +135,32 @@ module.exports = {
           from: { opacity: '0', transform: 'translateX(-8px)' },
           to: { opacity: '1', transform: 'translateX(0)' }
         },
+        'slide-in-right': {
+          from: { opacity: '0', transform: 'translateX(20px)' },
+          to: { opacity: '1', transform: 'translateX(0)' }
+        },
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'translateY(0)' }
+        },
+        'scale-up': {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to: { opacity: '1', transform: 'scale(1)' }
+        },
+        'grow-up': {
+          from: { opacity: '0', transform: 'scaleY(0)' },
+          to: { opacity: '1', transform: 'scaleY(1)' }
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in': 'fade-in 0.3s ease-out',
         'slide-in': 'slide-in 0.3s ease-out',
+        'slide-in-right': 'slide-in-right 0.5s ease-out',
+        'fade-up': 'fade-up 0.5s ease-out',
+        'scale-up': 'scale-up 0.4s ease-out',
+        'grow-up': 'grow-up 0.7s ease-out',
       },
       letterSpacing: {
         tighter: 'var(--tracking-tighter)',

@@ -28,10 +28,10 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "Slootea - Appointment Scheduling Software",
+    default: "Slootea - Service Business Management Software",
     template: "%s | Slootea",
   },
-  description: "AI-powered appointment scheduling. Reduce no-shows with WhatsApp confirmations, client tracking, and mobile app management.",
+  description: "The superior toolbox for service businesses. Manage appointments, inventory, and client relationships with elite precision.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com'),
   applicationName: 'Slootea',
   icons: {

@@ -57,10 +57,10 @@
     }
   },
   "landing": {
-    "badge": "Smart appointment management for modern businesses",
-    "heroTitle": "Never Lose Revenue to",
-    "heroTitleHighlight": "Empty Appointments",
-    "heroDescription": "An appointment management application that helps you book, confirm, and track appointments with ease.",
+    "badge": "The superior toolbox for service businesses",
+    "heroTitle": "Run Your Business with",
+    "heroTitleHighlight": "Elite Precision",
+    "heroDescription": "The all-in-one management platform that brings appointments, inventory, and client relationships together—so you can focus on what you do best.",
     "ctaButton": "Start Free Trial",
     "meetTheTeam": "Meet the Team",
     "noCreditCard": "No credit card required",
@@ -83,7 +83,7 @@
     },
     "problem": {
       "badge": "Why Slootea?",
-      "title": "3 key benefits",
+      "title": "4 key benefits",
       "benefit1": {
         "title": "Fewer no-shows",
         "description": "Customers confirm appointments, no-show rates drop."
@@ -95,6 +95,10 @@
       "benefit3": {
         "title": "All customers in one place",
         "description": "Customer info isn't scattered, everything together."
+      },
+      "benefit4": {
+        "title": "Elite experience",
+        "description": "Cutting-edge technology that makes running your business feel effortless."
       }
     },
     "stats": {
@@ -118,10 +122,10 @@
       },
       "whatsappConfirmation": {
         "badge": "Zero No-Shows",
-        "title": "WhatsApp Confirmation System",
-        "description": "Clients must confirm via WhatsApp that they're coming - or their slot gets automatically released to someone else. No more empty chairs.",
-        "imageAlt": "WhatsApp Confirmation Messages",
-        "feature1": "Automatic confirmation requests via WhatsApp",
+        "title": "Notification Confirmation System",
+        "description": "Clients must confirm that they're coming - or their slot gets automatically released to someone else. No more empty chairs.",
+        "imageAlt": "Confirmation Messages",
+        "feature1": "Automatic confirmation requests",
         "feature2": "Unconfirmed slots auto-released to waitlist",
         "feature3": "Customizable deadline for confirmations"
       },
@@ -227,9 +231,8 @@
         "description": "Perfect for small businesses",
         "feature1": "Up to 5 staff members",
         "feature2": "Up to 160 appointment hours/month",
-        "feature3": "WhatsApp confirmations",
-        "feature4": "AI Service Assistant",
-        "feature5": "Client tracking & notes",
+        "feature3": "AI Service Assistant",
+        "feature4": "Client tracking & notes",
         "cta": "Start Free Trial"
       },
       "enterprise": {
@@ -256,6 +259,101 @@
       "terms": "Terms of Service",
       "contact": "Contact",
       "copyright": "All rights reserved."
+    },
+    "showcase": {
+      "annotations": {
+        "intro": {
+          "title": "Slootea is a toolbox for running service businesses",
+          "subtitle": "Appointment management & inventory management"
+        },
+        "bookingIntro": {
+          "title": "Smart Booking Flow",
+          "subtitle": "Let clients book services with ease"
+        },
+        "calendarIntro": {
+          "title": "Visual Calendar",
+          "subtitle": "See your schedule at a glance"
+        },
+        "inventoryIntro": {
+          "title": "Inventory Management",
+          "subtitle": "Track stock levels in real-time"
+        }
+      },
+      "slideLabels": {
+        "ai": "AI",
+        "services": "Services",
+        "providers": "Provider",
+        "datetime": "Schedule",
+        "userinfo": "Details",
+        "calendar": "Calendar",
+        "inventory": "Inventory"
+      },
+      "ai": {
+        "title": "AI Assistant",
+        "subtitle": "Describe what you need",
+        "welcome": "Hello! 👋 How can I help you today?",
+        "userMessage": "I need a relaxing massage",
+        "aiResponse": "Perfect! Here's my recommendation:",
+        "inputPlaceholder": "Describe what you need...",
+        "serviceName": "Swedish Massage",
+        "book": "Book"
+      },
+      "services": {
+        "salonName": "Bella's Beauty Salon",
+        "selectService": "Select a service",
+        "needHelp": "Need help? Ask AI",
+        "hair": "Hair",
+        "facial": "Facial",
+        "nails": "Nails",
+        "massage": "Massage",
+        "makeup": "Makeup",
+        "waxing": "Waxing"
+      },
+      "providers": {
+        "title": "Choose Provider",
+        "subtitle": "Select who you'd like",
+        "continue": "Continue"
+      },
+      "datetime": {
+        "title": "Select Date & Time",
+        "back": "Back",
+        "continue": "Continue"
+      },
+      "userinfo": {
+        "title": "Your Information",
+        "name": "Name",
+        "phone": "Phone",
+        "email": "Email",
+        "optional": "Optional",
+        "yourName": "Your name",
+        "summary": "Summary",
+        "back": "Back",
+        "confirm": "Confirm"
+      },
+      "calendar": {
+        "week": "Week",
+        "day": "Day",
+        "today": "Today",
+        "thisWeek": "This Week",
+        "confirmed": "Confirmed",
+        "month": "April 2026",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri"
+        }
+      },
+      "inventory": {
+        "selectItem": "Select Item",
+        "search": "Search...",
+        "adjustStock": "Adjust Stock",
+        "currentStock": "Current Stock",
+        "newStock": "New Stock",
+        "units": "units",
+        "addStock": "Add Stock"
+      }
     }
   },
   "settings": {

@@ -77,7 +77,7 @@ export function PricingSection() {
             </div>
 
             <ul className="space-y-4 mb-8">
-              {["feature1", "feature2", "feature4", "feature5"].map((key) => (
+              {["feature1", "feature2", "feature3", "feature4"].map((key) => (
                 <li key={key} className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">{t(`standard.${key}`)}</span>
