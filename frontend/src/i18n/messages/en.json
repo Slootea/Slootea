@@ -137,6 +137,17 @@
         "feature2": "Private notes and preferences",
         "feature3": "Track reliability and no-show history"
       },
+      "inventoryManagement": {
+        "badge": "Stock Control",
+        "title": "Inventory Management",
+        "description": "Keep track of your products and supplies in real-time. Get alerts when stock is low, track usage patterns, and never run out of essential items again.",
+        "imageAlt": "Inventory Dashboard",
+        "feature1": "Real-time stock level tracking",
+        "feature2": "Low stock alerts and notifications",
+        "feature3": "Usage analytics and reports",
+        "feature4": "Automation triggers",
+        "comingSoon": "Coming Soon"
+      },
       "mobileApp": {
         "badge": "Coming Soon",
         "title": "Mobile App",
@@ -346,8 +357,19 @@
         }
       },
       "inventory": {
-        "selectItem": "Select Item",
+        "title": "Inventory",
+        "subtitle": "Stock Overview",
         "search": "Search...",
+        "totalItems": "Total Items",
+        "lowStock": "Low Stock",
+        "outOfStock": "Out of Stock",
+        "inStock": "In Stock",
+        "monthlyUsage": "Monthly",
+        "itemName": "Item Name",
+        "category": "Category",
+        "stock": "Stock",
+        "status": "Status",
+        "selectItem": "Select Item",
         "adjustStock": "Adjust Stock",
         "currentStock": "Current Stock",
         "newStock": "New Stock",

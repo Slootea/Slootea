@@ -137,6 +137,17 @@
         "feature2": "Özel notlar ve tercihler",
         "feature3": "Güvenilirlik ve gelmeme geçmişini takip"
       },
+      "inventoryManagement": {
+        "badge": "Stok Kontrolü",
+        "title": "Envanter Yönetimi",
+        "description": "Ürünlerinizi ve malzemelerinizi gerçek zamanlı takip edin. Stok azaldığında uyarı alın, kullanım kalıplarını izleyin ve temel ürünlerin asla tükenmesine izin vermeyin.",
+        "imageAlt": "Envanter Paneli",
+        "feature1": "Gerçek zamanlı stok seviyesi takibi",
+        "feature2": "Düşük stok uyarıları ve bildirimleri",
+        "feature3": "Kullanım analitiği ve raporlar",
+        "feature4": "Otomasyon tetikleyicileri",
+        "comingSoon": "Yakında"
+      },
       "mobileApp": {
         "badge": "Yakında",
         "title": "Mobil Uygulama",
@@ -346,8 +357,19 @@
         }
       },
       "inventory": {
-        "selectItem": "Ürün Seçin",
+        "title": "Envanter",
+        "subtitle": "Stok Özeti",
         "search": "Ara...",
+        "totalItems": "Toplam Ürün",
+        "lowStock": "Düşük Stok",
+        "outOfStock": "Tükendi",
+        "inStock": "Stokta",
+        "monthlyUsage": "Aylık",
+        "itemName": "Ürün Adı",
+        "category": "Kategori",
+        "stock": "Stok",
+        "status": "Durum",
+        "selectItem": "Ürün Seçin",
         "adjustStock": "Stok Ayarla",
         "currentStock": "Mevcut Stok",
         "newStock": "Yeni Stok",

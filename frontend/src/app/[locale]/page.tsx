@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { HeroShowcase } from "@/components/hero-showcase";
 import { AIAssistantShowcase } from "@/components/ai-assistant-showcase";
 import { CalendarShowcase } from "@/components/calendar-showcase";
+import { InventoryShowcase } from "@/components/inventory-showcase";
 import { ClientStoriesCarousel } from "@/components/client-stories-carousel";
 import { PricingSection } from "@/components/pricing-section";
 import { getTranslations } from "next-intl/server";
@@ -26,7 +27,8 @@ import {
   MessageCircle,
   Bot,
   ClipboardList,
-  Smartphone
+  Smartphone,
+  Package
 } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -428,20 +430,43 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            {/* Feature 4 - Mobile App */}
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* Feature 4 - Inventory Management */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-                <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3]">
-                  <Image 
-                    src="/Phone_App.jpeg" 
-                    alt={t('features.mobileApp.imageAlt')}
-                    fill
-                    className="object-cover object-center"
-                  />
-                </div>
+                <InventoryShowcase />
               </div>
               <div>
+                <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full bg-surface-container-low">
+                  {t('features.inventoryManagement.badge')}
+                </Badge>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-6">
+                  <Package className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-display font-bold mb-4">{t('features.inventoryManagement.title')}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  {t('features.inventoryManagement.description')}
+                </p>
+                <ul className="space-y-3">
+                  {['feature1', 'feature2', 'feature3', 'feature4'].map((key) => (
+                    <li key={key} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">
+                        {t(`features.inventoryManagement.${key}`)}
+                        {(key === 'feature2' || key === 'feature4') && (
+                          <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 font-normal text-muted-foreground border-muted-foreground/30">
+                            {t('features.inventoryManagement.comingSoon')}
+                          </Badge>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Feature 5 - Mobile App */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div className="order-2 lg:order-1">
                 <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs font-medium rounded-full bg-surface-container-low">
                   {t('features.mobileApp.badge')}
                 </Badge>
@@ -460,6 +485,17 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
                     </li>
                   ))}
                 </ul>
+              </div>
+              <div className="order-1 lg:order-2 relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
+                <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3]">
+                  <Image 
+                    src="/Phone_App.jpeg" 
+                    alt={t('features.mobileApp.imageAlt')}
+                    fill
+                    className="object-cover object-center"
+                  />
+                </div>
               </div>
             </div>
           </div>
