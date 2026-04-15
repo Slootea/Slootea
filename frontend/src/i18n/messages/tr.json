@@ -1272,6 +1272,38 @@
       "deleteFailed": "Envanter ürünü silinemedi",
       "adjustFailed": "Stok ayarlanamadı",
       "toggleFailed": "Ürün durumu güncellenemedi"
+    },
+    "automation": {
+      "title": "Envanter Otomasyonu",
+      "subtitle": "Stok yönetimi için otomatik iş akışları",
+      "comingSoon": "Yakında",
+      "comingSoonDescription": "Envanter yönetiminiz için güçlü otomasyon araçları geliştiriyoruz",
+      "featuresInDevelopment": "Geliştirme Aşamasındaki Özellikler",
+      "availableSoon": "Otomasyon özellikleri yakında kullanıma sunulacak",
+      "backToInventory": "Envantere Dön",
+      "status": {
+        "inProgress": "Devam Ediyor",
+        "planned": "Planlandı",
+        "ready": "Hazır"
+      },
+      "features": {
+        "lowStockAlerts": {
+          "title": "Düşük Stok Uyarıları",
+          "description": "Envanter minimum eşiğin altına düştüğünde otomatik bildirimler tetikleyin"
+        },
+        "notifications": {
+          "title": "Çok Kanallı Bildirimler",
+          "description": "E-posta, SMS, WhatsApp veya anlık bildirimler gönderin"
+        },
+        "webhook": {
+          "title": "Webhook Entegrasyonu",
+          "description": "Stok olayları gerçekleştiğinde harici API'ları ve webhook'ları tetikleyin"
+        },
+        "autoReorder": {
+          "title": "Otomatik Sipariş",
+          "description": "Stok azaldığında otomatik olarak satın alma siparişleri oluşturun"
+        }
+      }
     }
   },
   "calendarPage": {

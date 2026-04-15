@@ -6,6 +6,7 @@ import { StockAdjustment } from './entities/stock-adjustment.entity';
 import { AutomationWorkflow } from './entities/automation-workflow.entity';
 import { AutomationNode } from './entities/automation-node.entity';
 import { AutomationExecution } from './entities/automation-execution.entity';
+import { OrganizationSettings } from '../settings/entities/organization-settings.entity';
 import { InventoryService } from './inventory.service';
 import { AutomationService } from './automation.service';
 import { InventoryController } from './inventory.controller';
@@ -20,6 +21,7 @@ import { AutomationController } from './automation.controller';
       AutomationWorkflow,
       AutomationNode,
       AutomationExecution,
+      OrganizationSettings,
     ]),
   ],
   controllers: [InventoryController, AutomationController],

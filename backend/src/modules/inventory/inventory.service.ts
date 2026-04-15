@@ -9,6 +9,7 @@ import { Repository, ILike } from 'typeorm';
 import { InventoryItem, InventoryCategory } from './entities/inventory-item.entity';
 import { ServiceInventoryUsage } from './entities/service-inventory-usage.entity';
 import { StockAdjustment, StockAdjustmentType } from './entities/stock-adjustment.entity';
+import { OrganizationSettings } from '../settings/entities/organization-settings.entity';
 import {
   CreateInventoryItemDto,
   UpdateInventoryItemDto,
@@ -19,6 +20,12 @@ import {
   PaginatedInventoryResponseDto,
   LowStockSummaryDto,
 } from './dto/inventory.dto';
+import {
+  formatISODateInTimezone,
+  createUTCFromLocalTime,
+} from '../../common/utils/timezone.util';
+
+const DEFAULT_TIMEZONE = 'UTC';
 
 @Injectable()
 export class InventoryService {
@@ -29,23 +36,39 @@ export class InventoryService {
     private readonly serviceUsageRepository: Repository<ServiceInventoryUsage>,
     @InjectRepository(StockAdjustment)
     private readonly stockAdjustmentRepository: Repository<StockAdjustment>,
+    @InjectRepository(OrganizationSettings)
+    private readonly organizationSettingsRepository: Repository<OrganizationSettings>,
   ) {}
+
+  /**
+   * Get the timezone for an organization, defaulting to UTC if not set
+   */
+  private async getOrganizationTimezone(organizationId: string): Promise<string> {
+    const settings = await this.organizationSettingsRepository.findOne({
+      where: { organizationId },
+    });
+    return settings?.timezone || DEFAULT_TIMEZONE;
+  }
 
   // ==================== Inventory Item CRUD ====================
 
   async create(organizationId: string, dto: CreateInventoryItemDto): Promise<InventoryItem> {
+    // Normalize empty SKU to null (unique constraint only excludes NULL, not empty strings)
+    const sku = dto.sku?.trim() || null;
+
     // Check for duplicate SKU within organization
-    if (dto.sku) {
+    if (sku) {
       const existing = await this.inventoryItemRepository.findOne({
-        where: { organizationId, sku: dto.sku },
+        where: { organizationId, sku },
       });
       if (existing) {
-        throw new ConflictException(`An item with SKU "${dto.sku}" already exists`);
+        throw new ConflictException(`An item with SKU "${sku}" already exists`);
       }
     }
 
     const item = this.inventoryItemRepository.create({
       ...dto,
+      sku,
       organizationId,
     });
 
@@ -116,17 +139,20 @@ export class InventoryService {
   ): Promise<InventoryItem> {
     const item = await this.findOne(organizationId, id);
 
+    // Normalize empty SKU to null (unique constraint only excludes NULL, not empty strings)
+    const sku = dto.sku !== undefined ? (dto.sku?.trim() || null) : item.sku;
+
     // Check for duplicate SKU if updating
-    if (dto.sku && dto.sku !== item.sku) {
+    if (sku && sku !== item.sku) {
       const existing = await this.inventoryItemRepository.findOne({
-        where: { organizationId, sku: dto.sku },
+        where: { organizationId, sku },
       });
       if (existing) {
-        throw new ConflictException(`An item with SKU "${dto.sku}" already exists`);
+        throw new ConflictException(`An item with SKU "${sku}" already exists`);
       }
     }
 
-    Object.assign(item, dto);
+    Object.assign(item, { ...dto, sku });
     return this.inventoryItemRepository.save(item);
   }
 
@@ -289,6 +315,9 @@ export class InventoryService {
     startDate: string;
     endDate: string;
   }> {
+    // Get organization timezone
+    const timezone = await this.getOrganizationTimezone(organizationId);
+
     // Build query for inventory items
     const itemsQuery = this.inventoryItemRepository
       .createQueryBuilder('item')
@@ -311,16 +340,24 @@ export class InventoryService {
 
     const itemIds = inventoryItems.map((i) => i.id);
 
-    // Get all adjustments within the date range
+    // Convert local date range to UTC boundaries
+    // startDate at 00:00 local time -> UTC
+    // endDate at 23:59:59.999 local time -> UTC
+    const startUTC = createUTCFromLocalTime(startDate, '00:00', timezone);
+    const endUTC = createUTCFromLocalTime(endDate, '23:59', timezone);
+    // Add a bit to ensure we capture all adjustments in the last minute
+    endUTC.setSeconds(59, 999);
+
+    // Get all adjustments within the date range (using UTC boundaries)
     const adjustments = await this.stockAdjustmentRepository
       .createQueryBuilder('adj')
       .where('adj.inventoryItemId IN (:...itemIds)', { itemIds })
-      .andWhere('adj.createdAt >= :startDate', { startDate: `${startDate}T00:00:00.000Z` })
-      .andWhere('adj.createdAt <= :endDate', { endDate: `${endDate}T23:59:59.999Z` })
+      .andWhere('adj.createdAt >= :startUTC', { startUTC })
+      .andWhere('adj.createdAt <= :endUTC', { endUTC })
       .orderBy('adj.createdAt', 'ASC')
       .getMany();
 
-    // Generate all dates in the range
+    // Generate all dates in the range (local dates)
     const dates: string[] = [];
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -328,13 +365,14 @@ export class InventoryService {
       dates.push(d.toISOString().split('T')[0]);
     }
 
-    // Group adjustments by item and date
+    // Group adjustments by item and date (using organization timezone)
     const result = inventoryItems.map((item) => {
       const itemAdjustments = adjustments.filter((a) => a.inventoryItemId === item.id);
 
       const dailyData = dates.map((date) => {
+        // Filter adjustments that fall on this date in the organization's timezone
         const dayAdjustments = itemAdjustments.filter(
-          (a) => a.createdAt.toISOString().split('T')[0] === date,
+          (a) => formatISODateInTimezone(a.createdAt, timezone) === date,
         );
 
         const used = dayAdjustments
@@ -375,7 +413,7 @@ export class InventoryService {
     return {
       id: item.id,
       name: item.name,
-      sku: item.sku,
+      sku: item.sku ?? undefined,
       description: item.description,
       category: item.category,
       unit: item.unit,

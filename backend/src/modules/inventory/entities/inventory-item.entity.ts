@@ -27,8 +27,8 @@ export class InventoryItem {
   @Column()
   name: string;
 
-  @Column({ nullable: true, comment: 'Stock Keeping Unit for tracking' })
-  sku: string;
+  @Column({ type: 'varchar', nullable: true, comment: 'Stock Keeping Unit for tracking' })
+  sku: string | null;
 
   @Column({ type: 'text', nullable: true })
   description: string;

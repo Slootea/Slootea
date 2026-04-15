@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
+import React, { useState, useEffect } from "react";
 import { 
   AutomationNodeType, 
   NodeTypesResponse, 
@@ -10,13 +9,10 @@ import {
   automationApi,
   inventoryApi
 } from "@/lib/api";
-import { WorkflowCanvas } from "./workflow-canvas";
-import { NodePalette } from "./node-palette";
-import { NodeConfigPanel } from "./node-config-panel";
+import { WorkflowBuilder } from "./workflow-builder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { 
   Dialog, 
@@ -26,11 +22,6 @@ import {
   DialogFooter,
   DialogDescription
 } from "@/components/ui/dialog";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "@/components/ui/resizable";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Play, ArrowLeft, Loader2 } from "lucide-react";
 
@@ -59,7 +50,6 @@ export function WorkflowEditor({ workflow, onSave, onBack }: WorkflowEditorProps
   const [nodes, setNodes] = useState<CanvasNode[]>([]);
   
   // UI state
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [nodeTypes, setNodeTypes] = useState<NodeTypesResponse | null>(null);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,30 +93,6 @@ export function WorkflowEditor({ workflow, onSave, onBack }: WorkflowEditorProps
       );
     }
   }, [workflow]);
-
-  const selectedNode = nodes.find((n) => n.tempId === selectedNodeId) || null;
-
-  const handleAddNode = useCallback((type: AutomationNodeType) => {
-    const newNode: CanvasNode = {
-      tempId: uuidv4(),
-      type,
-      label: "",
-      config: {},
-      position: {
-        x: 100 + Math.random() * 200,
-        y: 100 + Math.random() * 200,
-      },
-      nextNodeIds: [],
-    };
-    setNodes((prev) => [...prev, newNode]);
-    setSelectedNodeId(newNode.tempId);
-  }, []);
-
-  const handleNodeUpdate = useCallback((updatedNode: CanvasNode) => {
-    setNodes((prev) =>
-      prev.map((n) => (n.tempId === updatedNode.tempId ? updatedNode : n))
-    );
-  }, []);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -270,49 +236,13 @@ export function WorkflowEditor({ workflow, onSave, onBack }: WorkflowEditorProps
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal">
-          {/* Node palette - left */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full p-4 bg-muted/30">
-              <NodePalette nodeTypes={nodeTypes} onAddNode={handleAddNode} />
-            </div>
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          {/* Canvas - center */}
-          <ResizablePanel defaultSize={selectedNode ? 50 : 80}>
-            <div className="h-full p-4">
-              <WorkflowCanvas
-                nodes={nodes}
-                onNodesChange={setNodes}
-                nodeTypes={nodeTypes}
-                onNodeSelect={(node) => setSelectedNodeId(node?.tempId || null)}
-                selectedNodeId={selectedNodeId}
-              />
-            </div>
-          </ResizablePanel>
-
-          {/* Config panel - right (conditional) */}
-          {selectedNode && (
-            <>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
-                <div className="h-full p-4 bg-muted/30">
-                  <NodeConfigPanel
-                    node={selectedNode}
-                    nodeTypes={nodeTypes}
-                    inventoryItems={inventoryItems}
-                    allNodes={nodes}
-                    onNodeUpdate={handleNodeUpdate}
-                    onClose={() => setSelectedNodeId(null)}
-                  />
-                </div>
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+      <div className="flex-1 overflow-hidden bg-muted/20">
+        <WorkflowBuilder
+          nodes={nodes}
+          onNodesChange={setNodes}
+          nodeTypes={nodeTypes}
+          inventoryItems={inventoryItems}
+        />
       </div>
 
       {/* Run confirmation dialog */}

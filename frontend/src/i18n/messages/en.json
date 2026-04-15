@@ -1272,6 +1272,38 @@
       "deleteFailed": "Failed to delete inventory item",
       "adjustFailed": "Failed to adjust stock",
       "toggleFailed": "Failed to update item status"
+    },
+    "automation": {
+      "title": "Inventory Automation",
+      "subtitle": "Automated workflows for stock management",
+      "comingSoon": "Coming Soon",
+      "comingSoonDescription": "We're building powerful automation tools for your inventory management",
+      "featuresInDevelopment": "Features in Development",
+      "availableSoon": "Automation features will be available soon",
+      "backToInventory": "Back to Inventory",
+      "status": {
+        "inProgress": "In Progress",
+        "planned": "Planned",
+        "ready": "Ready"
+      },
+      "features": {
+        "lowStockAlerts": {
+          "title": "Low Stock Alerts",
+          "description": "Automatically trigger notifications when inventory falls below minimum thresholds"
+        },
+        "notifications": {
+          "title": "Multi-Channel Notifications",
+          "description": "Send alerts via email, SMS, WhatsApp, or push notifications"
+        },
+        "webhook": {
+          "title": "Webhook Integration",
+          "description": "Trigger external APIs and webhooks when stock events occur"
+        },
+        "autoReorder": {
+          "title": "Auto-Reorder",
+          "description": "Automatically create purchase orders when stock runs low"
+        }
+      }
     }
   },
   "calendarPage": {
