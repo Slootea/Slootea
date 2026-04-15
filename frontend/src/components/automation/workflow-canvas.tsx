@@ -218,7 +218,7 @@ export function WorkflowCanvas({
 
   // Draw connections
   const renderConnections = () => {
-    const connections: JSX.Element[] = [];
+    const connections: React.JSX.Element[] = [];
     
     nodes.forEach(node => {
       node.nextNodeIds.forEach(nextTempId => {
