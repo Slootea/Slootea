@@ -306,6 +306,17 @@
     "saveError": "Failed to save settings",
     "loadError": "Failed to load settings"
   },
+  "moduleSwitcher": {
+    "switchModule": "Switch Module",
+    "appointments": {
+      "label": "Appointments",
+      "description": "Manage bookings & clients"
+    },
+    "inventory": {
+      "label": "Inventory",
+      "description": "Track stock & supplies"
+    }
+  },
   "sidebar": {
     "dashboard": "Dashboard",
     "calendar": "Calendar",
@@ -316,6 +327,15 @@
     "bookingLinks": "Booking Links",
     "serviceOptions": "Service Options",
     "serviceProviders": "Service Providers",
+    "inventory": "Inventory",
+    "inventoryManagement": "Inventory",
+    "inventoryOverview": "Overview",
+    "inventoryItems": "Items",
+    "stockAdjust": "Adjust Stock",
+    "stockAlerts": "Stock Alerts",
+    "stockHistory": "History",
+    "inventoryReports": "Reports",
+    "inventoryAutomation": "Automation",
     "reports": "Reports",
     "settings": "Settings",
     "main": "Main",
@@ -1049,6 +1069,241 @@
       "assignmentsUpdated": "Assignments updated",
       "assignmentsUpdatedDesc": "Member assignments have been saved",
       "assignmentsFailed": "Failed to update assignments"
+    }
+  },
+  "inventoryPage": {
+    "title": "Inventory",
+    "description": "Manage products and consumables used in your services.",
+    "addItem": "Add Item",
+    "addFirstItem": "Add First Item",
+    "editItem": "Edit Item",
+    "noItems": "No inventory items yet",
+    "noOrganization": "Please select an organization to manage inventory",
+    "adminOnly": "Only administrators can manage inventory",
+    "searchPlaceholder": "Search by name or SKU...",
+    "allCategories": "All Categories",
+    "lowStock": "Low Stock",
+    "inactive": "Inactive",
+    "lowStockAlert": "{count} items are running low on stock",
+    "more": "more",
+    "viewLowStock": "View Low Stock",
+    "showAll": "Show All",
+    "viewAll": "View All",
+    "adjustStock": "Adjust Stock",
+    "currentStock": "Current Stock",
+    "newStock": "New Stock",
+    "confirmAdjust": "Confirm Adjustment",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "minAlert": "Min. Alert",
+    "showing": "Showing {from}-{to} of {total}",
+    "allStocksHealthy": "All Stock Levels Healthy",
+    "allStocksHealthyDesc": "No items are currently below minimum stock levels.",
+    "tabs": {
+      "overview": "Overview",
+      "items": "Items",
+      "adjust": "Adjust",
+      "reports": "Reports"
+    },
+    "stats": {
+      "totalItems": "Total Items",
+      "active": "active",
+      "lowStock": "Low Stock",
+      "outOfStock": "out of stock",
+      "categories": "Categories",
+      "inventoryHealth": "Inventory Health",
+      "itemsCount": "items"
+    },
+    "charts": {
+      "stockLevels": "Stock Levels",
+      "stockLevelsDesc": "Items sorted by stock level relative to minimum alert",
+      "lowStockAlerts": "Low Stock Alerts",
+      "lowStockAlertsDesc": "Items that need restocking soon",
+      "categoryBreakdown": "Category Breakdown"
+    },
+    "adjust": {
+      "description": "Adjust stock levels and view adjustment history",
+      "newAdjustment": "New Adjustment",
+      "newAdjustmentDesc": "Add or subtract stock from inventory items",
+      "selectItem": "Select Item",
+      "selectItemPlaceholder": "Choose an item...",
+      "selectItemDesc": "Choose an item to adjust its stock level",
+      "adjustStock": "Adjust Stock",
+      "adjustStockDesc": "Add or remove stock from the selected item",
+      "quickAdjust": "Quick Adjust",
+      "customAmount": "Custom Amount",
+      "addStock": "Add Stock",
+      "removeStock": "Remove Stock",
+      "noItemSelected": "No Item Selected",
+      "noItemSelectedDesc": "Select an item from the list to adjust its stock",
+      "type": "Type",
+      "add": "Add",
+      "subtract": "Subtract",
+      "quantity": "Quantity",
+      "reason": "Reason",
+      "reasons": {
+        "purchase": "Purchase / Restock",
+        "consumed": "Consumed / Used",
+        "damaged": "Damaged",
+        "expired": "Expired",
+        "returned": "Returned",
+        "correction": "Correction",
+        "other": "Other"
+      },
+      "notes": "Notes",
+      "notesPlaceholder": "Add optional notes about this adjustment...",
+      "preview": "Preview",
+      "submit": "Submit Adjustment",
+      "inStock": "in stock",
+      "history": "Adjustment History",
+      "historyFor": "History for {name}",
+      "selectItemToViewHistory": "Select an item to view its history",
+      "selectItemFirst": "Select an item first",
+      "noHistory": "No adjustment history yet",
+      "table": {
+        "date": "Date",
+        "change": "Change",
+        "reason": "Reason"
+      },
+      "success": "Stock adjusted successfully",
+      "error": "Failed to adjust stock"
+    },
+    "reports": {
+      "description": "View inventory usage and consumption reports",
+      "usageTab": "Usage Reports",
+      "itemsTab": "Item Summary",
+      "activityTab": "Recent Activity",
+      "export": "Export CSV",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "last90Days": "Last 90 Days",
+      "stats": {
+        "totalUsed": "Total Used",
+        "inPeriod": "in selected period",
+        "itemsTracked": "Items Tracked",
+        "withActivity": "with activity",
+        "mostUsed": "Most Used Item",
+        "used": "used"
+      },
+      "units": "units",
+      "filters": "Report Filters",
+      "filtersDesc": "Select date range and filters for the usage report",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "product": "Product",
+      "allProducts": "All Products",
+      "generate": "Generate Report",
+      "selectProduct": "Select Product",
+      "dailyUsage": "Daily Usage Chart",
+      "dailyUsageDesc": "Daily consumption over the selected period",
+      "selectItem": "Select Product",
+      "selectItemDesc": "Choose a product to view its usage details",
+      "itemDailyUsageDesc": "Daily consumption of the selected item",
+      "selectItemToView": "Select a product to view usage data",
+      "totalUsed": "Total Used",
+      "totalAdded": "Total Added",
+      "used": "Used",
+      "added": "Added",
+      "selectProductToView": "Select a product to view its usage chart",
+      "noData": "No Usage Data",
+      "noDataDesc": "There is no usage data for the selected period and filters",
+      "itemUsage": "Item Usage Summary",
+      "itemUsageDesc": "Breakdown of usage by inventory item",
+      "noItemData": "No item usage data for this period",
+      "recentActivity": "Recent Activity",
+      "recentActivityDesc": "Latest stock adjustments across all items",
+      "noRecentActivity": "No recent activity",
+      "table": {
+        "totalUsed": "Total Used",
+        "avgDaily": "Avg/Day",
+        "daysUsed": "Days Used"
+      }
+    },
+    "categories": {
+      "consumable": "Consumable",
+      "retail": "Retail"
+    },
+    "units": {
+      "pcs": "pieces",
+      "ml": "ml",
+      "g": "grams",
+      "kg": "kg",
+      "L": "liters"
+    },
+    "table": {
+      "name": "Name",
+      "sku": "SKU",
+      "category": "Category",
+      "stock": "Stock",
+      "minAlert": "Min. Alert",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "e.g., Hair Dye, Nail Polish",
+      "sku": "SKU",
+      "category": "Category",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe this item...",
+      "unit": "Unit",
+      "currentStock": "Current Stock",
+      "minStockAlert": "Minimum Stock Alert",
+      "minStockAlertHelp": "You'll be notified when stock falls below this level",
+      "costPerUnit": "Cost per Unit",
+      "retailPrice": "Retail Price",
+      "image": "Image",
+      "isActive": "Active",
+      "adjustQuantity": "Adjustment Quantity",
+      "adjustQuantityHelp": "Use positive numbers to add, negative to subtract",
+      "reason": "Reason",
+      "reasonPlaceholder": "e.g., Restocked, Used for training"
+    },
+    "confirmDelete": "Are you sure you want to delete this inventory item?",
+    "messages": {
+      "created": "Inventory item created",
+      "updated": "Inventory item updated",
+      "deleted": "Inventory item deleted",
+      "stockAdjusted": "Stock adjusted successfully",
+      "activated": "Item activated",
+      "deactivated": "Item deactivated",
+      "loadFailed": "Failed to load inventory items",
+      "saveFailed": "Failed to save inventory item",
+      "deleteFailed": "Failed to delete inventory item",
+      "adjustFailed": "Failed to adjust stock",
+      "toggleFailed": "Failed to update item status"
+    },
+    "automation": {
+      "title": "Inventory Automation",
+      "subtitle": "Automated workflows for stock management",
+      "comingSoon": "Coming Soon",
+      "comingSoonDescription": "We're building powerful automation tools for your inventory management",
+      "featuresInDevelopment": "Features in Development",
+      "availableSoon": "Automation features will be available soon",
+      "backToInventory": "Back to Inventory",
+      "status": {
+        "inProgress": "In Progress",
+        "planned": "Planned",
+        "ready": "Ready"
+      },
+      "features": {
+        "lowStockAlerts": {
+          "title": "Low Stock Alerts",
+          "description": "Automatically trigger notifications when inventory falls below minimum thresholds"
+        },
+        "notifications": {
+          "title": "Multi-Channel Notifications",
+          "description": "Send alerts via email, SMS, WhatsApp, or push notifications"
+        },
+        "webhook": {
+          "title": "Webhook Integration",
+          "description": "Trigger external APIs and webhooks when stock events occur"
+        },
+        "autoReorder": {
+          "title": "Auto-Reorder",
+          "description": "Automatically create purchase orders when stock runs low"
+        }
+      }
     }
   },
   "calendarPage": {

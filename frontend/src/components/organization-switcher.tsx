@@ -4,7 +4,7 @@ import * as React from "react";
 import { ChevronsUpDown, Plus, Building2, Check, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
-import { CreateOrganization, OrganizationProfile } from "@clerk/nextjs";
+import { CreateOrganization } from "@clerk/nextjs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +26,38 @@ import {
 } from "@/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+// Clerk appearance theme to match app design
+const clerkAppearance = {
+  variables: {
+    colorPrimary: "hsl(221.2 83.2% 53.3%)",
+    colorBackground: "hsl(var(--surface))",
+    colorText: "hsl(var(--foreground))",
+    colorInputBackground: "hsl(var(--surface-container))",
+    colorInputText: "hsl(var(--foreground))",
+    borderRadius: "0.75rem",
+  },
+  elements: {
+    rootBox: "w-full",
+    card: "shadow-none border-0 bg-transparent",
+    headerTitle: "text-xl font-semibold text-foreground",
+    headerSubtitle: "text-muted-foreground",
+    formButtonPrimary: 
+      "bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg transition-colors",
+    formFieldInput: 
+      "rounded-lg border border-border bg-surface-container focus:ring-2 focus:ring-primary/20 focus:border-primary",
+    formFieldLabel: "text-sm font-medium text-foreground",
+    footerActionLink: "text-primary hover:text-primary/80",
+    identityPreview: "bg-surface-container rounded-lg",
+    identityPreviewText: "text-foreground",
+    identityPreviewEditButton: "text-primary hover:text-primary/80",
+    organizationSwitcherTrigger: "rounded-lg",
+    organizationPreview: "bg-surface-container-low",
+    organizationPreviewMainIdentifier: "text-foreground font-medium",
+    organizationPreviewSecondaryIdentifier: "text-muted-foreground",
+  },
+};
 
 export function OrganizationSwitcher() {
   const router = useRouter();
@@ -41,7 +71,6 @@ export function OrganizationSwitcher() {
   
   const [isOpen, setIsOpen] = React.useState(false);
   const [showCreateDialog, setShowCreateDialog] = React.useState(false);
-  const [showSettingsDialog, setShowSettingsDialog] = React.useState(false);
 
   const handleSwitch = async (orgId: string) => {
     try {
@@ -51,6 +80,11 @@ export function OrganizationSwitcher() {
     } catch (error) {
       console.error('Failed to switch organization:', error);
     }
+  };
+
+  const handleSettingsClick = () => {
+    setIsOpen(false);
+    router.push('/dashboard/organization-settings');
   };
 
   const getInitials = (name: string) => {
@@ -90,14 +124,14 @@ export function OrganizationSwitcher() {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30">
                     <Building2 className="size-4 text-muted-foreground" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="font-semibold text-muted-foreground">No Organization</span>
                     <span className="text-xs text-muted-foreground">Select or create one</span>
                   </div>
-                  <ChevronsUpDown className="ml-auto size-4" />
+                  <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -106,7 +140,7 @@ export function OrganizationSwitcher() {
                 side="bottom"
                 sideOffset={4}
               >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
                   Organizations
                 </DropdownMenuLabel>
                 {organizations.length > 0 ? (
@@ -115,11 +149,11 @@ export function OrganizationSwitcher() {
                       <DropdownMenuItem
                         key={org.id}
                         onClick={() => handleSwitch(org.id)}
-                        className="cursor-pointer"
+                        className="cursor-pointer gap-2"
                       >
-                        <Avatar className="size-6 mr-2">
+                        <Avatar className="size-5">
                           <AvatarImage src={org.imageUrl} alt={org.name} />
-                          <AvatarFallback className="text-xs">
+                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                             {getInitials(org.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -131,26 +165,27 @@ export function OrganizationSwitcher() {
                 ) : null}
                 <DialogTrigger asChild>
                   <DropdownMenuItem
-                    className="cursor-pointer"
+                    className="cursor-pointer gap-2"
                     onSelect={(e) => {
                       e.preventDefault();
                       setShowCreateDialog(true);
                       setIsOpen(false);
                     }}
                   >
-                    <Plus className="size-4 mr-2" />
+                    <Plus className="size-4" />
                     Create Organization
                   </DropdownMenuItem>
                 </DialogTrigger>
               </DropdownMenuContent>
             </DropdownMenu>
-            <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-md p-0 overflow-hidden border-border">
               <VisuallyHidden.Root>
                 <DialogTitle>Create Organization</DialogTitle>
               </VisuallyHidden.Root>
               <CreateOrganization 
                 afterCreateOrganizationUrl="/dashboard"
                 skipInvitationScreen
+                appearance={clerkAppearance}
               />
             </DialogContent>
           </Dialog>
@@ -171,7 +206,7 @@ export function OrganizationSwitcher() {
               >
                 <Avatar className="size-8 rounded-lg">
                   <AvatarImage src={currentOrganization.imageUrl} alt={currentOrganization.name} />
-                  <AvatarFallback className="rounded-lg">
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-medium">
                     {getInitials(currentOrganization.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -179,22 +214,11 @@ export function OrganizationSwitcher() {
                   <span className="font-semibold truncate max-w-[140px]">
                     {currentOrganization.name}
                   </span>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    {isAdmin ? (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                        Admin
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] px-1 py-0">
-                        Member
-                      </Badge>
-                    )}
-                    {currentOrganization.membersCount && (
-                      <span>· {currentOrganization.membersCount} members</span>
-                    )}
+                  <span className="text-xs text-muted-foreground">
+                    {isAdmin ? "Admin" : "Member"}
                   </span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4" />
+                <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -203,7 +227,7 @@ export function OrganizationSwitcher() {
               side="bottom"
               sideOffset={4}
             >
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
                 Switch Organization
               </DropdownMenuLabel>
               {organizations.map((org) => (
@@ -211,13 +235,13 @@ export function OrganizationSwitcher() {
                   key={org.id}
                   onClick={() => handleSwitch(org.id)}
                   className={cn(
-                    "cursor-pointer",
-                    org.id === currentOrganization.id && "bg-accent"
+                    "cursor-pointer gap-2",
+                    org.id === currentOrganization.id && "bg-surface-container"
                   )}
                 >
-                  <Avatar className="size-6 mr-2">
+                  <Avatar className="size-5">
                     <AvatarImage src={org.imageUrl} alt={org.name} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                       {getInitials(org.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -230,51 +254,36 @@ export function OrganizationSwitcher() {
               <DropdownMenuSeparator />
               {isAdmin && (
                 <DropdownMenuItem
-                  className="cursor-pointer"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    setShowSettingsDialog(true);
-                    setIsOpen(false);
-                  }}
+                  className="cursor-pointer gap-2"
+                  onClick={handleSettingsClick}
                 >
-                  <Settings className="size-4 mr-2" />
+                  <Settings className="size-4" />
                   Organization Settings
                 </DropdownMenuItem>
               )}
               <DialogTrigger asChild>
                 <DropdownMenuItem
-                  className="cursor-pointer"
+                  className="cursor-pointer gap-2"
                   onSelect={(e) => {
                     e.preventDefault();
                     setShowCreateDialog(true);
                     setIsOpen(false);
                   }}
                 >
-                  <Plus className="size-4 mr-2" />
+                  <Plus className="size-4" />
                   Create Organization
                 </DropdownMenuItem>
               </DialogTrigger>
             </DropdownMenuContent>
           </DropdownMenu>
-          <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden border-border">
             <VisuallyHidden.Root>
               <DialogTitle>Create Organization</DialogTitle>
             </VisuallyHidden.Root>
             <CreateOrganization 
               afterCreateOrganizationUrl="/dashboard"
               skipInvitationScreen
-            />
-          </DialogContent>
-        </Dialog>
-        
-        {/* Organization Settings Dialog */}
-        <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-          <DialogContent className="min-w-max p-0 overflow-hidden max-h-[90vh]">
-            <VisuallyHidden.Root>
-              <DialogTitle>Organization Settings</DialogTitle>
-            </VisuallyHidden.Root>
-            <OrganizationProfile 
-              routing="hash"
+              appearance={clerkAppearance}
             />
           </DialogContent>
         </Dialog>

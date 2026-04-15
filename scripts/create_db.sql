@@ -73,6 +73,50 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+  CREATE TYPE "inventory_category_enum" AS ENUM (
+    'consumable', 
+    'retail'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "stock_adjustment_type_enum" AS ENUM (
+    'manual', 
+    'appointment', 
+    'purchase', 
+    'correction'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "automation_node_type_enum" AS ENUM (
+    'trigger_stock_critical',
+    'trigger_stock_out',
+    'trigger_stock_adjusted',
+    'trigger_manual',
+    'condition_stock_level',
+    'condition_item_category',
+    'action_api_call',
+    'action_webhook',
+    'action_notification',
+    'action_adjust_stock'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "execution_status_enum" AS ENUM (
+    'running', 
+    'completed', 
+    'failed', 
+    'partial'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- ============================================
 -- TABLES
 -- ============================================
@@ -397,6 +441,113 @@ CREATE INDEX IF NOT EXISTS "idx_sms_template_org_id" ON "sms_templates" ("organi
 CREATE INDEX IF NOT EXISTS "idx_sms_template_event_type" ON "sms_templates" ("eventType");
 CREATE INDEX IF NOT EXISTS "idx_sms_template_language" ON "sms_templates" ("language");
 
+-- 19. inventory_items (inventory tracking)
+CREATE TABLE IF NOT EXISTS "inventory_items" (
+  "id" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "organizationId" VARCHAR(255) NOT NULL,
+  "name" VARCHAR(255) NOT NULL,
+  "sku" VARCHAR(255),
+  "description" TEXT,
+  "category" "inventory_category_enum" DEFAULT 'consumable',
+  "unit" VARCHAR(50) DEFAULT 'pcs',
+  "currentStock" DECIMAL(10,2) DEFAULT 0,
+  "minStockAlert" DECIMAL(10,2) DEFAULT 0,
+  "costPerUnit" DECIMAL(10,2),
+  "retailPrice" DECIMAL(10,2),
+  "imageBase64" TEXT,
+  "isActive" BOOLEAN DEFAULT true,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now()
+);
+
+COMMENT ON COLUMN "inventory_items"."sku" IS 'Stock Keeping Unit for tracking';
+COMMENT ON COLUMN "inventory_items"."unit" IS 'Unit of measurement (ml, g, pcs, etc.)';
+COMMENT ON COLUMN "inventory_items"."minStockAlert" IS 'Alert threshold for low stock';
+COMMENT ON COLUMN "inventory_items"."costPerUnit" IS 'Cost per unit for profitability tracking';
+COMMENT ON COLUMN "inventory_items"."retailPrice" IS 'Retail price for sellable items';
+
+CREATE INDEX IF NOT EXISTS "idx_inventory_items_org_name" ON "inventory_items" ("organizationId", "name");
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_inventory_items_org_sku" ON "inventory_items" ("organizationId", "sku") WHERE "sku" IS NOT NULL;
+
+-- 20. service_inventory_usage (links services to inventory consumption)
+CREATE TABLE IF NOT EXISTS "service_inventory_usage" (
+  "id" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "serviceOptionId" UUID NOT NULL REFERENCES "service_options"("id") ON DELETE CASCADE,
+  "inventoryItemId" UUID NOT NULL REFERENCES "inventory_items"("id") ON DELETE CASCADE,
+  "quantityUsed" DECIMAL(10,2) NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT now()
+);
+
+COMMENT ON COLUMN "service_inventory_usage"."quantityUsed" IS 'Quantity consumed per appointment';
+
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_service_inventory_usage_unique" ON "service_inventory_usage" ("serviceOptionId", "inventoryItemId");
+
+-- 21. stock_adjustments (audit log for stock changes)
+CREATE TABLE IF NOT EXISTS "stock_adjustments" (
+  "id" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "inventoryItemId" UUID NOT NULL REFERENCES "inventory_items"("id") ON DELETE CASCADE,
+  "type" "stock_adjustment_type_enum" DEFAULT 'manual',
+  "quantity" DECIMAL(10,2) NOT NULL,
+  "stockAfter" DECIMAL(10,2) NOT NULL,
+  "reason" TEXT,
+  "appointmentId" UUID,
+  "adjustedBy" VARCHAR(255),
+  "createdAt" TIMESTAMP DEFAULT now()
+);
+
+COMMENT ON COLUMN "stock_adjustments"."quantity" IS 'Positive for additions, negative for deductions';
+COMMENT ON COLUMN "stock_adjustments"."stockAfter" IS 'Stock level after adjustment';
+COMMENT ON COLUMN "stock_adjustments"."appointmentId" IS 'Reference to appointment ID if type is appointment';
+COMMENT ON COLUMN "stock_adjustments"."adjustedBy" IS 'User who made the adjustment';
+
+CREATE INDEX IF NOT EXISTS "idx_stock_adjustments_item_created" ON "stock_adjustments" ("inventoryItemId", "createdAt");
+
+-- 22. automation_workflows (automation workflow definitions)
+CREATE TABLE IF NOT EXISTS "automation_workflows" (
+  "id" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "organizationId" VARCHAR(255) NOT NULL,
+  "name" VARCHAR(255) NOT NULL,
+  "description" TEXT,
+  "isActive" BOOLEAN DEFAULT true,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS "idx_automation_workflows_org_active" ON "automation_workflows" ("organizationId", "isActive");
+
+-- 23. automation_nodes (nodes within automation workflows)
+CREATE TABLE IF NOT EXISTS "automation_nodes" (
+  "id" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "workflowId" UUID NOT NULL REFERENCES "automation_workflows"("id") ON DELETE CASCADE,
+  "type" "automation_node_type_enum" NOT NULL,
+  "label" VARCHAR(255),
+  "config" JSONB DEFAULT '{}',
+  "position" JSONB NOT NULL,
+  "nextNodeIds" UUID[] DEFAULT '{}',
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now()
+);
+
+COMMENT ON COLUMN "automation_nodes"."label" IS 'Display label for the node';
+COMMENT ON COLUMN "automation_nodes"."position" IS 'Visual position on canvas';
+COMMENT ON COLUMN "automation_nodes"."nextNodeIds" IS 'IDs of nodes this connects to';
+
+-- 24. automation_executions (automation execution history)
+CREATE TABLE IF NOT EXISTS "automation_executions" (
+  "id" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "organizationId" VARCHAR(255) NOT NULL,
+  "workflowId" UUID NOT NULL REFERENCES "automation_workflows"("id") ON DELETE CASCADE,
+  "status" "execution_status_enum" DEFAULT 'running',
+  "context" JSONB DEFAULT '{}',
+  "nodeResults" JSONB DEFAULT '[]',
+  "errorMessage" TEXT,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "completedAt" TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS "idx_automation_executions_org_created" ON "automation_executions" ("organizationId", "createdAt");
+CREATE INDEX IF NOT EXISTS "idx_automation_executions_workflow_created" ON "automation_executions" ("workflowId", "createdAt");
+
 -- ============================================
 -- TypeORM Migrations Table
 -- ============================================
@@ -414,7 +565,8 @@ INSERT INTO "migrations" ("timestamp", "name") VALUES
   (1708300900000, 'StandardizeRolesToClerkFormat1708300900000'),
   (1740000000000, 'AddOrganizationIdToAppointments1740000000000'),
   (1741200000000, 'AddSmsSettingsAndTemplates1741200000000'),
-  (1742920000000, 'AddPricingToServiceOptions1742920000000')
+  (1742920000000, 'AddPricingToServiceOptions1742920000000'),
+  (1744750000000, 'AddInventoryAndAutomation1744750000000')
 ON CONFLICT DO NOTHING;
 
 -- ============================================

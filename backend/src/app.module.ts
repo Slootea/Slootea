@@ -20,6 +20,7 @@ import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ExternalProvidersModule } from './modules/external-providers/external-providers.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -62,6 +63,7 @@ import { HealthController } from './health.controller';
     AdminModule,
     ExternalProvidersModule,
     MonitoringModule,
+    InventoryModule,
   ],
   controllers: [HealthController],
 })

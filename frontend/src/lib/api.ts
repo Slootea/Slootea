@@ -569,3 +569,335 @@ export const metaOAuthApi = {
   cancelSession: (orgId: string) =>
     api.post(`/auth/meta/organizations/${orgId}/cancel-session`),
 };
+
+// ==================== Inventory Types ====================
+
+export type InventoryCategory = 'consumable' | 'retail';
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  sku?: string;
+  description?: string;
+  category: InventoryCategory;
+  unit: string;
+  currentStock: number;
+  minStockAlert: number;
+  costPerUnit?: number;
+  retailPrice?: number;
+  imageBase64?: string;
+  isActive: boolean;
+  isLowStock: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedInventoryResponse {
+  items: InventoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface LowStockSummary {
+  totalLowStockItems: number;
+  items: InventoryItem[];
+}
+
+export interface StockAdjustment {
+  id: string;
+  inventoryItemId: string;
+  type: 'manual' | 'appointment' | 'purchase' | 'correction';
+  quantity: number;
+  stockAfter: number;
+  reason?: string;
+  appointmentId?: string;
+  adjustedBy?: string;
+  createdAt: string;
+}
+
+export interface ServiceInventoryUsage {
+  id: string;
+  serviceOptionId: string;
+  inventoryItemId: string;
+  quantityUsed: number;
+  inventoryItem?: InventoryItem;
+}
+
+export interface DailyUsageData {
+  date: string;
+  used: number;
+  added: number;
+  netChange: number;
+}
+
+export interface ItemUsageReport {
+  itemId: string;
+  itemName: string;
+  unit: string;
+  dailyData: DailyUsageData[];
+  totalUsed: number;
+  totalAdded: number;
+}
+
+export interface DailyUsageReport {
+  items: ItemUsageReport[];
+  startDate: string;
+  endDate: string;
+}
+
+// ==================== Inventory API ====================
+
+export const inventoryApi = {
+  // CRUD
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: InventoryCategory;
+    isActive?: boolean;
+    lowStock?: boolean;
+  }) => api.get<PaginatedInventoryResponse>('/inventory', { params }),
+  
+  getOne: (id: string) => api.get<InventoryItem>(`/inventory/${id}`),
+  
+  create: (data: {
+    name: string;
+    sku?: string;
+    description?: string;
+    category?: InventoryCategory;
+    unit?: string;
+    currentStock?: number;
+    minStockAlert?: number;
+    costPerUnit?: number;
+    retailPrice?: number;
+    imageBase64?: string;
+    isActive?: boolean;
+  }) => api.post<InventoryItem>('/inventory', data),
+  
+  update: (id: string, data: Partial<{
+    name: string;
+    sku: string;
+    description: string;
+    category: InventoryCategory;
+    unit: string;
+    minStockAlert: number;
+    costPerUnit: number;
+    retailPrice: number;
+    imageBase64: string;
+    isActive: boolean;
+  }>) => api.put<InventoryItem>(`/inventory/${id}`, data),
+  
+  delete: (id: string) => api.delete(`/inventory/${id}`),
+  
+  // Stock management
+  getLowStock: () => api.get<LowStockSummary>('/inventory/low-stock'),
+  
+  adjustStock: (id: string, data: {
+    quantity: number;
+    type?: 'manual' | 'purchase' | 'correction';
+    reason?: string;
+  }) => api.post<InventoryItem>(`/inventory/${id}/adjust`, data),
+  
+  getStockHistory: (id: string, limit?: number) =>
+    api.get<StockAdjustment[]>(`/inventory/${id}/history`, { params: { limit } }),
+  
+  // Service inventory usage
+  getServiceUsage: (serviceOptionId: string) =>
+    api.get<ServiceInventoryUsage[]>(`/inventory/service/${serviceOptionId}/usage`),
+  
+  updateServiceUsage: (serviceOptionId: string, items: Array<{
+    inventoryItemId: string;
+    quantityUsed: number;
+  }>) => api.put<ServiceInventoryUsage[]>(`/inventory/service/${serviceOptionId}/usage`, { items }),
+  
+  // Reports
+  getDailyUsageReport: (params: {
+    startDate: string;
+    endDate: string;
+    itemId?: string;
+    category?: InventoryCategory;
+  }) => api.get<DailyUsageReport>('/inventory/reports/daily-usage', { params }),
+};
+
+// ==================== Inventory Automation Types ====================
+
+export type AutomationNodeType =
+  | 'trigger_stock_critical'
+  | 'trigger_stock_out'
+  | 'trigger_stock_adjusted'
+  | 'trigger_manual'
+  | 'condition_stock_level'
+  | 'condition_item_category'
+  | 'action_api_call'
+  | 'action_webhook'
+  | 'action_notification'
+  | 'action_adjust_stock';
+
+export interface NodePosition {
+  x: number;
+  y: number;
+}
+
+export interface AutomationNode {
+  id: string;
+  workflowId: string;
+  type: AutomationNodeType;
+  label?: string;
+  config: Record<string, unknown>;
+  position: NodePosition;
+  nextNodeIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AutomationWorkflow {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  nodes: AutomationNode[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ExecutionStatus = 'running' | 'completed' | 'failed' | 'partial';
+
+export interface NodeExecutionResult {
+  nodeId: string;
+  nodeType: string;
+  status: 'success' | 'error' | 'skipped';
+  startedAt: string;
+  completedAt?: string;
+  input?: Record<string, unknown>;
+  output?: Record<string, unknown>;
+  error?: string;
+}
+
+export interface AutomationExecution {
+  id: string;
+  organizationId: string;
+  workflowId: string;
+  workflow?: AutomationWorkflow;
+  status: ExecutionStatus;
+  context: {
+    triggeredBy: 'system' | 'manual';
+    triggerData?: {
+      inventoryItemId?: string;
+      inventoryItemName?: string;
+      currentStock?: number;
+      minStockAlert?: number;
+      adjustmentType?: string;
+      adjustmentQuantity?: number;
+    };
+  };
+  nodeResults: NodeExecutionResult[];
+  errorMessage?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface NodeTypeInfo {
+  type: AutomationNodeType;
+  label: string;
+  description: string;
+  configSchema: Record<string, unknown>;
+}
+
+export interface NodeTypesResponse {
+  triggers: NodeTypeInfo[];
+  conditions: NodeTypeInfo[];
+  actions: NodeTypeInfo[];
+}
+
+// ==================== Inventory Automation API ====================
+
+export const automationApi = {
+  // Workflows
+  getWorkflows: () =>
+    api.get<AutomationWorkflow[]>('/inventory/automation/workflows'),
+
+  getWorkflow: (id: string) =>
+    api.get<AutomationWorkflow>(`/inventory/automation/workflows/${id}`),
+
+  createWorkflow: (data: {
+    name: string;
+    description?: string;
+    isActive?: boolean;
+    nodes?: Array<{
+      type: AutomationNodeType;
+      label?: string;
+      config: Record<string, unknown>;
+      position: NodePosition;
+      nextNodeIds?: string[];
+    }>;
+  }) => api.post<AutomationWorkflow>('/inventory/automation/workflows', data),
+
+  updateWorkflow: (id: string, data: {
+    name?: string;
+    description?: string;
+    isActive?: boolean;
+  }) => api.put<AutomationWorkflow>(`/inventory/automation/workflows/${id}`, data),
+
+  deleteWorkflow: (id: string) =>
+    api.delete(`/inventory/automation/workflows/${id}`),
+
+  // Canvas save (replaces all nodes)
+  saveWorkflowCanvas: (workflowId: string, data: {
+    name?: string;
+    description?: string;
+    nodes: Array<{
+      type: AutomationNodeType;
+      label?: string;
+      config: Record<string, unknown>;
+      position: NodePosition;
+      nextNodeIds?: string[];
+    }>;
+  }) => api.put<AutomationWorkflow>(`/inventory/automation/workflows/${workflowId}/canvas`, data),
+
+  // Node operations
+  addNode: (workflowId: string, data: {
+    type: AutomationNodeType;
+    label?: string;
+    config: Record<string, unknown>;
+    position: NodePosition;
+    nextNodeIds?: string[];
+  }) => api.post<AutomationNode>(`/inventory/automation/workflows/${workflowId}/nodes`, data),
+
+  updateNode: (workflowId: string, nodeId: string, data: {
+    type?: AutomationNodeType;
+    label?: string;
+    config?: Record<string, unknown>;
+    position?: NodePosition;
+    nextNodeIds?: string[];
+  }) => api.put<AutomationNode>(`/inventory/automation/workflows/${workflowId}/nodes/${nodeId}`, data),
+
+  deleteNode: (workflowId: string, nodeId: string) =>
+    api.delete(`/inventory/automation/workflows/${workflowId}/nodes/${nodeId}`),
+
+  // Execution
+  triggerWorkflow: (workflowId: string, data?: {
+    triggerData?: {
+      inventoryItemId?: string;
+      inventoryItemName?: string;
+      currentStock?: number;
+      minStockAlert?: number;
+      adjustmentType?: string;
+      adjustmentQuantity?: number;
+    };
+  }) => api.post<AutomationExecution>(`/inventory/automation/workflows/${workflowId}/trigger`, data || {}),
+
+  getExecutionHistory: (params?: {
+    workflowId?: string;
+    limit?: number;
+  }) => api.get<AutomationExecution[]>('/inventory/automation/executions', { params }),
+
+  getExecution: (id: string) =>
+    api.get<AutomationExecution>(`/inventory/automation/executions/${id}`),
+
+  // Node types reference
+  getNodeTypes: () =>
+    api.get<NodeTypesResponse>('/inventory/automation/node-types'),
+};

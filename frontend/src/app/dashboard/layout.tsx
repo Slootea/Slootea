@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { setAuthToken, setOrganizationContext, organizationsApi } from "@/lib/api";
 import { trackSignIn } from "@/lib/analytics";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { PageHeaderProvider, usePageHeader } from "@/components/providers/page-header-provider";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -117,35 +118,60 @@ export default function DashboardLayout({
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        {/* Header - Glass morphism effect per design spec */}
-        <header className="flex h-16 shrink-0 items-center gap-3 px-6 sticky top-0 z-50 glass">
-          <SidebarTrigger className="-ml-1" />
-          <div className="h-6 w-px bg-surface-variant/50" />
-          <h1 className="text-lg font-display font-semibold tracking-tight">
-            {navItems.find((item) => item.href === pathname)?.label || t("dashboard")}
-          </h1>
-          <div className="ml-auto">
-            <UserButton 
-              afterSignOutUrl="/" 
-              showName
-              appearance={{
-                elements: {
-                  userButtonTrigger: "flex items-center gap-2 rounded-lg bg-surface-container-low px-3 py-2 hover:bg-surface-container transition-colors",
-                  userButtonBox: "flex-row-reverse",
-                  userButtonOuterIdentifier: "text-sm font-medium text-foreground",
-                  avatarBox: "h-7 w-7",
-                }
-              }}
-            />
-          </div>
-        </header>
+    <PageHeaderProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <DashboardHeader navItems={navItems} pathname={pathname} defaultTitle={t("dashboard")} />
+          {/* Page content with breathing room */}
+          <main className="flex-1 p-6 lg:p-8">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </PageHeaderProvider>
+  );
+}
 
-        {/* Page content with breathing room */}
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+function DashboardHeader({ 
+  navItems, 
+  pathname, 
+  defaultTitle 
+}: { 
+  navItems: { href: string; label: string }[];
+  pathname: string;
+  defaultTitle: string;
+}) {
+  const { header } = usePageHeader();
+  
+  // Use page header from context, or fallback to nav item label
+  const title = header?.title || navItems.find((item) => item.href === pathname)?.label || defaultTitle;
+  const subtitle = header?.subtitle;
+
+  return (
+    <header className="flex h-16 shrink-0 items-center gap-3 px-6 sticky top-0 z-50 glass">
+      <SidebarTrigger className="-ml-1" />
+      <div className="h-6 w-px bg-surface-variant/50" />
+      <div className="flex flex-col justify-center">
+        <h1 className="text-lg font-display font-semibold tracking-tight leading-tight">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-sm text-muted-foreground leading-tight">{subtitle}</p>
+        )}
+      </div>
+      <div className="ml-auto">
+        <UserButton 
+          afterSignOutUrl="/" 
+          showName
+          appearance={{
+            elements: {
+              userButtonTrigger: "flex items-center gap-2 rounded-lg bg-surface-container-low px-3 py-2 hover:bg-surface-container transition-colors",
+              userButtonBox: "flex-row-reverse",
+              userButtonOuterIdentifier: "text-sm font-medium text-foreground",
+              avatarBox: "h-7 w-7",
+            }
+          }}
+        />
+      </div>
+    </header>
   );
 }
