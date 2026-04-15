@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { OrganizationProvider } from "@/components/providers/organization-provider";
+import { ModuleProvider } from "@/components/providers/module-provider";
 import { ActivityTracker } from "@/components/activity-tracker";
 import { Toaster } from "@/components/ui/toaster";
 import { GoogleAnalytics } from '@next/third-parties/google'
@@ -62,8 +63,10 @@ export default async function RootLayout({
               <LocaleProvider>
                 <AuthProvider>
                   <OrganizationProvider>
-                    <ActivityTracker />
-                    {children}
+                    <ModuleProvider>
+                      <ActivityTracker />
+                      {children}
+                    </ModuleProvider>
                   </OrganizationProvider>
                 </AuthProvider>
               </LocaleProvider>

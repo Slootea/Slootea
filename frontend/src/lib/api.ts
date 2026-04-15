@@ -720,3 +720,184 @@ export const inventoryApi = {
     category?: InventoryCategory;
   }) => api.get<DailyUsageReport>('/inventory/reports/daily-usage', { params }),
 };
+
+// ==================== Inventory Automation Types ====================
+
+export type AutomationNodeType =
+  | 'trigger_stock_critical'
+  | 'trigger_stock_out'
+  | 'trigger_stock_adjusted'
+  | 'trigger_manual'
+  | 'condition_stock_level'
+  | 'condition_item_category'
+  | 'action_api_call'
+  | 'action_webhook'
+  | 'action_notification'
+  | 'action_adjust_stock';
+
+export interface NodePosition {
+  x: number;
+  y: number;
+}
+
+export interface AutomationNode {
+  id: string;
+  workflowId: string;
+  type: AutomationNodeType;
+  label?: string;
+  config: Record<string, unknown>;
+  position: NodePosition;
+  nextNodeIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AutomationWorkflow {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  nodes: AutomationNode[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ExecutionStatus = 'running' | 'completed' | 'failed' | 'partial';
+
+export interface NodeExecutionResult {
+  nodeId: string;
+  nodeType: string;
+  status: 'success' | 'error' | 'skipped';
+  startedAt: string;
+  completedAt?: string;
+  input?: Record<string, unknown>;
+  output?: Record<string, unknown>;
+  error?: string;
+}
+
+export interface AutomationExecution {
+  id: string;
+  organizationId: string;
+  workflowId: string;
+  workflow?: AutomationWorkflow;
+  status: ExecutionStatus;
+  context: {
+    triggeredBy: 'system' | 'manual';
+    triggerData?: {
+      inventoryItemId?: string;
+      inventoryItemName?: string;
+      currentStock?: number;
+      minStockAlert?: number;
+      adjustmentType?: string;
+      adjustmentQuantity?: number;
+    };
+  };
+  nodeResults: NodeExecutionResult[];
+  errorMessage?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface NodeTypeInfo {
+  type: AutomationNodeType;
+  label: string;
+  description: string;
+  configSchema: Record<string, unknown>;
+}
+
+export interface NodeTypesResponse {
+  triggers: NodeTypeInfo[];
+  conditions: NodeTypeInfo[];
+  actions: NodeTypeInfo[];
+}
+
+// ==================== Inventory Automation API ====================
+
+export const automationApi = {
+  // Workflows
+  getWorkflows: () =>
+    api.get<AutomationWorkflow[]>('/inventory/automation/workflows'),
+
+  getWorkflow: (id: string) =>
+    api.get<AutomationWorkflow>(`/inventory/automation/workflows/${id}`),
+
+  createWorkflow: (data: {
+    name: string;
+    description?: string;
+    isActive?: boolean;
+    nodes?: Array<{
+      type: AutomationNodeType;
+      label?: string;
+      config: Record<string, unknown>;
+      position: NodePosition;
+      nextNodeIds?: string[];
+    }>;
+  }) => api.post<AutomationWorkflow>('/inventory/automation/workflows', data),
+
+  updateWorkflow: (id: string, data: {
+    name?: string;
+    description?: string;
+    isActive?: boolean;
+  }) => api.put<AutomationWorkflow>(`/inventory/automation/workflows/${id}`, data),
+
+  deleteWorkflow: (id: string) =>
+    api.delete(`/inventory/automation/workflows/${id}`),
+
+  // Canvas save (replaces all nodes)
+  saveWorkflowCanvas: (workflowId: string, data: {
+    name?: string;
+    description?: string;
+    nodes: Array<{
+      type: AutomationNodeType;
+      label?: string;
+      config: Record<string, unknown>;
+      position: NodePosition;
+      nextNodeIds?: string[];
+    }>;
+  }) => api.put<AutomationWorkflow>(`/inventory/automation/workflows/${workflowId}/canvas`, data),
+
+  // Node operations
+  addNode: (workflowId: string, data: {
+    type: AutomationNodeType;
+    label?: string;
+    config: Record<string, unknown>;
+    position: NodePosition;
+    nextNodeIds?: string[];
+  }) => api.post<AutomationNode>(`/inventory/automation/workflows/${workflowId}/nodes`, data),
+
+  updateNode: (workflowId: string, nodeId: string, data: {
+    type?: AutomationNodeType;
+    label?: string;
+    config?: Record<string, unknown>;
+    position?: NodePosition;
+    nextNodeIds?: string[];
+  }) => api.put<AutomationNode>(`/inventory/automation/workflows/${workflowId}/nodes/${nodeId}`, data),
+
+  deleteNode: (workflowId: string, nodeId: string) =>
+    api.delete(`/inventory/automation/workflows/${workflowId}/nodes/${nodeId}`),
+
+  // Execution
+  triggerWorkflow: (workflowId: string, data?: {
+    triggerData?: {
+      inventoryItemId?: string;
+      inventoryItemName?: string;
+      currentStock?: number;
+      minStockAlert?: number;
+      adjustmentType?: string;
+      adjustmentQuantity?: number;
+    };
+  }) => api.post<AutomationExecution>(`/inventory/automation/workflows/${workflowId}/trigger`, data || {}),
+
+  getExecutionHistory: (params?: {
+    workflowId?: string;
+    limit?: number;
+  }) => api.get<AutomationExecution[]>('/inventory/automation/executions', { params }),
+
+  getExecution: (id: string) =>
+    api.get<AutomationExecution>(`/inventory/automation/executions/${id}`),
+
+  // Node types reference
+  getNodeTypes: () =>
+    api.get<NodeTypesResponse>('/inventory/automation/node-types'),
+};

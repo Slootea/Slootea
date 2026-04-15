@@ -306,6 +306,17 @@
     "saveError": "Ayarlar kaydedilemedi",
     "loadError": "Ayarlar yüklenemedi"
   },
+  "moduleSwitcher": {
+    "switchModule": "Modül Değiştir",
+    "appointments": {
+      "label": "Randevular",
+      "description": "Rezervasyonları ve müşterileri yönet"
+    },
+    "inventory": {
+      "label": "Envanter",
+      "description": "Stok ve malzemeleri takip et"
+    }
+  },
   "sidebar": {
     "dashboard": "Panel",
     "calendar": "Takvim",
@@ -317,6 +328,14 @@
     "serviceOptions": "Hizmet Seçenekleri",
     "serviceProviders": "Hizmet Sağlayıcılar",
     "inventory": "Envanter",
+    "inventoryManagement": "Envanter",
+    "inventoryOverview": "Genel Bakış",
+    "inventoryItems": "Ürünler",
+    "stockAdjust": "Stok Ayarla",
+    "stockAlerts": "Stok Uyarıları",
+    "stockHistory": "Geçmiş",
+    "inventoryReports": "Raporlar",
+    "inventoryAutomation": "Otomasyon",
     "reports": "Raporlar",
     "settings": "Ayarlar",
     "main": "Ana Menü",
@@ -1103,7 +1122,11 @@
       "categoryBreakdown": "Kategori Dağılımı"
     },
     "adjust": {
+      "description": "Stok seviyelerini ayarlayın ve ayarlama geçmişini görüntüleyin",
+      "newAdjustment": "Yeni Ayarlama",
+      "newAdjustmentDesc": "Envanter ürünlerinden stok ekleyin veya çıkarın",
       "selectItem": "Ürün Seç",
+      "selectItemPlaceholder": "Bir ürün seçin...",
       "selectItemDesc": "Stok seviyesini ayarlamak için bir ürün seçin",
       "adjustStock": "Stok Ayarla",
       "adjustStockDesc": "Seçili üründen stok ekle veya çıkar",
@@ -1112,9 +1135,57 @@
       "addStock": "Stok Ekle",
       "removeStock": "Stok Çıkar",
       "noItemSelected": "Ürün Seçilmedi",
-      "noItemSelectedDesc": "Stok ayarlamak için listeden bir ürün seçin"
+      "noItemSelectedDesc": "Stok ayarlamak için listeden bir ürün seçin",
+      "type": "Tür",
+      "add": "Ekle",
+      "subtract": "Çıkar",
+      "quantity": "Miktar",
+      "reason": "Sebep",
+      "reasons": {
+        "purchase": "Satın Alma / Yeniden Stoklama",
+        "consumed": "Tüketildi / Kullanıldı",
+        "damaged": "Hasarlı",
+        "expired": "Süresi Doldu",
+        "returned": "İade",
+        "correction": "Düzeltme",
+        "other": "Diğer"
+      },
+      "notes": "Notlar",
+      "notesPlaceholder": "Bu ayarlama hakkında isteğe bağlı not ekleyin...",
+      "preview": "Önizleme",
+      "submit": "Ayarlamayı Kaydet",
+      "inStock": "stokta",
+      "history": "Ayarlama Geçmişi",
+      "historyFor": "{name} için geçmiş",
+      "selectItemToViewHistory": "Geçmişini görmek için bir ürün seçin",
+      "selectItemFirst": "Önce bir ürün seçin",
+      "noHistory": "Henüz ayarlama geçmişi yok",
+      "table": {
+        "date": "Tarih",
+        "change": "Değişiklik",
+        "reason": "Sebep"
+      },
+      "success": "Stok başarıyla ayarlandı",
+      "error": "Stok ayarlanamadı"
     },
     "reports": {
+      "description": "Envanter kullanım ve tüketim raporlarını görüntüleyin",
+      "usageTab": "Kullanım Raporları",
+      "itemsTab": "Ürün Kullanım Özeti",
+      "activityTab": "Son Aktiviteler",
+      "export": "CSV İndir",
+      "last7Days": "Son 7 Gün",
+      "last30Days": "Son 30 Gün",
+      "last90Days": "Son 90 Gün",
+      "stats": {
+        "totalUsed": "Toplam Kullanılan",
+        "inPeriod": "seçili dönemde",
+        "itemsTracked": "İzlenen Ürünler",
+        "withActivity": "aktivite ile",
+        "mostUsed": "En Çok Kullanılan",
+        "used": "kullanıldı"
+      },
+      "units": "birim",
       "filters": "Rapor Filtreleri",
       "filtersDesc": "Kullanım raporu için tarih aralığı ve filtreler seçin",
       "startDate": "Başlangıç Tarihi",
@@ -1123,14 +1194,30 @@
       "allProducts": "Tüm Ürünler",
       "generate": "Rapor Oluştur",
       "selectProduct": "Ürün Seç",
-      "dailyUsage": "Günlük Kullanım",
+      "dailyUsage": "Günlük Kullanım Grafiği",
+      "dailyUsageDesc": "Seçili dönemdeki günlük tüketim",
+      "selectItem": "Ürün Seç",
+      "selectItemDesc": "Kullanım detaylarını görüntülemek için bir ürün seçin",
+      "itemDailyUsageDesc": "Seçili ürünün günlük tüketimi",
+      "selectItemToView": "Kullanım verisini görmek için bir ürün seçin",
       "totalUsed": "Toplam Kullanılan",
       "totalAdded": "Toplam Eklenen",
       "used": "Kullanılan",
       "added": "Eklenen",
       "selectProductToView": "Kullanım grafiğini görmek için bir ürün seçin",
       "noData": "Kullanım Verisi Yok",
-      "noDataDesc": "Seçilen dönem ve filtreler için kullanım verisi bulunamadı"
+      "noDataDesc": "Seçilen dönem ve filtreler için kullanım verisi bulunamadı",
+      "itemUsage": "Ürün Kullanım Özeti",
+      "itemUsageDesc": "Envanter ürünlerine göre kullanım dağılımı",
+      "noItemData": "Bu dönem için ürün kullanım verisi yok",
+      "recentActivity": "Son Aktiviteler",
+      "recentActivityDesc": "Tüm ürünlerdeki son stok değişiklikleri",
+      "noRecentActivity": "Son aktivite yok",
+      "table": {
+        "totalUsed": "Toplam Kullanılan",
+        "avgDaily": "Ort/Gün",
+        "daysUsed": "Kullanılan Gün"
+      }
     },
     "categories": {
       "consumable": "Sarf Malzemesi",

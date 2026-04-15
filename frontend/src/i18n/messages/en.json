@@ -306,6 +306,17 @@
     "saveError": "Failed to save settings",
     "loadError": "Failed to load settings"
   },
+  "moduleSwitcher": {
+    "switchModule": "Switch Module",
+    "appointments": {
+      "label": "Appointments",
+      "description": "Manage bookings & clients"
+    },
+    "inventory": {
+      "label": "Inventory",
+      "description": "Track stock & supplies"
+    }
+  },
   "sidebar": {
     "dashboard": "Dashboard",
     "calendar": "Calendar",
@@ -317,6 +328,14 @@
     "serviceOptions": "Service Options",
     "serviceProviders": "Service Providers",
     "inventory": "Inventory",
+    "inventoryManagement": "Inventory",
+    "inventoryOverview": "Overview",
+    "inventoryItems": "Items",
+    "stockAdjust": "Adjust Stock",
+    "stockAlerts": "Stock Alerts",
+    "stockHistory": "History",
+    "inventoryReports": "Reports",
+    "inventoryAutomation": "Automation",
     "reports": "Reports",
     "settings": "Settings",
     "main": "Main",
@@ -1103,7 +1122,11 @@
       "categoryBreakdown": "Category Breakdown"
     },
     "adjust": {
+      "description": "Adjust stock levels and view adjustment history",
+      "newAdjustment": "New Adjustment",
+      "newAdjustmentDesc": "Add or subtract stock from inventory items",
       "selectItem": "Select Item",
+      "selectItemPlaceholder": "Choose an item...",
       "selectItemDesc": "Choose an item to adjust its stock level",
       "adjustStock": "Adjust Stock",
       "adjustStockDesc": "Add or remove stock from the selected item",
@@ -1112,9 +1135,57 @@
       "addStock": "Add Stock",
       "removeStock": "Remove Stock",
       "noItemSelected": "No Item Selected",
-      "noItemSelectedDesc": "Select an item from the list to adjust its stock"
+      "noItemSelectedDesc": "Select an item from the list to adjust its stock",
+      "type": "Type",
+      "add": "Add",
+      "subtract": "Subtract",
+      "quantity": "Quantity",
+      "reason": "Reason",
+      "reasons": {
+        "purchase": "Purchase / Restock",
+        "consumed": "Consumed / Used",
+        "damaged": "Damaged",
+        "expired": "Expired",
+        "returned": "Returned",
+        "correction": "Correction",
+        "other": "Other"
+      },
+      "notes": "Notes",
+      "notesPlaceholder": "Add optional notes about this adjustment...",
+      "preview": "Preview",
+      "submit": "Submit Adjustment",
+      "inStock": "in stock",
+      "history": "Adjustment History",
+      "historyFor": "History for {name}",
+      "selectItemToViewHistory": "Select an item to view its history",
+      "selectItemFirst": "Select an item first",
+      "noHistory": "No adjustment history yet",
+      "table": {
+        "date": "Date",
+        "change": "Change",
+        "reason": "Reason"
+      },
+      "success": "Stock adjusted successfully",
+      "error": "Failed to adjust stock"
     },
     "reports": {
+      "description": "View inventory usage and consumption reports",
+      "usageTab": "Usage Reports",
+      "itemsTab": "Item Summary",
+      "activityTab": "Recent Activity",
+      "export": "Export CSV",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "last90Days": "Last 90 Days",
+      "stats": {
+        "totalUsed": "Total Used",
+        "inPeriod": "in selected period",
+        "itemsTracked": "Items Tracked",
+        "withActivity": "with activity",
+        "mostUsed": "Most Used Item",
+        "used": "used"
+      },
+      "units": "units",
       "filters": "Report Filters",
       "filtersDesc": "Select date range and filters for the usage report",
       "startDate": "Start Date",
@@ -1123,14 +1194,30 @@
       "allProducts": "All Products",
       "generate": "Generate Report",
       "selectProduct": "Select Product",
-      "dailyUsage": "Daily Usage",
+      "dailyUsage": "Daily Usage Chart",
+      "dailyUsageDesc": "Daily consumption over the selected period",
+      "selectItem": "Select Product",
+      "selectItemDesc": "Choose a product to view its usage details",
+      "itemDailyUsageDesc": "Daily consumption of the selected item",
+      "selectItemToView": "Select a product to view usage data",
       "totalUsed": "Total Used",
       "totalAdded": "Total Added",
       "used": "Used",
       "added": "Added",
       "selectProductToView": "Select a product to view its usage chart",
       "noData": "No Usage Data",
-      "noDataDesc": "There is no usage data for the selected period and filters"
+      "noDataDesc": "There is no usage data for the selected period and filters",
+      "itemUsage": "Item Usage Summary",
+      "itemUsageDesc": "Breakdown of usage by inventory item",
+      "noItemData": "No item usage data for this period",
+      "recentActivity": "Recent Activity",
+      "recentActivityDesc": "Latest stock adjustments across all items",
+      "noRecentActivity": "No recent activity",
+      "table": {
+        "totalUsed": "Total Used",
+        "avgDaily": "Avg/Day",
+        "daysUsed": "Days Used"
+      }
     },
     "categories": {
       "consumable": "Consumable",
