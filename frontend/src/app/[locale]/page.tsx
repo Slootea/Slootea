@@ -10,8 +10,8 @@ import { CalendarShowcase } from "@/components/calendar-showcase";
 import { InventoryShowcase } from "@/components/inventory-showcase";
 import { ClientStoriesCarousel } from "@/components/client-stories-carousel";
 import { PricingSection } from "@/components/pricing-section";
+import { LandingHeader } from "@/components/landing-header";
 import { getTranslations } from "next-intl/server";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { 
   Calendar, 
   Clock, 
@@ -113,7 +113,6 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
   }
 
   const t = await getTranslations({ locale, namespace: 'landing' });
-  const common = await getTranslations({ locale, namespace: 'common' });
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slootea.com';
 
@@ -190,36 +189,7 @@ export default async function LocaleLandingPage({ params }: { params: Promise<{ 
       />
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-50 w-full glass shadow-ambient-sm">
-          <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Image 
-                src="/Slootea_logo.png" 
-                alt="Slootea Logo" 
-                width={36}
-                height={36}
-                className="h-9 w-9"
-              />
-              <span className="text-xl font-display font-bold tracking-tight">Slootea</span>
-            </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.features')}</a>
-              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.howItWorks')}</a>
-              <a href="#testimonials" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.testimonials')}</a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.pricing')}</a>
-              <Link href={`/${locale}/blog`} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.blog')}</Link>
-          </nav>
-          <div className="flex items-center space-x-3">
-            <LanguageSwitcher currentLocale={locale} />
-            <Link href="/sign-in">
-              <Button variant="ghost" size="sm" className="font-medium">{common('logIn')}</Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button size="sm" className="font-medium">{common('getStarted')}</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+        <LandingHeader locale={locale} />
 
       <main className="flex-1">
         {/* Hero Section */}

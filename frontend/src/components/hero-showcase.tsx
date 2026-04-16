@@ -5,11 +5,12 @@ import { useTranslations } from "next-intl"
 import { 
   Calendar, Clock, User, Package,
   Send, Users, ChevronRight, ArrowLeft, Mail, Phone, Sparkles,
-  Check, Minus, Plus, ArrowUpDown, Search, PackagePlus
+  Check, Minus, Plus, ArrowUpDown, Search, PackagePlus, Play
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics"
 
 // Slide types
 type SlideKey = 'intro' | 'ai' | 'booking-intro' | 'services' | 'providers' | 'datetime' | 'userinfo' | 'calendar-intro' | 'calendar' | 'inventory-intro' | 'inventory'
@@ -20,7 +21,17 @@ const SLIDE_DURATION = 4000
 type TranslationFunction = ReturnType<typeof useTranslations<'landing.showcase'>>
 
 // ==================== ANNOTATION PANE ====================
-function AnnotationPane({ slideKey, t }: { slideKey: string; t: TranslationFunction }) {
+function AnnotationPane({ 
+  slideKey, 
+  t, 
+  onPlayDemo,
+  demoStarted 
+}: { 
+  slideKey: string; 
+  t: TranslationFunction;
+  onPlayDemo?: () => void;
+  demoStarted?: boolean;
+}) {
   const annotationKeys: Record<string, string> = {
     'intro': 'intro',
     'booking-intro': 'bookingIntro',
@@ -31,6 +42,8 @@ function AnnotationPane({ slideKey, t }: { slideKey: string; t: TranslationFunct
   const key = annotationKeys[slideKey]
   if (!key) return null
 
+  const isIntro = slideKey === 'intro'
+
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-primary/5 via-background to-primary/10 items-center justify-center p-4 sm:p-6 md:p-8">
       <div className="text-center max-w-md animate-fade-up" style={{ animationFillMode: 'both' }}>
@@ -40,6 +53,20 @@ function AnnotationPane({ slideKey, t }: { slideKey: string; t: TranslationFunct
         <p className="text-[10px] sm:text-sm md:text-base text-muted-foreground animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
           {t(`annotations.${key}.subtitle` as Parameters<typeof t>[0])}
         </p>
+        
+        {/* Play button for intro slide */}
+        {isIntro && !demoStarted && onPlayDemo && (
+          <div className="mt-4 sm:mt-6 animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
+            <Button 
+              size="lg" 
+              onClick={onPlayDemo}
+              className="h-10 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-medium gap-2 shadow-lg hover:shadow-xl transition-all"
+            >
+              <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
+              {t('playDemo')}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -89,14 +116,14 @@ function AIAssistantPane({ t }: { t: TranslationFunction }) {
               <div className="aspect-[4/1] bg-gradient-to-br from-violet-100 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/30 flex items-center justify-center">
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
               </div>
-              <div className="p-1.5 sm:p-2 flex items-center justify-between">
-                <div>
+              <div className="p-1.5 sm:p-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <div className="flex items-center justify-between sm:block">
                   <h4 className="font-semibold text-[9px] sm:text-[10px] md:text-xs">{t('ai.serviceName')}</h4>
                   <span className="text-[7px] sm:text-[8px] text-muted-foreground flex items-center gap-0.5">
                     <Clock className="h-2 w-2" />60 min
                   </span>
                 </div>
-                <Button size="sm" className="h-5 sm:h-6 text-[8px] sm:text-[10px] px-2">{t('ai.book')}</Button>
+                <Button size="sm" className="h-4 sm:h-5 text-[6px] sm:text-[8px] px-1.5 w-full sm:w-auto">{t('ai.book')}</Button>
               </div>
             </div>
           </div>
@@ -638,16 +665,31 @@ export function HeroShowcase() {
   const t = useTranslations('landing.showcase')
   const [currentSlide, setCurrentSlide] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
+  const [demoStarted, setDemoStarted] = useState(false)
 
   const goToNextSlide = useCallback(() => {
     setDirection('forward')
     setCurrentSlide((prev) => (prev + 1) % SLIDES.length)
   }, [])
 
+  const handlePlayDemo = useCallback(() => {
+    // Track the event in Google Analytics
+    trackEvent(AnalyticsEvents.DEMO_PLAY, {
+      source: 'hero_showcase'
+    })
+    
+    // Start the demo
+    setDemoStarted(true)
+    goToNextSlide()
+  }, [goToNextSlide])
+
   useEffect(() => {
+    // Only auto-play after demo has been started
+    if (!demoStarted) return
+    
     const interval = setInterval(goToNextSlide, SLIDE_DURATION)
     return () => clearInterval(interval)
-  }, [goToNextSlide])
+  }, [goToNextSlide, demoStarted])
 
   const isAnnotationSlide = (slideKey: SlideKey) => {
     return ['intro', 'booking-intro', 'calendar-intro', 'inventory-intro'].includes(slideKey)
@@ -656,7 +698,14 @@ export function HeroShowcase() {
   const renderSlide = (slideKey: SlideKey) => {
     // Check if it's an annotation slide
     if (isAnnotationSlide(slideKey)) {
-      return <AnnotationPane slideKey={slideKey} t={t} />
+      return (
+        <AnnotationPane 
+          slideKey={slideKey} 
+          t={t} 
+          onPlayDemo={slideKey === 'intro' ? handlePlayDemo : undefined}
+          demoStarted={demoStarted}
+        />
+      )
     }
     
     switch (slideKey) {

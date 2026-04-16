@@ -60,11 +60,11 @@
     "badge": "The superior toolbox for service businesses",
     "heroTitle": "Run Your Business with",
     "heroTitleHighlight": "Elite Precision",
-    "heroDescription": "The all-in-one management platform that brings appointments, inventory, and client relationships together—so you can focus on what you do best.",
+    "heroDescription": "The all-in-one management platform that brings appointments, inventory, and client relationships together—don't lose clients, use the best tools.",
     "ctaButton": "Start Free Trial",
     "meetTheTeam": "Meet the Team",
     "noCreditCard": "No credit card required",
-    "freeTrial": "2-month free trial",
+    "freeTrial": "Free",
     "setupMinutes": "Free setup & data migration help",
     "trustedBy": "Trusted by businesses",
     "clientStories": {
@@ -237,14 +237,13 @@
       "save": "Save 2 months",
       "standard": {
         "name": "Standard",
-        "price": "$22",
-        "yearlyPrice": "$220",
+        "price": "Free",
+        "yearlyPrice": "Free",
         "description": "Perfect for small businesses",
         "feature1": "Up to 5 staff members",
         "feature2": "Up to 160 appointment hours/month",
-        "feature3": "AI Service Assistant",
-        "feature4": "Client tracking & notes",
-        "cta": "Start Free Trial"
+        "feature3": "Client tracking & notes",
+        "cta": "Get Started Free"
       },
       "enterprise": {
         "name": "Special Offer",
@@ -252,9 +251,10 @@
         "description": "For larger teams with custom needs",
         "feature1": "Unlimited staff members",
         "feature2": "Unlimited appointment hours",
-        "feature3": "Everything in Standard",
-        "feature4": "Priority support",
-        "feature5": "Custom integrations",
+        "feature3": "AI Service Assistant",
+        "feature4": "Everything in Standard",
+        "feature5": "Priority support",
+        "feature6": "Custom integrations",
         "cta": "Contact Us"
       }
     },
@@ -272,6 +272,7 @@
       "copyright": "All rights reserved."
     },
     "showcase": {
+      "playDemo": "Watch Demo",
       "annotations": {
         "intro": {
           "title": "Slootea is a toolbox for running service businesses",

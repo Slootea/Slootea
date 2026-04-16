@@ -60,11 +60,11 @@
     "badge": "Hizmet işletmeleri için üstün araç kutusu",
     "heroTitle": "İşletmenizi",
     "heroTitleHighlight": "Üst Düzey Hassasiyetle Yönetin",
-    "heroDescription": "Randevuları, envanteri ve müşteri ilişkilerini bir araya getiren hepsi bir arada yönetim platformu—böylece en iyi yaptığınız işe odaklanabilirsiniz.",
+    "heroDescription": "Randevuları, envanteri ve müşteri ilişkilerini bir araya getiren hepsi bir arada yönetim platformu—müşteri kaybetmeyin, en iyi araçları kullanın.",
     "ctaButton": "Ücretsiz Deneyin",
     "meetTheTeam": "Ekiple Tanışın",
     "noCreditCard": "Kredi kartı gerekmez",
-    "freeTrial": "2 ay ücretsiz deneme",
+    "freeTrial": "Ücretsiz",
     "setupMinutes": "Kurulum ve veri aktarımına ücretsiz yardım",
     "trustedBy": "İşletmeler tarafından tercih ediliyor",
     "clientStories": {
@@ -237,14 +237,13 @@
       "save": "2 ay tasarruf edin",
       "standard": {
         "name": "Standart",
-        "price": "₺980",
-        "yearlyPrice": "₺9.800",
+        "price": "Ücretsiz",
+        "yearlyPrice": "Ücretsiz",
         "description": "Küçük işletmeler için ideal",
         "feature1": "5 personele kadar",
         "feature2": "Ayda 160 randevu saatine kadar",
-        "feature3": "AI Hizmet Asistanı",
-        "feature4": "Müşteri takibi ve notlar",
-        "cta": "Ücretsiz Deneyin"
+        "feature3": "Müşteri takibi ve notlar",
+        "cta": "Ücretsiz Başla"
       },
       "enterprise": {
         "name": "Özel Teklif",
@@ -252,9 +251,10 @@
         "description": "Özel ihtiyaçları olan büyük ekipler için",
         "feature1": "Sınırsız personel",
         "feature2": "Sınırsız randevu saati",
-        "feature3": "Standart'taki her şey",
-        "feature4": "Öncelikli destek",
-        "feature5": "Özel entegrasyonlar",
+        "feature3": "AI Hizmet Asistanı",
+        "feature4": "Standart'taki her şey",
+        "feature5": "Öncelikli destek",
+        "feature6": "Özel entegrasyonlar",
         "cta": "Bize Ulaşın"
       }
     },
@@ -272,6 +272,7 @@
       "copyright": "Tüm hakları saklıdır."
     },
     "showcase": {
+      "playDemo": "Demoyu İzle",
       "annotations": {
         "intro": {
           "title": "Slootea, hizmet işletmelerini yönetmek için bir araç kutusudur",
@@ -307,7 +308,7 @@
         "aiResponse": "Mükemmel! İşte önerim:",
         "inputPlaceholder": "Neye ihtiyacınız olduğunu açıklayın...",
         "serviceName": "İsveç Masajı",
-        "book": "Rezerve Et"
+        "book": "Randevu Al"
       },
       "services": {
         "salonName": "Bella Güzellik Salonu",

@@ -34,7 +34,7 @@ export function CalendarShowcase() {
   return (
     <div className="relative">
       <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-      <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3] border">
+      <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[3/4] sm:aspect-[4/3] border">
         {/* Browser chrome */}
         <div className="flex items-center gap-1.5 px-3 py-2 bg-background/80 border-b">
           {/* Traffic lights */}

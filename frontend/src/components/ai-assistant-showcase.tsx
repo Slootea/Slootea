@@ -11,7 +11,7 @@ export function AIAssistantShowcase() {
   return (
     <div className="relative">
       <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-xl opacity-60" />
-      <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[4/3] border">
+      <div className="relative bg-surface-container-low rounded-2xl shadow-ambient overflow-hidden aspect-[3/4] sm:aspect-[4/3] border">
         {/* Browser chrome */}
         <div className="flex items-center gap-2 px-4 py-2.5 bg-background/80 border-b">
           {/* Traffic lights */}
@@ -82,7 +82,7 @@ export function AIAssistantShowcase() {
                         <span className="text-xs font-semibold text-primary">₺250</span>
                       </div>
                     </div>
-                    <Button size="sm" className="h-8 text-xs px-3">{t('book')}</Button>
+                    <Button size="sm" className="h-7 text-[10px] px-2.5">{t('book')}</Button>
                   </div>
                 </div>
               </div>

@@ -18,6 +18,9 @@ export const AnalyticsEvents = {
   SIGN_IN: 'sign_in',
   SIGN_UP: 'sign_up',
   
+  // Landing Page
+  DEMO_PLAY: 'demo_play',
+  
   // Public Booking Flow
   BOOKING_LINK_VIEW: 'booking_link_view',
   SERVICE_SELECTED: 'service_selected',
