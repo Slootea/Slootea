@@ -2,7 +2,9 @@
 
 # API subdomain
 api.slootea.com {
-    reverse_proxy backend:3001
+    reverse_proxy backend:3001 {
+        flush_interval -1
+    }
 
     # Enable compression
     encode gzip
