@@ -436,6 +436,10 @@
     "inventory": {
       "label": "Inventory",
       "description": "Track stock & supplies"
+    },
+    "economy": {
+      "label": "Economy",
+      "description": "Track income & expenses"
     }
   },
   "sidebar": {
@@ -466,7 +470,14 @@
     "adminConfiguration": "Admin",
     "myServices": "My Services",
     "members": "Members",
-    "organizationSettings": "Organization Settings"
+    "organizationSettings": "Organization Settings",
+    "economyManagement": "Economy",
+    "economyOverview": "Overview",
+    "economyExpenses": "Expenses",
+    "economyIncome": "Income",
+    "economyAnalytics": "Analytics",
+    "economyCategories": "Categories",
+    "economyIntegrations": "Integrations"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1190,6 +1201,118 @@
       "assignmentsUpdated": "Assignments updated",
       "assignmentsUpdatedDesc": "Member assignments have been saved",
       "assignmentsFailed": "Failed to update assignments"
+    }
+  },
+  "economyPage": {
+    "title": "Economy",
+    "description": "Track your business income and expenses.",
+    "noOrganization": "Please select an organization to manage finances.",
+    "adminOnly": "Only administrators can access the economy module.",
+    "overview": {
+      "title": "Financial Overview",
+      "totalIncome": "Total Income",
+      "totalExpenses": "Total Expenses",
+      "netProfit": "Net Profit",
+      "transactions": "Transactions",
+      "thisMonth": "This Month",
+      "recentTransactions": "Recent Transactions",
+      "noTransactions": "No transactions yet",
+      "noTransactionsDesc": "Start by adding your first income or expense.",
+      "addFirst": "Add Transaction",
+      "incomeVsExpense": "Income vs Expenses",
+      "incomeVsExpenseDesc": "Monthly comparison of income and expenses"
+    },
+    "transactions": {
+      "addExpense": "Add Expense",
+      "addIncome": "Add Income",
+      "editTransaction": "Edit Transaction",
+      "deleteTransaction": "Delete Transaction",
+      "deleteConfirm": "Are you sure you want to delete this transaction?",
+      "amount": "Amount",
+      "description": "Description",
+      "date": "Date",
+      "category": "Category",
+      "paymentMethod": "Payment Method",
+      "contactName": "Contact",
+      "referenceNumber": "Reference #",
+      "notes": "Notes",
+      "source": "Source",
+      "manual": "Manual",
+      "parasut": "Parasut",
+      "allTypes": "All Types",
+      "income": "Income",
+      "expense": "Expense",
+      "noResults": "No transactions found",
+      "noResultsDesc": "Try adjusting your filters or add a new transaction.",
+      "createdSuccess": "Transaction created successfully",
+      "updatedSuccess": "Transaction updated successfully",
+      "deletedSuccess": "Transaction deleted successfully"
+    },
+    "paymentMethods": {
+      "cash": "Cash",
+      "credit_card": "Credit Card",
+      "bank_transfer": "Bank Transfer",
+      "check": "Check",
+      "other": "Other"
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Organize your transactions with categories.",
+      "addCategory": "Add Category",
+      "editCategory": "Edit Category",
+      "deleteCategory": "Delete Category",
+      "name": "Name",
+      "type": "Type",
+      "color": "Color",
+      "icon": "Icon",
+      "incomeCategories": "Income Categories",
+      "expenseCategories": "Expense Categories",
+      "noCategories": "No categories yet",
+      "noCategoriesDesc": "Create categories to organize your transactions.",
+      "createdSuccess": "Category created successfully",
+      "updatedSuccess": "Category updated successfully",
+      "deletedSuccess": "Category deleted successfully"
+    },
+    "analytics": {
+      "title": "Financial Analytics",
+      "description": "Analyze your income and expense trends.",
+      "period": "Period",
+      "groupBy": "Group By",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "summary": "Summary",
+      "trends": "Trends",
+      "categoryBreakdown": "Category Breakdown",
+      "incomeBreakdown": "Income by Category",
+      "expenseBreakdown": "Expense by Category",
+      "noData": "No data for selected period",
+      "noDataDesc": "Try selecting a different date range."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "Connect external accounting services.",
+      "parasut": {
+        "title": "Paraşüt",
+        "description": "Sync invoices and expenses from Paraşüt accounting software.",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connected": "Connected",
+        "notConnected": "Not Connected",
+        "companyId": "Company ID",
+        "username": "Username / Email",
+        "password": "Password",
+        "sync": "Sync Now",
+        "syncing": "Syncing...",
+        "lastSync": "Last synced",
+        "syncSuccess": "Sync completed successfully",
+        "syncError": "Sync failed",
+        "imported": "imported",
+        "skipped": "skipped",
+        "disconnectConfirm": "Are you sure you want to disconnect Paraşüt?",
+        "connectedSuccess": "Paraşüt connected successfully",
+        "disconnectedSuccess": "Paraşüt disconnected successfully"
+      }
     }
   },
   "inventoryPage": {

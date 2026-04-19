@@ -436,6 +436,10 @@
     "inventory": {
       "label": "Envanter",
       "description": "Stok ve malzemeleri takip et"
+    },
+    "economy": {
+      "label": "Ekonomi",
+      "description": "Gelir ve giderleri takip et"
     }
   },
   "sidebar": {
@@ -466,7 +470,14 @@
     "adminConfiguration": "Yönetici",
     "myServices": "Hizmetlerim",
     "members": "Üyeler",
-    "organizationSettings": "Organizasyon Ayarları"
+    "organizationSettings": "Organizasyon Ayarları",
+    "economyManagement": "Ekonomi",
+    "economyOverview": "Genel Bakış",
+    "economyExpenses": "Giderler",
+    "economyIncome": "Gelirler",
+    "economyAnalytics": "Analitik",
+    "economyCategories": "Kategoriler",
+    "economyIntegrations": "Entegrasyonlar"
   },
   "dashboard": {
     "title": "Panel",
@@ -1190,6 +1201,118 @@
       "assignmentsUpdated": "Atamalar güncellendi",
       "assignmentsUpdatedDesc": "Üye atamaları kaydedildi",
       "assignmentsFailed": "Atamalar güncellenemedi"
+    }
+  },
+  "economyPage": {
+    "title": "Ekonomi",
+    "description": "İşletme gelir ve giderlerinizi takip edin.",
+    "noOrganization": "Finans yönetimi için lütfen bir organizasyon seçin.",
+    "adminOnly": "Ekonomi modülüne yalnızca yöneticiler erişebilir.",
+    "overview": {
+      "title": "Finansal Genel Bakış",
+      "totalIncome": "Toplam Gelir",
+      "totalExpenses": "Toplam Gider",
+      "netProfit": "Net Kar",
+      "transactions": "İşlemler",
+      "thisMonth": "Bu Ay",
+      "recentTransactions": "Son İşlemler",
+      "noTransactions": "Henüz işlem yok",
+      "noTransactionsDesc": "İlk gelir veya giderinizi ekleyerek başlayın.",
+      "addFirst": "İşlem Ekle",
+      "incomeVsExpense": "Gelir ve Gider",
+      "incomeVsExpenseDesc": "Aylık gelir ve gider karşılaştırması"
+    },
+    "transactions": {
+      "addExpense": "Gider Ekle",
+      "addIncome": "Gelir Ekle",
+      "editTransaction": "İşlemi Düzenle",
+      "deleteTransaction": "İşlemi Sil",
+      "deleteConfirm": "Bu işlemi silmek istediğinize emin misiniz?",
+      "amount": "Tutar",
+      "description": "Açıklama",
+      "date": "Tarih",
+      "category": "Kategori",
+      "paymentMethod": "Ödeme Yöntemi",
+      "contactName": "İlgili Kişi",
+      "referenceNumber": "Referans No",
+      "notes": "Notlar",
+      "source": "Kaynak",
+      "manual": "Manuel",
+      "parasut": "Paraşüt",
+      "allTypes": "Tüm Türler",
+      "income": "Gelir",
+      "expense": "Gider",
+      "noResults": "İşlem bulunamadı",
+      "noResultsDesc": "Filtrelerinizi değiştirmeyi deneyin veya yeni bir işlem ekleyin.",
+      "createdSuccess": "İşlem başarıyla oluşturuldu",
+      "updatedSuccess": "İşlem başarıyla güncellendi",
+      "deletedSuccess": "İşlem başarıyla silindi"
+    },
+    "paymentMethods": {
+      "cash": "Nakit",
+      "credit_card": "Kredi Kartı",
+      "bank_transfer": "Banka Transferi",
+      "check": "Çek",
+      "other": "Diğer"
+    },
+    "categories": {
+      "title": "Kategoriler",
+      "description": "İşlemlerinizi kategorilerle düzenleyin.",
+      "addCategory": "Kategori Ekle",
+      "editCategory": "Kategoriyi Düzenle",
+      "deleteCategory": "Kategoriyi Sil",
+      "name": "Ad",
+      "type": "Tür",
+      "color": "Renk",
+      "icon": "İkon",
+      "incomeCategories": "Gelir Kategorileri",
+      "expenseCategories": "Gider Kategorileri",
+      "noCategories": "Henüz kategori yok",
+      "noCategoriesDesc": "İşlemlerinizi düzenlemek için kategoriler oluşturun.",
+      "createdSuccess": "Kategori başarıyla oluşturuldu",
+      "updatedSuccess": "Kategori başarıyla güncellendi",
+      "deletedSuccess": "Kategori başarıyla silindi"
+    },
+    "analytics": {
+      "title": "Finansal Analitik",
+      "description": "Gelir ve gider trendlerinizi analiz edin.",
+      "period": "Dönem",
+      "groupBy": "Grupla",
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay",
+      "summary": "Özet",
+      "trends": "Trendler",
+      "categoryBreakdown": "Kategori Dağılımı",
+      "incomeBreakdown": "Kategoriye Göre Gelir",
+      "expenseBreakdown": "Kategoriye Göre Gider",
+      "noData": "Seçilen dönem için veri yok",
+      "noDataDesc": "Farklı bir tarih aralığı seçmeyi deneyin."
+    },
+    "integrations": {
+      "title": "Entegrasyonlar",
+      "description": "Harici muhasebe servislerini bağlayın.",
+      "parasut": {
+        "title": "Paraşüt",
+        "description": "Paraşüt muhasebe yazılımından fatura ve giderleri senkronize edin.",
+        "connect": "Bağla",
+        "disconnect": "Bağlantıyı Kes",
+        "connected": "Bağlı",
+        "notConnected": "Bağlı Değil",
+        "companyId": "Şirket ID",
+        "username": "Kullanıcı Adı / E-posta",
+        "password": "Şifre",
+        "sync": "Şimdi Senkronize Et",
+        "syncing": "Senkronize ediliyor...",
+        "lastSync": "Son senkronizasyon",
+        "syncSuccess": "Senkronizasyon başarıyla tamamlandı",
+        "syncError": "Senkronizasyon başarısız",
+        "imported": "içe aktarıldı",
+        "skipped": "atlandı",
+        "disconnectConfirm": "Paraşüt bağlantısını kesmek istediğinize emin misiniz?",
+        "connectedSuccess": "Paraşüt başarıyla bağlandı",
+        "disconnectedSuccess": "Paraşüt bağlantısı kesildi"
+      }
     }
   },
   "inventoryPage": {

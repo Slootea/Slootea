@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3, Shield, UserCog, Package, TrendingUp, ArrowUpDown, Zap } from "lucide-react";
+import { CalendarRange, Clock, Link2, Settings, LayoutDashboard, List, Users, Calendar, Building2, BarChart3, Shield, UserCog, Package, TrendingUp, ArrowUpDown, Zap, Wallet, Receipt, PiggyBank, Tags, Plug } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -29,7 +29,7 @@ export function AppSidebar() {
   const t = useTranslations('sidebar');
   const { user } = useUser();
   const { isAdmin, currentOrganization } = useOrganizationContext();
-  const { isInventoryModule } = useModuleContext();
+  const { isInventoryModule, isEconomyModule } = useModuleContext();
   
   // Check if user is a system admin (has role: 'admin' in public metadata)
   const isSystemAdmin = (user?.publicMetadata as { role?: string } | undefined)?.role === 'admin';
@@ -53,7 +53,6 @@ export function AppSidebar() {
     { href: "/dashboard/providers", label: t('serviceProviders') || 'Service Providers', icon: UserCog },
     { href: "/dashboard/links", label: t('bookingLinks'), icon: Link2 },
     { href: "/dashboard/reports", label: t('reports') || 'Reports', icon: BarChart3 },
-    { href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 },
   ];
 
   // Inventory module navigation (each is a separate page)
@@ -65,6 +64,16 @@ export function AppSidebar() {
     { href: "/dashboard/inventory/automation", label: t('inventoryAutomation') || 'Automation', icon: Zap },
   ];
 
+  // Economy module navigation
+  const economyNavItems = [
+    { href: "/dashboard/economy", label: t('economyOverview') || 'Overview', icon: BarChart3, exact: true },
+    { href: "/dashboard/economy/expenses", label: t('economyExpenses') || 'Expenses', icon: Receipt },
+    { href: "/dashboard/economy/income", label: t('economyIncome') || 'Income', icon: PiggyBank },
+    { href: "/dashboard/economy/analytics", label: t('economyAnalytics') || 'Analytics', icon: TrendingUp },
+    { href: "/dashboard/economy/categories", label: t('economyCategories') || 'Categories', icon: Tags },
+    { href: "/dashboard/economy/integrations", label: t('economyIntegrations') || 'Integrations', icon: Plug },
+  ];
+
   // Helper to check if inventory nav item is active
   const isInventoryItemActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -73,6 +82,7 @@ export function AppSidebar() {
 
   const settingsNavItems = [
     { href: "/dashboard/settings", label: t('settings'), icon: Settings },
+    ...(isAdmin && currentOrganization ? [{ href: "/dashboard/organization-settings", label: t('organizationSettings') || 'Organization Settings', icon: Building2 }] : []),
   ];
 
   return (
@@ -98,6 +108,26 @@ export function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {inventoryNavItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={isInventoryItemActive(item.href, item.exact)} tooltip={item.label}>
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        ) : isEconomyModule && isAdmin ? (
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel>{t('economyManagement') || 'Economy'}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {economyNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={isInventoryItemActive(item.href, item.exact)} tooltip={item.label}>
                         <Link href={item.href}>

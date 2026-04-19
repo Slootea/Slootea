@@ -3,13 +3,14 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-export type AppModule = "appointments" | "inventory";
+export type AppModule = "appointments" | "inventory" | "economy";
 
 interface ModuleContextValue {
   currentModule: AppModule;
   setModule: (module: AppModule) => void;
   isInventoryModule: boolean;
   isAppointmentsModule: boolean;
+  isEconomyModule: boolean;
 }
 
 const ModuleContext = createContext<ModuleContextValue | undefined>(undefined);
@@ -18,23 +19,23 @@ const MODULE_STORAGE_KEY = "slootea_current_module";
 
 // Module route prefixes
 const INVENTORY_ROUTES = ["/dashboard/inventory"];
-const APPOINTMENTS_ROUTES = [
-  "/dashboard",
-  "/dashboard/calendar",
-  "/dashboard/appointments",
-  "/dashboard/clients",
-  "/dashboard/availability",
-  "/dashboard/options",
-  "/dashboard/providers",
-  "/dashboard/links",
-  "/dashboard/reports",
-  "/dashboard/organization-settings",
+const ECONOMY_ROUTES = ["/dashboard/economy"];
+
+// Routes that should preserve the current module instead of switching
+const MODULE_NEUTRAL_ROUTES = [
   "/dashboard/settings",
+  "/dashboard/organization-settings",
 ];
 
-function getModuleFromPath(pathname: string): AppModule {
+function getModuleFromPath(pathname: string): AppModule | null {
+  if (MODULE_NEUTRAL_ROUTES.some(route => pathname.startsWith(route))) {
+    return null; // preserve current module
+  }
   if (INVENTORY_ROUTES.some(route => pathname.startsWith(route))) {
     return "inventory";
+  }
+  if (ECONOMY_ROUTES.some(route => pathname.startsWith(route))) {
+    return "economy";
   }
   return "appointments";
 }
@@ -49,6 +50,11 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem(MODULE_STORAGE_KEY) as AppModule | null;
     const pathModule = getModuleFromPath(pathname);
     
+    // Module-neutral routes (settings) preserve current module
+    if (pathModule === null) {
+      // Keep current module as-is
+      return;
+    }
     // Path takes precedence, but if we're on dashboard root, use stored preference
     if (pathname === "/dashboard" && stored) {
       setCurrentModule(stored);
@@ -64,6 +70,8 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
     // Navigate to the appropriate default route for the module
     if (module === "inventory") {
       router.push("/dashboard/inventory");
+    } else if (module === "economy") {
+      router.push("/dashboard/economy");
     } else {
       router.push("/dashboard");
     }
@@ -74,6 +82,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
     setModule,
     isInventoryModule: currentModule === "inventory",
     isAppointmentsModule: currentModule === "appointments",
+    isEconomyModule: currentModule === "economy",
   };
 
   return (

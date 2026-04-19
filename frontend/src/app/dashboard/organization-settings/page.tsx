@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { organizationSettingsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
 import { OrganizationSettings, ProviderSelectionMode } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { useSetPageHeader } from "@/components/providers/page-header-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NumberInput } from "@/components/ui/number-input";
@@ -28,6 +29,7 @@ export default function OrganizationSettingsPage() {
   const { toast } = useToast();
   const t = useTranslations('organization');
   const { currentOrganization, isAdmin } = useOrganizationContext();
+  useSetPageHeader(t('title'), t('description'));
   const [settings, setSettings] = useState<OrganizationSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -144,11 +146,6 @@ export default function OrganizationSettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground">{t('description')}</p>
-      </div>
-
       {/* Provider Selection Mode */}
       <Card>
         <CardHeader>

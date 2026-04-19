@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, Check, CalendarRange, Package } from "lucide-react";
+import { ChevronsUpDown, Check, CalendarRange, Package, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useModuleContext, AppModule } from "@/components/providers/module-provider";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
@@ -46,6 +46,13 @@ export function ModuleSwitcher() {
       label: t("inventory.label"),
       description: t("inventory.description"),
       icon: Package,
+      adminOnly: true,
+    },
+    {
+      id: "economy",
+      label: t("economy.label"),
+      description: t("economy.description"),
+      icon: Wallet,
       adminOnly: true,
     },
   ];

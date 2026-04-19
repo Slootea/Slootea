@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { trTR } from "@clerk/localizations";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
 import { AuthProvider } from "@/components/providers/auth-provider";
@@ -48,9 +49,10 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const clerkLocalization = locale === "tr" ? trTR : undefined;
 
   return (
-    <ClerkProvider>
+    <ClerkProvider localization={clerkLocalization}>
       <html lang={locale} suppressHydrationWarning>
         <body className={`${inter.variable} ${manrope.variable} font-sans antialiased`}>
           <ThemeProvider

@@ -21,6 +21,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { ExternalProvidersModule } from './modules/external-providers/external-providers.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { EconomyModule } from './modules/economy/economy.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -64,6 +65,7 @@ import { HealthController } from './health.controller';
     ExternalProvidersModule,
     MonitoringModule,
     InventoryModule,
+    EconomyModule,
   ],
   controllers: [HealthController],
 })

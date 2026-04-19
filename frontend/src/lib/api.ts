@@ -721,6 +721,187 @@ export const inventoryApi = {
   }) => api.get<DailyUsageReport>('/inventory/reports/daily-usage', { params }),
 };
 
+// ==================== Economy Types ====================
+
+export type TransactionType = 'income' | 'expense';
+export type PaymentMethod = 'cash' | 'credit_card' | 'bank_transfer' | 'check' | 'other';
+export type TransactionSource = 'manual' | 'parasut';
+
+export interface TransactionItem {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  currency: string;
+  description: string;
+  date: string;
+  paymentMethod: PaymentMethod;
+  categoryId?: string;
+  categoryName?: string;
+  categoryColor?: string;
+  source: TransactionSource;
+  notes?: string;
+  referenceNumber?: string;
+  contactName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedTransactionResponse {
+  items: TransactionItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface TransactionCategory {
+  id: string;
+  organizationId: string;
+  name: string;
+  type: TransactionType;
+  color?: string;
+  icon?: string;
+  parentId?: string;
+  isActive: boolean;
+  children?: TransactionCategory[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalyticsSummary {
+  totalIncome: number;
+  totalExpense: number;
+  netProfit: number;
+  transactionCount: number;
+}
+
+export interface CategoryBreakdown {
+  categoryId: string;
+  categoryName: string;
+  categoryColor?: string;
+  total: number;
+  count: number;
+  percentage: number;
+}
+
+export interface TrendData {
+  period: string;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+export interface AnalyticsResponse {
+  summary: AnalyticsSummary;
+  incomeByCategory: CategoryBreakdown[];
+  expenseByCategory: CategoryBreakdown[];
+  trends: TrendData[];
+}
+
+export interface ParasutStatus {
+  connected: boolean;
+  companyId?: string;
+  syncStatus?: string;
+  lastSyncAt?: string;
+  lastSyncError?: string;
+  username?: string;
+}
+
+// ==================== Economy API ====================
+
+export const economyApi = {
+  // Transactions
+  getTransactions: (params?: {
+    page?: number;
+    limit?: number;
+    type?: TransactionType;
+    search?: string;
+    categoryId?: string;
+    startDate?: string;
+    endDate?: string;
+    paymentMethod?: PaymentMethod;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }) => api.get<PaginatedTransactionResponse>('/economy/transactions', { params }),
+
+  getTransaction: (id: string) =>
+    api.get<TransactionItem>(`/economy/transactions/${id}`),
+
+  createTransaction: (data: {
+    type: TransactionType;
+    amount: number;
+    currency?: string;
+    description: string;
+    date: string;
+    paymentMethod?: PaymentMethod;
+    categoryId?: string;
+    notes?: string;
+    referenceNumber?: string;
+    contactName?: string;
+  }) => api.post<TransactionItem>('/economy/transactions', data),
+
+  updateTransaction: (id: string, data: Partial<{
+    type: TransactionType;
+    amount: number;
+    currency: string;
+    description: string;
+    date: string;
+    paymentMethod: PaymentMethod;
+    categoryId: string;
+    notes: string;
+    referenceNumber: string;
+    contactName: string;
+  }>) => api.put<TransactionItem>(`/economy/transactions/${id}`, data),
+
+  deleteTransaction: (id: string) => api.delete(`/economy/transactions/${id}`),
+
+  // Categories
+  getCategories: (type?: TransactionType) =>
+    api.get<TransactionCategory[]>('/economy/categories', { params: type ? { type } : undefined }),
+
+  createCategory: (data: {
+    name: string;
+    type: TransactionType;
+    color?: string;
+    icon?: string;
+    parentId?: string;
+  }) => api.post<TransactionCategory>('/economy/categories', data),
+
+  updateCategory: (id: string, data: Partial<{
+    name: string;
+    color: string;
+    icon: string;
+    isActive: boolean;
+  }>) => api.put<TransactionCategory>(`/economy/categories/${id}`, data),
+
+  deleteCategory: (id: string) => api.delete(`/economy/categories/${id}`),
+
+  // Analytics
+  getAnalytics: (params: {
+    startDate: string;
+    endDate: string;
+    groupBy?: 'day' | 'week' | 'month';
+  }) => api.get<AnalyticsResponse>('/economy/analytics', { params }),
+
+  getSummary: (params: {
+    startDate: string;
+    endDate: string;
+  }) => api.get<AnalyticsSummary>('/economy/summary', { params }),
+
+  // Parasut
+  getParasutStatus: () => api.get<ParasutStatus>('/economy/parasut/status'),
+
+  connectParasut: (data: {
+    companyId: string;
+    username: string;
+    password: string;
+  }) => api.post<ParasutStatus>('/economy/parasut/connect', data),
+
+  disconnectParasut: () => api.post('/economy/parasut/disconnect'),
+
+  syncParasut: () => api.post<{ imported: number; skipped: number }>('/economy/parasut/sync'),
+};
+
 // ==================== Inventory Automation Types ====================
 
 export type AutomationNodeType =
