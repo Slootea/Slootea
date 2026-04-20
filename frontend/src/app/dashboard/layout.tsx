@@ -15,6 +15,7 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
+import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 
 export default function DashboardLayout({
   children,
@@ -158,7 +159,8 @@ function DashboardHeader({
           <p className="text-sm text-muted-foreground leading-tight">{subtitle}</p>
         )}
       </div>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <NotificationsDropdown />
         <UserButton 
           afterSignOutUrl="/" 
           showName

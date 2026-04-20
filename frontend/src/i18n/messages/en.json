@@ -1707,6 +1707,16 @@
     "confirmSuccess": "Your attendance has been confirmed",
     "confirmError": "Failed to confirm"
   },
+  "notificationsDropdown": {
+    "title": "Notifications",
+    "noNotifications": "No notifications yet",
+    "seeAll": "See all notifications"
+  },
+  "notificationsPage": {
+    "title": "Notifications",
+    "workInProgress": "This feature is currently under development",
+    "description": "Soon you'll be able to track organization notifications here, such as inventory stock alerts and triggered events."
+  },
   "organization": {
     "title": "Organization Settings",
     "description": "Manage your organization settings and member preferences",

@@ -1707,6 +1707,16 @@
     "confirmSuccess": "Katılımınız onaylanmıştır",
     "confirmError": "Onaylama başarısız"
   },
+  "notificationsDropdown": {
+    "title": "Bildirimler",
+    "noNotifications": "Henüz bildirim yok",
+    "seeAll": "Tüm bildirimleri gör"
+  },
+  "notificationsPage": {
+    "title": "Bildirimler",
+    "workInProgress": "Bu özellik şu anda geliştirme aşamasında",
+    "description": "Yakında burada stok uyarıları ve tetiklenen etkinlikler gibi organizasyon bildirimlerini takip edebileceksiniz."
+  },
   "organization": {
     "title": "Organizasyon Ayarları",
     "description": "Organizasyon ayarlarınızı ve üye tercihlerini yönetin",
