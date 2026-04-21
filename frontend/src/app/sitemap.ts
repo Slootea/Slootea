@@ -36,6 +36,18 @@ export default async function sitemap(props: {
         priority: 1,
       },
       {
+        url: `${siteUrl}/en/roadmap`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      },
+      {
+        url: `${siteUrl}/tr/roadmap`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      },
+      {
         url: `${siteUrl}/en/blog`,
         lastModified,
         changeFrequency: 'weekly',

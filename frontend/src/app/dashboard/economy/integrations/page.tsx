@@ -102,7 +102,7 @@ export default function IntegrationsPage() {
     } catch (err: any) {
       toast({
         title: tCommon("error"),
-        description: err?.response?.data?.message || "Connection failed",
+        description: err?.response?.data?.message || t("integrations.parasut.connectionFailed"),
         variant: "destructive",
       });
     } finally {
@@ -117,7 +117,7 @@ export default function IntegrationsPage() {
       setParasutStatus({ connected: false });
       toast({ title: tCommon("success"), description: t("integrations.parasut.disconnectedSuccess") });
     } catch {
-      toast({ title: tCommon("error"), description: "Disconnect failed", variant: "destructive" });
+      toast({ title: tCommon("error"), description: t("integrations.parasut.disconnectFailed"), variant: "destructive" });
     }
     setDisconnectDialogOpen(false);
   };
@@ -196,12 +196,12 @@ export default function IntegrationsPage() {
                   <p className="text-sm font-medium">{parasutStatus?.username || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
+                  <p className="text-xs text-muted-foreground">{t("integrations.parasut.statusLabel")}</p>
                   <div className="flex items-center gap-1">
                     {parasutStatus?.syncStatus === "success" && <CheckCircle2 className="h-3 w-3 text-green-500" />}
                     {parasutStatus?.syncStatus === "error" && <AlertTriangle className="h-3 w-3 text-red-500" />}
                     {parasutStatus?.syncStatus === "syncing" && <Loader2 className="h-3 w-3 animate-spin" />}
-                    <p className="text-sm font-medium capitalize">{parasutStatus?.syncStatus || "idle"}</p>
+                    <p className="text-sm font-medium capitalize">{parasutStatus?.syncStatus || t("integrations.parasut.statusIdle")}</p>
                   </div>
                 </div>
                 <div>
@@ -209,7 +209,7 @@ export default function IntegrationsPage() {
                   <p className="text-sm font-medium">
                     {parasutStatus?.lastSyncAt
                       ? new Date(parasutStatus.lastSyncAt).toLocaleString()
-                      : "Never"}
+                      : t("integrations.parasut.neverSynced")}
                   </p>
                 </div>
               </div>
@@ -242,8 +242,7 @@ export default function IntegrationsPage() {
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Connect your Paraşüt account to automatically sync invoices and expenses.
-                You&apos;ll need your Paraşüt company ID and login credentials.
+                {t("integrations.parasut.connectDescription")}
               </p>
               <div className="flex gap-2">
                 <Button onClick={() => setConnectDialogOpen(true)}>
@@ -253,7 +252,7 @@ export default function IntegrationsPage() {
                 <Button variant="outline" asChild>
                   <a href="https://www.parasut.com" target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-1" />
-                    Paraşüt Website
+                    {t("integrations.parasut.website")}
                   </a>
                 </Button>
               </div>
@@ -266,9 +265,9 @@ export default function IntegrationsPage() {
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
           <Plug className="h-10 w-10 text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground font-medium">More integrations coming soon</p>
+          <p className="text-muted-foreground font-medium">{t("integrations.moreComingSoon")}</p>
           <p className="text-sm text-muted-foreground">
-            Support for additional accounting and payment platforms is on the roadmap.
+            {t("integrations.moreComingSoonDesc")}
           </p>
         </CardContent>
       </Card>
@@ -277,7 +276,7 @@ export default function IntegrationsPage() {
       <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>{t("integrations.parasut.connect")} Paraşüt</DialogTitle>
+            <DialogTitle>{t("integrations.parasut.connectDialogTitle")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -285,7 +284,7 @@ export default function IntegrationsPage() {
               <Input
                 value={formData.companyId}
                 onChange={(e) => setFormData((f) => ({ ...f, companyId: e.target.value }))}
-                placeholder="Your Paraşüt company ID"
+                placeholder={t("integrations.parasut.companyIdPlaceholder")}
               />
             </div>
             <div className="space-y-2">

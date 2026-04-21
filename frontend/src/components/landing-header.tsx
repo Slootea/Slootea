@@ -29,6 +29,7 @@ export function LandingHeader({ locale }: LandingHeaderProps) {
     { href: "#how-it-works", label: t("nav.howItWorks") },
     { href: "#testimonials", label: t("nav.testimonials") },
     { href: "#pricing", label: t("nav.pricing") },
+    { href: `/${locale}/roadmap`, label: t("nav.roadmap"), isLink: true },
     { href: `/${locale}/blog`, label: t("nav.blog"), isLink: true },
   ];
 

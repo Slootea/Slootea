@@ -76,6 +76,7 @@
       "howItWorks": "Nasıl Çalışır",
       "testimonials": "Referanslar",
       "pricing": "Fiyatlandırma",
+      "roadmap": "Yol Haritası",
       "blog": "Blog"
     },
     "hero": {
@@ -377,6 +378,121 @@
         "units": "adet",
         "addStock": "Stok Ekle"
       }
+    }
+  },
+  "roadmap": {
+    "meta": {
+      "title": "Ürün yol haritası",
+      "description": "Slootea'nın sonraki üç büyük aşamasını görün: envanter tetiklemeli bildirimler, tedarikçi iş akışı otomasyonu ve ön ödemeler ile ek satışları destekleyen kapsamlı işletme analitiği."
+    },
+    "eyebrow": "Herkese açık yol haritası",
+    "backToHome": "Ana sayfaya dön",
+    "hero": {
+      "title": "Slootea'nın sıradaki yönü",
+      "description": "Operasyonel uyarılardan otomatik tedarikçi akışlarına, oradan da analitik, ön ödeme ve ürün satışını çalıştıran güçlü bir işletme katmanına uzanan net bir yol.",
+      "primaryCta": "Slootea ile başlayın",
+      "secondaryCta": "Platformu inceleyin"
+    },
+    "snapshot": {
+      "label": "Sonraki yayın hattı",
+      "title": "Üç yayın, tek bir bağlı işletme katmanı",
+      "stat1": {
+        "label": "Kanallar",
+        "value": "Web + mobil + Telegram",
+        "detail": "İşletme sahipleri envanter ve randevu uyarılarını çalıştıkları her yerde alır."
+      },
+      "stat2": {
+        "label": "Yeni modül",
+        "value": "Yönetim",
+        "detail": "Randevu, envanter ve ekonominin yanında dördüncü bir çalışma alanı."
+      },
+      "stat3": {
+        "label": "İşletme derinliği",
+        "value": "Analitik + ticaret",
+        "detail": "Canlı operasyon verisi üzerine kurulu ön ödeme, ek satış ve tahminleme."
+      }
+    },
+    "timeline": {
+      "eyebrow": "Planlanan sıra",
+      "title": "Her adım aynı çekirdek sistemi büyütür",
+      "description": "Yol haritası, önce anlık operasyon görünürlüğü, sonra otomatik tedarik koordinasyonu, ardından gelir zekasına doğru ilerler."
+    },
+    "phases": {
+      "phase1": {
+        "step": "Adım 01",
+        "status": "Şekilleniyor",
+        "title": "Entegrasyonlar ve işletme sahibi bildirimleri",
+        "description": "İlk yayın, envanter ve randevu hareketlerini işletme sahipleri için aksiyona dönüştüren uyarılara çevirecek. Stok düşüşleri, yeniden dolum eşikleri ve paylaşılabilir linklerden gelen rezervasyonlar doğru kişiye anında ulaşan sinyaller olacak.",
+        "bullet1": "Ürün ve sarf malzemelerinde işi aksatmadan önce düşük stok uyarıları.",
+        "bullet2": "Kullanım eğilimleri yeniden sipariş zamanını gösterdiğinde dolum uyarıları.",
+        "bullet3": "Belirli hizmetler link üzerinden alındığında doğrudan dikkat gerektiren rezervasyon bildirimleri.",
+        "bullet4": "Düşük stok durumlarının API çağrılarını ve devam aksiyonlarını tetikleyebilmesi için olay tabanlı otomasyon.",
+        "panelTitle": "Yayın odağı",
+        "highlight1": {
+          "title": "Çok kanallı teslimat",
+          "description": "Bildirimler web uygulaması, mobil uygulama ve Telegram içinde gelir; operatör bağlam kaybetmez."
+        },
+        "highlight2": {
+          "title": "Rezervasyonla bağlı zeka",
+          "description": "Yüksek değerli veya hassas hizmetler, rezervasyon linki dönüşür dönüşmez sahipleri haberdar edebilir."
+        },
+        "highlight3": {
+          "title": "Aksiyona hazır olaylar",
+          "description": "Envanter olayları API çağrılarını, webhook'ları ve özel işletme otomasyonlarını tetikleyebilecek."
+        }
+      },
+      "phase2": {
+        "step": "Adım 02",
+        "status": "Sonraki temel",
+        "title": "Yönetim modülü ve tedarikçi talep panosu",
+        "description": "Randevu, envanter ve ekonominin yanında yeni bir yönetim bölümü açılacak. Burada tedarikçilerin ve üreticilerin eksik ya da azalan stok talebini takip edip teklif ve tedarik yanıtı verebildiği herkese açık bir pano olacak.",
+        "bullet1": "Satın alma ve yeniden tedarik akışlarını birleştiren yeni yönetim modülü.",
+        "bullet2": "İşletmelerde eksik ürünleri ve düşük stok talebini gösteren herkese açık tedarikçi panosu.",
+        "bullet3": "Siparişlerin döngüde daha erken yakalanması için tedarikçi ve üretici katılımı.",
+        "bullet4": "Stok eşikleri ve dolum mantığına doğrudan bağlanan otomatik sipariş akışları.",
+        "panelTitle": "İş akışı vaadi",
+        "highlight1": {
+          "title": "Kamusal talep görünürlüğü",
+          "description": "Tedarikçiler manuel talep beklemek yerine somut yeniden stok fırsatlarını panodan izleyebilir."
+        },
+        "highlight2": {
+          "title": "Stok farkındalıklı satın alma",
+          "description": "Sistem düşük stok koşullarını önerilen veya otomatik sipariş akışına çevirebilir."
+        },
+        "highlight3": {
+          "title": "Kesintisiz devir",
+          "description": "Hedef, stok sinyalinden tedarikçi yanıtına ve tamamlanan doluma kadar kesintisiz bir akış kurmaktır."
+        }
+      },
+      "phase3": {
+        "step": "Adım 03",
+        "status": "Stratejik katman",
+        "title": "Gelişmiş analitik, ön ödemeler ve ek satış ticareti",
+        "description": "Slootea müşterileri, envanter hareketini ve yeniden tedarik davranışını birlikte izlediğinde çok daha güçlü bir işletme resmi çıkarır. Aynı temel, randevu öncesi ödeme almayı ve ürünleri özel Slootea sayfalarında satmayı da mümkün kılar.",
+        "bullet1": "Müşteri davranışı, stok kullanımı, dolum zamanlaması ve hizmet performansında daha derin analitik.",
+        "bullet2": "Randevu talebi ile envanter tüketimi aynı sistemde yaşadığı için daha güçlü tahminleme.",
+        "bullet3": "Riski azaltmak ve nakit akışını iyileştirmek için randevu öncesi ön ödemeler.",
+        "bullet4": "Ürünleri özel bir Slootea sayfasında ek satış olarak sunabilen çevrim içi satış akışı.",
+        "panelTitle": "İşletme sonucu",
+        "highlight1": {
+          "title": "Operasyon analitiği",
+          "description": "Sahipler gelir, stok sağlığı, müşteri talebi ve yeniden tedarik verimliliğini birlikte görebilir."
+        },
+        "highlight2": {
+          "title": "Daha iyi ödeme zamanlaması",
+          "description": "Ön ödeme akışları, işlemin bir bölümünü randevu gerçekleşmeden önce taşır."
+        },
+        "highlight3": {
+          "title": "Gömülü ticaret",
+          "description": "İşletmeler ürünleri, operasyonlardan ayrı tutmak yerine özel Slootea sayfalarında satabilir."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "Bizimle büyüyün",
+      "title": "Slootea, hizmet işletmelerinin arka plandaki işletim sistemine dönüşürken bu yolculuğu izleyin",
+      "description": "Bu yön, birbirinden kopuk özelliklerden oluşmuyor. Her adım aynı randevu, envanter ve işletme bağlamının üzerine kuruluyor; böylece her yayınla birlikte otomasyon daha da güçleniyor.",
+      "button": "Çalışma alanınızı oluşturun"
     }
   },
   "settings": {
@@ -1311,8 +1427,19 @@
         "skipped": "atlandı",
         "disconnectConfirm": "Paraşüt bağlantısını kesmek istediğinize emin misiniz?",
         "connectedSuccess": "Paraşüt başarıyla bağlandı",
-        "disconnectedSuccess": "Paraşüt bağlantısı kesildi"
-      }
+        "disconnectedSuccess": "Paraşüt bağlantısı kesildi",
+        "connectionFailed": "Bağlantı başarısız",
+        "disconnectFailed": "Bağlantı kesme başarısız",
+        "statusLabel": "Durum",
+        "statusIdle": "Beklemede",
+        "neverSynced": "Hiç",
+        "connectDescription": "Fatura ve giderleri otomatik olarak senkronize etmek için Paraşüt hesabınızı bağlayın. Paraşüt şirket ID'nize ve giriş bilgilerinize ihtiyacınız olacak.",
+        "connectDialogTitle": "Paraşüt Bağla",
+        "website": "Paraşüt Web Sitesi",
+        "companyIdPlaceholder": "Paraşüt şirket ID'niz"
+      },
+      "moreComingSoon": "Yakında daha fazla entegrasyon",
+      "moreComingSoonDesc": "Ek muhasebe ve ödeme platformları için destek yol haritasında yer almaktadır."
     }
   },
   "inventoryPage": {

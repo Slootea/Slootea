@@ -76,6 +76,7 @@
       "howItWorks": "How It Works",
       "testimonials": "Testimonials",
       "pricing": "Pricing",
+      "roadmap": "Roadmap",
       "blog": "Blog"
     },
     "hero": {
@@ -377,6 +378,121 @@
         "units": "units",
         "addStock": "Add Stock"
       }
+    }
+  },
+  "roadmap": {
+    "meta": {
+      "title": "Product roadmap",
+      "description": "See the next three major stages of Slootea: inventory-triggered notifications, supplier workflow automation, and business-wide analytics with prepayments and upsells."
+    },
+    "eyebrow": "Public roadmap",
+    "backToHome": "Back to home",
+    "hero": {
+      "title": "Where Slootea is heading next",
+      "description": "A clear rollout from operational alerts to automated supplier workflows and finally to a business graph powerful enough to drive analytics, prepayments, and product sales.",
+      "primaryCta": "Start with Slootea",
+      "secondaryCta": "Explore the platform"
+    },
+    "snapshot": {
+      "label": "Next release arc",
+      "title": "Three releases, one connected operating layer",
+      "stat1": {
+        "label": "Channels",
+        "value": "Web + mobile + Telegram",
+        "detail": "Business owners get inventory and booking alerts wherever they work."
+      },
+      "stat2": {
+        "label": "New module",
+        "value": "Management",
+        "detail": "A fourth workspace beside appointments, inventory, and economy."
+      },
+      "stat3": {
+        "label": "Business depth",
+        "value": "Analytics + commerce",
+        "detail": "Prepayments, upsells, and forecasting built on live operating data."
+      }
+    },
+    "timeline": {
+      "eyebrow": "Planned sequence",
+      "title": "Each step extends the same core system",
+      "description": "The roadmap builds from immediate operational visibility into automated supply coordination and finally into revenue intelligence."
+    },
+    "phases": {
+      "phase1": {
+        "step": "Step 01",
+        "status": "Now shaping",
+        "title": "Integrations and owner notifications",
+        "description": "The first release turns inventory and appointment activity into actionable alerts for business owners. Stock drops, refill thresholds, and bookings from shareable links become signals that reach the right person immediately.",
+        "bullet1": "Low stock alerts for products and supplies before work is disrupted.",
+        "bullet2": "Refill alerts when usage trends show that replenishment should start.",
+        "bullet3": "Appointment-through-link alerts for specific services that need direct attention.",
+        "bullet4": "Event-based automation so low stock can trigger API calls and downstream actions.",
+        "panelTitle": "Release focus",
+        "highlight1": {
+          "title": "Multi-channel delivery",
+          "description": "Notifications arrive inside the web app, the mobile app, and Telegram so operators never lose context."
+        },
+        "highlight2": {
+          "title": "Booking-linked intelligence",
+          "description": "High-value or sensitive services can notify owners as soon as a booking link converts."
+        },
+        "highlight3": {
+          "title": "Action-ready events",
+          "description": "Inventory events will be able to trigger API calls, webhooks, and custom business automations."
+        }
+      },
+      "phase2": {
+        "step": "Step 02",
+        "status": "Next foundation",
+        "title": "Management module and supplier demand board",
+        "description": "A fourth section next to appointments, inventory, and economy will open a management layer. It will expose a public board where suppliers and product makers can follow missing or low-stock demand and respond with offers and fulfillment.",
+        "bullet1": "A new management module for cross-functional purchasing and replenishment flows.",
+        "bullet2": "A public supplier board showing missing items and low-stock demand across businesses.",
+        "bullet3": "Supplier and maker participation so orders can be captured earlier in the cycle.",
+        "bullet4": "Automatic ordering workflows connected directly to stock thresholds and refill logic.",
+        "panelTitle": "Workflow promise",
+        "highlight1": {
+          "title": "Public demand visibility",
+          "description": "Suppliers can follow the board and discover concrete restock opportunities instead of waiting for manual outreach."
+        },
+        "highlight2": {
+          "title": "Stock-aware procurement",
+          "description": "The system can convert low-stock conditions into suggested or automatic order flows."
+        },
+        "highlight3": {
+          "title": "Seamless handoff",
+          "description": "The goal is an uninterrupted path from stock signal to supplier response to fulfilled replenishment."
+        }
+      },
+      "phase3": {
+        "step": "Step 03",
+        "status": "Strategic layer",
+        "title": "Advanced analytics, prepayments, and upsell commerce",
+        "description": "Once Slootea tracks clients, inventory movement, and resupply behavior together, it can produce a much stronger analytical picture of the business. That same foundation also enables payment capture before appointments and dedicated product-selling pages.",
+        "bullet1": "Deeper analytics across client behavior, stock usage, refill timing, and service performance.",
+        "bullet2": "Sharper forecasting because appointment demand and inventory consumption live in one system.",
+        "bullet3": "Prepayments before appointments to reduce risk and improve cash flow.",
+        "bullet4": "Upsell items on a Slootea-hosted page for dedicated online product sales.",
+        "panelTitle": "Business outcome",
+        "highlight1": {
+          "title": "Operating analytics",
+          "description": "Owners get visibility across revenue, stock health, client demand, and replenishment efficiency."
+        },
+        "highlight2": {
+          "title": "Better payment timing",
+          "description": "Prepayment flows move part of the transaction earlier, before the appointment happens."
+        },
+        "highlight3": {
+          "title": "Embedded commerce",
+          "description": "Businesses can upsell products on a dedicated Slootea page instead of keeping sales separate from operations."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "Build with us",
+      "title": "Follow the rollout as Slootea becomes the operating system behind service businesses",
+      "description": "The direction is not a collection of isolated features. Each step builds on the same scheduling, inventory, and business context so automation gets stronger with every release.",
+      "button": "Create your workspace"
     }
   },
   "settings": {
@@ -1311,8 +1427,19 @@
         "skipped": "skipped",
         "disconnectConfirm": "Are you sure you want to disconnect Paraşüt?",
         "connectedSuccess": "Paraşüt connected successfully",
-        "disconnectedSuccess": "Paraşüt disconnected successfully"
-      }
+        "disconnectedSuccess": "Paraşüt disconnected successfully",
+        "connectionFailed": "Connection failed",
+        "disconnectFailed": "Disconnect failed",
+        "statusLabel": "Status",
+        "statusIdle": "Idle",
+        "neverSynced": "Never",
+        "connectDescription": "Connect your Paraşüt account to automatically sync invoices and expenses. You'll need your Paraşüt company ID and login credentials.",
+        "connectDialogTitle": "Connect Paraşüt",
+        "website": "Paraşüt Website",
+        "companyIdPlaceholder": "Your Paraşüt company ID"
+      },
+      "moreComingSoon": "More integrations coming soon",
+      "moreComingSoonDesc": "Support for additional accounting and payment platforms is on the roadmap."
     }
   },
   "inventoryPage": {
