@@ -172,7 +172,7 @@
       },
       "teamManagement": {
         "title": "Ekip Yönetimi",
-        "description": "Birden fazla sağlayıcıyı yönetin, hizmetler atayın ve bireysel performansı takip edin."
+        "description": "Birden fazla hizmet vereni yönetin, hizmetler atayın ve bireysel performansı takip edin."
       },
       "analytics": {
         "title": "Raporlar ve Analiz",
@@ -567,7 +567,7 @@
     "blockedTimes": "Engelli Zamanlar",
     "bookingLinks": "Rezervasyon Linkleri",
     "serviceOptions": "Hizmet Seçenekleri",
-    "serviceProviders": "Hizmet Sağlayıcılar",
+    "serviceProviders": "Hizmet Verenler",
     "inventory": "Envanter",
     "inventoryManagement": "Envanter",
     "inventoryOverview": "Genel Bakış",
@@ -888,19 +888,19 @@
     "validationError": "Doğrulama Hatası"
   },
   "providersPage": {
-    "title": "Hizmet Sağlayıcılar",
-    "description": "Organizasyonunuzun üyesi olmayan harici hizmet sağlayıcıları yönetin",
-    "addProvider": "Sağlayıcı Ekle",
+    "title": "Hizmet Verenler",
+    "description": "Organizasyonunuzun üyesi olmayan harici hizmet verenleri yönetin",
+    "addProvider": "Hizmet Veren Ekle",
     "empty": {
-      "title": "Henüz harici sağlayıcı yok",
-      "description": "Rezervasyon sisteminiz aracılığıyla hizmet sunmak için harici hizmet sağlayıcıları ekleyin."
+      "title": "Henüz harici hizmet veren yok",
+      "description": "Rezervasyon sisteminiz aracılığıyla hizmet sunmak için harici hizmet verenleri ekleyin."
     },
     "status": {
       "active": "Aktif",
       "inactive": "Pasif"
     },
     "type": {
-      "external": "Harici Sağlayıcı"
+      "external": "Harici Hizmet Veren"
     },
     "card": {
       "added": "Eklendi"
@@ -910,16 +910,16 @@
       "delete": "Sil"
     },
     "dialog": {
-      "createTitle": "Hizmet Sağlayıcı Ekle",
-      "createDescription": "Organizasyonunuza yeni bir harici hizmet sağlayıcı ekleyin",
-      "editTitle": "Hizmet Sağlayıcıyı Düzenle",
-      "editDescription": "Sağlayıcı bilgilerini, hizmetleri ve müsaitliği güncelleyin",
+      "createTitle": "Hizmet Veren Ekle",
+      "createDescription": "Organizasyonunuza yeni bir harici hizmet veren ekleyin",
+      "editTitle": "Hizmet Vereni Düzenle",
+      "editDescription": "Hizmet Veren bilgilerini, hizmetleri ve müsaitliği güncelleyin",
       "uploadImage": "Fotoğraf Yükle",
       "imageHint": "JPG, PNG veya WEBP. Maks 5MB.",
       "removeImage": "Fotoğrafı kaldır",
       "name": "İsim",
-      "namePlaceholder": "Sağlayıcı adını girin",
-      "activeLabel": "Sağlayıcı aktif ve rezervasyon alabilir"
+      "namePlaceholder": "Hizmet Veren adını girin",
+      "activeLabel": "Hizmet Veren aktif ve rezervasyon alabilir"
     },
     "tabs": {
       "details": "Detaylar",
@@ -928,11 +928,11 @@
       "blockedTimes": "Engelli Zamanlar"
     },
     "services": {
-      "noServices": "Henüz hizmet oluşturulmamış. Sağlayıcılara atamak için önce hizmet oluşturun.",
-      "selectDescription": "Bu sağlayıcının sunabileceği hizmetleri seçin."
+      "noServices": "Henüz hizmet oluşturulmamış. Hizmet Verenlere atamak için önce hizmet oluşturun.",
+      "selectDescription": "Bu hizmet verenin sunabileceği hizmetleri seçin."
     },
     "availability": {
-      "description": "Bu sağlayıcı için haftalık çalışma saatlerini ayarlayın.",
+      "description": "Bu hizmet veren için haftalık çalışma saatlerini ayarlayın.",
       "unavailable": "Müsait değil",
       "addTitle": "Müsaitlik Ekle",
       "addDescription": "{day} için çalışma saatleri ekleyin",
@@ -945,11 +945,11 @@
       "deleteFailed": "Müsaitlik kaldırılamadı"
     },
     "blockedTime": {
-      "description": "Bu sağlayıcının müsait olmadığı belirli tarihleri veya zamanları engelleyin.",
+      "description": "Bu hizmet verenin müsait olmadığı belirli tarihleri veya zamanları engelleyin.",
       "add": "Engelli Zaman Ekle",
       "empty": "Zamanlanmış engelli zaman yok",
       "addTitle": "Zaman Engelle",
-      "addDescription": "Bu sağlayıcının müsait olmadığı bir tarih veya zaman aralığı engelleyin",
+      "addDescription": "Bu hizmet verenin müsait olmadığı bir tarih veya zaman aralığı engelleyin",
       "date": "Tarih",
       "fullDay": "Tüm Gün",
       "fullDayLabel": "Tüm günü engelle",
@@ -964,25 +964,25 @@
       "deleteFailed": "Engelli zaman kaldırılamadı"
     },
     "delete": {
-      "title": "Sağlayıcıyı Sil",
-      "description": "{name} sağlayıcısını silmek istediğinizden emin misiniz? Bu işlem tüm müsaitlik, engelli zaman ve hizmet atamalarını da kaldıracaktır. Bu işlem geri alınamaz."
+      "title": "Hizmet Vereni Sil",
+      "description": "{name} hizmet verenini silmek istediğinizden emin misiniz? Bu işlem tüm müsaitlik, engelli zaman ve hizmet atamalarını da kaldıracaktır. Bu işlem geri alınamaz."
     },
     "success": {
       "title": "Başarılı",
-      "created": "Sağlayıcı başarıyla oluşturuldu",
-      "updated": "Sağlayıcı başarıyla güncellendi",
-      "deleted": "Sağlayıcı başarıyla silindi"
+      "created": "Hizmet Veren başarıyla oluşturuldu",
+      "updated": "Hizmet Veren başarıyla güncellendi",
+      "deleted": "Hizmet Veren başarıyla silindi"
     },
     "error": {
       "title": "Hata",
-      "loadFailed": "Sağlayıcılar yüklenemedi",
-      "saveFailed": "Sağlayıcı kaydedilemedi",
-      "deleteFailed": "Sağlayıcı silinemedi",
-      "nameRequired": "Sağlayıcı adı gerekli",
+      "loadFailed": "Hizmet Verenler yüklenemedi",
+      "saveFailed": "Hizmet Veren kaydedilemedi",
+      "deleteFailed": "Hizmet Veren silinemedi",
+      "nameRequired": "Hizmet Veren adı gerekli",
       "imageTooLarge": "Görsel 5MB'dan küçük olmalıdır",
       "serviceFailed": "Hizmet ataması güncellenemedi",
-      "adminOnly": "Sadece organizasyon yöneticileri hizmet sağlayıcıları yönetebilir.",
-      "noOrganization": "Hizmet sağlayıcıları yönetmek için lütfen bir organizasyon seçin."
+      "adminOnly": "Sadece organizasyon yöneticileri hizmet verenleri yönetebilir.",
+      "noOrganization": "Hizmet verenleri yönetmek için lütfen bir organizasyon seçin."
     }
   },
   "appointments": {
@@ -1004,11 +1004,11 @@
     "selectServiceToContinue": "Rezervasyona devam etmek için bir hizmet seçin",
     "selectService": "Bir hizmet seçin",
     "selectServiceFirst": "Lütfen önce bir hizmet seçin",
-    "selectProvider": "Sağlayıcınızı Seçin",
+    "selectProvider": "Hizmet Vereninizi Seçin",
     "selectProviderDescription": "Görmek istediğiniz kişiyi seçin",
-    "provider": "Sağlayıcı",
-    "pleaseSelectProvider": "Devam etmek için lütfen bir sağlayıcı seçin",
-    "selectProviderFirst": "Lütfen önce bir sağlayıcı seçin",
+    "provider": "Hizmet Veren",
+    "pleaseSelectProvider": "Devam etmek için lütfen bir hizmet veren seçin",
+    "selectProviderFirst": "Lütfen önce bir hizmet veren seçin",
     "selectDate": "Tarih Seçin",
     "selectDateTime": "Tarih ve Saat Seçin",
     "enterContactDetails": "Onaylamak için iletişim bilgilerinizi girin",
@@ -1299,7 +1299,7 @@
       "createTitle": "Hizmet Seçeneği Oluştur",
       "detailsTab": "Detaylar",
       "membersTab": "Üye Ata",
-      "providersTab": "Sağlayıcı Ata",
+      "providersTab": "Hizmet Veren Ata",
       "title": "Başlık",
       "titlePlaceholder": "örn., Saç Kesimi, Danışmanlık",
       "description": "Açıklama",
@@ -1314,17 +1314,17 @@
       "assignMembersOnCreate": "Oluşturduktan sonra bu hizmete ekip üyelerini atayın"
     },
     "assignDialog": {
-      "title": "Sağlayıcı Ata",
+      "title": "Hizmet Veren Ata",
       "description": "Bu hizmeti sunabilecek ekip üyelerini seçin",
-      "providersDescription": "Bu hizmeti sunabilecek sağlayıcıları seçin",
+      "providersDescription": "Bu hizmeti sunabilecek hizmet verenleri seçin",
       "noMembers": "Ekip üyesi bulunamadı",
-      "noProviders": "Sağlayıcı bulunamadı",
+      "noProviders": "Hizmet Veren bulunamadı",
       "saving": "Kaydediliyor...",
       "save": "Atamaları Kaydet",
       "selectAll": "Tümünü Seç",
       "deselectAll": "Tümünü Kaldır",
       "membersSelected": "{count} üye seçildi",
-      "providersSelected": "{count} sağlayıcı seçildi"
+      "providersSelected": "{count} hizmet veren seçildi"
     },
     "confirmDelete": "Bu hizmet seçeneğini silmek istediğinizden emin misiniz?",
     "messages": {
@@ -1336,7 +1336,7 @@
       "deleteFailed": "Hizmet seçeneği silinemedi",
       "updateFailed": "Hizmet seçeneği güncellenemedi",
       "loadMembersFailed": "Üyeler yüklenemedi",
-      "loadProvidersFailed": "Sağlayıcılar yüklenemedi",
+      "loadProvidersFailed": "Hizmet Verenler yüklenemedi",
       "assignmentsUpdated": "Atamalar güncellendi",
       "assignmentsUpdatedDesc": "Üye atamaları kaydedildi",
       "assignmentsFailed": "Atamalar güncellenemedi"
@@ -1780,10 +1780,10 @@
       "selectService": "Bir hizmet seçin",
       "noServicesAvailable": "Kullanılabilir hizmet yok",
       "duration": "Süre",
-      "assignToProvider": "Sağlayıcıya Ata",
-      "loadingProviders": "Sağlayıcılar yükleniyor...",
-      "noProvidersAssigned": "Bu hizmete atanmış sağlayıcı yok",
-      "selectProvider": "Sağlayıcı seçin",
+      "assignToProvider": "Hizmet Verene Ata",
+      "loadingProviders": "Hizmet Verenler yükleniyor...",
+      "noProvidersAssigned": "Bu hizmete atanmış hizmet veren yok",
+      "selectProvider": "Hizmet Veren seçin",
       "date": "Tarih",
       "time": "Saat",
       "timeSlotUnavailable": "Zaman Dilimi Müsait Değil",
@@ -1809,7 +1809,7 @@
       "previewClient": "Müşteri",
       "previewDate": "Tarih",
       "previewTime": "Saat",
-      "previewProvider": "Sağlayıcı",
+      "previewProvider": "Hizmet Veren",
       "cancel": "İptal",
       "creating": "Oluşturuluyor...",
       "createAppointment": "Randevu Oluştur",
@@ -1891,20 +1891,20 @@
     "general": {
       "title": "Genel Ayarlar",
       "description": "Müşterilerin organizasyonunuzla nasıl randevu alacağını yapılandırın",
-      "providerSelectionMode": "Sağlayıcı Seçim Modu",
-      "providerSelectionModeDescription": "Randevulara hizmet sağlayıcıların nasıl atanacağını seçin",
-      "clientChooses": "Müşteri Sağlayıcıyı Seçer",
+      "providerSelectionMode": "Hizmet Veren Seçim Modu",
+      "providerSelectionModeDescription": "Randevulara hizmet verenlerin nasıl atanacağını seçin",
+      "clientChooses": "Müşteri Hizmet Vereni Seçer",
       "clientChoosesHint": "Müşteriler hizmet seçtikten sonra hangi ekip üyesinden randevu almak istediklerini seçebilir",
       "autoAssign": "Müsaitliğe Göre Otomatik Ata",
-      "autoAssignHint": "Sistem her rezervasyon için en uygun sağlayıcıyı otomatik olarak atar",
-      "allowProviderSelection": "Sağlayıcı Seçimine İzin Ver",
+      "autoAssignHint": "Sistem her rezervasyon için en uygun hizmet vereni otomatik olarak atar",
+      "allowProviderSelection": "Hizmet Veren Seçimine İzin Ver",
       "allowProviderSelectionHint": "Etkinleştirildiğinde, müşteriler rezervasyon yaparken belirli bir ekip üyesi seçebilir",
-      "autoAssignProvider": "Otomatik Sağlayıcı Ata",
-      "autoAssignProviderHint": "Müşteri seçmediğinde en uygun sağlayıcıyı otomatik olarak ata",
-      "showProviderNames": "Sağlayıcı Adlarını Göster",
-      "showProviderNamesHint": "Rezervasyon sırasında müşterilere sağlayıcı adlarını göster",
-      "showProviderPhotos": "Sağlayıcı Fotoğraflarını Göster",
-      "showProviderPhotosHint": "Rezervasyon sırasında müşterilere sağlayıcı fotoğraflarını göster"
+      "autoAssignProvider": "Otomatik Hizmet Veren Ata",
+      "autoAssignProviderHint": "Müşteri seçmediğinde en uygun hizmet vereni otomatik olarak ata",
+      "showProviderNames": "Hizmet Veren Adlarını Göster",
+      "showProviderNamesHint": "Rezervasyon sırasında müşterilere hizmet veren adlarını göster",
+      "showProviderPhotos": "Hizmet Veren Fotoğraflarını Göster",
+      "showProviderPhotosHint": "Rezervasyon sırasında müşterilere hizmet veren fotoğraflarını göster"
     },
     "booking": {
       "title": "Rezervasyon Ayarları",
@@ -1916,7 +1916,7 @@
       "bufferTime": "Tampon Süresi (dakika)",
       "bufferTimeHint": "Ardışık randevular arasındaki süre",
       "maxAppointmentsPerDay": "Günlük Maksimum Randevu",
-      "maxAppointmentsPerDayHint": "Sağlayıcı başına günlük maksimum randevu (0 = sınırsız)"
+      "maxAppointmentsPerDayHint": "Hizmet Veren başına günlük maksimum randevu (0 = sınırsız)"
     },
     "confirmation": {
       "title": "Onay Ayarları",
@@ -1994,7 +1994,7 @@
           "serviceName": "Hizmet/randevu türü",
           "appointmentDate": "Tarih (örn: 15 Şubat 2026)",
           "appointmentTime": "Saat (örn: 14:30)",
-          "providerName": "Sağlayıcı/personel adı",
+          "providerName": "Hizmet Veren/personel adı",
           "organizationName": "İşletme adı",
           "appointmentLink": "Randevuyu görüntüleme linki",
           "confirmationLink": "Randevuyu onaylama linki"
@@ -2095,7 +2095,7 @@
           "serviceName": "Hizmet adı",
           "appointmentDate": "Randevu tarihi",
           "appointmentTime": "Randevu saati",
-          "providerName": "Sağlayıcı adı",
+          "providerName": "Hizmet Veren adı",
           "organizationName": "İşletme adı",
           "confirmationLink": "Onay linki",
           "appointmentLink": "Randevu detay linki"
@@ -2141,7 +2141,7 @@
         "serviceName": "Randevu alınan hizmet",
         "appointmentDate": "Randevu tarihi",
         "appointmentTime": "Randevu saati",
-        "providerName": "Hizmet sağlayıcının adı",
+        "providerName": "hizmet verenin adı",
         "organizationName": "Organizasyon adınız",
         "appointmentLink": "Görüntüleme/düzenleme linki",
         "confirmationLink": "Katılım onay linki"
@@ -2422,10 +2422,10 @@
       "timezoneHint": "Tüm randevu saatleri bu saat dilimine göre olacaktır",
       "currency": "Para Birimi",
       "currencyHint": "Hizmet fiyatlarını görüntülemek için kullanılan para birimi",
-      "providerMode": "Sağlayıcı Seçimi",
-      "providerModeHint": "Müşteriler sağlayıcılara nasıl atanmalı?",
+      "providerMode": "Hizmet Veren Seçimi",
+      "providerModeHint": "Müşteriler hizmet verenlere nasıl atanmalı?",
       "autoAssign": "Müsaitliğe göre otomatik ata",
-      "clientChooses": "Müşterilerin sağlayıcısını seçmesine izin ver",
+      "clientChooses": "Müşterilerin hizmet verenini seçmesine izin ver",
       "bufferTime": "Ara Süre (dakika)",
       "bufferTimeHint": "Randevular arasındaki süre",
       "minAdvance": "Minimum Önceden Rezervasyon (saat)",
@@ -2650,7 +2650,7 @@
           "title": "4. Bilgi Paylaşımı ve Açıklama",
           "intro": "Kişisel bilgilerinizi satmıyoruz. Bilgilerinizi aşağıdaki durumlarda paylaşabiliriz:",
           "items": [
-            "Hizmet Sağlayıcılarla: Platformumuzu işletmemize yardımcı olan üçüncü taraf satıcılar (barındırma, analitik, iletişim hizmetleri).",
+            "Hizmet Verenlerle: Platformumuzu işletmemize yardımcı olan üçüncü taraf satıcılar (barındırma, analitik, iletişim hizmetleri).",
             "Kullanıcılar Arasında: Randevu detayları, rezervasyonları kolaylaştırmak için müşteriler ve işletmeler arasında paylaşılır.",
             "Yasal Uyumluluk İçin: Yasa, mahkeme emri gerektirdiğinde veya haklarımızı ve güvenliğimizi korumak için.",
             "İş Transferleri: Birleşme, devralma veya varlık satışı ile bağlantılı olarak."
@@ -2690,7 +2690,7 @@
         },
         "thirdParty": {
           "title": "9. Üçüncü Taraf Hizmetleri",
-          "content": "Platformumuz üçüncü taraf hizmetlerle (kimlik doğrulama sağlayıcıları, ödeme işlemcileri ve iletişim hizmetleri gibi) entegre olabilir. Bu hizmetlerin kendi gizlilik politikaları vardır ve bunları incelemenizi öneririz. Üçüncü taraf hizmetlerin gizlilik uygulamalarından sorumlu değiliz."
+          "content": "Platformumuz üçüncü taraf hizmetlerle (kimlik doğrulama hizmet verenleri, ödeme işlemcileri ve iletişim hizmetleri gibi) entegre olabilir. Bu hizmetlerin kendi gizlilik politikaları vardır ve bunları incelemenizi öneririz. Üçüncü taraf hizmetlerin gizlilik uygulamalarından sorumlu değiliz."
         },
         "children": {
           "title": "10. Çocukların Gizliliği",
