@@ -48,9 +48,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - slootea_network
       - coolify
@@ -72,9 +69,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    depends_on:
-      backend:
-        condition: service_healthy
     networks:
       - slootea_network
       - coolify
