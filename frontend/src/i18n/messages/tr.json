@@ -761,7 +761,11 @@
     "actions": {
       "viewDetails": "Detayları Gör",
       "edit": "Düzenle",
+      "editInfo": "Bilgileri Düzenle",
+      "manage": "Yönet",
       "delete": "Sil",
+      "removeClient": "Müşteriyi Kaldır",
+      "close": "Kapat",
       "openMenu": "Menüyü aç"
     },
     "detail": {
@@ -775,7 +779,26 @@
       "notes": "Notlar",
       "noNotes": "Henüz not eklenmedi",
       "appointmentHistory": "Randevu Geçmişi",
-      "noHistory": "Randevu geçmişi yok"
+      "noHistory": "Randevu geçmişi yok",
+      "openNotebook": "Not Defterini Aç",
+      "notesPreviewEmpty": "Henüz not yok. Bu müşteri hakkında bilgi eklemek için not defterini açın.",
+      "tabs": {
+        "overview": "Genel Bakış",
+        "notes": "Notlar",
+        "history": "Geçmiş"
+      }
+    },
+    "notebook": {
+      "title": "Not Defteri",
+      "subtitle": "{name} için notlar",
+      "placeholder": "Bu müşteri hakkında önemli bilgileri yazın — tercihler, alerjiler, geçmiş, özel istekler...",
+      "save": "Notları Kaydet",
+      "saving": "Kaydediliyor...",
+      "savedToast": "Notlar kaydedildi",
+      "saveError": "Notlar kaydedilemedi",
+      "charCount": "{count} karakter",
+      "unsavedConfirm": "Kaydedilmemiş değişiklikleriniz var. İptal edilsin mi?",
+      "emptyHint": "Bu not defteri boş. Not eklemek için yazmaya başlayın."
     },
     "form": {
       "editTitle": "Müşteriyi Düzenle",

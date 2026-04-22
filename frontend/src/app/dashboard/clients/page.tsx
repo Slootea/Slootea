@@ -53,13 +53,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -96,6 +89,7 @@ import {
   ShieldOff,
   ShieldAlert,
   CalendarOff,
+  BookOpen,
 } from "lucide-react";
 import {
   format,
@@ -126,7 +120,12 @@ export default function ClientsPage() {
     []
   );
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
-  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  // Notebook (notes editor) dialog
+  const [notebookOpen, setNotebookOpen] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
 
   // Edit/Create dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -415,12 +414,51 @@ export default function ClientsPage() {
 
   const handleViewDetails = async (client: Client) => {
     setSelectedClient(client);
-    setDetailSheetOpen(true);
+    setDetailModalOpen(true);
     setClientPenalty(null);
     await Promise.all([
       fetchClientAppointments(client.id),
       fetchClientPenalty(client.id),
     ]);
+  };
+
+  const handleOpenNotebook = () => {
+    if (!selectedClient) return;
+    setNotesDraft(selectedClient.notes || "");
+    setNotebookOpen(true);
+  };
+
+  const handleNotebookOpenChange = (open: boolean) => {
+    if (!open && selectedClient && notesDraft !== (selectedClient.notes || "")) {
+      const confirmed = window.confirm(t('notebook.unsavedConfirm'));
+      if (!confirmed) return;
+    }
+    setNotebookOpen(open);
+  };
+
+  const handleSaveNotes = async () => {
+    if (!selectedClient || !currentOrganization) return;
+    setSavingNotes(true);
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      setOrganizationContext(currentOrganization.id);
+      await clientsApi.update(selectedClient.id, { notes: notesDraft });
+      // Update selected client in place so the summary card refreshes
+      setSelectedClient({ ...selectedClient, notes: notesDraft });
+      toast({ title: t('notebook.savedToast') });
+      setNotebookOpen(false);
+      fetchData(true);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast({
+        title: t('error'),
+        description: err.response?.data?.message || t('notebook.saveError'),
+        variant: "destructive",
+      });
+    } finally {
+      setSavingNotes(false);
+    }
   };
 
   const handleEditClient = (client: Client) => {
@@ -530,9 +568,9 @@ export default function ClientsPage() {
       setDeleteDialogOpen(false);
       setClientToDelete(null);
 
-      // Close detail sheet if we deleted the selected client
+      // Close detail modal if we deleted the selected client
       if (selectedClient?.id === clientToDelete.id) {
-        setDetailSheetOpen(false);
+        setDetailModalOpen(false);
         setSelectedClient(null);
       }
 
@@ -735,251 +773,343 @@ export default function ClientsPage() {
         </CardContent>
       </Card>
 
-      {/* Client Detail Sheet */}
-      <Sheet open={detailSheetOpen} onOpenChange={setDetailSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-hidden flex flex-col">
+      {/* Client Detail Modal */}
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] p-0 overflow-hidden flex flex-col gap-0">
           {selectedClient && (
             <>
-              <SheetHeader className="flex-shrink-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Users className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <SheetTitle className="text-left">
-                        {selectedClient.name}
-                      </SheetTitle>
-                      <SheetDescription className="text-left">
-                        {t('detail.clientSince')}{" "}
-                        {format(parseISO(selectedClient.createdAt), "MMM d, yyyy")}
-                      </SheetDescription>
-                    </div>
+              <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-left text-xl">
+                      {selectedClient.name}
+                    </DialogTitle>
+                    <DialogDescription className="text-left">
+                      {t('detail.clientSince')}{" "}
+                      {format(parseISO(selectedClient.createdAt), "MMM d, yyyy")}
+                    </DialogDescription>
                   </div>
                 </div>
-              </SheetHeader>
+              </DialogHeader>
 
-              <ScrollArea className="flex-1 -mx-6 px-6">
-                <div className="space-y-6 pb-6">
-                  {/* Contact Info */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-muted-foreground">
-                      {t('detail.contactInfo')}
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{selectedClient.phone}</span>
+              <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-shrink-0 px-6 pt-3 border-b">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="overview">{t('detail.tabs.overview')}</TabsTrigger>
+                    <TabsTrigger value="notes" className="gap-1.5">
+                      <StickyNote className="h-3.5 w-3.5" />
+                      {t('detail.tabs.notes')}
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="gap-1.5">
+                      <History className="h-3.5 w-3.5" />
+                      {t('detail.tabs.history')}
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="flex-1 overflow-hidden m-0">
+                  <ScrollArea className="h-full px-6">
+                    <div className="space-y-6 py-6">
+                      {/* Actions */}
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <MoreHorizontal className="h-4 w-4 mr-2" />
+                              {t('actions.manage')}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleEditClient(selectedClient)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              {t('actions.editInfo')}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(selectedClient)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              {t('actions.removeClient')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      {selectedClient.email && (
-                        <div className="flex items-center gap-3 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{selectedClient.email}</span>
+
+                      {/* Contact Info */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-muted-foreground">
+                          {t('detail.contactInfo')}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div className="flex items-center gap-3 text-sm">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span>{selectedClient.phone}</span>
+                          </div>
+                          {selectedClient.email && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
+                              <span className="truncate">{selectedClient.email}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Stats */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-muted-foreground">
-                      {t('detail.appointmentStats')}
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-lg border p-3">
-                        <p className="text-2xl font-bold">
-                          {selectedClient.totalAppointments}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t('detail.total')}</p>
                       </div>
-                      <div className="rounded-lg border p-3">
-                        <p className="text-2xl font-bold text-green-600">
-                          {selectedClient.completedAppointments}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t('detail.completed')}</p>
-                      </div>
-                      <div className="rounded-lg border p-3">
-                        <p className="text-2xl font-bold text-red-600">
-                          {selectedClient.cancelledAppointments}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t('detail.cancelled')}</p>
-                      </div>
-                      <div className="rounded-lg border p-3">
-                        <p className="text-2xl font-bold text-yellow-600">
-                          {selectedClient.noShowAppointments}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t('detail.noShows')}</p>
-                      </div>
-                    </div>
-                  </div>
 
-                  <Separator />
+                      <Separator />
 
-                  {/* Penalty Status Section */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <ShieldAlert className="h-4 w-4" />
-                        {t('penalty.title')}
-                      </h4>
-                      {!clientPenalty && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setPenaltyFormData({ type: 'ban', reason: '', expiresAt: '' });
-                            setPenaltyDialogOpen(true);
-                          }}
-                        >
-                          <Ban className="h-3 w-3 mr-1" />
-                          {t('penalty.addPenalty')}
-                        </Button>
-                      )}
-                    </div>
+                      {/* Stats */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-muted-foreground">
+                          {t('detail.appointmentStats')}
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="rounded-lg border p-3">
+                            <p className="text-2xl font-bold">
+                              {selectedClient.totalAppointments}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{t('detail.total')}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-2xl font-bold text-green-600">
+                              {selectedClient.completedAppointments}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{t('detail.completed')}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-2xl font-bold text-red-600">
+                              {selectedClient.cancelledAppointments}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{t('detail.cancelled')}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-2xl font-bold text-yellow-600">
+                              {selectedClient.noShowAppointments}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{t('detail.noShows')}</p>
+                          </div>
+                        </div>
+                      </div>
 
-                    {penaltyLoading ? (
-                      <Skeleton className="h-16 w-full" />
-                    ) : clientPenalty ? (
-                      <div className={`rounded-lg border p-4 ${
-                        clientPenalty.type === PenaltyType.BAN 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-950/20' 
-                          : 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
-                      }`}>
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
-                            {clientPenalty.type === PenaltyType.BAN ? (
-                              <Ban className="h-5 w-5 text-red-600" />
-                            ) : (
-                              <CalendarOff className="h-5 w-5 text-yellow-600" />
-                            )}
-                            <div>
-                              <p className="font-medium">
-                                {clientPenalty.type === PenaltyType.BAN ? t('penalty.banned') : t('penalty.suspended')}
+                      <Separator />
+
+                      {/* Penalty Status Section */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <ShieldAlert className="h-4 w-4" />
+                            {t('penalty.title')}
+                          </h4>
+                          {!clientPenalty && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPenaltyFormData({ type: 'ban', reason: '', expiresAt: '' });
+                                setPenaltyDialogOpen(true);
+                              }}
+                            >
+                              <Ban className="h-3 w-3 mr-1" />
+                              {t('penalty.addPenalty')}
+                            </Button>
+                          )}
+                        </div>
+
+                        {penaltyLoading ? (
+                          <Skeleton className="h-16 w-full" />
+                        ) : clientPenalty ? (
+                          <div className={`rounded-lg border p-4 ${
+                            clientPenalty.type === PenaltyType.BAN 
+                              ? 'border-red-500 bg-red-50 dark:bg-red-950/20' 
+                              : 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                          }`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                {clientPenalty.type === PenaltyType.BAN ? (
+                                  <Ban className="h-5 w-5 text-red-600" />
+                                ) : (
+                                  <CalendarOff className="h-5 w-5 text-yellow-600" />
+                                )}
+                                <div>
+                                  <p className="font-medium">
+                                    {clientPenalty.type === PenaltyType.BAN ? t('penalty.banned') : t('penalty.suspended')}
+                                  </p>
+                                  {clientPenalty.expiresAt && (
+                                    <p className="text-xs text-muted-foreground">
+                                      {t('penalty.until')}: {format(parseISO(clientPenalty.expiresAt), "MMM d, yyyy 'at' h:mm a")}
+                                    </p>
+                                  )}
+                                  {clientPenalty.type === PenaltyType.BAN && (
+                                    <p className="text-xs text-muted-foreground">{t('penalty.permanent')}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setRemovalReason('');
+                                  setRemovePenaltyDialogOpen(true);
+                                }}
+                              >
+                                <ShieldOff className="h-3 w-3 mr-1" />
+                                {t('penalty.removePenalty')}
+                              </Button>
+                            </div>
+                            {clientPenalty.reason && (
+                              <p className="text-sm mt-2 text-muted-foreground">
+                                <span className="font-medium">{t('penalty.reason')}:</span> {clientPenalty.reason}
                               </p>
-                              {clientPenalty.expiresAt && (
-                                <p className="text-xs text-muted-foreground">
-                                  {t('penalty.until')}: {format(parseISO(clientPenalty.expiresAt), "MMM d, yyyy 'at' h:mm a")}
-                                </p>
-                              )}
-                              {clientPenalty.type === PenaltyType.BAN && (
-                                <p className="text-xs text-muted-foreground">{t('penalty.permanent')}</p>
-                              )}
+                            )}
+                            <p className="text-xs mt-2 text-muted-foreground">
+                              {t('penalty.issued')}: {format(parseISO(clientPenalty.createdAt), "MMM d, yyyy")}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 p-3">
+                            <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                              <CheckCircle2 className="h-4 w-4" />
+                              <span className="text-sm">{t('penalty.noActivePenalty')}</span>
                             </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setRemovalReason('');
-                              setRemovePenaltyDialogOpen(true);
-                            }}
-                          >
-                            <ShieldOff className="h-3 w-3 mr-1" />
-                            {t('penalty.removePenalty')}
-                          </Button>
-                        </div>
-                        {clientPenalty.reason && (
-                          <p className="text-sm mt-2 text-muted-foreground">
-                            <span className="font-medium">{t('penalty.reason')}:</span> {clientPenalty.reason}
-                          </p>
                         )}
-                        <p className="text-xs mt-2 text-muted-foreground">
-                          {t('penalty.issued')}: {format(parseISO(clientPenalty.createdAt), "MMM d, yyyy")}
-                        </p>
                       </div>
-                    ) : (
-                      <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 p-3">
-                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span className="text-sm">{t('penalty.noActivePenalty')}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  {/* Notes */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-muted-foreground">
-                        {t('detail.notes')}
-                      </h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditClient(selectedClient)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        {t('actions.edit')}
-                      </Button>
                     </div>
-                    {selectedClient.notes ? (
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <p className="text-sm whitespace-pre-wrap">
-                          {selectedClient.notes}
+                  </ScrollArea>
+                </TabsContent>
+
+                {/* Notes Tab */}
+                <TabsContent value="notes" className="flex-1 overflow-hidden m-0">
+                  <ScrollArea className="h-full px-6">
+                    <div className="space-y-4 py-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <StickyNote className="h-4 w-4" />
+                          {t('detail.notes')}
+                        </h4>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleOpenNotebook}
+                        >
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          {t('detail.openNotebook')}
+                        </Button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenNotebook}
+                        className="w-full text-left rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors p-4 group min-h-[200px]"
+                      >
+                        {selectedClient.notes ? (
+                          <p className="text-sm whitespace-pre-wrap text-foreground">
+                            {selectedClient.notes}
+                          </p>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-center gap-2 text-sm text-muted-foreground italic group-hover:text-foreground py-8">
+                            <BookOpen className="h-8 w-8" />
+                            <span>{t('detail.notesPreviewEmpty')}</span>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                {/* History Tab */}
+                <TabsContent value="history" className="flex-1 overflow-hidden m-0">
+                  <ScrollArea className="h-full px-6">
+                    <div className="space-y-3 py-6">
+                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <History className="h-4 w-4" />
+                        {t('detail.appointmentHistory')}
+                      </h4>
+                      {appointmentsLoading ? (
+                        <div className="space-y-2">
+                          {[...Array(3)].map((_, i) => (
+                            <Skeleton key={i} className="h-16 w-full" />
+                          ))}
+                        </div>
+                      ) : clientAppointments.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">
+                          {t('detail.noHistory')}
                         </p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">
-                        {t('detail.noNotes')}
-                      </p>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  {/* Appointment History */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <History className="h-4 w-4" />
-                      {t('detail.appointmentHistory')}
-                    </h4>
-                    {appointmentsLoading ? (
-                      <div className="space-y-2">
-                        {[...Array(3)].map((_, i) => (
-                          <Skeleton key={i} className="h-16 w-full" />
-                        ))}
-                      </div>
-                    ) : clientAppointments.length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic">
-                        {t('detail.noHistory')}
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {clientAppointments.map((apt) => (
-                          <AppointmentHistoryItem key={apt.id} appointment={apt} tCommon={common} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </ScrollArea>
-
-              <div className="flex-shrink-0 pt-4 border-t flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handleEditClient(selectedClient)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  {t('actions.edit')}
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={() => handleDeleteClick(selectedClient)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {t('actions.delete')}
-                </Button>
-              </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {clientAppointments.map((apt) => (
+                            <AppointmentHistoryItem key={apt.id} appointment={apt} tCommon={common} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notebook Dialog (dedicated notes editor) */}
+      <Dialog open={notebookOpen} onOpenChange={handleNotebookOpenChange}>
+        <DialogContent className="w-[95vw] sm:max-w-2xl h-[90vh] sm:h-[85vh] p-0 overflow-hidden flex flex-col gap-0">
+          {selectedClient && (
+            <>
+              <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-left text-lg">
+                      {t('notebook.title')}
+                    </DialogTitle>
+                    <DialogDescription className="text-left">
+                      {t('notebook.subtitle', { name: selectedClient.name })}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="flex-1 overflow-hidden p-6">
+                <Textarea
+                  autoFocus
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  placeholder={t('notebook.placeholder')}
+                  className="h-full w-full resize-none text-base leading-relaxed font-normal"
+                />
+              </div>
+
+              <DialogFooter className="flex-shrink-0 px-6 py-4 border-t flex-row items-center sm:justify-between gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {t('notebook.charCount', { count: notesDraft.length })}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleNotebookOpenChange(false)}
+                    disabled={savingNotes}
+                  >
+                    {t('cancel')}
+                  </Button>
+                  <Button
+                    onClick={handleSaveNotes}
+                    disabled={savingNotes || notesDraft === (selectedClient.notes || "")}
+                  >
+                    {savingNotes ? t('notebook.saving') : t('notebook.save')}
+                  </Button>
+                </div>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit/Create Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
@@ -1039,18 +1169,20 @@ export default function ClientsPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">{t('form.notes')}</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                }
-                placeholder={t('form.notesPlaceholder')}
-                rows={4}
-              />
-            </div>
+            {!editingClient && (
+              <div className="space-y-2">
+                <Label htmlFor="notes">{t('form.notes')}</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder={t('form.notesPlaceholder')}
+                  rows={4}
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

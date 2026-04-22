@@ -761,7 +761,11 @@
     "actions": {
       "viewDetails": "View Details",
       "edit": "Edit",
+      "editInfo": "Edit Information",
+      "manage": "Manage",
       "delete": "Delete",
+      "removeClient": "Remove Client",
+      "close": "Close",
       "openMenu": "Open menu"
     },
     "detail": {
@@ -775,7 +779,26 @@
       "notes": "Notes",
       "noNotes": "No notes added yet",
       "appointmentHistory": "Appointment History",
-      "noHistory": "No appointment history"
+      "noHistory": "No appointment history",
+      "openNotebook": "Open Notebook",
+      "notesPreviewEmpty": "No notes yet. Open the notebook to add some context about this client.",
+      "tabs": {
+        "overview": "Overview",
+        "notes": "Notes",
+        "history": "History"
+      }
+    },
+    "notebook": {
+      "title": "Notebook",
+      "subtitle": "Notes for {name}",
+      "placeholder": "Write anything important about this client — preferences, allergies, history, special requests...",
+      "save": "Save Notes",
+      "saving": "Saving...",
+      "savedToast": "Notes saved",
+      "saveError": "Failed to save notes",
+      "charCount": "{count} characters",
+      "unsavedConfirm": "You have unsaved changes. Discard them?",
+      "emptyHint": "This notebook is empty. Start typing to add notes."
     },
     "form": {
       "editTitle": "Edit Client",

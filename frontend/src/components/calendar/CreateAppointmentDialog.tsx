@@ -654,51 +654,72 @@ export function CreateAppointmentDialog({
                             </Button>
                           </CommandEmpty>
                         ) : (
-                          <CommandGroup>
-                            {clients.map((client) => (
-                              <CommandItem
-                                key={client.id}
-                                value={client.id}
-                                onSelect={() => {
-                                  setSelectedClient(client);
-                                  setClientPopoverOpen(false);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Check
+                          <CommandGroup className="p-1">
+                            {clients.map((client) => {
+                              const isSelected = selectedClient?.id === client.id;
+                              const initials = client.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2);
+                              return (
+                                <CommandItem
+                                  key={client.id}
+                                  value={client.id}
+                                  onSelect={() => {
+                                    setSelectedClient(client);
+                                    setClientPopoverOpen(false);
+                                  }}
                                   className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedClient?.id === client.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
+                                    "cursor-pointer rounded-md px-2 py-2 gap-3 text-foreground",
+                                    "data-[selected=true]:bg-muted data-[selected=true]:text-foreground",
+                                    isSelected && "bg-primary/5 ring-1 ring-primary/20"
                                   )}
-                                />
-                                <div className="flex flex-col flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{client.name}</span>
-                                    {client.activePenalty && (
-                                      <Badge variant="destructive" className="text-xs">
-                                        {client.activePenalty.type === "ban"
-                                          ? t("banned")
-                                          : t("suspended")}
-                                      </Badge>
+                                >
+                                  <div
+                                    className={cn(
+                                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                                      client.activePenalty
+                                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                        : "bg-primary/10 text-primary"
                                     )}
+                                  >
+                                    {initials}
                                   </div>
-                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Phone className="h-3 w-3" />
-                                      {client.phone}
-                                    </span>
-                                    {client.email && (
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium truncate">{client.name}</span>
+                                      {client.activePenalty && (
+                                        <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
+                                          {client.activePenalty.type === "ban"
+                                            ? t("banned")
+                                            : t("suspended")}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                                       <span className="flex items-center gap-1">
-                                        <Mail className="h-3 w-3" />
-                                        {client.email}
+                                        <Phone className="h-3 w-3" />
+                                        {client.phone}
                                       </span>
-                                    )}
+                                      {client.email && (
+                                        <span className="flex items-center gap-1 truncate">
+                                          <Mail className="h-3 w-3 shrink-0" />
+                                          <span className="truncate">{client.email}</span>
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              </CommandItem>
-                            ))}
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4 shrink-0 text-primary transition-opacity",
+                                      isSelected ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              );
+                            })}
                           </CommandGroup>
                         )}
                       </CommandList>
