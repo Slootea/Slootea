@@ -136,7 +136,7 @@ export class InventoryController {
     if (!organizationId) {
       throw new BadRequestException('Organization context required');
     }
-    return this.inventoryService.update(organizationId, id, updateDto);
+    return this.inventoryService.update(organizationId, id, updateDto, req.user?.dbUserId);
   }
 
   @Delete(':id')

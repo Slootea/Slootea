@@ -136,6 +136,7 @@ export class InventoryService {
     organizationId: string,
     id: string,
     dto: UpdateInventoryItemDto,
+    updatedBy?: string,
   ): Promise<InventoryItem> {
     const item = await this.findOne(organizationId, id);
 
@@ -152,7 +153,28 @@ export class InventoryService {
       }
     }
 
-    Object.assign(item, { ...dto, sku });
+    // Handle currentStock change separately to record an audit trail
+    const { currentStock: newStockRaw, ...rest } = dto;
+    Object.assign(item, { ...rest, sku });
+
+    if (newStockRaw !== undefined && newStockRaw !== null) {
+      const newStock = Number(newStockRaw);
+      const oldStock = Number(item.currentStock);
+      const delta = newStock - oldStock;
+      if (delta !== 0) {
+        const adjustment = this.stockAdjustmentRepository.create({
+          inventoryItemId: id,
+          type: StockAdjustmentType.MANUAL,
+          quantity: delta,
+          stockAfter: newStock,
+          reason: 'Manual edit',
+          adjustedBy: updatedBy,
+        });
+        await this.stockAdjustmentRepository.save(adjustment);
+        item.currentStock = newStock;
+      }
+    }
+
     return this.inventoryItemRepository.save(item);
   }
 

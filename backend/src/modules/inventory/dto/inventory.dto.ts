@@ -108,6 +108,12 @@ export class UpdateInventoryItemDto {
   @IsString()
   unit?: string;
 
+  @ApiPropertyOptional({ description: 'Current stock quantity. Updating this creates a manual stock adjustment.', minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  currentStock?: number;
+
   @ApiPropertyOptional({ description: 'Minimum stock level for low stock alert', minimum: 0 })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
