@@ -1584,6 +1584,12 @@
       "recentActivity": "Son Aktiviteler",
       "recentActivityDesc": "Tüm ürünlerdeki son stok değişiklikleri",
       "noRecentActivity": "Son aktivite yok",
+      "showingActivity": "{total} kayıttan {from}-{to} arası gösteriliyor",
+      "stockMovement": "Stok Hareketi",
+      "stockMovementDesc": "Günlük stok artış ve azalışları",
+      "net": "Net",
+      "stockLevel": "Stok Seviyesi",
+      "minAlertLine": "Min. Uyarı",
       "table": {
         "totalUsed": "Toplam Kullanılan",
         "avgDaily": "Ort/Gün",

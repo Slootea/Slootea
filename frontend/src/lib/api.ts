@@ -682,6 +682,7 @@ export const inventoryApi = {
     description: string;
     category: InventoryCategory;
     unit: string;
+    currentStock: number;
     minStockAlert: number;
     costPerUnit: number;
     retailPrice: number;
@@ -702,6 +703,15 @@ export const inventoryApi = {
   
   getStockHistory: (id: string, limit?: number) =>
     api.get<StockAdjustment[]>(`/inventory/${id}/history`, { params: { limit } }),
+
+  getRecentActivity: (params?: { page?: number; limit?: number }) =>
+    api.get<{
+      items: Array<StockAdjustment & { itemName: string; unit: string }>;
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>('/inventory/activity', { params }),
   
   // Service inventory usage
   getServiceUsage: (serviceOptionId: string) =>

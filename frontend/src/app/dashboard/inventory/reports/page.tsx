@@ -16,7 +16,7 @@ interface ItemUsageDisplay {
   totalUsed: number;
   averageDaily: number;
   daysWithUsage: number;
-  dailyData: Array<{ date: string; used: number }>;
+  dailyData: Array<{ date: string; used: number; added: number; netChange: number }>;
 }
 
 interface DailyUsageDisplay {
@@ -37,12 +37,288 @@ import {
 } from "@/components/ui/table";
 import { 
   BarChart3, TrendingDown, TrendingUp, Calendar, Download, 
-  Package, Loader2, ArrowDownUp, History, RefreshCw, CheckCircle, Search
+  Package, Loader2, ArrowDownUp, History, RefreshCw, CheckCircle, Search,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useSetPageHeader } from "@/components/providers/page-header-provider";
+
+interface StockMovementChartProps {
+  data: Array<{ date: string; used: number; added: number; netChange: number }>;
+  unit: string;
+  currentStock: number;
+  minStockAlert: number;
+  labels: { added: string; used: string; net: string; stockLevel: string; minAlert: string };
+}
+
+function StockMovementChart({ data, unit, currentStock, minStockAlert, labels }: StockMovementChartProps) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  if (data.length === 0) return null;
+
+  // Reconstruct historical end-of-day stock by walking backwards from current stock
+  // stock[last] = currentStock (snapshot at end of period). stock[i-1] = stock[i] - netChange[i]
+  const stockSeries: number[] = new Array(data.length);
+  stockSeries[data.length - 1] = currentStock;
+  for (let i = data.length - 1; i > 0; i--) {
+    stockSeries[i - 1] = stockSeries[i] - (data[i].netChange || 0);
+  }
+
+  // Layout (Material/Google-ish: generous whitespace, light grid)
+  const W = 720;
+  const H = 260;
+  const padL = 44;
+  const padR = 16;
+  const padT = 20;
+  const padB = 36;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  // Y scale based on stock series, including min alert and zero
+  const allValues = [...stockSeries, minStockAlert, 0];
+  const rawMin = Math.min(...allValues);
+  const rawMax = Math.max(...allValues);
+  const range = Math.max(rawMax - rawMin, 1);
+
+  const niceCeil = (v: number) => {
+    if (v <= 0) return 1;
+    const exp = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / exp;
+    const m = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+    return m * exp;
+  };
+
+  // Add 10% padding above
+  const padTop = niceCeil(range * 0.1);
+  const yMax = rawMax + padTop;
+  const yMin = Math.min(0, rawMin);
+
+  const xAt = (i: number) => padL + (data.length === 1 ? plotW / 2 : (i / (data.length - 1)) * plotW);
+  const yAt = (v: number) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  // Y ticks (5 ticks)
+  const tickCount = 5;
+  const yTicks = Array.from({ length: tickCount }, (_, i) => yMin + ((yMax - yMin) * i) / (tickCount - 1));
+
+  // Build smooth-ish polyline + area
+  const linePoints = data.map((_, i) => `${xAt(i)},${yAt(stockSeries[i])}`).join(' ');
+  const areaPoints = `${padL},${yAt(yMin)} ${linePoints} ${xAt(data.length - 1)},${yAt(yMin)}`;
+
+  // X axis labels
+  const labelStep = Math.max(1, Math.ceil(data.length / 6));
+  const xLabelIdx: number[] = [];
+  for (let i = 0; i < data.length; i += labelStep) xLabelIdx.push(i);
+  if (xLabelIdx[xLabelIdx.length - 1] !== data.length - 1) xLabelIdx.push(data.length - 1);
+
+  const fmtNum = (n: number) => {
+    if (Math.abs(n) >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return Number.isInteger(n) ? n.toString() : n.toFixed(1);
+  };
+
+  // Min alert visibility
+  const showMinAlert = minStockAlert > 0 && minStockAlert >= yMin && minStockAlert <= yMax;
+
+  return (
+    <div className="space-y-3">
+      {/* Legend */}
+      <div className="flex items-center gap-5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-4 h-0.5 bg-blue-500" />
+          <span>{labels.stockLevel}</span>
+        </div>
+        {showMinAlert && (
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-block w-4 h-0.5 border-t border-dashed border-orange-500"
+              style={{ borderTopWidth: 2 }}
+            />
+            <span>{labels.minAlert}: {fmtNum(minStockAlert)} {unit}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="relative w-full">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          preserveAspectRatio="none"
+          onMouseLeave={() => setHoverIdx(null)}
+        >
+          <defs>
+            <linearGradient id="stockArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgb(59,130,246)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="rgb(59,130,246)" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+
+          {/* Horizontal grid + Y labels */}
+          {yTicks.map((t, i) => {
+            const y = yAt(t);
+            return (
+              <g key={`yt-${i}`}>
+                <line
+                  x1={padL}
+                  x2={W - padR}
+                  y1={y}
+                  y2={y}
+                  stroke="currentColor"
+                  strokeOpacity={0.08}
+                  strokeWidth={1}
+                />
+                <text
+                  x={padL - 8}
+                  y={y + 3}
+                  textAnchor="end"
+                  className="fill-muted-foreground"
+                  style={{ fontSize: 11 }}
+                >
+                  {fmtNum(t)}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Min alert line */}
+          {showMinAlert && (
+            <g>
+              <line
+                x1={padL}
+                x2={W - padR}
+                y1={yAt(minStockAlert)}
+                y2={yAt(minStockAlert)}
+                stroke="rgb(249,115,22)"
+                strokeOpacity={0.85}
+                strokeWidth={1.5}
+                strokeDasharray="6 4"
+              />
+            </g>
+          )}
+
+          {/* Area fill */}
+          <polygon points={areaPoints} fill="url(#stockArea)" />
+
+          {/* Line */}
+          <polyline
+            points={linePoints}
+            fill="none"
+            stroke="rgb(59,130,246)"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Hover hit areas + crosshair + dots */}
+          {data.map((d, i) => {
+            const x = xAt(i);
+            const y = yAt(stockSeries[i]);
+            const bandLeft = i === 0 ? padL : (xAt(i - 1) + x) / 2;
+            const bandRight = i === data.length - 1 ? W - padR : (x + xAt(i + 1)) / 2;
+            return (
+              <g key={d.date}>
+                <rect
+                  x={bandLeft}
+                  y={padT}
+                  width={Math.max(1, bandRight - bandLeft)}
+                  height={plotH}
+                  fill="transparent"
+                  onMouseEnter={() => setHoverIdx(i)}
+                />
+                {hoverIdx === i && (
+                  <>
+                    <line
+                      x1={x}
+                      x2={x}
+                      y1={padT}
+                      y2={padT + plotH}
+                      stroke="currentColor"
+                      strokeOpacity={0.2}
+                      strokeWidth={1}
+                    />
+                    <circle cx={x} cy={y} r={5} fill="rgb(59,130,246)" fillOpacity={0.18} />
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={3.5}
+                      fill="hsl(var(--background))"
+                      stroke="rgb(59,130,246)"
+                      strokeWidth={2}
+                    />
+                  </>
+                )}
+              </g>
+            );
+          })}
+
+          {/* X labels */}
+          {xLabelIdx.map((i) => {
+            const x = xAt(i);
+            const anchor = i === 0 ? 'start' : i === data.length - 1 ? 'end' : 'middle';
+            return (
+              <text
+                key={`xl-${i}`}
+                x={x}
+                y={H - 12}
+                textAnchor={anchor}
+                className="fill-muted-foreground"
+                style={{ fontSize: 11 }}
+              >
+                {format(new Date(data[i].date), 'MMM d')}
+              </text>
+            );
+          })}
+        </svg>
+
+        {/* Tooltip */}
+        {hoverIdx !== null && (() => {
+          const d = data[hoverIdx];
+          const stock = stockSeries[hoverIdx];
+          const leftPct = (xAt(hoverIdx) / W) * 100;
+          const flip = leftPct > 65;
+          const belowAlert = minStockAlert > 0 && stock <= minStockAlert;
+          return (
+            <div
+              className="pointer-events-none absolute px-3 py-2 rounded-md border bg-popover shadow-lg text-xs whitespace-nowrap z-10"
+              style={{
+                left: `${leftPct}%`,
+                top: 4,
+                transform: `translate(${flip ? 'calc(-100% - 10px)' : '10px'}, 0)`,
+              }}
+            >
+              <p className="font-medium mb-1.5">{format(new Date(d.date), 'EEE, MMM d, yyyy')}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
+                <span className="text-muted-foreground">{labels.stockLevel}:</span>
+                <span className={cn('font-semibold', belowAlert && 'text-orange-600')}>
+                  {fmtNum(stock)} {unit}
+                </span>
+              </div>
+              {(d.added > 0 || d.used > 0) && (
+                <div className="pt-1.5 mt-1.5 border-t space-y-0.5">
+                  {d.added > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-sm bg-emerald-500" />
+                      <span className="text-muted-foreground">{labels.added}:</span>
+                      <span className="font-semibold text-emerald-600">+{d.added.toFixed(2)} {unit}</span>
+                    </div>
+                  )}
+                  {d.used > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-sm bg-rose-500" />
+                      <span className="text-muted-foreground">{labels.used}:</span>
+                      <span className="font-semibold text-rose-600">-{d.used.toFixed(2)} {unit}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
 
 export default function InventoryReportsPage() {
   const { getToken } = useAuth();
@@ -64,9 +340,13 @@ export default function InventoryReportsPage() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [itemSearchQuery, setItemSearchQuery] = useState("");
   
-  // History state
-  const [recentHistory, setRecentHistory] = useState<(StockAdjustment & { itemName?: string })[]>([]);
+  // History state (paginated)
+  const [recentHistory, setRecentHistory] = useState<(StockAdjustment & { itemName?: string; unit?: string })[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyLimit] = useState(10);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
 
   const getDateRange = () => {
     const end = endOfDay(new Date());
@@ -86,12 +366,13 @@ export default function InventoryReportsPage() {
     }
   }, [dateRange, currentOrganization]);
 
-  // Fetch recent history when items are loaded
+  // Fetch recent history when org is ready or page changes
   useEffect(() => {
-    if (currentOrganization && allItems.length > 0) {
-      fetchRecentHistory();
+    if (currentOrganization) {
+      fetchRecentHistory(historyPage);
     }
-  }, [currentOrganization, allItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentOrganization, historyPage]);
 
   const loadReports = async () => {
     setReportLoading(true);
@@ -113,7 +394,12 @@ export default function InventoryReportsPage() {
             totalUsed: item.totalUsed,
             averageDaily,
             daysWithUsage,
-            dailyData: item.dailyData.map(d => ({ date: d.date, used: d.used })),
+            dailyData: item.dailyData.map(d => ({
+              date: d.date,
+              used: d.used,
+              added: d.added,
+              netChange: d.netChange,
+            })),
           };
         });
         setItemUsage(transformedItems);
@@ -137,31 +423,20 @@ export default function InventoryReportsPage() {
     }
   };
 
-  const fetchRecentHistory = async () => {
-    if (!currentOrganization || allItems.length === 0) return;
-    
+  const fetchRecentHistory = async (page = 1) => {
+    if (!currentOrganization) return;
+
     setHistoryLoading(true);
     try {
       const token = await getToken();
       if (token) {
         setAuthToken(token);
         setOrganizationContext(currentOrganization.id);
-        
-        // Fetch history for the first 10 active items
-        const activeItems = allItems.filter(i => i.isActive).slice(0, 10);
-        const historyPromises = activeItems.map(item => 
-          inventoryApi.getStockHistory(item.id, 5)
-            .then(res => res.data.map(h => ({ ...h, itemName: item.name })))
-            .catch(() => [])
-        );
-        
-        const allHistory = await Promise.all(historyPromises);
-        const combined = allHistory
-          .flat()
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 20);
-        
-        setRecentHistory(combined);
+
+        const res = await inventoryApi.getRecentActivity({ page, limit: historyLimit });
+        setRecentHistory(res.data.items);
+        setHistoryTotal(res.data.total);
+        setHistoryTotalPages(res.data.totalPages);
       }
     } catch (error) {
       console.error("Failed to fetch history:", error);
@@ -404,117 +679,47 @@ export default function InventoryReportsPage() {
                     {/* Summary stats for selected item */}
                     <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-muted/50">
                       <div className="text-center">
-                        <p className="text-2xl font-bold">
+                        <p className="text-2xl font-bold text-red-600">
                           {selectedItemDailyData.reduce((sum, d) => sum + d.used, 0).toFixed(1)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{t("reports.stats.totalUsed")}</p>
+                        <p className="text-xs text-muted-foreground">{t("reports.totalUsed")}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold">
-                          {(selectedItemDailyData.reduce((sum, d) => sum + d.used, 0) / selectedItemDailyData.length).toFixed(2)}
+                        <p className="text-2xl font-bold text-green-600">
+                          {selectedItemDailyData.reduce((sum, d) => sum + d.added, 0).toFixed(1)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{t("reports.table.avgDaily")}</p>
+                        <p className="text-xs text-muted-foreground">{t("reports.totalAdded")}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold">
-                          {selectedItemDailyData.filter(d => d.used > 0).length}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t("reports.table.daysUsed")}</p>
+                        {(() => {
+                          const net = selectedItemDailyData.reduce((sum, d) => sum + d.netChange, 0);
+                          return (
+                            <p className={cn(
+                              "text-2xl font-bold",
+                              net > 0 ? "text-green-600" : net < 0 ? "text-red-600" : "text-foreground",
+                            )}>
+                              {net > 0 ? "+" : ""}{net.toFixed(1)}
+                            </p>
+                          );
+                        })()}
+                        <p className="text-xs text-muted-foreground">{t("reports.net")}</p>
                       </div>
                     </div>
 
-                    {/* Line chart */}
-                    <div className="space-y-1">
-                      <div className="relative h-48">
-                        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                          {/* Grid lines */}
-                          {[0, 25, 50, 75, 100].map((y) => (
-                            <line
-                              key={y}
-                              x1="0"
-                              y1={y}
-                              x2="100"
-                              y2={y}
-                              stroke="currentColor"
-                              strokeOpacity="0.1"
-                              strokeWidth="0.5"
-                            />
-                          ))}
-                          {/* Line path */}
-                          {(() => {
-                            const data = selectedItemDailyData.slice(-30);
-                            const maxVal = Math.max(...data.map(d => d.used), 1);
-                            const points = data.map((day, i) => {
-                              const x = (i / (data.length - 1 || 1)) * 100;
-                              const y = 100 - (day.used / maxVal) * 100;
-                              return `${x},${y}`;
-                            }).join(' ');
-                            const areaPoints = `0,100 ${points} 100,100`;
-                            return (
-                              <>
-                                {/* Area fill */}
-                                <polygon
-                                  points={areaPoints}
-                                  fill="hsl(var(--primary))"
-                                  fillOpacity="0.1"
-                                />
-                                {/* Line */}
-                                <polyline
-                                  points={points}
-                                  fill="none"
-                                  stroke="hsl(var(--primary))"
-                                  strokeWidth="2"
-                                  vectorEffect="non-scaling-stroke"
-                                />
-                                {/* Data points */}
-                                {data.map((day, i) => {
-                                  const x = (i / (data.length - 1 || 1)) * 100;
-                                  const y = 100 - (day.used / maxVal) * 100;
-                                  return (
-                                    <g key={day.date} className="group">
-                                      <circle
-                                        cx={x}
-                                        cy={y}
-                                        r="1.5"
-                                        fill="hsl(var(--primary))"
-                                        className="cursor-pointer"
-                                      />
-                                    </g>
-                                  );
-                                })}
-                              </>
-                            );
-                          })()}
-                        </svg>
-                        {/* Hover tooltips layer */}
-                        <div className="absolute inset-0 flex">
-                          {selectedItemDailyData.slice(-30).map((day, i, arr) => {
-                            const maxVal = Math.max(...arr.map(d => d.used), 1);
-                            return (
-                              <div
-                                key={day.date}
-                                className="flex-1 relative group"
-                              >
-                                <div 
-                                  className="absolute left-1/2 -translate-x-1/2 px-2 py-1 bg-popover border rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none"
-                                  style={{ 
-                                    bottom: `${(day.used / maxVal) * 100}%`,
-                                    marginBottom: '8px'
-                                  }}
-                                >
-                                  <p className="font-medium">{format(new Date(day.date), "MMM d")}</p>
-                                  <p>{day.used.toFixed(1)} {selectedItem?.unit}</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground pt-2">
-                        <span>{format(new Date(selectedItemDailyData[Math.max(0, selectedItemDailyData.length - 30)].date), "MMM d")}</span>
-                        <span>{format(new Date(selectedItemDailyData[selectedItemDailyData.length - 1].date), "MMM d")}</span>
-                      </div>
-                    </div>
+                    {/* Stock Movement Chart */}
+                    <StockMovementChart
+                      data={selectedItemDailyData.slice(-30)}
+                      unit={selectedItem?.unit || ''}
+                      currentStock={Number(selectedItem?.currentStock) || 0}
+                      minStockAlert={Number(selectedItem?.minStockAlert) || 0}
+                      labels={{
+                        added: t("reports.added"),
+                        used: t("reports.used"),
+                        net: t("reports.net"),
+                        stockLevel: t("reports.stockLevel"),
+                        minAlert: t("reports.minAlertLine"),
+                      }}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -596,11 +801,24 @@ export default function InventoryReportsPage() {
         <TabsContent value="activity" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <History className="h-5 w-5" />
-                {t("reports.recentActivity")}
-              </CardTitle>
-              <CardDescription>{t("reports.recentActivityDesc")}</CardDescription>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    {t("reports.recentActivity")}
+                  </CardTitle>
+                  <CardDescription>{t("reports.recentActivityDesc")}</CardDescription>
+                </div>
+                {historyTotal > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("reports.showingActivity", {
+                      from: (historyPage - 1) * historyLimit + 1,
+                      to: Math.min(historyPage * historyLimit, historyTotal),
+                      total: historyTotal,
+                    })}
+                  </p>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {historyLoading ? (
@@ -634,6 +852,7 @@ export default function InventoryReportsPage() {
                           adj.quantity >= 0 ? "text-green-600" : "text-red-600"
                         )}>
                           {adj.quantity > 0 ? "+" : ""}{adj.quantity}
+                          {adj.unit ? <span className="text-xs text-muted-foreground ml-1">{adj.unit}</span> : null}
                         </span>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(adj.createdAt), "MMM d, HH:mm")}
@@ -641,6 +860,34 @@ export default function InventoryReportsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {historyTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 mt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    {historyPage} / {historyTotalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                      disabled={historyPage <= 1 || historyLoading}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      {tCommon("previous")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setHistoryPage((p) => Math.min(historyTotalPages, p + 1))}
+                      disabled={historyPage >= historyTotalPages || historyLoading}
+                    >
+                      {tCommon("next")}
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

@@ -1584,6 +1584,12 @@
       "recentActivity": "Recent Activity",
       "recentActivityDesc": "Latest stock adjustments across all items",
       "noRecentActivity": "No recent activity",
+      "showingActivity": "Showing {from}-{to} of {total}",
+      "stockMovement": "Stock Movement",
+      "stockMovementDesc": "Daily increases and decreases in stock",
+      "net": "Net",
+      "stockLevel": "Stock Level",
+      "minAlertLine": "Min. Alert",
       "table": {
         "totalUsed": "Total Used",
         "avgDaily": "Avg/Day",

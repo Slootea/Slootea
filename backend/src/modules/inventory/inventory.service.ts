@@ -246,6 +246,48 @@ export class InventoryService {
     });
   }
 
+  async getRecentActivity(
+    organizationId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    items: Array<StockAdjustment & { itemName: string; unit: string }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+    const skip = (safePage - 1) * safeLimit;
+
+    const [rows, total] = await this.stockAdjustmentRepository
+      .createQueryBuilder('adj')
+      .innerJoinAndSelect('adj.inventoryItem', 'item')
+      .where('item.organizationId = :organizationId', { organizationId })
+      .orderBy('adj.createdAt', 'DESC')
+      .skip(skip)
+      .take(safeLimit)
+      .getManyAndCount();
+
+    const items = rows.map((adj) => ({
+      ...adj,
+      quantity: Number(adj.quantity),
+      stockAfter: Number(adj.stockAfter),
+      itemName: adj.inventoryItem?.name ?? 'Unknown Item',
+      unit: adj.inventoryItem?.unit ?? '',
+      inventoryItem: undefined as any,
+    }));
+
+    return {
+      items,
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit) || 1,
+    };
+  }
+
   // ==================== Service Inventory Usage ====================
 
   async getServiceInventoryUsage(serviceOptionId: string): Promise<ServiceInventoryUsage[]> {

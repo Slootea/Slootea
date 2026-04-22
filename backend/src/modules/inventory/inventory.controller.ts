@@ -111,6 +111,27 @@ export class InventoryController {
     );
   }
 
+  @Get('activity')
+  @OrgMemberOrAdmin()
+  @ApiOperation({ summary: 'Get recent stock activity across all items, paginated' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getRecentActivity(
+    @Request() req: any,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    const organizationId = req.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization context required');
+    }
+    return this.inventoryService.getRecentActivity(
+      organizationId,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
+  }
+
   @Get(':id')
   @OrgMemberOrAdmin()
   @ApiOperation({ summary: 'Get a specific inventory item' })
