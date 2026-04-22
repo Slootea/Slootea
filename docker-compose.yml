@@ -44,8 +44,8 @@ services:
       - "3001"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 5s
+      interval: 60s
+      timeout: 50s
       retries: 3
       start_period: 30s
     networks:
@@ -65,8 +65,8 @@ services:
       - "3000"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 5s
+      interval: 60s
+      timeout: 60s
       retries: 3
       start_period: 30s
     networks:
