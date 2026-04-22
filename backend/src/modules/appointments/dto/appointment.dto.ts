@@ -155,6 +155,11 @@ export class AppointmentQueryDto {
   @IsString()
   userId?: string;
 
+  @ApiPropertyOptional({ description: 'Filter by external provider ID (for organization admins)' })
+  @IsOptional()
+  @IsUUID()
+  externalProviderId?: string;
+
   @ApiPropertyOptional({ description: 'Sort field', default: 'startTime' })
   @IsOptional()
   @IsString()

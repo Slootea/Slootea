@@ -9,6 +9,7 @@ import {
   availabilityApi,
   blockedTimesApi,
   organizationSettingsApi,
+  externalProvidersApi,
   setAuthToken,
   setOrganizationContext,
 } from "@/lib/api";
@@ -19,6 +20,7 @@ import {
   Availability,
   BlockedTime,
   DayOfWeek,
+  ExternalProvider,
 } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -68,11 +70,13 @@ export default function CalendarPage() {
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
   const [organizationTimezone, setOrganizationTimezone] = useState<string>("UTC");
+  const [externalProviders, setExternalProviders] = useState<ExternalProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "day">("week");
 
-  // Member filter state (for organization admins)
+  // Provider filter state (for organization admins). Value is either
+  // "all", a member's Clerk ID, or an external provider UUID.
   const [selectedMember, setSelectedMember] = useState<string>("all");
 
   // Edit appointment state
@@ -153,6 +157,17 @@ export default function CalendarPage() {
       const startDate = format(viewMode === "week" ? weekStart : currentDate, "yyyy-MM-dd");
       const endDate = format(viewMode === "week" ? weekEnd : currentDate, "yyyy-MM-dd");
 
+      const isOrgAdminContext = !!(currentOrganization && isAdmin);
+      // Members are identified by their Clerk ID (which always begins with
+      // `user_`); external providers use a UUID. This keeps fetchData
+      // independent of the externalProviders list to avoid a feedback loop.
+      const isExternalSelected =
+        isOrgAdminContext &&
+        selectedMember !== "all" &&
+        !selectedMember.startsWith("user_");
+      const isMemberSelected =
+        isOrgAdminContext && selectedMember !== "all" && !isExternalSelected;
+
       const appointmentParams: Record<string, unknown> = {
         startDate,
         endDate,
@@ -161,38 +176,65 @@ export default function CalendarPage() {
         sortOrder: "ASC",
       };
 
-      if (currentOrganization && isAdmin && selectedMember !== "all") {
+      if (isMemberSelected) {
         appointmentParams.userId = selectedMember;
+      } else if (isExternalSelected) {
+        appointmentParams.externalProviderId = selectedMember;
       }
 
-      // Determine if we should fetch member-specific availability/blocked times
-      const shouldFetchMemberData = currentOrganization && isAdmin && selectedMember !== "all";
-
-      const [appointmentsRes, servicesRes, availabilityRes, blockedRes, orgSettingsRes] = await Promise.all([
+      const [
+        appointmentsRes,
+        servicesRes,
+        availabilityRes,
+        blockedRes,
+        orgSettingsRes,
+        externalProvidersRes,
+      ] = await Promise.all([
         appointmentsApi.getAll(appointmentParams),
         // Admin gets organization services, members get personal services
-        currentOrganization && isAdmin
+        isOrgAdminContext
           ? serviceOptionsApi.getAllForOrganization()
           : serviceOptionsApi.getAll(),
-        // Fetch availability for selected member or current user
-        shouldFetchMemberData
-          ? availabilityApi.getForMember(selectedMember)
-          : availabilityApi.getAll(),
-        // Fetch blocked times for selected member or current user
-        shouldFetchMemberData
-          ? blockedTimesApi.getForMember(selectedMember, { startDate, endDate })
-          : blockedTimesApi.getAll({ startDate, endDate }),
+        // Availability source depends on which provider type is selected.
+        isExternalSelected
+          ? externalProvidersApi.getAvailability(selectedMember)
+          : isMemberSelected
+            ? availabilityApi.getForMember(selectedMember)
+            : availabilityApi.getAll(),
+        // Blocked times: same dispatch.
+        isExternalSelected
+          ? externalProvidersApi.getBlockedTimes(selectedMember)
+          : isMemberSelected
+            ? blockedTimesApi.getForMember(selectedMember, { startDate, endDate })
+            : blockedTimesApi.getAll({ startDate, endDate }),
         // Fetch organization settings for timezone
         currentOrganization
           ? organizationSettingsApi.get().catch(() => ({ data: { timezone: 'UTC' } }))
           : Promise.resolve({ data: { timezone: 'UTC' } }),
+        // External providers list (admins only) for the calendar filter dropdown.
+        isOrgAdminContext
+          ? externalProvidersApi.getAll().catch(() => ({ data: [] as ExternalProvider[] }))
+          : Promise.resolve({ data: [] as ExternalProvider[] }),
       ]);
 
       setAppointments(appointmentsRes.data.data || appointmentsRes.data);
       setServiceOptions(servicesRes.data);
       setAvailabilities(availabilityRes.data);
-      setBlockedTimes(blockedRes.data);
+      // External-provider blocked-times endpoint returns the full list; trim
+      // to the requested window for display consistency.
+      const allBlocked: BlockedTime[] = blockedRes.data || [];
+      const windowStart = new Date(`${startDate}T00:00:00`).getTime();
+      const windowEnd = new Date(`${endDate}T23:59:59.999`).getTime();
+      setBlockedTimes(
+        isExternalSelected
+          ? allBlocked.filter((bt) => {
+              const t = new Date(bt.date).getTime();
+              return t >= windowStart && t <= windowEnd;
+            })
+          : allBlocked,
+      );
       setOrganizationTimezone(orgSettingsRes.data?.timezone || 'UTC');
+      setExternalProviders(externalProvidersRes.data || []);
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({
@@ -843,6 +885,7 @@ export default function CalendarPage() {
             selectedMember={selectedMember}
             setSelectedMember={setSelectedMember}
             members={members}
+            externalProviders={externalProviders}
             onAddAppointment={handleAddAppointmentFromHeader}
           />
         </CardHeader>

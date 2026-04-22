@@ -175,6 +175,8 @@ export const appointmentsApi = {
     startDate?: string;
     endDate?: string;
     serviceOptionId?: string;
+    userId?: string;
+    externalProviderId?: string;
     sortBy?: string;
     sortOrder?: 'ASC' | 'DESC';
   }) => api.get('/appointments', { params }),

@@ -227,9 +227,14 @@ export function CreateAppointmentDialog({
         // 2. If only one provider, auto-select them
         // 3. Otherwise, don't auto-select (let admin choose)
         if (preselectedProviderId && preselectedProviderId !== "all") {
-          const preselectedProvider = uniqueProviders.find((p: Provider) => p.clerkId === preselectedProviderId);
+          // Match member by clerkId, external by id. Either way, the value
+          // we send back to the server is `clerkId || id` of the picked row.
+          const preselectedProvider = uniqueProviders.find(
+            (p: Provider) =>
+              p.clerkId === preselectedProviderId || p.id === preselectedProviderId,
+          );
           if (preselectedProvider) {
-            setSelectedProvider(preselectedProviderId);
+            setSelectedProvider(preselectedProvider.clerkId || preselectedProvider.id);
           } else if (uniqueProviders.length === 1) {
             setSelectedProvider(uniqueProviders[0].clerkId || uniqueProviders[0].id);
           }
@@ -489,26 +494,30 @@ export function CreateAppointmentDialog({
                     <SelectValue placeholder={t("selectProvider")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {serviceProviders.map((provider, index) => (
-                      <SelectItem 
-                        key={provider.clerkId || provider.id || `provider-${index}`} 
-                        value={provider.clerkId || provider.id}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={provider.imageUrl} />
-                            <AvatarFallback className="text-xs">
-                              {(provider.firstName?.[0] || "U").toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>
-                            {provider.firstName
-                              ? `${provider.firstName} ${provider.lastName || ""}`
-                              : "Provider"}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {serviceProviders.map((provider, index) => {
+                      const displayName = provider.firstName
+                        ? `${provider.firstName} ${provider.lastName || ""}`.trim()
+                        : provider.name || "Provider";
+                      const initial = (
+                        provider.firstName?.[0] ||
+                        provider.name?.[0] ||
+                        "U"
+                      ).toUpperCase();
+                      return (
+                        <SelectItem
+                          key={provider.clerkId || provider.id || `provider-${index}`}
+                          value={provider.clerkId || provider.id}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={provider.imageUrl} />
+                              <AvatarFallback className="text-xs">{initial}</AvatarFallback>
+                            </Avatar>
+                            <span>{displayName}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               )}
@@ -829,13 +838,21 @@ export function CreateAppointmentDialog({
                     )}{" "}
                   ({selectedServiceOption.duration} min)
                 </p>
-                {isAdmin && selectedProvider && (
-                  <p>
-                    <span className="text-muted-foreground">{t("previewProvider")}:</span>{" "}
-                    {serviceProviders.find((p) => p.clerkId === selectedProvider)?.firstName ||
-                      "Selected Provider"}
-                  </p>
-                )}
+                {isAdmin && selectedProvider && (() => {
+                  const picked = serviceProviders.find(
+                    (p) => (p.clerkId || p.id) === selectedProvider,
+                  );
+                  const label =
+                    (picked?.firstName
+                      ? `${picked.firstName} ${picked.lastName || ""}`.trim()
+                      : picked?.name) || "Selected Provider";
+                  return (
+                    <p>
+                      <span className="text-muted-foreground">{t("previewProvider")}:</span>{" "}
+                      {label}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
           )}

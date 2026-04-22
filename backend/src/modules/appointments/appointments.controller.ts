@@ -23,6 +23,7 @@ import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgAdminOnly } from '../auth/decorators/org-roles.decorator';
 import { UsersService } from '../users/users.service';
+import { ExternalProvidersService } from '../external-providers/external-providers.service';
 
 @ApiTags('appointments')
 @Controller('appointments')
@@ -30,6 +31,7 @@ export class AppointmentsController {
   constructor(
     private readonly appointmentsService: AppointmentsService,
     private readonly usersService: UsersService,
+    private readonly externalProvidersService: ExternalProvidersService,
   ) {}
 
   // Protected routes (require authentication)
@@ -54,7 +56,7 @@ export class AppointmentsController {
     // If organization admin and userId filter is specified, convert Clerk ID to database user ID
     const isOrgAdmin = req.user.orgRole === 'org:admin';
     let targetUserId = req.user.dbUserId;
-    
+
     if (isOrgAdmin && query.userId) {
       // userId from query is a Clerk ID, need to convert to database ID
       const targetUser = await this.usersService.findByClerkId(query.userId);
@@ -62,12 +64,18 @@ export class AppointmentsController {
         targetUserId = targetUser.id;
       }
     }
-    
+
+    // External-provider filter (calendar): always go through the org-scoped query
+    // so we can filter on appointment.externalProviderId.
+    if (isOrgAdmin && organizationId && query.externalProviderId) {
+      return this.appointmentsService.findAllByOrganizationPaginated(organizationId, query);
+    }
+
     // If admin filtering all members (no specific userId), get all org appointments
     if (isOrgAdmin && organizationId && !query.userId) {
       return this.appointmentsService.findAllByOrganizationPaginated(organizationId, query);
     }
-    
+
     return this.appointmentsService.findAllByUserPaginated(targetUserId, query);
   }
 
@@ -204,26 +212,45 @@ export class AppointmentsController {
     @Headers('x-organization-id') organizationId?: string,
   ) {
     const isOrgAdmin = req.user.orgRole === 'org:admin';
-    
-    // If provider ID is specified and user is admin, use that provider
-    // Otherwise, use the current user as provider
-    let targetUserId = req.user.dbUserId;
-    
-    if (createDto.providerId && isOrgAdmin && organizationId) {
-      // Admin can assign to any provider - providerId is a Clerk ID
-      const targetUser = await this.usersService.findByClerkId(createDto.providerId);
-      if (targetUser) {
-        targetUserId = targetUser.id;
+
+    // Defaults: appointment goes to the current member, no external provider.
+    let targetUserId: string | undefined = req.user.dbUserId;
+    let externalProviderId: string | undefined;
+
+    if (createDto.providerId) {
+      if (!isOrgAdmin) {
+        // Non-admins cannot reassign provider — ignore.
+        delete createDto.providerId;
+      } else if (organizationId) {
+        // Try to resolve as a member first (providerId is typically a Clerk ID).
+        const memberUser = await this.usersService.findByClerkId(createDto.providerId);
+        if (memberUser) {
+          targetUserId = memberUser.id;
+        } else {
+          // Fall back to external provider lookup within this organization.
+          try {
+            const ext = await this.externalProvidersService.findOne(
+              createDto.providerId,
+              organizationId,
+            );
+            if (ext) {
+              externalProviderId = ext.id;
+              // Appointment is assigned to an external provider (no member user).
+              targetUserId = undefined;
+            }
+          } catch {
+            // Not an external provider either — leave defaults so the request fails
+            // with a clear conflict downstream rather than silently picking the admin.
+          }
+        }
       }
-    } else if (createDto.providerId && !isOrgAdmin) {
-      // Non-admin cannot assign to other providers - ignore providerId
-      delete createDto.providerId;
     }
-    
+
     return this.appointmentsService.createFromDashboard(
       targetUserId,
       createDto,
       organizationId,
+      externalProviderId,
     );
   }
 

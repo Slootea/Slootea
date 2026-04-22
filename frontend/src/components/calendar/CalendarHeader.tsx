@@ -27,6 +27,7 @@ import {
   Plus,
 } from "lucide-react";
 import { OrganizationMember } from "@/components/providers/organization-provider";
+import { ExternalProvider } from "@/lib/types";
 
 interface CalendarHeaderProps {
   viewMode: "week" | "day";
@@ -42,6 +43,8 @@ interface CalendarHeaderProps {
   selectedMember: string;
   setSelectedMember: (member: string) => void;
   members: OrganizationMember[];
+  /** External (non-member) providers for the same org. */
+  externalProviders?: ExternalProvider[];
   // Add appointment callback
   onAddAppointment?: () => void;
 }
@@ -59,6 +62,7 @@ export function CalendarHeader({
   selectedMember,
   setSelectedMember,
   members,
+  externalProviders = [],
   onAddAppointment,
 }: CalendarHeaderProps) {
   const t = useTranslations("calendarPage");
@@ -86,8 +90,8 @@ export function CalendarHeader({
             </Button>
           )}
 
-          {/* Member Filter (Organization Admin only) */}
-          {showMemberFilter && members.length > 0 && (
+          {/* Provider Filter (Organization Admin only) */}
+          {showMemberFilter && (members.length > 0 || externalProviders.length > 0) && (
             <Select value={selectedMember} onValueChange={setSelectedMember}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder={t("allMembers")} />
@@ -113,7 +117,19 @@ export function CalendarHeader({
                           ? `${member.firstName} ${member.lastName || ""}`
                           : member.email.split("@")[0]}
                       </span>
-                   
+                    </div>
+                  </SelectItem>
+                ))}
+                {externalProviders.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.id}>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={provider.imageBase64} />
+                        <AvatarFallback className="text-xs">
+                          {provider.name[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{provider.name}</span>
                     </div>
                   </SelectItem>
                 ))}

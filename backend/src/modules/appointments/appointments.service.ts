@@ -141,6 +141,44 @@ function createDateInTimezone(dateStr: string, time: string, timezone: string = 
   }
 }
 
+/**
+ * Add (or subtract) calendar days to a YYYY-MM-DD date string.
+ * Operates on the calendar (not on a Date) so it is immune to DST and
+ * server-timezone effects.
+ */
+function addDaysToDateStr(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  // Use UTC math to avoid DST/server-tz drift, then re-format.
+  const t = Date.UTC(y, m - 1, d) + days * 24 * 60 * 60 * 1000;
+  const dt = new Date(t);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+/**
+ * Returns true if a candidate slot [slotStart, slotEnd) conflicts with an
+ * existing appointment [aptStart, aptEnd), respecting a single configured
+ * buffer (minimum gap) between any two appointments.
+ *
+ * Conflict iff slotStart < aptEnd + buffer AND slotEnd + buffer > aptStart.
+ * (Equivalent to requiring at least `buffer` minutes of gap on either side.)
+ */
+function slotConflictsWithAppointment(
+  slotStart: Date,
+  slotEnd: Date,
+  aptStart: Date,
+  aptEnd: Date,
+  bufferMinutes: number,
+): boolean {
+  const bufferMs = bufferMinutes * 60_000;
+  return (
+    slotStart.getTime() < aptEnd.getTime() + bufferMs &&
+    slotEnd.getTime() + bufferMs > aptStart.getTime()
+  );
+}
+
 @Injectable()
 export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
@@ -289,6 +327,7 @@ export class AppointmentsService {
       startDate,
       endDate,
       serviceOptionId,
+      externalProviderId,
       sortBy = 'startTime',
       sortOrder = 'DESC',
     } = query;
@@ -297,11 +336,19 @@ export class AppointmentsService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.serviceOption', 'serviceOption')
       .leftJoinAndSelect('appointment.user', 'aptUser')
+      .leftJoinAndSelect('appointment.externalProvider', 'externalProvider')
       .where('appointment.organizationId = :organizationId', { organizationId });
 
     // Filter by status
     if (status) {
       queryBuilder.andWhere('appointment.status = :status', { status });
+    }
+
+    // Filter by external provider (calendar provider filter)
+    if (externalProviderId) {
+      queryBuilder.andWhere('appointment.externalProviderId = :externalProviderId', {
+        externalProviderId,
+      });
     }
 
     // Search by client name, email, or phone
@@ -1129,7 +1176,8 @@ export class AppointmentsService {
       let existingAppointments: Appointment[];
 
       const dayStartInTz = createDateInTimezone(date, '00:00', timezone);
-      const dayEndInTz = createDateInTimezone(date, '23:59', timezone);
+      const nextDayStartInTz = createDateInTimezone(addDaysToDateStr(date, 1), '00:00', timezone);
+      const dayEndInclusive = new Date(nextDayStartInTz.getTime() - 1);
 
       if (provider.type === 'member') {
         // Member provider - use userId
@@ -1147,7 +1195,7 @@ export class AppointmentsService {
         existingAppointments = await this.appointmentRepository.find({
           where: {
             userId: provider.id,
-            startTime: Between(dayStartInTz, dayEndInTz),
+            startTime: Between(dayStartInTz, dayEndInclusive),
             status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
           },
         });
@@ -1167,7 +1215,7 @@ export class AppointmentsService {
         existingAppointments = await this.appointmentRepository.find({
           where: {
             externalProviderId: provider.id,
-            startTime: Between(dayStartInTz, dayEndInTz),
+            startTime: Between(dayStartInTz, dayEndInclusive),
             status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
           },
         });
@@ -1198,16 +1246,16 @@ export class AppointmentsService {
               return slotStart < blockEnd && slotEnd > blockStart;
             });
 
-            // Check if slot overlaps with existing appointments (considering buffer time before AND after)
-            const isBooked = existingAppointments.some((apt) => {
-              const aptStart = new Date(apt.startTime);
-              const aptEnd = new Date(apt.endTime);
-              // Buffer zone extends both before the appointment starts and after it ends
-              const aptStartWithBufferBefore = new Date(aptStart.getTime() - buffer * 60000);
-              const aptEndWithBufferAfter = new Date(aptEnd.getTime() + buffer * 60000);
-              const slotEndWithBuffer = new Date(slotEnd.getTime() + buffer * 60000);
-              return slotStart < aptEndWithBufferAfter && slotEndWithBuffer > aptStartWithBufferBefore;
-            });
+            // Check if slot overlaps with existing appointments (single-buffer gap)
+            const isBooked = existingAppointments.some((apt) =>
+              slotConflictsWithAppointment(
+                slotStart,
+                slotEnd,
+                new Date(apt.startTime),
+                new Date(apt.endTime),
+                buffer,
+              ),
+            );
 
             if (!isBlocked && !isBooked) {
               // Add or update slot (available if any provider has it)
@@ -1549,10 +1597,14 @@ export class AppointmentsService {
    * Create an appointment from dashboard (authenticated user)
    */
   async createFromDashboard(
-    userId: string,
+    userId: string | undefined,
     createDto: CreateAppointmentDto,
     organizationId?: string,
+    externalProviderId?: string,
   ): Promise<Appointment> {
+    if (!userId && !externalProviderId) {
+      throw new BadRequestException('Provider could not be resolved for this appointment');
+    }
     // Get service option
     const serviceOption = await this.serviceOptionsService.findById(
       createDto.serviceOptionId,
@@ -1579,17 +1631,21 @@ export class AppointmentsService {
 
     // Create appointment - dashboard appointments are confirmed by default
     const confirmationToken = uuidv4();
+    // `providerId` on the DTO is a transient lookup field; do not persist it
+    // on the appointment row (the entity has no such column).
+    const { providerId: _ignoredProviderId, ...persistableDto } = createDto;
     const appointment = this.appointmentRepository.create({
-      ...createDto,
+      ...persistableDto,
       startTime,
       endTime,
-      userId,
+      userId: userId ?? undefined,
+      externalProviderId: externalProviderId ?? undefined,
       clientId,
       organizationId,
       confirmationToken,
       status: AppointmentStatus.CONFIRMED,
       confirmedAt: new Date(),
-    });
+    } as Partial<Appointment>);
 
     const savedAppointment = await this.appointmentRepository.save(appointment);
 
@@ -1640,8 +1696,8 @@ export class AppointmentsService {
     organizationId?: string,
   ): Promise<NextAvailableResult> {
     const serviceOption = await this.serviceOptionsService.findById(serviceOptionId);
-    
-    // Get settings based on context
+
+    // Resolve organization
     let orgId = organizationId;
     if (!orgId) {
       const user = await this.appointmentRepository.manager.findOne('User', { where: { id: userId } }) as { organizationId: string } | null;
@@ -1651,34 +1707,45 @@ export class AppointmentsService {
       return { available: false, nextSlot: null, message: 'Organization not found' };
     }
     const settings = await this.organizationSettingsService.findByOrganizationId(orgId);
+    const timezone = (settings as any).timezone || 'UTC';
+    const duration = serviceOption.duration;
+    const buffer = settings.bufferTimeMinutes;
 
-    const searchStartDate = fromDate ? new Date(fromDate) : new Date();
-    const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+    // Booking-window bounds
+    const now = new Date();
+    const minAdvanceDate = new Date(now.getTime() + settings.minAdvanceBookingHours * 3600_000);
+    const maxAdvanceDate = new Date(now.getTime() + settings.maxAdvanceBookingDays * 24 * 3600_000);
 
-    // If provider is specified, search only that provider's slots
-    // Otherwise, if in org context, search all providers for the service
-    let targetUserIds: string[] = [];
-    
-    if (providerId) {
-      // providerId is a Clerk ID, we need to convert to db user ID
-      const targetUser = await this.userServiceOptionsService.getUserByClerkId(providerId);
-      if (targetUser) {
-        targetUserIds = [targetUser.id];
-      }
-    } else if (organizationId) {
-      // Get all providers for this service in the organization
-      const providers = await this.userServiceOptionsService.getProvidersForService(
+    // Build the unified provider list (members + external) for this service
+    let providers: UnifiedProvider[];
+    if (organizationId) {
+      providers = await this.userServiceOptionsService.getUnifiedProvidersForService(
         serviceOptionId,
         organizationId,
       );
-      targetUserIds = providers.map(p => p.id);
     } else {
-      // Individual user context
-      targetUserIds = [userId];
+      // Individual user context (no org) — search only the calling user
+      const u = await this.userServiceOptionsService.getUserById(userId);
+      providers = u
+        ? [{
+            id: u.id,
+            type: 'member',
+            firstName: u.firstName,
+            lastName: u.lastName,
+            email: u.email,
+            clerkId: u.clerkId,
+          } as UnifiedProvider]
+        : [];
     }
 
-    if (targetUserIds.length === 0) {
+    // Optional filter to a specific provider (accept either internal id or Clerk id)
+    if (providerId) {
+      providers = providers.filter(
+        (p) => p.id === providerId || (p.type === 'member' && p.clerkId === providerId),
+      );
+    }
+
+    if (providers.length === 0) {
       return {
         available: false,
         nextSlot: null,
@@ -1686,82 +1753,87 @@ export class AppointmentsService {
       };
     }
 
-    const duration = serviceOption.duration;
-    const buffer = settings.bufferTimeMinutes;
-    const timezone = (settings as any).timezone || 'UTC';
-    const minAdvanceDate = new Date();
-    minAdvanceDate.setHours(minAdvanceDate.getHours() + settings.minAdvanceBookingHours);
+    // Determine the earliest moment we are allowed to suggest, then derive the
+    // calendar date string in the organization's timezone. Iterating by date
+    // string (not by Date arithmetic) avoids DST and server-tz drift.
+    let searchStart = minAdvanceDate;
+    if (fromDate) {
+      const parsed = new Date(fromDate);
+      if (!isNaN(parsed.getTime()) && parsed.getTime() > searchStart.getTime()) {
+        searchStart = parsed;
+      }
+    }
 
-    // Search day by day until we find an available slot
-    const currentDate = new Date(Math.max(searchStartDate.getTime(), minAdvanceDate.getTime()));
-    currentDate.setHours(0, 0, 0, 0);
+    let dateStr = formatDateInTimezone(searchStart, timezone);
+    const maxDateStr = formatDateInTimezone(maxAdvanceDate, timezone);
 
-    while (currentDate <= maxDate) {
-      // Use timezone-aware date formatting
-      const dateStr = formatDateInTimezone(currentDate, timezone);
-      const dayOfWeek = getDayOfWeekInTimezone(currentDate, timezone);
+    // Hard cap on how many days we will scan, defensive against bad config.
+    const maxDaysScan = Math.max(1, Math.min(settings.maxAdvanceBookingDays + 1, 400));
 
-      for (const targetUserId of targetUserIds) {
-        // Get availability for this day
-        const availabilities = await this.availabilityService.findByUserAndDay(
-          targetUserId,
-          dayOfWeek,
-          serviceOptionId,
-        );
+    for (let dayCount = 0; dayCount < maxDaysScan && dateStr <= maxDateStr; dayCount++) {
+      const dayOfWeek = getDayOfWeekInTimezone(
+        createDateInTimezone(dateStr, '12:00', timezone),
+        timezone,
+      );
+
+      // Day window in UTC, exclusive of the next day's 00:00
+      const dayStartUtc = createDateInTimezone(dateStr, '00:00', timezone);
+      const nextDayStartUtc = createDateInTimezone(addDaysToDateStr(dateStr, 1), '00:00', timezone);
+
+      // For each provider, find the earliest valid slot on this day.
+      // We then pick the globally earliest slot across providers (with a
+      // load-balancing tie-break) so the suggestion isn't biased by provider
+      // iteration order.
+      type Candidate = {
+        provider: UnifiedProvider;
+        slotStart: Date;
+        slotEnd: Date;
+        existingCount: number;
+      };
+      const candidates: Candidate[] = [];
+
+      for (const provider of providers) {
+        // Availability for this provider + day
+        const availabilities =
+          provider.type === 'member'
+            ? await this.availabilityService.findByUserAndDay(provider.id, dayOfWeek, serviceOptionId)
+            : await this.availabilityService.findByExternalProviderAndDay(provider.id, dayOfWeek, serviceOptionId);
 
         if (availabilities.length === 0) continue;
 
-        // Get blocked times
-        const blockedTimes = await this.blockedTimesService.findByUserAndDate(
-          targetUserId,
-          dateStr,
-        );
+        // Blocked times for this provider + date
+        const blockedTimes =
+          provider.type === 'member'
+            ? await this.blockedTimesService.findByUserAndDate(provider.id, dateStr)
+            : await this.blockedTimesService.findByExternalProviderAndDate(provider.id, dateStr);
 
         if (blockedTimes.some((bt) => bt.isFullDay)) continue;
 
-        // Get existing appointments for this day in the organization's timezone
-        // We need to query appointments that fall within 00:00 to 23:59:59 in the org timezone
-        const dayStartInTz = createDateInTimezone(dateStr, '00:00', timezone);
-        const dayEndInTz = createDateInTimezone(dateStr, '23:59', timezone);
-
-        console.log('[getNextAvailableTime] Querying appointments for:', {
-          dateStr,
-          timezone,
-          dayStartInTz: dayStartInTz.toISOString(),
-          dayEndInTz: dayEndInTz.toISOString(),
-          targetUserId,
-        });
-
+        // Existing appointments for this provider on this day
+        const apptWhere: any = {
+          startTime: Between(dayStartUtc, new Date(nextDayStartUtc.getTime() - 1)),
+          status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+        };
+        if (provider.type === 'member') {
+          apptWhere.userId = provider.id;
+        } else {
+          apptWhere.externalProviderId = provider.id;
+        }
         const existingAppointments = await this.appointmentRepository.find({
-          where: {
-            userId: targetUserId,
-            startTime: Between(dayStartInTz, dayEndInTz),
-            status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
-          },
+          where: apptWhere,
         });
 
-        console.log('[getNextAvailableTime] Found appointments:', existingAppointments.map(a => ({
-          id: a.id,
-          startTime: a.startTime,
-          endTime: a.endTime,
-          status: a.status,
-        })));
+        let providerEarliest: Candidate | null = null;
 
-        // Check each availability window
         for (const availability of availabilities) {
-          const [startHour, startMin] = availability.startTime.split(':').map(Number);
-          const [endHour, endMin] = availability.endTime.split(':').map(Number);
-
-          // Create slot times using the organization's timezone
           let slotStart = createDateInTimezone(dateStr, availability.startTime, timezone);
           const availabilityEnd = createDateInTimezone(dateStr, availability.endTime, timezone);
 
-          while (slotStart.getTime() + duration * 60000 <= availabilityEnd.getTime()) {
-            const slotEnd = new Date(slotStart.getTime() + duration * 60000);
+          while (slotStart.getTime() + duration * 60_000 <= availabilityEnd.getTime()) {
+            const slotEnd = new Date(slotStart.getTime() + duration * 60_000);
 
-            // Check if slot is in the future and after min advance booking
-            if (slotStart > minAdvanceDate) {
-              // Check if blocked
+            // Must respect minimum advance booking
+            if (slotStart.getTime() >= minAdvanceDate.getTime()) {
               const isBlocked = blockedTimes.some((bt) => {
                 if (bt.isFullDay) return true;
                 const blockStart = createDateInTimezone(dateStr, bt.startTime, timezone);
@@ -1769,72 +1841,72 @@ export class AppointmentsService {
                 return slotStart < blockEnd && slotEnd > blockStart;
               });
 
-              // Check if booked (considering buffer time before AND after appointments)
-              // For a slot to be available:
-              // 1. Slot must start AFTER existing appointment ends + buffer (respect buffer after appointments)
-              // 2. Slot must end + buffer BEFORE existing appointment starts (respect buffer before appointments)
-              // In other words: no overlap between [slotStart, slotEnd+buffer] and [aptStart-buffer, aptEnd+buffer]
-              const isBooked = existingAppointments.some((apt) => {
-                const aptStart = new Date(apt.startTime);
-                const aptEnd = new Date(apt.endTime);
-                // Buffer zone extends both before the appointment starts and after it ends
-                const aptStartWithBufferBefore = new Date(aptStart.getTime() - buffer * 60000);
-                const aptEndWithBufferAfter = new Date(aptEnd.getTime() + buffer * 60000);
-                const slotEndWithBuffer = new Date(slotEnd.getTime() + buffer * 60000);
-                // Check overlap: slot conflicts if there's any overlap between 
-                // [slotStart, slotEndWithBuffer] and [aptStartWithBufferBefore, aptEndWithBufferAfter]
-                const hasOverlap = slotStart < aptEndWithBufferAfter && slotEndWithBuffer > aptStartWithBufferBefore;
-                
-                if (hasOverlap) {
-                  console.log('[getNextAvailableTime] Slot conflict detected:', {
-                    slotStart: slotStart.toISOString(),
-                    slotEnd: slotEnd.toISOString(),
-                    slotEndWithBuffer: slotEndWithBuffer.toISOString(),
-                    aptStart: aptStart.toISOString(),
-                    aptEnd: aptEnd.toISOString(),
-                    aptStartWithBufferBefore: aptStartWithBufferBefore.toISOString(),
-                    aptEndWithBufferAfter: aptEndWithBufferAfter.toISOString(),
-                    buffer,
-                  });
-                }
-                
-                return hasOverlap;
-              });
+              const isBooked = !isBlocked && existingAppointments.some((apt) =>
+                slotConflictsWithAppointment(
+                  slotStart,
+                  slotEnd,
+                  new Date(apt.startTime),
+                  new Date(apt.endTime),
+                  buffer,
+                ),
+              );
 
               if (!isBlocked && !isBooked) {
-                console.log('[getNextAvailableTime] Found available slot:', {
-                  slotStart: slotStart.toISOString(),
-                  slotEnd: slotEnd.toISOString(),
-                  existingAppointmentsCount: existingAppointments.length,
-                });
-                // Found an available slot!
-                // Get provider info
-                const providerUser = await this.userServiceOptionsService.getUserById(targetUserId);
-                
-                return {
-                  available: true,
-                  nextSlot: {
-                    startTime: slotStart.toISOString(),
-                    endTime: slotEnd.toISOString(),
-                    providerId: providerUser?.clerkId,
-                    providerName: providerUser?.firstName 
-                      ? `${providerUser.firstName} ${providerUser.lastName || ''}`.trim()
-                      : undefined,
-                  },
+                providerEarliest = {
+                  provider,
+                  slotStart,
+                  slotEnd,
+                  existingCount: existingAppointments.length,
                 };
+                break;
               }
             }
 
-            // Move to next slot - use 15 minute increments to catch gaps between appointments
-            // (e.g., when an appointment in between was cancelled)
-            const SLOT_INCREMENT_MINUTES = 5;
-            slotStart = new Date(slotStart.getTime() + SLOT_INCREMENT_MINUTES * 60000);
+            // 5-minute increments to catch gaps between cancelled appointments
+            slotStart = new Date(slotStart.getTime() + 5 * 60_000);
           }
+
+          if (providerEarliest) break;
         }
+
+        if (providerEarliest) candidates.push(providerEarliest);
       }
 
-      // Move to next day
-      currentDate.setDate(currentDate.getDate() + 1);
+      if (candidates.length > 0) {
+        // Pick the globally earliest slot. Tie-break by the provider with
+        // the fewest existing appointments that day (load balancing).
+        candidates.sort((a, b) => {
+          const dt = a.slotStart.getTime() - b.slotStart.getTime();
+          if (dt !== 0) return dt;
+          return a.existingCount - b.existingCount;
+        });
+        const best = candidates[0];
+
+        let providerName: string | undefined;
+        let providerClerkId: string | undefined;
+        if (best.provider.type === 'member') {
+          providerClerkId = best.provider.clerkId;
+          const fn = best.provider.firstName?.trim() || '';
+          const ln = best.provider.lastName?.trim() || '';
+          const composed = `${fn} ${ln}`.trim();
+          providerName = composed || undefined;
+        } else {
+          providerName = best.provider.name;
+        }
+
+        return {
+          available: true,
+          nextSlot: {
+            startTime: best.slotStart.toISOString(),
+            endTime: best.slotEnd.toISOString(),
+            providerId: providerClerkId,
+            providerName,
+          },
+        };
+      }
+
+      // Advance one calendar day in the org timezone.
+      dateStr = addDaysToDateStr(dateStr, 1);
     }
 
     return {
@@ -1875,12 +1947,24 @@ export class AppointmentsService {
     const dayOfWeek = getDayOfWeekInTimezone(requestedStart, timezone);
     const buffer = settings.bufferTimeMinutes;
 
-    // Determine target user
-    let targetUserId: string;
-    
+    // Determine target provider (member or external).
+    // `providerId` may be a Clerk ID (member) or an external-provider UUID.
+    let targetUserId: string | undefined;
+    let targetExternalProviderId: string | undefined;
+
     if (providerId) {
-      const targetUser = await this.userServiceOptionsService.getUserByClerkId(providerId);
-      if (!targetUser) {
+      const memberUser = await this.userServiceOptionsService.getUserByClerkId(providerId);
+      if (memberUser) {
+        targetUserId = memberUser.id;
+      } else if (organizationId) {
+        try {
+          const ext = await this.externalProvidersService.findOne(providerId, organizationId);
+          if (ext) targetExternalProviderId = ext.id;
+        } catch {
+          // fall through; treated as not-found below
+        }
+      }
+      if (!targetUserId && !targetExternalProviderId) {
         return {
           available: false,
           conflict: {
@@ -1888,7 +1972,6 @@ export class AppointmentsService {
           },
         };
       }
-      targetUserId = targetUser.id;
     } else {
       targetUserId = userId;
     }
@@ -1927,12 +2010,18 @@ export class AppointmentsService {
       };
     }
 
-    // Check availability for this day
-    const availabilities = await this.availabilityService.findByUserAndDay(
-      targetUserId,
-      dayOfWeek,
-      serviceOptionId,
-    );
+    // Check availability for this day (member or external provider)
+    const availabilities = targetExternalProviderId
+      ? await this.availabilityService.findByExternalProviderAndDay(
+          targetExternalProviderId,
+          dayOfWeek,
+          serviceOptionId,
+        )
+      : await this.availabilityService.findByUserAndDay(
+          targetUserId!,
+          dayOfWeek,
+          serviceOptionId,
+        );
 
     const hasAvailability = availabilities.some((av) => {
       const avStart = createDateInTimezone(dateStr, av.startTime, timezone);
@@ -1957,11 +2046,16 @@ export class AppointmentsService {
       };
     }
 
-    // Check blocked times
-    const blockedTimes = await this.blockedTimesService.findByUserAndDate(
-      targetUserId,
-      dateStr,
-    );
+    // Check blocked times (member or external provider)
+    const blockedTimes = targetExternalProviderId
+      ? await this.blockedTimesService.findByExternalProviderAndDate(
+          targetExternalProviderId,
+          dateStr,
+        )
+      : await this.blockedTimesService.findByUserAndDate(
+          targetUserId!,
+          dateStr,
+        );
 
     const isBlocked = blockedTimes.some((bt) => {
       if (bt.isFullDay) return true;
@@ -1989,32 +2083,32 @@ export class AppointmentsService {
 
     // Check existing appointments for this day in the organization's timezone
     const dayStartInTz = createDateInTimezone(dateStr, '00:00', timezone);
-    const dayEndInTz = createDateInTimezone(dateStr, '23:59', timezone);
+    const nextDayStartInTz = createDateInTimezone(addDaysToDateStr(dateStr, 1), '00:00', timezone);
+    const dayEndInclusive = new Date(nextDayStartInTz.getTime() - 1);
 
+    const apptWhere: any = {
+      startTime: Between(dayStartInTz, dayEndInclusive),
+      status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+    };
+    if (targetExternalProviderId) {
+      apptWhere.externalProviderId = targetExternalProviderId;
+    } else {
+      apptWhere.userId = targetUserId;
+    }
     const existingAppointments = await this.appointmentRepository.find({
-      where: {
-        userId: targetUserId,
-        startTime: Between(dayStartInTz, dayEndInTz),
-        status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
-      },
+      where: apptWhere,
     });
 
-    // Check for conflicts considering buffer time before AND after appointments
-    // For a slot to be available:
-    // 1. Slot must start AFTER existing appointment ends + buffer (respect buffer after appointments)
-    // 2. Slot must end + buffer BEFORE existing appointment starts (respect buffer before appointments)
-    const requestedEndWithBuffer = new Date(requestedEnd.getTime() + buffer * 60000);
-    
-    const conflictingAppointment = existingAppointments.find((apt) => {
-      const aptStart = new Date(apt.startTime);
-      const aptEnd = new Date(apt.endTime);
-      // Buffer zone extends both before the appointment starts and after it ends
-      const aptStartWithBufferBefore = new Date(aptStart.getTime() - buffer * 60000);
-      const aptEndWithBufferAfter = new Date(aptEnd.getTime() + buffer * 60000);
-      // Check overlap: requested conflicts if there's any overlap between 
-      // [requestedStart, requestedEndWithBuffer] and [aptStartWithBufferBefore, aptEndWithBufferAfter]
-      return requestedStart < aptEndWithBufferAfter && requestedEndWithBuffer > aptStartWithBufferBefore;
-    });
+    // Check for conflicts using the single-buffer gap rule (see helper).
+    const conflictingAppointment = existingAppointments.find((apt) =>
+      slotConflictsWithAppointment(
+        requestedStart,
+        requestedEnd,
+        new Date(apt.startTime),
+        new Date(apt.endTime),
+        buffer,
+      ),
+    );
 
     if (conflictingAppointment) {
       const nextAvailable = await this.getNextAvailableTime(
