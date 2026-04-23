@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { metaOAuthApi, notificationSettingsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { metaOAuthApi, notificationSettingsApi } from "@/lib/api";
 import { 
   MetaOAuthUrlResponse, 
   WhatsAppAssetsResponse, 
@@ -49,7 +48,6 @@ export function useMetaOAuth({
   onError,
   onOAuthComplete,
 }: UseMetaOAuthOptions): UseMetaOAuthReturn {
-  const { getToken } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [hasPendingSession, setHasPendingSession] = useState(false);
@@ -59,15 +57,10 @@ export function useMetaOAuth({
   const popupRef = useRef<Window | null>(null);
   const popupCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Setup auth headers
+  // Token + org context are attached globally; just verify org is selected.
   const setupAuth = useCallback(async () => {
-    if (!organizationId) return false;
-    
-    const token = await getToken();
-    setAuthToken(token);
-    setOrganizationContext(organizationId);
-    return true;
-  }, [organizationId, getToken]);
+    return Boolean(organizationId);
+  }, [organizationId]);
 
   // Fetch WhatsApp assets after OAuth
   const fetchAssets = useCallback(async () => {

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -9,7 +9,18 @@ export const api = axios.create({
   },
 });
 
-// Add auth token to requests
+// Token getter registered by AuthProvider. The interceptor calls this on every
+// request so we always send a fresh token (Clerk caches it client-side for ~50s),
+// which removes the need for ad-hoc `getToken()` calls in components.
+type TokenGetter = (opts?: { skipCache?: boolean }) => Promise<string | null>;
+let tokenGetter: TokenGetter | null = null;
+let activeOrganizationId: string | null = null;
+
+export const registerTokenGetter = (getter: TokenGetter | null) => {
+  tokenGetter = getter;
+};
+
+// Add auth token to requests (legacy — AuthProvider also calls this on mount).
 export const setAuthToken = (token: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -20,12 +31,55 @@ export const setAuthToken = (token: string | null) => {
 
 // Set organization context for requests
 export const setOrganizationContext = (organizationId: string | null) => {
+  activeOrganizationId = organizationId;
   if (organizationId) {
     api.defaults.headers.common['x-organization-id'] = organizationId;
   } else {
     delete api.defaults.headers.common['x-organization-id'];
   }
 };
+
+// Request interceptor: refresh the bearer token on every call when a getter is
+// registered. Clerk caches session tokens internally so this is effectively free
+// in the steady state but guarantees we never send an expired token.
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  if (tokenGetter) {
+    try {
+      const token = await tokenGetter();
+      if (token) {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      }
+    } catch {
+      // Fall back to whatever default header is already set.
+    }
+  }
+  if (activeOrganizationId && !config.headers.get('x-organization-id')) {
+    config.headers.set('x-organization-id', activeOrganizationId);
+  }
+  return config;
+});
+
+// Response interceptor: on a single 401, force-refresh the token (skipping
+// Clerk's cache) and retry the request once.
+api.interceptors.response.use(
+  (res) => res,
+  async (error: AxiosError) => {
+    const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    if (error.response?.status === 401 && config && !config._retry && tokenGetter) {
+      config._retry = true;
+      try {
+        const token = await tokenGetter({ skipCache: true });
+        if (token) {
+          config.headers.set('Authorization', `Bearer ${token}`);
+          return api.request(config);
+        }
+      } catch {
+        // fall through
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 // Service Options API
 export const serviceOptionsApi = {

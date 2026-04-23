@@ -30,6 +30,7 @@ import { NotificationService, NotificationData } from '../messaging/notification
 import { DayOfWeek, Availability } from '../availability/entities/availability.entity';
 import { BlockedTime } from '../blocked-times/entities/blocked-time.entity';
 import { ExternalProvidersService } from '../external-providers/external-providers.service';
+import { TtlCache } from '../../common/utils/ttl-cache';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface TimeSlot {
@@ -182,6 +183,7 @@ function slotConflictsWithAppointment(
 @Injectable()
 export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
+  private readonly organizationNameCache = new TtlCache<string, string>(5 * 60 * 1000);
 
   constructor(
     @InjectRepository(Appointment)
@@ -202,14 +204,42 @@ export class AppointmentsService {
   ) {}
 
   /**
-   * Get organization name by ID
+   * Get organization name by ID. Cached briefly — names rarely change and
+   * this method is called multiple times per notification path.
    */
   private async getOrganizationName(organizationId: string): Promise<string> {
+    const cached = this.organizationNameCache.get(organizationId);
+    if (cached !== undefined) return cached;
     const org = await this.organizationRepository.findOne({
       where: { id: organizationId },
       select: ['name'],
     });
-    return org?.name || '';
+    const name = org?.name || '';
+    this.organizationNameCache.set(organizationId, name);
+    return name;
+  }
+
+  /**
+   * Run a notification send detached from the request lifecycle so external API
+   * latency (WhatsApp, SMS, email) doesn't extend the user-facing response.
+   * Errors are logged but never propagated.
+   */
+  private fireAndForgetNotification(
+    label: string,
+    send: () => Promise<{ anySent?: boolean }>,
+  ): void {
+    setImmediate(async () => {
+      try {
+        const result = await send();
+        if (result?.anySent) {
+          this.logger.log(`Notification[${label}] dispatched`);
+        } else {
+          this.logger.debug(`Notification[${label}] no channels configured`);
+        }
+      } catch (error) {
+        this.logger.error(`Notification[${label}] failed`, error as Error);
+      }
+    });
   }
 
   async create(createDto: CreateAppointmentDto): Promise<Appointment> {
@@ -681,15 +711,13 @@ export class AppointmentsService {
             timezone,
           };
 
-          const result = await this.notificationService.sendAppointmentRescheduledNotification(notificationData);
-          if (result.anySent) {
-            this.logger.log(`Reschedule notification sent for appointment ${savedAppointment.id}`);
-          } else {
-            this.logger.debug(`No reschedule notification sent for appointment ${savedAppointment.id} - no channels configured`);
-          }
+          this.fireAndForgetNotification(
+            `reschedule:${savedAppointment.id}`,
+            () => this.notificationService.sendAppointmentRescheduledNotification(notificationData),
+          );
         }
       } catch (notificationError) {
-        this.logger.error(`Failed to send reschedule notification`, notificationError);
+        this.logger.error(`Failed to prepare reschedule notification`, notificationError);
       }
     }
 
@@ -739,13 +767,13 @@ export class AppointmentsService {
                   timezone: cancelTimezone,
                 };
 
-                const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
-                if (result.anySent) {
-                  this.logger.log(`Cancellation notification sent for appointment ${savedAppointment.id}`);
-                }
+                this.fireAndForgetNotification(
+                  `cancel:${savedAppointment.id}`,
+                  () => this.notificationService.sendAppointmentCanceledNotification(notificationData),
+                );
               }
             } catch (notificationError) {
-              this.logger.error(`Failed to send cancellation notification`, notificationError);
+              this.logger.error(`Failed to prepare cancellation notification`, notificationError);
             }
           }
         } else if (updateDto.status === AppointmentStatus.NO_SHOW) {
@@ -797,15 +825,13 @@ export class AppointmentsService {
             timezone: cancelTimezone,
           };
 
-          const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
-          if (result.anySent) {
-            this.logger.log(`Cancellation notification sent for appointment ${id}`);
-          } else {
-            this.logger.debug(`No cancellation notification sent for appointment ${id} - no channels configured`);
-          }
+          this.fireAndForgetNotification(
+            `cancel:${id}`,
+            () => this.notificationService.sendAppointmentCanceledNotification(notificationData),
+          );
         }
       } catch (error) {
-        this.logger.error(`Failed to send cancellation notification for appointment ${id}`, error);
+        this.logger.error(`Failed to prepare cancellation notification for appointment ${id}`, error);
       }
     }
 
@@ -1065,7 +1091,7 @@ export class AppointmentsService {
       where: {
         status: AppointmentStatus.PENDING_CONFIRMATION,
       },
-      relations: ['user'],
+      relations: ['user', 'serviceOption'],
     });
 
     if (appointments.length === 0) {
@@ -1169,58 +1195,46 @@ export class AppointmentsService {
     const duration = serviceOption.duration;
     const buffer = settings.bufferTimeMinutes;
 
-    for (const provider of filteredProviders) {
-      // Get availability based on provider type
-      let availabilities: Availability[];
-      let blockedTimes: BlockedTime[];
-      let existingAppointments: Appointment[];
+    const dayStartInTz = createDateInTimezone(date, '00:00', timezone);
+    const nextDayStartInTz = createDateInTimezone(addDaysToDateStr(date, 1), '00:00', timezone);
+    const dayEndInclusive = new Date(nextDayStartInTz.getTime() - 1);
 
-      const dayStartInTz = createDateInTimezone(date, '00:00', timezone);
-      const nextDayStartInTz = createDateInTimezone(addDaysToDateStr(date, 1), '00:00', timezone);
-      const dayEndInclusive = new Date(nextDayStartInTz.getTime() - 1);
+    // Fetch availability/blocked-times/appointments for every provider in parallel.
+    // Per-provider this issues 3 queries; across providers they all run concurrently
+    // through the connection pool instead of one provider blocking the next.
+    const perProviderData = await Promise.all(
+      filteredProviders.map(async (provider) => {
+        if (provider.type === 'member') {
+          const [availabilities, blockedTimes, existingAppointments] = await Promise.all([
+            this.availabilityService.findByUserAndDay(provider.id, dayOfWeek, serviceOptionId),
+            this.blockedTimesService.findByUserAndDate(provider.id, date),
+            this.appointmentRepository.find({
+              where: {
+                userId: provider.id,
+                startTime: Between(dayStartInTz, dayEndInclusive),
+                status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+              },
+            }),
+          ]);
+          return { provider, availabilities, blockedTimes, existingAppointments };
+        }
 
-      if (provider.type === 'member') {
-        // Member provider - use userId
-        availabilities = await this.availabilityService.findByUserAndDay(
-          provider.id,
-          dayOfWeek,
-          serviceOptionId,
-        );
+        const [availabilities, blockedTimes, existingAppointments] = await Promise.all([
+          this.availabilityService.findByExternalProviderAndDay(provider.id, dayOfWeek, serviceOptionId),
+          this.blockedTimesService.findByExternalProviderAndDate(provider.id, date),
+          this.appointmentRepository.find({
+            where: {
+              externalProviderId: provider.id,
+              startTime: Between(dayStartInTz, dayEndInclusive),
+              status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
+            },
+          }),
+        ]);
+        return { provider, availabilities, blockedTimes, existingAppointments };
+      }),
+    );
 
-        blockedTimes = await this.blockedTimesService.findByUserAndDate(
-          provider.id,
-          date,
-        );
-
-        existingAppointments = await this.appointmentRepository.find({
-          where: {
-            userId: provider.id,
-            startTime: Between(dayStartInTz, dayEndInclusive),
-            status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
-          },
-        });
-      } else {
-        // External provider - use externalProviderId
-        availabilities = await this.availabilityService.findByExternalProviderAndDay(
-          provider.id,
-          dayOfWeek,
-          serviceOptionId,
-        );
-
-        blockedTimes = await this.blockedTimesService.findByExternalProviderAndDate(
-          provider.id,
-          date,
-        );
-
-        existingAppointments = await this.appointmentRepository.find({
-          where: {
-            externalProviderId: provider.id,
-            startTime: Between(dayStartInTz, dayEndInclusive),
-            status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING_CONFIRMATION]),
-          },
-        });
-      }
-
+    for (const { availabilities, blockedTimes, existingAppointments } of perProviderData) {
       if (availabilities.length === 0) continue;
 
       // Skip if full day is blocked
@@ -1354,16 +1368,6 @@ export class AppointmentsService {
     const endTime = createDto.endTime 
       ? new Date(createDto.endTime)
       : new Date(startTime.getTime() + serviceOption.duration * 60000);
-
-    // Get providers assigned to this service
-    const providers = await this.userServiceOptionsService.getProvidersForService(
-      createDto.serviceOptionId,
-      organizationId,
-    );
-
-    if (providers.length === 0) {
-      throw new BadRequestException('No providers available for this service');
-    }
 
     // Find all available providers for this slot, then pick the one with least appointments (load balancing)
     const settings = await this.organizationSettingsService.findByOrganizationId(organizationId);
@@ -1576,17 +1580,13 @@ export class AppointmentsService {
           appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
         };
 
-        const result = await this.notificationService.sendAppointmentCreatedNotification(notificationData);
-        if (result.anySent) {
-          this.logger.log(`Notification sent for appointment ${savedAppointment.id}`, {
-            whatsapp: result.whatsapp?.success,
-          });
-        } else {
-          this.logger.debug(`No notification sent for appointment ${savedAppointment.id} - no channels configured`);
-        }
+        this.fireAndForgetNotification(
+          `create:${savedAppointment.id}`,
+          () => this.notificationService.sendAppointmentCreatedNotification(notificationData),
+        );
       } catch (error) {
-        // Don't fail the appointment creation if notification fails
-        this.logger.error(`Failed to send notification for appointment ${savedAppointment.id}`, error);
+        // Don't fail the appointment creation if notification preparation fails
+        this.logger.error(`Failed to prepare notification for appointment ${savedAppointment.id}`, error);
       }
     }
 
@@ -1663,20 +1663,21 @@ export class AppointmentsService {
       }
     }
     
-    await this.notificationService.sendAppointmentCreatedNotification({
-      organizationId: organizationId || "",
-      organizationName,
-      clientName: createDto.clientName,
-      clientPhone: createDto.clientPhone || undefined,
-      clientEmail: createDto.clientEmail || undefined,
-      serviceName: serviceOption.title,
-      appointmentDate: startTime,
-      timezone,
-      confirmationLink: `${baseUrl}/confirm/${confirmationToken}`,
-      appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
-    }).catch((error) => {
-      this.logger.error(`Failed to send notification for appointment ${savedAppointment.id}`, error);
-    });
+    this.fireAndForgetNotification(
+      `create:${savedAppointment.id}`,
+      () => this.notificationService.sendAppointmentCreatedNotification({
+        organizationId: organizationId || "",
+        organizationName,
+        clientName: createDto.clientName,
+        clientPhone: createDto.clientPhone || undefined,
+        clientEmail: createDto.clientEmail || undefined,
+        serviceName: serviceOption.title,
+        appointmentDate: startTime,
+        timezone,
+        confirmationLink: `${baseUrl}/confirm/${confirmationToken}`,
+        appointmentLink: `${baseUrl}/appointment/${confirmationToken}`,
+      }),
+    );
 
     return this.appointmentRepository.findOneOrFail({
       where: { id: savedAppointment.id },
@@ -2262,13 +2263,13 @@ export class AppointmentsService {
               : undefined,
           };
 
-          const result = await this.notificationService.sendAppointmentRescheduledNotification(notificationData);
-          if (result.anySent) {
-            this.logger.log(`Reschedule notification sent for appointment ${savedAppointment.id} (client-initiated)`);
-          }
+          this.fireAndForgetNotification(
+            `reschedule:${savedAppointment.id}:client`,
+            () => this.notificationService.sendAppointmentRescheduledNotification(notificationData),
+          );
         }
       } catch (notificationError) {
-        this.logger.error(`Failed to send reschedule notification`, notificationError);
+        this.logger.error(`Failed to prepare reschedule notification`, notificationError);
       }
     }
 
@@ -2340,13 +2341,13 @@ export class AppointmentsService {
             cancellationReason: reason,
           };
 
-          const result = await this.notificationService.sendAppointmentCanceledNotification(notificationData);
-          if (result.anySent) {
-            this.logger.log(`Cancellation notification sent for appointment ${savedAppointment.id}`);
-          }
+          this.fireAndForgetNotification(
+            `cancel:${savedAppointment.id}:token`,
+            () => this.notificationService.sendAppointmentCanceledNotification(notificationData),
+          );
         }
       } catch (error) {
-        this.logger.error('Failed to send cancellation notification', error);
+        this.logger.error('Failed to prepare cancellation notification', error);
       }
     }
 

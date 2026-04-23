@@ -1,6 +1,30 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClerkClient, verifyToken } from '@clerk/backend';
+import { TtlCache } from '../../common/utils/ttl-cache';
+
+interface ClerkUserProfile {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+  publicMetadata?: { role?: 'admin' | 'user' | 'guest'; [key: string]: any };
+}
+
+export type CachedClerkProfile = ClerkUserProfile;
+
+interface MembershipEntry {
+  organizationId: string;
+  role: string;
+  isAdmin: boolean;
+}
+
+// Module-level caches survive across requests within a single process.
+// TTLs are short enough that Clerk-side changes (role updates, new memberships)
+// propagate within seconds without requiring a webhook handler.
+const userProfileCache = new TtlCache<string, ClerkUserProfile>(5 * 60 * 1000);
+const userMembershipsCache = new TtlCache<string, MembershipEntry[]>(60 * 1000);
 
 export interface ClerkUser {
   id: string;
@@ -37,31 +61,63 @@ async verifyToken(token: string): Promise<ClerkUser> {
     const secretKey = this.configService.get<string>('CLERK_SECRET_KEY');
     if (!secretKey) throw new UnauthorizedException('Clerk secret key not configured');
 
+    // JWKS-backed; networkless after first verification per process.
     const payload = await verifyToken(token, { secretKey });
     if (!payload?.sub) throw new UnauthorizedException('Invalid token');
 
-    const user = await this.clerkClient.users.getUser(payload.sub);
+    const userId = payload.sub;
 
-    // Fetch organizations explicitly
-    const memberships = await this.getUserOrganizations(user.id);
+    // Profile data — cached to avoid hitting Clerk's REST API on every request.
+    let profile = userProfileCache.get(userId);
+    if (!profile) {
+      const user = await this.clerkClient.users.getUser(userId);
+      profile = {
+        id: user.id,
+        email: user.emailAddresses[0]?.emailAddress || '',
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        imageUrl: user.imageUrl || undefined,
+        publicMetadata: (user.publicMetadata as ClerkUserProfile['publicMetadata']) || {},
+      };
+      userProfileCache.set(userId, profile);
+    }
+
+    // Prefer org claims from the JWT itself (set when an active org is selected).
+    const claims = payload as Record<string, any>;
+    let memberships: MembershipEntry[] | undefined;
+    if (claims.org_id && claims.org_role) {
+      memberships = [
+        {
+          organizationId: claims.org_id,
+          role: claims.org_role,
+          isAdmin: claims.org_role === 'org:admin',
+        },
+      ];
+    } else {
+      memberships = userMembershipsCache.get(userId);
+      if (!memberships) {
+        memberships = await this.getUserOrganizations(userId);
+        userMembershipsCache.set(userId, memberships);
+      }
+    }
 
     return {
-      id: user.id,
-      email: user.emailAddresses[0]?.emailAddress || '',
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      imageUrl: user.imageUrl || undefined,
-      // Attach first org info for convenience (optional)
+      ...profile,
       organizationId: memberships[0]?.organizationId,
       organizationRole: memberships[0]?.role as 'org:admin' | 'org:member' | undefined,
-      isOrgAdmin: memberships.some(m => m.isAdmin),
-      memberships, // full memberships array for guards
-      publicMetadata: user.publicMetadata as { role?: 'admin' | 'user' | 'guest'; [key: string]: any } || {},
+      isOrgAdmin: memberships.some((m) => m.isAdmin),
+      memberships,
     };
   } catch (error) {
     console.error('Token verification failed:', error);
     throw new UnauthorizedException('Invalid or expired token');
   }
+}
+
+/** Invalidate cached Clerk data for a user — call from webhook handlers. */
+invalidateUserCache(clerkUserId: string): void {
+  userProfileCache.delete(clerkUserId);
+  userMembershipsCache.delete(clerkUserId);
 }
 
 
@@ -80,6 +136,31 @@ async verifyToken(token: string): Promise<ClerkUser> {
     } catch (error) {
       console.error('Failed to fetch user:', error);
       throw new UnauthorizedException('User not found');
+    }
+  }
+
+  /**
+   * Cached variant of getUserById. Reuses the same TTL cache populated by
+   * verifyToken so repeated lookups within ~5 minutes are free.
+   */
+  async getCachedUserById(userId: string): Promise<ClerkUserProfile | null> {
+    const cached = userProfileCache.get(userId);
+    if (cached) return cached;
+    try {
+      const user = await this.clerkClient.users.getUser(userId);
+      const profile: ClerkUserProfile = {
+        id: user.id,
+        email: user.emailAddresses[0]?.emailAddress || '',
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        imageUrl: user.imageUrl || undefined,
+        publicMetadata: (user.publicMetadata as ClerkUserProfile['publicMetadata']) || {},
+      };
+      userProfileCache.set(userId, profile);
+      return profile;
+    } catch (error) {
+      console.error(`Failed to fetch Clerk user ${userId}:`, error);
+      return null;
     }
   }
 

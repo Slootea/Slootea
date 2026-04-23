@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useAuth } from "@clerk/nextjs";
 import {
   economyApi,
-  setAuthToken,
-  setOrganizationContext,
   TransactionItem,
   TransactionType,
   PaginatedTransactionResponse,
@@ -18,7 +15,6 @@ import { useOrganizationContext } from "@/components/providers/organization-prov
 import { useToast } from "@/components/ui/use-toast";
 
 export function useEconomy() {
-  const { getToken } = useAuth();
   const { toast } = useToast();
   const { currentOrganization, userRole } = useOrganizationContext();
 
@@ -32,13 +28,11 @@ export function useEconomy() {
 
   const isAdmin = userRole === "owner" || userRole === "admin";
 
+  // Token + org context are attached globally by AuthProvider + the axios
+  // interceptor; we just need to verify an organization is selected.
   const setupAuth = useCallback(async () => {
-    if (!currentOrganization) return false;
-    const token = await getToken();
-    setAuthToken(token);
-    setOrganizationContext(currentOrganization.id);
-    return true;
-  }, [currentOrganization, getToken]);
+    return Boolean(currentOrganization);
+  }, [currentOrganization]);
 
   // Fetch transactions
   const fetchTransactions = useCallback(

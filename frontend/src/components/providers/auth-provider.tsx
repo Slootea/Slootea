@@ -2,22 +2,24 @@
 
 import { useEffect } from "react";
 import { useAuth, useOrganization } from "@clerk/nextjs";
-import { setAuthToken, setOrganizationContext } from "@/lib/api";
+import { registerTokenGetter, setAuthToken, setOrganizationContext } from "@/lib/api";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { organization } = useOrganization();
 
+  // Register a single token getter that the axios request interceptor will use
+  // for every request. Removes the need for components to call getToken() and
+  // setAuthToken() themselves before each fetch.
   useEffect(() => {
-    const setupAuth = async () => {
-      if (isLoaded && isSignedIn) {
-        const token = await getToken();
-        setAuthToken(token);
-      } else {
-        setAuthToken(null);
-      }
-    };
-    setupAuth();
+    if (isLoaded && isSignedIn) {
+      registerTokenGetter((opts) => getToken(opts));
+      // Prime the default header so non-intercepted code paths still work.
+      getToken().then(setAuthToken).catch(() => setAuthToken(null));
+    } else {
+      registerTokenGetter(null);
+      setAuthToken(null);
+    }
   }, [isLoaded, isSignedIn, getToken]);
 
   // Set organization context when organization changes

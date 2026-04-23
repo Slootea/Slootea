@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { setAuthToken } from "@/lib/api";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -20,29 +19,17 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
-  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push("/sign-in");
     }
   }, [isLoaded, isSignedIn, router]);
-
-  useEffect(() => {
-    const setupAuth = async () => {
-      if (isSignedIn) {
-        const token = await getToken();
-        setAuthToken(token);
-        setAuthReady(true);
-      }
-    };
-    setupAuth();
-  }, [isSignedIn, getToken]);
 
   // Check if user is system admin
   useEffect(() => {
@@ -54,7 +41,7 @@ export default function AdminLayout({
     }
   }, [user]);
 
-  if (!isLoaded || !isSignedIn || !authReady) {
+  if (!isLoaded || !isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

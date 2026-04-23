@@ -209,38 +209,21 @@ export class OrganizationsService {
       throw new ForbiddenException("Access denied to this organization");
     }
 
-    // Fetch members directly from Clerk
+    // Fetch members directly from Clerk (already includes publicUserData)
     const clerkMembers = await this.clerkService.getOrganizationMembers(organizationId);
-    
-    // Map to include user details
-    const membersWithDetails = await Promise.all(
-      clerkMembers.map(async (member) => {
-        try {
-          const user = await this.clerkService.getUserById(member.userId);
-          return {
-            userId: member.userId,
-            organizationId,
-            role: member.role,
-            user: {
-              clerkId: user.id,
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              imageUrl: user.imageUrl,
-            },
-          };
-        } catch {
-          return {
-            userId: member.userId,
-            organizationId,
-            role: member.role,
-            user: null,
-          };
-        }
-      })
-    );
 
-    return membersWithDetails;
+    return clerkMembers.map((member) => ({
+      userId: member.userId,
+      organizationId,
+      role: member.role,
+      user: {
+        clerkId: member.userId,
+        email: member.email,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        imageUrl: member.imageUrl,
+      },
+    }));
   }
   async updateMemberRole(
     organizationId: string,

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { inventoryApi, setAuthToken, setOrganizationContext, InventoryItem, InventoryCategory, LowStockSummary, DailyUsageReport, ItemUsageReport } from "@/lib/api";
+import { inventoryApi, InventoryItem, InventoryCategory, LowStockSummary, DailyUsageReport, ItemUsageReport } from "@/lib/api";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslations } from "next-intl";
@@ -23,7 +22,6 @@ export interface UseInventoryOptions {
 }
 
 export function useInventory(options: UseInventoryOptions = { autoFetch: true }) {
-  const { getToken } = useAuth();
   const { toast } = useToast();
   const { currentOrganization, userRole } = useOrganizationContext();
   const t = useTranslations("inventoryPage");
@@ -53,12 +51,9 @@ export function useInventory(options: UseInventoryOptions = { autoFetch: true })
   }, [allItems]);
 
   const setupAuth = useCallback(async () => {
-    if (!currentOrganization) return false;
-    const token = await getToken();
-    setAuthToken(token);
-    setOrganizationContext(currentOrganization.id);
-    return true;
-  }, [currentOrganization, getToken]);
+    // Token + org context are attached globally; just verify selection.
+    return Boolean(currentOrganization);
+  }, [currentOrganization]);
 
   const fetchItems = useCallback(async (params?: {
     page?: number;

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { bookingLinksApi, serviceOptionsApi, setAuthToken, setOrganizationContext } from "@/lib/api";
+import { bookingLinksApi, serviceOptionsApi } from "@/lib/api";
 import { BookingLink, BookingLinkType, ServiceOption } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +32,6 @@ import { useTranslations } from "next-intl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function BookingLinksPage() {
-  const { getToken } = useAuth();
   const { toast } = useToast();
   const { currentOrganization, isAdmin, userRole } = useOrganizationContext();
   const t = useTranslations("linksPage");
@@ -53,9 +51,6 @@ export default function BookingLinksPage() {
   const canManageLinks = currentOrganization && isAdmin;
 
   const fetchData = async () => {
-    const token = await getToken();
-    setAuthToken(token);
-
     try {
       if (!currentOrganization) {
         // Booking links require organization context
@@ -65,9 +60,6 @@ export default function BookingLinksPage() {
         return;
       }
 
-      // Set organization context for API calls
-      setOrganizationContext(currentOrganization.id);
-      
       // Fetch organization links and services
       const [linksRes, optionsRes] = await Promise.all([
         bookingLinksApi.getAll(),
@@ -85,13 +77,12 @@ export default function BookingLinksPage() {
 
   useEffect(() => {
     fetchData();
-  }, [getToken, currentOrganization]);
+  }, [currentOrganization]);
 
   const handleCreate = async () => {
     if (!currentOrganization) return;
     
     try {
-      setOrganizationContext(currentOrganization.id);
       await bookingLinksApi.create({
         name: formData.name || undefined,
         type: formData.type,
@@ -124,7 +115,6 @@ export default function BookingLinksPage() {
     if (!currentOrganization) return;
 
     try {
-      setOrganizationContext(currentOrganization.id);
       await bookingLinksApi.delete(id);
       toast({ title: t("messages.deleted") });
       fetchData();
@@ -141,7 +131,6 @@ export default function BookingLinksPage() {
     if (!currentOrganization) return;
     
     try {
-      setOrganizationContext(currentOrganization.id);
       await bookingLinksApi.update(link.id, { isActive: !link.isActive });
       fetchData();
     } catch (error) {

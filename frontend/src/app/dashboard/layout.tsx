@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { setAuthToken, setOrganizationContext, organizationsApi } from "@/lib/api";
+import { organizationsApi } from "@/lib/api";
 import { trackSignIn } from "@/lib/analytics";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { PageHeaderProvider, usePageHeader } from "@/components/providers/page-header-provider";
@@ -22,16 +22,17 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("sidebar");
   const tLayout = useTranslations("layoutPage");
   const { currentOrganization, isAdmin, isLoading: orgLoading } = useOrganizationContext();
-  
+
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const hasTrackedSignIn = useRef(false);
+
 
   const navItems = [
     { href: "/dashboard", label: tLayout("overview") },
@@ -50,36 +51,25 @@ export default function DashboardLayout({
     }
   }, [isLoaded, isSignedIn, router]);
 
+  // Track sign-in once the user is signed in. Token attachment is handled
+  // globally by AuthProvider + the axios interceptor.
   useEffect(() => {
-    const setupAuth = async () => {
-      if (isSignedIn) {
-        const token = await getToken();
-        setAuthToken(token);
-        
-        // Track sign-in (only once per session)
-        if (!hasTrackedSignIn.current && user?.id) {
-          hasTrackedSignIn.current = true;
-          trackSignIn(user.id, {
-            organization_id: currentOrganization?.id,
-            organization_name: currentOrganization?.name,
-          });
-        }
-      }
-    };
-    setupAuth();
-  }, [isSignedIn, getToken, user?.id, currentOrganization]);
+    if (isSignedIn && !hasTrackedSignIn.current && user?.id) {
+      hasTrackedSignIn.current = true;
+      trackSignIn(user.id, {
+        organization_id: currentOrganization?.id,
+        organization_name: currentOrganization?.name,
+      });
+    }
+  }, [isSignedIn, user?.id, currentOrganization]);
 
   // Check onboarding status for org admins
   const checkOnboardingStatus = useCallback(async () => {
     if (!currentOrganization || !isAdmin || orgLoading) return;
 
     try {
-      const token = await getToken();
-      setAuthToken(token);
-      setOrganizationContext(currentOrganization.id);
-
       const response = await organizationsApi.getOnboardingStatus(currentOrganization.id);
-      
+
       if (!response.data.onboarded) {
         // Not onboarded, redirect to onboarding
         router.replace("/onboarding");
@@ -90,7 +80,7 @@ export default function DashboardLayout({
     } finally {
       setOnboardingChecked(true);
     }
-  }, [currentOrganization, isAdmin, orgLoading, getToken, router]);
+  }, [currentOrganization, isAdmin, orgLoading, router]);
 
   useEffect(() => {
     if (isSignedIn && currentOrganization && isAdmin && !orgLoading) {

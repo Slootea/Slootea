@@ -282,35 +282,21 @@ export class UserServiceOptionsService {
       relations: ['user'],
     });
 
-    // Enhance each provider with Clerk profile data
+    // Enhance each provider with Clerk profile data (cached)
     const providers = await Promise.all(
       assignments.map(async (assignment) => {
         const user = assignment.user;
         if (!user) return null;
 
-        try {
-          // Fetch fresh Clerk data for image and latest name
-          const clerkUser = await this.clerkService.getUserById(user.clerkId);
-          return {
-            id: user.id,
-            clerkId: user.clerkId,
-            firstName: clerkUser.firstName || user.firstName,
-            lastName: clerkUser.lastName || user.lastName,
-            imageUrl: clerkUser.imageUrl,
-            email: clerkUser.email || user.email,
-          };
-        } catch (error) {
-          // Fallback to database data if Clerk fetch fails
-          console.error(`Failed to fetch Clerk data for user ${user.clerkId}:`, error);
-          return {
-            id: user.id,
-            clerkId: user.clerkId,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            imageUrl: undefined,
-            email: user.email,
-          };
-        }
+        const clerkUser = await this.clerkService.getCachedUserById(user.clerkId);
+        return {
+          id: user.id,
+          clerkId: user.clerkId,
+          firstName: clerkUser?.firstName || user.firstName,
+          lastName: clerkUser?.lastName || user.lastName,
+          imageUrl: clerkUser?.imageUrl,
+          email: clerkUser?.email || user.email,
+        };
       }),
     );
 
@@ -346,29 +332,17 @@ export class UserServiceOptionsService {
         const user = assignment.user;
         if (!user) return null;
 
-        try {
-          const clerkUser = await this.clerkService.getUserById(user.clerkId);
-          return {
-            id: user.id,
-            type: 'member' as const,
-            firstName: clerkUser.firstName || user.firstName,
-            lastName: clerkUser.lastName || user.lastName,
-            imageUrl: clerkUser.imageUrl,
-            email: clerkUser.email || user.email,
-            clerkId: user.clerkId,
-          };
-        } catch (error) {
-          console.error(`Failed to fetch Clerk data for user ${user.clerkId}:`, error);
-          return {
-            id: user.id,
-            type: 'member' as const,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            imageUrl: undefined,
-            email: user.email,
-            clerkId: user.clerkId,
-          };
-        }
+        // Cached lookup — avoids hitting the Clerk REST API on every slot check.
+        const clerkUser = await this.clerkService.getCachedUserById(user.clerkId);
+        return {
+          id: user.id,
+          type: 'member' as const,
+          firstName: clerkUser?.firstName || user.firstName,
+          lastName: clerkUser?.lastName || user.lastName,
+          imageUrl: clerkUser?.imageUrl,
+          email: clerkUser?.email || user.email,
+          clerkId: user.clerkId,
+        };
       }),
     );
 

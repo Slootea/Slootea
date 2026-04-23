@@ -10,7 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, Image, ArrowLeft, Sparkles } from "lucide-react";
-import { AiServiceAssistant } from "@/components/booking";
+import dynamic from "next/dynamic";
+
+// AI assistant pulls in OpenAI/LangChain client code; only load when enabled.
+const AiServiceAssistant = dynamic(
+  () => import("@/components/booking").then((m) => m.AiServiceAssistant),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> },
+);
 
 type ViewMode = 'ai-assistant' | 'services';
 
