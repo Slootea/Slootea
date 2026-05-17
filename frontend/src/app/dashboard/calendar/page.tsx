@@ -56,6 +56,7 @@ import { EditAppointmentDialog } from "@/components/calendar/EditAppointmentDial
 import { MoveConfirmationDialog } from "@/components/calendar/MoveConfirmationDialog";
 import { CalendarSkeleton } from "@/components/calendar/CalendarSkeleton";
 import { CreateAppointmentDialog } from "@/components/calendar/CreateAppointmentDialog";
+import { CreateServiceRecordFromAppointmentDialog } from "@/components/clients/create-service-record-from-appointment-dialog";
 
 export default function CalendarPage() {
   const { getToken } = useAuth();
@@ -780,10 +781,15 @@ export default function CalendarPage() {
     }
   };
 
+  // Service record dialog (after completing an appointment)
+  const [serviceRecordDialogOpen, setServiceRecordDialogOpen] = useState(false);
+  const [serviceRecordAppointment, setServiceRecordAppointment] = useState<Appointment | null>(null);
+
   // Complete appointment
   const handleCompleteAppointment = async (id: string) => {
     setCompleting(true);
     try {
+      const apptForRecord = editingAppointment;
       await appointmentsApi.complete(id);
 
       toast({
@@ -794,6 +800,12 @@ export default function CalendarPage() {
       setEditDialogOpen(false);
       setEditingAppointment(null);
       fetchData();
+
+      // Offer to log a service record (frontend-only flow)
+      if (apptForRecord) {
+        setServiceRecordAppointment(apptForRecord);
+        setServiceRecordDialogOpen(true);
+      }
     } catch (error) {
       toast({
         title: t("error"),
@@ -995,6 +1007,14 @@ export default function CalendarPage() {
         fromButton={createFromButton}
         preselectedProviderId={selectedMember !== "all" ? selectedMember : undefined}
         timezone={organizationTimezone}
+      />
+
+      {/* Service Record creation prompt (after marking an appointment complete) */}
+      <CreateServiceRecordFromAppointmentDialog
+        open={serviceRecordDialogOpen}
+        onOpenChange={setServiceRecordDialogOpen}
+        appointment={serviceRecordAppointment}
+        onDone={() => setServiceRecordAppointment(null)}
       />
     </div>
   );

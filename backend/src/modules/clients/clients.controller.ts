@@ -24,6 +24,7 @@ import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgMemberOrAdmin } from '../auth/decorators/org-roles.decorator';
 import { AppointmentsService } from '../appointments/appointments.service';
+import { ServiceRecordsService } from '../service-records/service-records.service';
 
 @ApiTags('clients')
 @Controller('clients')
@@ -35,6 +36,7 @@ export class ClientsController {
     private readonly clientsService: ClientsService,
     @Inject(forwardRef(() => AppointmentsService))
     private readonly appointmentsService: AppointmentsService,
+    private readonly serviceRecordsService: ServiceRecordsService,
   ) {}
 
   @Post()
@@ -112,6 +114,17 @@ export class ClientsController {
       limit: limit || 10,
       sortOrder: 'DESC',
     });
+  }
+
+  @Get(':id/service-records')
+  @OrgMemberOrAdmin()
+  @ApiOperation({ summary: 'Get all service records for a client' })
+  async getClientServiceRecords(@Request() req: any, @Param('id') id: string) {
+    const organizationId = req.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization context required');
+    }
+    return this.serviceRecordsService.findAllForClient(organizationId, id);
   }
 
   @Put(':id')

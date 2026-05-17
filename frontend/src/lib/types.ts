@@ -860,3 +860,17 @@ export interface UpdateSmsTemplatePayload {
   isActive?: boolean;
 }
 
+
+// Service Records
+export interface ServiceRecord {
+  id: string;
+  organizationId: string;
+  clientId: string;
+  serviceOptionId: string;
+  serviceDate: string; // 'YYYY-MM-DD'
+  note?: string | null;
+  createdByUserId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  serviceOption?: ServiceOption;
+}

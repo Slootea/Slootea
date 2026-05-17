@@ -22,6 +22,7 @@ import { ExternalProvidersModule } from './modules/external-providers/external-p
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { EconomyModule } from './modules/economy/economy.module';
+import { ServiceRecordsModule } from './modules/service-records/service-records.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -66,6 +67,7 @@ import { HealthController } from './health.controller';
     MonitoringModule,
     InventoryModule,
     EconomyModule,
+    ServiceRecordsModule,
   ],
   controllers: [HealthController],
 })

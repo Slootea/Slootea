@@ -71,6 +71,7 @@ import { format, parseISO, formatDistanceToNow, isToday, isTomorrow, isPast, isF
 import { useTranslations } from "next-intl";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
 import { CreateAppointmentDialog } from "@/components/calendar/CreateAppointmentDialog";
+import { CreateServiceRecordFromAppointmentDialog } from "@/components/clients/create-service-record-from-appointment-dialog";
 
 export default function AppointmentsPage() {
   const { getToken } = useAuth();
@@ -98,6 +99,10 @@ export default function AppointmentsPage() {
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date>(new Date());
   const [createSaving, setCreateSaving] = useState(false);
   const [createFromButton, setCreateFromButton] = useState(true);
+
+  // Service record dialog (after marking complete)
+  const [serviceRecordDialogOpen, setServiceRecordDialogOpen] = useState(false);
+  const [serviceRecordAppointment, setServiceRecordAppointment] = useState<Appointment | null>(null);
 
   // Pagination & Filters
   const [filters, setFilters] = useState<AppointmentFilters>({
@@ -260,6 +265,15 @@ export default function AppointmentsPage() {
       await appointmentsApi.update(id, { status });
       toast({ title: t("messages.statusUpdated") });
       fetchData(true);
+
+      // After marking as completed, prompt user to log a service record.
+      if (status === AppointmentStatus.COMPLETED) {
+        const appt = appointments.find(a => a.id === id) || null;
+        if (appt) {
+          setServiceRecordAppointment(appt);
+          setServiceRecordDialogOpen(true);
+        }
+      }
     } catch (error) {
       toast({
         title: tCommon("error"),
@@ -594,6 +608,14 @@ export default function AppointmentsPage() {
         onSave={handleCreateAppointment}
         fromButton={createFromButton}
         timezone={organizationTimezone}
+      />
+
+      {/* Service Record creation prompt (after marking an appointment complete) */}
+      <CreateServiceRecordFromAppointmentDialog
+        open={serviceRecordDialogOpen}
+        onOpenChange={setServiceRecordDialogOpen}
+        appointment={serviceRecordAppointment}
+        onDone={() => setServiceRecordAppointment(null)}
       />
     </div>
   );

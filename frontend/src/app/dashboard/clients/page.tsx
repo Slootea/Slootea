@@ -17,6 +17,7 @@ import {
   PenaltyStatus,
 } from "@/lib/types";
 import { useOrganizationContext } from "@/components/providers/organization-provider";
+import { ServiceRecordsTab } from "@/components/clients/service-records-tab";
 import {
   Card,
   CardContent,
@@ -90,6 +91,7 @@ import {
   ShieldAlert,
   CalendarOff,
   BookOpen,
+  ClipboardList,
 } from "lucide-react";
 import {
   format,
@@ -797,11 +799,15 @@ export default function ClientsPage() {
 
               <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex-shrink-0 px-6 pt-3 border-b">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="overview">{t('detail.tabs.overview')}</TabsTrigger>
                     <TabsTrigger value="notes" className="gap-1.5">
                       <StickyNote className="h-3.5 w-3.5" />
                       {t('detail.tabs.notes')}
+                    </TabsTrigger>
+                    <TabsTrigger value="serviceRecords" className="gap-1.5">
+                      <ClipboardList className="h-3.5 w-3.5" />
+                      {t('detail.tabs.serviceRecords')}
                     </TabsTrigger>
                     <TabsTrigger value="history" className="gap-1.5">
                       <History className="h-3.5 w-3.5" />
@@ -1019,6 +1025,11 @@ export default function ClientsPage() {
                       </button>
                     </div>
                   </ScrollArea>
+                </TabsContent>
+
+                {/* Service Records Tab */}
+                <TabsContent value="serviceRecords" className="flex-1 overflow-hidden m-0">
+                  <ServiceRecordsTab clientId={selectedClient.id} active={detailModalOpen} />
                 </TabsContent>
 
                 {/* History Tab */}

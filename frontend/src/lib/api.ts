@@ -408,6 +408,39 @@ export const clientsApi = {
   delete: (id: string) => api.delete(`/clients/${id}`),
 };
 
+// Service Records API
+export interface ServiceRecordCreatePayload {
+  clientId: string;
+  serviceOptionId: string;
+  serviceDate: string; // 'YYYY-MM-DD' in organization timezone
+  note?: string;
+}
+export interface ServiceRecordUpdatePayload {
+  serviceOptionId?: string;
+  serviceDate?: string;
+  note?: string;
+}
+export interface ServiceRecordSyncPayload {
+  clientId: string;
+  create?: Array<{ serviceOptionId: string; serviceDate: string; note?: string }>;
+  update?: Array<{ id: string; serviceOptionId?: string; serviceDate?: string; note?: string }>;
+  deleteIds?: string[];
+}
+
+export const serviceRecordsApi = {
+  getByClient: (clientId: string) =>
+    api.get(`/clients/${clientId}/service-records`),
+  list: (params?: { clientId?: string; from?: string; to?: string; page?: number; limit?: number }) =>
+    api.get('/service-records', { params }),
+  getOne: (id: string) => api.get(`/service-records/${id}`),
+  create: (data: ServiceRecordCreatePayload) => api.post('/service-records', data),
+  update: (id: string, data: ServiceRecordUpdatePayload) =>
+    api.put(`/service-records/${id}`, data),
+  delete: (id: string) => api.delete(`/service-records/${id}`),
+  sync: (data: ServiceRecordSyncPayload) => api.post('/service-records/sync', data),
+};
+
+
 // Client Penalties API
 export const clientPenaltiesApi = {
   getActive: () => api.get('/client-penalties'),
